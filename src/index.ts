@@ -393,6 +393,7 @@ $('#connect').on('click', async () => {
     $('#deviceName').val(conn.deviceName);
     $('#deviceMAC').val(conn.deviceMAC);
     $('#connect').html('Disconnect');
+    $('#alg-input').attr('placeholder', 'Turn the smartcube to input the algorithm');
   }
 });
 
