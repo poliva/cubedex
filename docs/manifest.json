@@ -1,7 +1,7 @@
   {
     "name": "Cubedex",
     "short_name": "Cubedex",
-    "description": "Drill Rubik's cube algorithms using a smartcube",
+    "description": "Cubedex allows to train Rubik's cube algorithms like PLL or OLL using a smartcube.",
     "start_url": "index.html",
     "display": "standalone",
     "background_color": "#f0f2f5",
