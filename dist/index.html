@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cubedex</title>
+  <link rel="manifest" href="/cubedex/manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <script type="module" crossorigin src="/cubedex/assets/index-CsUkGxxS.js"></script>
+  <link rel="stylesheet" crossorigin href="/cubedex/assets/index-BYIl_Ezv.css">
+</head>
+
+<body>
+
+  <div id="app">
+
+    <div id="cube"></div>
+
+    <input id="alg-input" type="text" placeholder="Enter alg e.g., R U R' U'">
+    <div id="alg-display"></div>
+    <div id="alg-fix"></div>
+
+    <div class="controls">
+      <button id="input-alg">Input Alg</button>
+      <button id="submit-alg">Train Alg</button>
+      <button id="connect">Connect</button>
+      <button id="reset-state">Reset State</button>
+      <button id="reset-gyro">Reset Gyro</button>
+      <button id="device-info">Device Info</button>
+      <button id="show-help">Show Help</button>
+    </div>
+
+    <div class="help" id="help">
+      Connect the cube and enter the algorithm you want to train. The preferred way to enter the algorithm is by clicking the "Input Alg" button and performing the algorithm in the cube. Once the alg is entered click the "Train Alg" button to start training.
+    </div>
+
+    <div class="info" id="info">
+
+      <label for="deviceName">Device Name</label>
+      <input id="deviceName" type="text" readonly value="- n/a -">
+
+      <label for="deviceMAC">Device MAC</label>
+      <input id="deviceMAC" type="text" readonly value="- n/a -">
+
+      <label for="hardwareName">Hardware Name</label>
+      <input id="hardwareName" type="text" readonly value="- n/a -">
+
+      <label for="hardwareVersion">Hardware Version</label>
+      <input id="hardwareVersion" type="text" readonly value="- n/a -">
+
+      <label for="softwareVersion">Software Version</label>
+      <input id="softwareVersion" type="text" readonly value="- n/a -">
+
+      <label for="productDate">Product Date</label>
+      <input id="productDate" type="text" readonly value="- n/a -">
+
+      <label for="gyroSupported">Gyro Supported</label>
+      <input id="gyroSupported" type="text" readonly value="- n/a -">
+
+      <label for="batteryLevel">Battery</label>
+      <input id="batteryLevel" type="text" readonly value="- n/a -">
+
+      <label for="skew">Clock Skew</label>
+      <input id="skew" type="text" readonly value="- n/a -">
+
+      <label for="quaternion">Quaternion</label>
+      <input id="quaternion" type="text" readonly value="- n/a -">
+
+      <label for="velocity">Angular Velocity</label>
+      <input id="velocity" type="text" readonly value="- n/a -">
+
+    </div>
+
+    <div id="timer">0:00.000</div>
+
+  </div>
+
+</body>
+
+</html>
