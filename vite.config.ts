@@ -35,12 +35,14 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
+      manifestFilename: 'manifest.json',
       manifest: {
         "name": "Cubedex",
         "short_name": "Cubedex",
         "description": "Cubedex allows to train Rubik's cube algorithms like PLL or OLL using a smartcube.",
         "start_url": "index.html",
         "display": "standalone",
+        "scope":"/cubedex/",
         "background_color": "#f0f2f5",
         "theme_color": "#007bff",
         "icons": [
@@ -52,6 +54,25 @@ export default defineConfig({
           {
             "src": "icons/icon-512x512.png",
             "sizes": "512x512",
+            "type": "image/png"
+          }
+        ],
+        "screenshots": [
+          {
+            "src": "icons/cubedex_screenshot_wide.png",
+            "sizes": "1002x684",
+            "type": "image/png",
+            "form_factor": "wide"
+          },
+          {
+            "src": "icons/cubedex_screenshot_narrow.png",
+            "sizes": "612x845",
+            "type": "image/png",
+            "form_factor": "narrow"
+          },
+          {
+            "src": "icons/cubedex_screenshot_narrow.png",
+            "sizes": "612x845",
             "type": "image/png"
           }
         ]
