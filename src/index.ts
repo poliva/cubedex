@@ -85,7 +85,7 @@ var userAlg: string[] = [];
 var badAlg: string[] = [];
 var currentMoveIndex = 0;
 var incorrectMoves: number[] = [];
-var inputMode: boolean = false;
+var inputMode: boolean = true;
 
 function expandNotation(input: string): string {
   // If there are no spaces in the input, insert spaces between moves
