@@ -133,6 +133,7 @@ $('#submit-alg').on('click', () => {
     $('#alg-display').show();
     $('#alg-input').hide();
     $('#alg-fix').hide();
+    requestWakeLock();
   } else {
     $('#alg-input').show();
     $('#alg-input').attr('placeholder', "Enter alg e.g., R U R' U'");
@@ -384,6 +385,7 @@ $('#connect').on('click', async () => {
   if (conn) {
     conn.disconnect();
     conn = null;
+    releaseWakeLock();
   } else {
     conn = await connectGanCube(customMacAddressProvider);
     conn.events$.subscribe(handleCubeEvent);
@@ -474,3 +476,48 @@ $("#cube").on('touchstart', () => {
   activateTimer();
 });
 */
+
+let wakeLock: WakeLockSentinel | null = null;
+
+// Function to request a wake lock
+async function requestWakeLock() {
+  try {
+    // Check if wake lock is supported
+    if ('wakeLock' in navigator) {
+      // Request a screen wake lock
+      wakeLock = await navigator.wakeLock.request('screen');
+      console.log('Wake lock is active');
+
+      // Add an event listener to detect visibility change
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    } else {
+      console.log('Wake lock is not supported by this browser.');
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error(`${err.name}, ${err.message}`);
+    } else {
+      console.error('An unknown error occurred.');
+    }
+  }
+}
+
+// Function to handle visibility change
+function handleVisibilityChange() {
+  if (wakeLock !== null && document.visibilityState === 'visible') {
+    requestWakeLock();
+  }
+}
+
+// Function to release the wake lock
+function releaseWakeLock() {
+  if (wakeLock !== null) {
+    wakeLock.release().then(() => {
+      wakeLock = null;
+      console.log('Wake lock has been released');
+    });
+  }
+}
+
+// Release wake lock when the app is closed or user navigates away
+window.addEventListener('unload', releaseWakeLock);
