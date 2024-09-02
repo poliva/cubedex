@@ -3,6 +3,9 @@ import './style.css'
 import $ from 'jquery';
 import { Subscription, interval } from 'rxjs';
 import { TwistyPlayer } from 'cubing/twisty';
+import { Alg } from "cubing/alg";
+import { cube3x3x3 } from "cubing/puzzles";
+import { KPattern } from 'cubing/kpuzzle';
 import { experimentalSolve3x3x3IgnoringCenters } from 'cubing/search';
 
 import * as THREE from 'three';
@@ -83,32 +86,54 @@ async function handleGyroEvent(event: GanCubeEvent) {
 // Define the type of userAlg explicitly as an array of strings
 var userAlg: string[] = [];
 var badAlg: string[] = [];
+var patternStates: KPattern[] = [];
+var algPatternStates: KPattern[] = [];
 var currentMoveIndex = 0;
-var incorrectMoves: number[] = [];
 var inputMode: boolean = true;
 
 function expandNotation(input: string): string {
-  // If there are no spaces in the input, insert spaces between moves
-  if (!input.includes(' ')) {
-    input = input.replace(/([A-Z]'?)(?=[A-Z])/g, '$1 ').replace(/([A-Z])([2])/g, '$1 $2');
-  }
+  // Replace characters
+  let output = input.replace(/["´`‘]/g, "'")  // Replace " ´ ` ‘ with '
+                    .replace(/\[/g, "(")      // Replace [ with (
+                    .replace(/\]/g, ")")      // Replace ] with )
+                    .replace(/XYZ/g, "xyz");  // lowercase x y z
 
-  // Replace all occurrences of letters followed by a number (e.g., R2, U2', etc.)
-  return input.replace(/([A-Z])([2])('?)/g, (_: string, letter: string, number: string, prime: string) => {
-    // Calculate the repetitions based on the number (2 means 2 times)
-    let repetitions = parseInt(number, 10);
-    // Construct the replacement string, adding ' if needed
-    let replacement = (letter + prime + ' ').repeat(repetitions).trim();
-    return replacement;
-  });
+  // Remove characters not allowed
+  output = output.replace(/[^RLFBUDMESrlfbudxyz2()']/g, '');
+
+  // Before a ( there must always be a space
+  output = output.replace(/\(/g, ' (');
+
+  // After a ) there must always be a space
+  output = output.replace(/\)(?!\s)/g, ') ');
+
+  // After a ' there must always be a space unless the next character is )
+  output = output.replace(/'(?![\s)])/g, "' ");
+
+  // After a 2 there must always be a space unless the next character is ) or '
+  output = output.replace(/2(?![\s')])/g, '2 ');
+
+  // After any letter of RLFBUDMESrlfbudxyz there must always be a space unless the next character is ) ' or 2
+  output = output.replace(/([RLFBUDMESrlfbudxyz])(?![\s)'2])/g, '$1 ');
+
+  // There can't be a space before a 2
+  output = output.replace(/(\s)(?=2)/g, '');;
+
+  // R'2 must be R2' instead
+  output = output.replace(/'2/g, "2'");;
+
+  // There can't be more than 1 space together
+  output = output.replace(/\s+/g, ' ');
+
+  // Trim to ensure no leading or trailing spaces
+  return output.trim();
 }
 
 function resetAlg() {
-  currentMoveIndex = 0; // Reset the move index
-  incorrectMoves = []; // Reset incorrect moves
+  console.log("RESET ALG");
+  currentMoveIndex = -1; // Reset the move index
   badAlg = [];
-  $('#alg-fix').hide();
-  $('#alg-fix').html("");
+  hideMistakes();
 }
 
 $('#input-alg').on('click', () => {
@@ -116,7 +141,8 @@ $('#input-alg').on('click', () => {
   $('#alg-input').val('');
   if (conn) {
     inputMode = true;
-    $('#alg-input').attr('placeholder', 'Turn the smartcube to input the algorithm');
+    $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
+    $('#alg-input').get(0)?.focus();
   } else {
     $('#alg-input').attr('placeholder', 'Please connect the smartcube first');
   }
@@ -128,56 +154,156 @@ $('#submit-alg').on('click', () => {
   const algInput = $('#alg-input').val()?.toString().trim();
   if (algInput) {
     inputMode = false;
-    userAlg = expandNotation(algInput.replace(/[()]/g, '')).split(/\s+/); // Split the input string into moves
+    userAlg = expandNotation(algInput).split(/\s+/); // Split the input string into moves
     $('#alg-display').text(userAlg.join(' ')); // Display the alg
     $('#alg-display').show();
     $('#alg-input').hide();
-    $('#alg-fix').hide();
+    hideMistakes();
     requestWakeLock();
+    patternStates = [];
+    algPatternStates = [];
+    fetchNextPatterns();
   } else {
     $('#alg-input').show();
-    $('#alg-input').attr('placeholder', "Enter alg e.g., R U R' U'");
+    if (conn) {
+      $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
+    } else {
+      $('#alg-input').attr('placeholder', "Please connect the smartcube first");
+    }
+    $('#alg-input').get(0)?.focus();
   }
   resetAlg();
 });
 
-function updateAlgDisplay() {
-  let displayHtml = '';
-  userAlg.forEach((move, index) => {
-      let color = 'black'; // Default color
-      if (index == currentMoveIndex) color = 'white';
-      if (index < currentMoveIndex) {
-        color = 'green'; // Correct moves
-      } else if (incorrectMoves.includes(index)) {
-        color = 'red'; // Incorrect moves
-      }
-      if (index == currentMoveIndex) {
-        displayHtml += `<span class="circle" style="color: ${color};">${move} </span>`;
-      } else {
-        displayHtml += `<span style="color: ${color};">${move} </span>`;
-      }
-  });
-  $('#alg-display').html(displayHtml);
-  let fixHtml  = '';
-  for (let i=0 ; i<badAlg.length; i++){
-    fixHtml += getInverseMove(badAlg[badAlg.length - 1 - i])+" ";
+function fixOrientation(pattern: KPattern) {
+  if (JSON.stringify(pattern.patternData["CENTERS"].pieces) === JSON.stringify([0, 1, 2, 3, 4, 5])) {
+    return pattern;
   }
+  for (const letter of ['x', 'y', 'z']) {
+    let result = pattern;
+    for (let i = 0; i < 4; i++) {
+      result = result.applyAlg(letter);
+      if (JSON.stringify(result.patternData["CENTERS"].pieces) === JSON.stringify([0, 1, 2, 3, 4, 5])) {
+        return result;
+      }
+    }
+  }
+  return pattern;
+}
+
+function fetchNextPatterns() {
+  initialstate = patternStates.length === 0 ? myKpattern : patternStates[patternStates.length - 1];
+  userAlg.forEach((move, index) => {
+    move = move.replace(/[()]/g, "");
+    if (index === 0) patternStates[index] = initialstate.applyMove(move);
+    else patternStates[index] = algPatternStates[index - 1].applyMove(move);
+    algPatternStates[index]=patternStates[index];
+    patternStates[index]=fixOrientation(patternStates[index]);
+    //console.log("patternStates[" + index + "]=" + JSON.stringify(patternStates[index].patternData));
+  });
+}
+
+var showMistakesTimeout: number;
+
+function showMistakesWithDelay(fixHtml: string) {
   if (fixHtml.length > 0) {
     $('#alg-fix').html(fixHtml);
-    $('#alg-fix').show();
+    clearTimeout(showMistakesTimeout);
+    showMistakesTimeout = setTimeout(function() {
+      $('#alg-fix').show();
+    }, 500);  // 0.5 second
   } else {
-    $('#alg-fix').hide();
+    hideMistakes();
   }
 }
 
-function fixSlice() {
-  console.log("FIXING SLICE ;)")
-  incorrectMoves.pop();
-  incorrectMoves.pop();
-  badAlg.pop();
-  badAlg.pop();
-  currentMoveIndex += 2;
-  if (currentMoveIndex === userAlg.length) resetAlg();
+function hideMistakes() {
+  // Clear the timeout if hide is called before the div is shown
+  clearTimeout(showMistakesTimeout);
+  $('#alg-fix').hide();
+  $('#alg-fix').html("");
+}
+
+function updateAlgDisplay() {
+
+  let displayHtml = '';
+  let color = '';
+  let previousColor = '';
+  let simplifiedBadAlg: string[] = [];
+  let fixHtml  = '';
+
+  if (badAlg.length > 0) {
+    for (let i=0 ; i < badAlg.length; i++){
+      fixHtml += getInverseMove(badAlg[badAlg.length - 1 - i])+" ";
+    }
+
+    // simplfy badAlg
+    simplifiedBadAlg = Alg.fromString(fixHtml).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString().split(/\s+/);
+    fixHtml = simplifiedBadAlg.join(' ').trim();
+    if (fixHtml.length === 0) {
+      badAlg = [];
+    }
+  }
+
+  userAlg.forEach((move, index) => {
+    color = 'black'; // Default color
+
+    // Determine the color based on the move index
+    if (index < currentMoveIndex) {
+      color = 'green'; // Correct moves
+    } else if (index <= currentMoveIndex + simplifiedBadAlg.length) {
+      color = 'red'; // Incorrect moves
+    }
+
+    // Highlight the current move
+    if (index === currentMoveIndex) {
+      color = 'white';
+    }
+
+    // Don't mark double turns and slices as errors when they are not yet completed
+    let cleanMove = move.replace(/[()']/g, "").trim();
+    if (index === currentMoveIndex + 1 && cleanMove.length > 1 && (simplifiedBadAlg.length === 1 || (simplifiedBadAlg.length === 2 && 'MES'.includes(cleanMove[0])))) {
+        color = 'blue';
+    }
+
+    if (previousColor === 'blue') color = 'black';
+
+    // Build moveHtml excluding parentheses
+    let circleHtml = '';
+    let preCircleHtml = '';
+    let postCircleHtml = '';
+
+    for (let char of move) {
+      if (char === '(') {
+        preCircleHtml += `<span style="color: black;">${char}</span>`;
+      } else if (char === ')') {
+        postCircleHtml += `<span style="color: black;">${char}</span>`;
+      } else {
+        circleHtml += `<span style="color: ${color};">${char}</span>`;
+      }
+    }
+
+    // Wrap non-parenthesis characters in circle class if it's the current move
+    if (index === currentMoveIndex) {
+      displayHtml += `${preCircleHtml}<span class="circle">${circleHtml}</span>${postCircleHtml} `;
+    } else {
+      displayHtml += `${preCircleHtml}${circleHtml}${postCircleHtml} `;
+    }
+    previousColor = color;
+  });
+
+  // Update the display with the constructed HTML
+  $('#alg-display').html(displayHtml);
+
+  if (color === 'blue') fixHtml = '';
+  if (fixHtml.length > 0) {
+    showMistakesWithDelay(fixHtml);
+  } else {
+    hideMistakes();
+  }
+
+  // stay green in last move when alg is finished
+  if (currentMoveIndex === userAlg.length -1) currentMoveIndex=-1;
 }
 
 async function handleMoveEvent(event: GanCubeEvent) {
@@ -197,6 +323,7 @@ async function handleMoveEvent(event: GanCubeEvent) {
       var skew = cubeTimestampCalcSkew(lastMoves);
       $('#skew').val(skew + '%');
     }
+
     // Check if the current move matches the user's alg
     console.log("MOVE: " + event.move + " Index: " + currentMoveIndex + " currentValue: " + userAlg[currentMoveIndex]);
     if (inputMode) {
@@ -205,82 +332,42 @@ async function handleMoveEvent(event: GanCubeEvent) {
       });
       return;
     };
-    if (lastMoves.length > 1 ) console.log("LAST MOVE: " + lastMoves[lastMoves.length - 1].move);
-    if (userAlg[currentMoveIndex] === event.move && incorrectMoves.length === 0) {
-      currentMoveIndex++;
-      incorrectMoves = incorrectMoves.filter(index => index !== currentMoveIndex); // Remove from incorrect moves if corrected
-      badAlg = [];
-      if (currentMoveIndex === userAlg.length){
-        resetAlg();
+    //if (lastMoves.length > 1 ) console.log("LAST MOVE: " + lastMoves[lastMoves.length - 1].move);
+
+    var found: boolean = false;
+    patternStates.forEach((pattern, index) => {
+      //console.log("obj[" + index + "]: " + JSON.stringify(pattern));
+      if (myKpattern.applyMove(event.move).isIdentical(pattern)) {
+        currentMoveIndex=index;
+        found = true;
+        badAlg = [];
+        if (currentMoveIndex === userAlg.length - 1){
+          resetAlg();
+          fetchNextPatterns();
+          currentMoveIndex = userAlg.length - 1;
+        }
       }
-    } else {
+    });
+    if (!found) {
       badAlg.push(event.move);
-      if (!incorrectMoves.includes(currentMoveIndex)) {
-        incorrectMoves.push(currentMoveIndex);
-      } else {
-        incorrectMoves.push(incorrectMoves[incorrectMoves.length-1]+1);
-      }
-      console.log("Pushing 1 incorrect move. incorrectMoves: " + incorrectMoves + " badAlg: " + badAlg)
-      
-      // fix for slice moves (S,M,E)
-      if (incorrectMoves.length === 2){
-        // fix R+L = L+R
-        if (lastMoves[lastMoves.length - 1].move === "R"  && lastMoves[lastMoves.length - 2].move === "L"  && userAlg[currentMoveIndex + 1] === "L"  && userAlg[currentMoveIndex] === "R") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "R"  && lastMoves[lastMoves.length - 2].move === "L'" && userAlg[currentMoveIndex + 1] === "L'" && userAlg[currentMoveIndex] === "R") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "R'" && lastMoves[lastMoves.length - 2].move === "L'" && userAlg[currentMoveIndex + 1] === "L'" && userAlg[currentMoveIndex] === "R'") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "R'" && lastMoves[lastMoves.length - 2].move === "L"  && userAlg[currentMoveIndex + 1] === "L"  && userAlg[currentMoveIndex] === "R'") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "L"  && lastMoves[lastMoves.length - 2].move === "R"  && userAlg[currentMoveIndex + 1] === "R"  && userAlg[currentMoveIndex] === "L") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "L"  && lastMoves[lastMoves.length - 2].move === "R'" && userAlg[currentMoveIndex + 1] === "R'" && userAlg[currentMoveIndex] === "L") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "L'" && lastMoves[lastMoves.length - 2].move === "R'" && userAlg[currentMoveIndex + 1] === "R'" && userAlg[currentMoveIndex] === "L'") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "L'" && lastMoves[lastMoves.length - 2].move === "R"  && userAlg[currentMoveIndex + 1] === "R"  && userAlg[currentMoveIndex] === "L'") fixSlice();
+      console.log("Pushing 1 incorrect move. badAlg: " + badAlg)
 
-        // fix U+D = D+U
-        if (lastMoves[lastMoves.length - 1].move === "U"  && lastMoves[lastMoves.length - 2].move === "D"  && userAlg[currentMoveIndex + 1] === "D"  && userAlg[currentMoveIndex] === "U") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "U"  && lastMoves[lastMoves.length - 2].move === "D'" && userAlg[currentMoveIndex + 1] === "D'" && userAlg[currentMoveIndex] === "U") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "U'" && lastMoves[lastMoves.length - 2].move === "D'" && userAlg[currentMoveIndex + 1] === "D'" && userAlg[currentMoveIndex] === "U'") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "U'" && lastMoves[lastMoves.length - 2].move === "D"  && userAlg[currentMoveIndex + 1] === "D"  && userAlg[currentMoveIndex] === "U'") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "D"  && lastMoves[lastMoves.length - 2].move === "U"  && userAlg[currentMoveIndex + 1] === "U"  && userAlg[currentMoveIndex] === "D") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "D"  && lastMoves[lastMoves.length - 2].move === "U'" && userAlg[currentMoveIndex + 1] === "U'" && userAlg[currentMoveIndex] === "D") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "D'" && lastMoves[lastMoves.length - 2].move === "U'" && userAlg[currentMoveIndex + 1] === "U'" && userAlg[currentMoveIndex] === "D'") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "D'" && lastMoves[lastMoves.length - 2].move === "U"  && userAlg[currentMoveIndex + 1] === "U"  && userAlg[currentMoveIndex] === "D'") fixSlice();
-
-        // fix F+B = B+F
-        if (lastMoves[lastMoves.length - 1].move === "F"  && lastMoves[lastMoves.length - 2].move === "B"  && userAlg[currentMoveIndex + 1] === "B"  && userAlg[currentMoveIndex] === "F") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "F"  && lastMoves[lastMoves.length - 2].move === "B'" && userAlg[currentMoveIndex + 1] === "B'" && userAlg[currentMoveIndex] === "F") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "F'" && lastMoves[lastMoves.length - 2].move === "B'" && userAlg[currentMoveIndex + 1] === "B'" && userAlg[currentMoveIndex] === "F'") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "F'" && lastMoves[lastMoves.length - 2].move === "B"  && userAlg[currentMoveIndex + 1] === "B"  && userAlg[currentMoveIndex] === "F'") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "B"  && lastMoves[lastMoves.length - 2].move === "F"  && userAlg[currentMoveIndex + 1] === "F"  && userAlg[currentMoveIndex] === "B") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "B"  && lastMoves[lastMoves.length - 2].move === "F'" && userAlg[currentMoveIndex + 1] === "F'" && userAlg[currentMoveIndex] === "B") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "B'" && lastMoves[lastMoves.length - 2].move === "F'" && userAlg[currentMoveIndex + 1] === "F'" && userAlg[currentMoveIndex] === "B'") fixSlice();
-        if (lastMoves[lastMoves.length - 1].move === "B'" && lastMoves[lastMoves.length - 2].move === "F"  && userAlg[currentMoveIndex + 1] === "F"  && userAlg[currentMoveIndex] === "B'") fixSlice();
-      }
-
-      if (currentMoveIndex > 0 && incorrectMoves.length === 1 && lastMoves[lastMoves.length - 1].move === getInverseMove(userAlg[currentMoveIndex -1])) { 
+      if (currentMoveIndex === 0 && badAlg.length === 1 && lastMoves[lastMoves.length - 1].move === getInverseMove(userAlg[currentMoveIndex].replace(/[()]/g, ""))) { 
         currentMoveIndex--;
-        incorrectMoves.pop();
         badAlg.pop();
-        console.log("Cancelling last correct move");
-      } else if (lastMoves[lastMoves.length - 1].move === getInverseMove(badAlg[badAlg.length -2])) { 
-        incorrectMoves.pop();
-        incorrectMoves.pop();
+        console.log("Cancelling first correct move");
+      }  else if (lastMoves[lastMoves.length - 1].move === getInverseMove(badAlg[badAlg.length -2])) { 
         badAlg.pop();
         badAlg.pop();
-        console.log("Popping last incorrect move. incorrectMoves=" + incorrectMoves + " badAlg=" + badAlg);
-      } else if (incorrectMoves.length > 3 && lastMoves.length > 3 && lastMoves[lastMoves.length - 1].move === lastMoves[lastMoves.length - 2].move && lastMoves[lastMoves.length - 2].move === lastMoves[lastMoves.length - 3].move && lastMoves[lastMoves.length - 3].move === lastMoves[lastMoves.length - 4].move ) {
+        console.log("Popping last incorrect move. badAlg=" + badAlg);
+      } else if (badAlg.length > 3 && lastMoves.length > 3 && lastMoves[lastMoves.length - 1].move === lastMoves[lastMoves.length - 2].move && lastMoves[lastMoves.length - 2].move === lastMoves[lastMoves.length - 3].move && lastMoves[lastMoves.length - 3].move === lastMoves[lastMoves.length - 4].move ) {
         badAlg.pop();
         badAlg.pop();
         badAlg.pop();
         badAlg.pop();
-        incorrectMoves.pop();
-        incorrectMoves.pop();
-        incorrectMoves.pop();
-        incorrectMoves.pop();
-        console.log("Popping a turn (4 incorrect moves): " + incorrectMoves)
-
+        console.log("Popping a turn (4 incorrect moves)");
       }
     }
-    console.log("-------- incorrectMoves: " + incorrectMoves)
-
     updateAlgDisplay();
   }
 }
@@ -293,9 +380,15 @@ function getInverseMove(move: string): string {
       'R': 'R\'', 'R\'': 'R',
       'F': 'F\'', 'F\'': 'F',
       'B': 'B\'', 'B\'': 'B',
-      'S': 'S\'', 'S\'': 'S',
+      'u': 'u\'', 'u\'': 'u',
+      'd': 'd\'', 'd\'': 'd',
+      'l': 'l\'', 'l\'': 'l',
+      'r': 'r\'', 'r\'': 'r',
+      'f': 'f\'', 'f\'': 'f',
+      'b': 'b\'', 'b\'': 'b',
       'M': 'M\'', 'M\'': 'M',
       'E': 'E\'', 'E\'': 'E',
+      'S': 'S\'', 'S\'': 'S',
       'x': 'x\'', 'x\'': 'x',
       'y': 'y\'', 'y\'': 'y',
       'z': 'z\'', 'z\'': 'z'
@@ -395,7 +488,8 @@ $('#connect').on('click', async () => {
     $('#deviceName').val(conn.deviceName);
     $('#deviceMAC').val(conn.deviceMAC);
     $('#connect').html('Disconnect');
-    $('#alg-input').attr('placeholder', 'Turn the smartcube to input the algorithm');
+    $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
+    $('#alg-input').get(0)?.focus();
   }
 });
 
@@ -428,8 +522,17 @@ function setTimerState(state: typeof timerState) {
   }
 }
 
+var myKpattern: KPattern;
+var initialstate: KPattern;
+
 twistyPlayer.experimentalModel.currentPattern.addFreshListener(async (kpattern) => {
   var facelets = patternToFacelets(kpattern);
+  myKpattern = kpattern;
+  if (patternStates.length > 0 && currentMoveIndex === 0 && myKpattern.isIdentical(initialstate)) {
+    console.log("Returning to initial state")
+    resetAlg();
+    updateAlgDisplay();
+  }
   if (facelets == SOLVED_STATE) {
     if (timerState == "RUNNING") {
       setTimerState("STOPPED");
@@ -502,13 +605,6 @@ async function requestWakeLock() {
   }
 }
 
-// Function to handle visibility change
-function handleVisibilityChange() {
-  if (wakeLock !== null && document.visibilityState === 'visible') {
-    requestWakeLock();
-  }
-}
-
 // Function to release the wake lock
 function releaseWakeLock() {
   if (wakeLock !== null) {
@@ -519,5 +615,13 @@ function releaseWakeLock() {
   }
 }
 
-// Release wake lock when the app is closed or user navigates away
-window.addEventListener('unload', releaseWakeLock);
+// Function to handle visibility change
+function handleVisibilityChange() {
+  if (wakeLock !== null) {
+    if (document.visibilityState === 'visible') {
+      requestWakeLock();
+    } else {
+      releaseWakeLock();
+    }
+  }
+}
