@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 const workerImportMetaUrlRE = /\bnew\s+(?:Worker|SharedWorker)\s*\(\s*(new\s+URL\s*\(\s*('[^']+'|"[^"]+"|`[^`]+`)\s*,\s*import\.meta\.url\s*\))/g;
 
 export default defineConfig({
-  base: "/cubedex",
+  base: "/",
   build: {
     chunkSizeWarningLimit: 2048
   },
@@ -84,7 +84,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,png,svg}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/pof\.eslack.org\.org\/cubedex\/.*\.(png|jpg|svg)$/,
+            urlPattern: /^https:\/\/cubedex\.app\/.*\.(png|jpg|svg)$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'images-cache',
