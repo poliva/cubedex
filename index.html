@@ -40,12 +40,11 @@
       <button id="load-alg">Load Alg</button>
       <button id="save-alg" disabled>Save Alg</button>
       <button id="input-alg">Input Alg</button>
-      <button id="export-algs">Export Algs</button>
-      <button id="import-algs">Import Algs</button>
       <button id="connect">Connect</button>
       <button id="reset-state" disabled>Reset State</button>
       <button id="reset-gyro" disabled>Reset Gyro</button>
       <button id="device-info" disabled>Device Info</button>
+      <button id="show-options">Show Options</button>
       <button id="show-help">Show Help</button>
     </div>
 
@@ -115,6 +114,31 @@
 
     </div>
 
+    <div id="options-container" style="display: none;">
+      <button id="export-algs">Export Algs</button>
+      <button id="import-algs">Import Algs</button>
+      <label for="visualization-select">Cube Visualization:</label>
+      <select id="visualization-select">
+        <option value="PG3D">PG3D</option>
+        <option value="2D">2D</option>
+        <option value="3D">3D</option>
+        <option value="experimental-2D-LL">2D-LL</option>
+        <option value="experimental-2D-LL-face">2D-LL-face</option>
+      </select>
+
+      <label for="hintFacelets-select">Hint Facelets:</label>
+      <select id="hintFacelets-select">
+        <option value="floating">Floating</option>
+        <option value="none">Disabled</option>
+      </select>
+
+      <label for="backview-select">Back view:</label>
+      <select id="backview-select">
+        <option value="none">Disabled</option>
+        <option value="side-by-side">Side-by-side</option>
+        <option value="top-right">Top Right</option>
+      </select>
+    </div>
   </div>
   <script type="module" src="/src/index.ts"></script>
 

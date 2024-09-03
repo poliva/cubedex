@@ -221,7 +221,6 @@ body {
   outline: none;
 }
 
-
 #save-container, #load-container {
   margin-top: 1em;
   display: flex;
@@ -263,6 +262,28 @@ body {
   background-color: var(--secondary-color);
   color: #ccc;
   cursor: not-allowed;
+}
+
+#options-container {
+  margin-top: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+#options-container label {
+  font-size: 1em;
+  color: var(--text-color);
+}
+
+#options-container select {
+  padding: 0.5em;
+  border: 1px solid var(--secondary-color);
+  border-radius: var(--border-radius);
+  background-color: #ffffff;
+  color: var(--text-color);
+  box-shadow: 0 2px 4px var(--shadow-color);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Responsive Styles */

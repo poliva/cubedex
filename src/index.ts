@@ -34,10 +34,10 @@ var twistyPlayer = new TwistyPlayer({
   experimentalSetupAnchor: 'start',
   background: 'none',
   controlPanel: 'none',
-  hintFacelets: 'none',
-  experimentalDragInput: 'none',
+  hintFacelets: 'floating',
+  experimentalDragInput: 'auto',
   cameraLatitude: 0,
-  cameraLongitude: -40,
+  cameraLongitude: 0,
   cameraLatitudeLimit: 0,
   tempoScale: 5,
   experimentalStickering: 'full'
@@ -507,15 +507,26 @@ $('#show-help').on('click', () => {
     $('#show-help').html('Show Help');
   } else {
     $('#show-help').html('Hide Help');
+    $('#options-container').hide();
+    $('#load-container').hide();
+    $('#save-container').hide();
+    $('#info').hide();
+    $('#show-options').html('Show Options');
   }
 });
 
 $('#device-info').on('click', () => {
   const infoDiv = $('#info');
   if (infoDiv.css('display') === 'none') {
-      infoDiv.css('display', 'grid');
+    infoDiv.css('display', 'grid');
+    $('#options-container').hide();
+    $('#load-container').hide();
+    $('#save-container').hide();
+    $('#help').hide();
+    $('#show-options').html('Show Options');
+    $('#show-help').html('Show Help');
   } else {
-      infoDiv.css('display', 'none');
+    infoDiv.css('display', 'none');
   }
 });
 
@@ -873,12 +884,6 @@ function importAlgorithms(file: File) {
   reader.readAsText(file);
 }
 
-// Event listener for Save button
-$('#save-alg').on('click', () => {
-  $('#save-container').toggle();
-  $('#load-container').hide();
-});
-
 // Event listener for Confirm Save button
 $('#confirm-save').on('click', () => {
   const category = $('#category-input').val()?.toString().trim();
@@ -898,6 +903,22 @@ $('#load-alg').on('click', () => {
   loadAlgorithms(); // Load all algorithms initially
   $('#load-container').toggle();
   $('#save-container').hide();
+  $('#options-container').hide();
+  $('#help').hide();
+  $('#info').hide();
+  $('#show-options').html('Show Options');
+  $('#show-help').html('Show Help');
+});
+
+// Event listener for Save button
+$('#save-alg').on('click', () => {
+  $('#save-container').toggle();
+  $('#load-container').hide();
+  $('#options-container').hide();
+  $('#help').hide();
+  $('#info').hide();
+  $('#show-options').html('Show Options');
+  $('#show-help').html('Show Help');
 });
 
 // Event listener for Category select change
@@ -964,5 +985,99 @@ $('#import-file').on('change', (event) => {
   const file = (event.target as HTMLInputElement).files?.[0];
   if (file) {
     importAlgorithms(file);
+  }
+});
+
+// Add event listener for Options button
+$('#show-options').on('click', () => {
+  const optionsDiv = $('#options-container');
+  optionsDiv.toggle();
+  if (optionsDiv.css('display') === 'none') {
+    $('#show-options').html('Show Options');
+  } else {
+    $('#show-options').html('Hide Options');
+    $('#load-container').hide();
+    $('#save-container').hide();
+    $('#info').hide();
+    $('#help').hide();
+    $('#show-help').html('Show Help');
+  }
+});
+
+$(function() {
+  loadConfiguration();
+});
+
+function loadConfiguration() {
+  const visualization = localStorage.getItem('visualization');
+  if (visualization) {
+    $('#visualization-select').val(visualization).trigger('change');
+  }
+
+  const hintFacelets = localStorage.getItem('hintFacelets');
+  if (hintFacelets) {
+    $('#hintFacelets-select').val(hintFacelets).trigger('change');
+  }
+
+  const backview = localStorage.getItem('backview');
+  if (backview) {
+    $('#backview-select').val(backview).trigger('change');
+  }
+}
+// Add event listeners for the selectors to update twistyPlayer settings
+$('#visualization-select').on('change', () => {
+  const visualizationValue = $('#visualization-select').val();
+  localStorage.setItem('visualization', visualizationValue as string);
+  switch (visualizationValue) {
+    case '2D':
+      twistyPlayer.visualization = '2D';
+      break;
+    case '3D':
+      twistyPlayer.visualization = '3D';
+      break;
+    case 'PG3D':
+      twistyPlayer.visualization = 'PG3D';
+      break;
+    case 'experimental-2D-LL':
+      twistyPlayer.visualization = 'experimental-2D-LL';
+      break;
+    case 'experimental-2D-LL-face':
+      twistyPlayer.visualization = 'experimental-2D-LL-face';
+      break;
+    default:
+      twistyPlayer.visualization = 'PG3D';
+  }
+});
+
+$('#hintFacelets-select').on('change', () => {
+  const hintFaceletsValue = $('#hintFacelets-select').val();
+  localStorage.setItem('hintFacelets', hintFaceletsValue as string);
+  switch (hintFaceletsValue) {
+    case 'floating':
+      twistyPlayer.hintFacelets = 'floating';
+      break;
+    case 'none':
+      twistyPlayer.hintFacelets = 'none';
+      break;
+    default:
+      twistyPlayer.hintFacelets = 'none';
+  }
+});
+
+$('#backview-select').on('change', () => {
+  const backviewValue = $('#backview-select').val();
+  localStorage.setItem('backview', backviewValue as string);
+  switch (backviewValue) {
+    case 'none':
+      twistyPlayer.backView = 'none';
+      break;
+    case 'side-by-side':
+      twistyPlayer.backView = 'side-by-side';
+      break;
+    case 'top-right':
+      twistyPlayer.backView = 'top-right';
+      break;
+    default:
+      twistyPlayer.backView = 'none';
   }
 });
