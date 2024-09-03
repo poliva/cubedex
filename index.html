@@ -26,7 +26,7 @@
 
   <div id="app">
     <div id="container">
-      <div id="times-display"></div> <!-- New div for displaying times -->
+      <div id="times-display"></div>
       <div id="timer">0:00.000</div>
       <div id="cube"></div>
     </div>
@@ -36,18 +36,47 @@
     <div id="alg-fix"></div>
 
     <div class="controls">
+      <button id="train-alg" disabled>Train</button>
+      <button id="load-alg">Load Alg</button>
+      <button id="save-alg" disabled>Save Alg</button>
       <button id="input-alg">Input Alg</button>
-      <button id="submit-alg">Train Alg</button>
+      <button id="export-algs">Export Algs</button>
+      <button id="import-algs">Import Algs</button>
       <button id="connect">Connect</button>
-      <button id="reset-state">Reset State</button>
-      <button id="reset-gyro">Reset Gyro</button>
-      <button id="device-info">Device Info</button>
+      <button id="reset-state" disabled>Reset State</button>
+      <button id="reset-gyro" disabled>Reset Gyro</button>
+      <button id="device-info" disabled>Device Info</button>
       <button id="show-help">Show Help</button>
     </div>
 
     <div class="help" id="help">
-      Connect the smart cube and enter the algorithm you want to train. Hold the cube with white on top and green on front and click the "Train Alg" button to start training. To switch to a different algorithm click the "Input Alg" button.
+      <p>Connect the smart cube and load or input the algorithm you want to practice.</p>
+      <p>Hold the cube with WHITE ON TOP and GREEN ON FRONT and click the Train button to start training.</p>
     </div>
+
+    <!-- Hidden elements for saving and loading algorithms -->
+    <div id="save-container" style="display: none;">
+      <input id="category-input" type="text" placeholder="Enter category">
+      <input id="alg-name-input" type="text" placeholder="Enter algorithm name">
+      <button id="confirm-save">Confirm Save</button>
+    </div>
+
+    <div id="load-container" style="display: none;">
+      <select id="category-select">
+        <option value="">Select Category</option>
+      </select>
+      <select id="alg-select">
+        <option value="">Select Algorithm</option>
+      </select>
+      <div class="delete-mode-container">
+        <input type="checkbox" id="delete-mode-toggle">
+        <label for="delete-mode-toggle">Delete Mode</label>
+        <button id="delete-alg" disabled>Delete Algorithm</button>
+      </div>
+    </div>
+
+    <!-- Hidden file input for importing algorithms -->
+    <input type="file" id="import-file" style="display: none;">
 
     <div class="info" id="info">
 

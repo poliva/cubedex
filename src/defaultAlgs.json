@@ -1,0 +1,318 @@
+{
+  "PLL": [
+    {
+      "name": "Aa Perm",
+      "algorithm": "x (R' U R') D2 (R U' R') D2 R2 x'"
+    },
+    {
+      "name": "Ab Perm",
+      "algorithm": "x R2 D2 (R U R') D2 (R U' R) x'"
+    },
+    {
+      "name": "V Perm",
+      "algorithm": "(R' U R U' R') f' U' (R U2) (R' U' R U' R') f R"
+    },
+    {
+      "name": "Jb Perm",
+      "algorithm": "(R U R' F') (R U R' U') R' F R2 U' R'"
+    },
+    {
+      "name": "Ja Perm",
+      "algorithm": "(R' U L' U2) (R U' R' U2) R L"
+    },
+    {
+      "name": "F Perm",
+      "algorithm": "(R' U' F') (R U R' U') (R' F R2) (U' R' U') (R U R') U R"
+    },
+    {
+      "name": "Y Perm",
+      "algorithm": "(F R U' R' U' R U R' F') (R U R' U') (R' F R F')"
+    },
+    {
+      "name": "Na Perm",
+      "algorithm": "F' (R U R' U') (R' F R2 F) (U' R' U' R U) F' R'"
+    },
+    {
+      "name": "Nb Perm",
+      "algorithm": "(r' D' F r U' r' F') D r2 (U r' U' r' F r F')"
+    },
+    {
+      "name": "E Perm",
+      "algorithm": "x' (R U' R' D) (R U R' D') (R U R' D) (R U' R' D') x"
+    },
+    {
+      "name": "Ua Perm",
+      "algorithm": "(R U R' U R') U' R2 U' (R' U R' U R)"
+    },
+    {
+      "name": "Ub Perm",
+      "algorithm": "(R' U) (R' U') (R' U') (R' U) R U R2"
+    },
+    {
+      "name": "H Perm",
+      "algorithm": "M2 (U') M2 (U2') M2 (U') M2"
+    },
+    {
+      "name": "Z Perm",
+      "algorithm": "M' U' (M2' U') (M2' U') M' U2' M2'"
+    },
+    {
+      "name": "T Perm",
+      "algorithm": "(R U R' U') (R' F R2) (U' R' U') (R U R' F')"
+    },
+    {
+      "name": "Ra Perm",
+      "algorithm": "(R U' R' U') (R U R) D (R' U' R) D' (R' U2 R')"
+    },
+    {
+      "name": "Ga Perm",
+      "algorithm": "R2 U (R' U R' U') (R U' R2) D+U' (R' U R D')"
+    },
+    {
+      "name": "Gd Perm",
+      "algorithm": "(R U R') U'+D (R2 U' R U') (R' U R' U) R2 D'"
+    },
+    {
+      "name": "Gb Perm",
+      "algorithm": "(R' U' R) U+D' (R2 U R' U) (R U' R U') R2' D"
+    },
+    {
+      "name": "Gc Perm",
+      "algorithm": "(R2' U' R U') (R U R' U) (R2 U+D') (R U' R' D)"
+    },
+    {
+      "name": "Rb Perm",
+      "algorithm": "R2' F R (U R U' R') F' (R U2' R') U2 R"
+    }
+  ],
+  "OLL": [
+    {
+      "name": "OLL-2 Zamboni (Dot)",
+      "algorithm": "F (R U R' U') S (R U R' U') f'"
+    },
+    {
+      "name": "OLL-3 Anti Nazi (Dot)",
+      "algorithm": "f (R U R' U') f' U' F (R U R' U') F'"
+    },
+    {
+      "name": "OLL-4 Nazi (Dot)",
+      "algorithm": "f (R U R' U') f' U F (R U R' U') F'"
+    },
+    {
+      "name": "OLL-17 Slash (Dot)",
+      "algorithm": "(R U R' U) (R' F R F') U2' (R' F R F')"
+    },
+    {
+      "name": "OLL-1 Blank (Dot)",
+      "algorithm": "(R U2') (R2' F R F') U2' (R' F R F')"
+    },
+    {
+      "name": "OLL-18 Crown (Dot)",
+      "algorithm": "(R U2') (R2' F R F') U2' M' (U R U' r')"
+    },
+    {
+      "name": "OLL-19 Bunny (Dot)",
+      "algorithm": "M U (R U R' U') M' (R' F R F')"
+    },
+    {
+      "name": "OLL-20 X (Dot)",
+      "algorithm": "M U (R U R' U') M2' (U R U' r')"
+    },
+    {
+      "name": "OLL-45 T / Suit Up (T)",
+      "algorithm": "F (R U R' U') F'"
+    },
+    {
+      "name": "OLL-33 Key / Shoelaces (T)",
+      "algorithm": "(R U R' U') (R' F R F')"
+    },
+    {
+      "name": "OLL-6 Righty Square (Square)",
+      "algorithm": "r U2' (R' U' R U') r'"
+    },
+    {
+      "name": "OLL-5 Lefty Square (Square)",
+      "algorithm": "r' U2 (R U R' U) r"
+    },
+    {
+      "name": "OLL-28 Arrow (Oriented Corners)",
+      "algorithm": "(r U R' U') M (U R U' R')"
+    },
+    {
+      "name": "OLL-57 H (Oriented Corners)",
+      "algorithm": "(R U R' U') M' (U R U' r')"
+    },
+    {
+      "name": "OLL-27 Sune (Oriented Edges)",
+      "algorithm": "(R U R' U) (R U2' R')"
+    },
+    {
+      "name": "OLL-26 Anti Sune (Oriented Edges)",
+      "algorithm": "(R U2') (R' U' R U' R')"
+    },
+    {
+      "name": "OLL-21 H / Cross (Oriented Edges)",
+      "algorithm": "(R U R' U) (R U' R' U) (R U2' R')"
+    },
+    {
+      "name": "OLL-22 Pi / Bruno (Oriented Edges)",
+      "algorithm": "R U'2 (R'2 U' R2 U' R'2) U'2 R"
+    },
+    {
+      "name": "OLL-23 U / Headlights (Oriented Edges)",
+      "algorithm": "R2 D (R' U2 R) D' (R' U2 R')"
+    },
+    {
+      "name": "OLL-24 T / Chameleon (Oriented Edges)",
+      "algorithm": "(r U R' U') (r' F R) F'"
+    },
+    {
+      "name": "OLL-25 L / Bowtie (Oriented Edges)",
+      "algorithm": "F' (r U R' U') (r' F R)"
+    },
+    {
+      "name": "OLL-7 Lightning (Lightning Bolts)",
+      "algorithm": "r (U R' U R) U2' r'"
+    },
+    {
+      "name": "OLL-8 Reverse Lightning (Lightning Bolts)",
+      "algorithm": "r' (U' R U' R') U2' r"
+    },
+    {
+      "name": "OLL-11 Downstairs (Lightning Bolts)",
+      "algorithm": "S (R U R' U R U2' R') U2' S'"
+    },
+    {
+      "name": "OLL-12 Upstairs (Lightning Bolts)",
+      "algorithm": "S (R' U' R U' R' U2' R) U2' S'"
+    },
+    {
+      "name": "OLL-40 Big Lightning / Anti Fung (Lightning Bolts)",
+      "algorithm": "R' F (R U R' U') F' U R"
+    },
+    {
+      "name": "OLL-39 Lefty Big Lightning / Fung (Lightning Bolts)",
+      "algorithm": "L F' (L' U' L U) F U' L'"
+    },
+    {
+      "name": "OLL-44 P (P)",
+      "algorithm": "f (R U R' U') f'"
+    },
+    {
+      "name": "OLL-43 Anti P (P)",
+      "algorithm": "f' (L' U' L U) f"
+    },
+    {
+      "name": "OLL-31 Couch (P)",
+      "algorithm": "R' U' F (U R U' R') F' R"
+    },
+    {
+      "name": "OLL-32 Anti Couch (P)",
+      "algorithm": "S (R U R' U') (R' F R f')"
+    },
+    {
+      "name": "OLL-46 Seein' Headlights (C)",
+      "algorithm": "R' U' (R' F R F') U R"
+    },
+    {
+      "name": "OLL-34 City (C)",
+      "algorithm": "(R U R' U') B' (R' F R F') B"
+    },
+    {
+      "name": "OLL-38 Mario (W)",
+      "algorithm": "(R U R' U) (R U' R' U') (R' F R F')"
+    },
+    {
+      "name": "OLL-36 Warrio (W)",
+      "algorithm": "(L' U' L U') (L' U L U) (L F' L' F)"
+    },
+    {
+      "name": "OLL-51 Ant / Bottlecap (Line)",
+      "algorithm": "F (U R U' R') (U R U' R') F'"
+    },
+    {
+      "name": "OLL-52 Rice Cooker (Line)",
+      "algorithm": "R' (F' U' F U') (R U R' U) R"
+    },
+    {
+      "name": "OLL-56 Street Lights (Line)",
+      "algorithm": "F (R U R' U') F' (r U R' U') (r' F R) F'"
+    },
+    {
+      "name": "OLL-55 Highway (Line)",
+      "algorithm": "(R' F U R U') R2 F' R2' (U R' U' R)"
+    },
+    {
+      "name": "OLL-37 Mounted Fish (Fish)",
+      "algorithm": "F (R U' R') (U' R U R') F'"
+    },
+    {
+      "name": "OLL-35 Fish Salad (Fish)",
+      "algorithm": "(R U2' R') (R' F R F') (R U2' R')"
+    },
+    {
+      "name": "OLL-10 Anti Kite (Fish)",
+      "algorithm": "(R U R' U) (R' F R F') (R U2' R')"
+    },
+    {
+      "name": "OLL-9 Kite (Fish)",
+      "algorithm": "(R U R' U') (R' F R2) (U R' U' F')"
+    },
+    {
+      "name": "OLL-48 Breakneck (L)",
+      "algorithm": "f (U R U' R') (U R U' R') f'"
+    },
+    {
+      "name": "OLL-47 Anti Breakneck (L)",
+      "algorithm": "F' (L' U' L U) (L' U' L U) F"
+    },
+    {
+      "name": "OLL-53 Frying Pan (L)",
+      "algorithm": "(r' U' R U') (R' U R U') R' U2 r"
+    },
+    {
+      "name": "OLL-54 Anti Frying Pan (L)",
+      "algorithm": "(r U R' U) (R U' R' U) R U2' r'"
+    },
+    {
+      "name": "OLL-50 Front Squeezy (L)",
+      "algorithm": "r' U (r2 U') (r2' U') (r2) U r'"
+    },
+    {
+      "name": "OLL-49 Back Squeezy (L)",
+      "algorithm": "r U' (r2' U) (r2 U) (r2') U' r"
+    },
+    {
+      "name": "OLL-15 Squeegee (Knight Move)",
+      "algorithm": "(R' F' R) (L' U' L) U (R' F R)"
+    },
+    {
+      "name": "OLL-16 Anti Squeegee (Knight Move)",
+      "algorithm": "(r U r') (R U R' U') (r U' r')"
+    },
+    {
+      "name": "OLL-13 Gun (Knight Move)",
+      "algorithm": "F U (R U2' R') U' (R U R' F')"
+    },
+    {
+      "name": "OLL-14 Anti Gun (Knight Move)",
+      "algorithm": "(R' F R U R') F' R (F U' F')"
+    },
+    {
+      "name": "OLL-41 Poodle (Awkward)",
+      "algorithm": "(R U R' U) (R U2' R') F (R U R' U') F'"
+    },
+    {
+      "name": "OLL-42 Anti Poodle (Awkward)",
+      "algorithm": "F S' (R U R' U') F' U S"
+    },
+    {
+      "name": "OLL-29 WTF (Awkward)",
+      "algorithm": "S' (R U R' U') (R' F R F') U S"
+    },
+    {
+      "name": "OLL-30 Anti WTF (Awkward)",
+      "algorithm": "F U (R U2' R') U' (R U2' R') U' F'"
+    }
+  ]
+}

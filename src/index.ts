@@ -40,7 +40,7 @@ var twistyPlayer = new TwistyPlayer({
   cameraLongitude: -40,
   cameraLatitudeLimit: 0,
   tempoScale: 5,
-  experimentalStickering: 'PLL'
+  experimentalStickering: 'full'
 });
 
 var twistyTracker = new TwistyPlayer({
@@ -154,18 +154,33 @@ function resetAlg() {
   hideMistakes();
 }
 
+$('#alg-input').on('input', () => {
+  const algInput = $('#alg-input').val()?.toString().trim();
+  if (algInput && algInput.length > 0) {
+    $('#save-alg').prop('disabled', false);
+    if (conn) {
+      $('#train-alg').prop('disabled', false);
+    }
+  } else {
+    $('#save-alg').prop('disabled', true);
+    $('#train-alg').prop('disabled', true);
+  }
+});
+
 $('#input-alg').on('click', () => {
+  twistyPlayer.experimentalStickering = 'full';
   resetAlg();
   $('#alg-input').val('');
   if (conn) {
     inputMode = true;
     $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
+    $('#train-alg').prop('disabled', false);
+    $('#save-alg').prop('disabled', false);
   } else {
     $('#alg-input').attr('placeholder', 'Please connect the smartcube first');
   }
   lastFiveTimes = [];
   updateTimesDisplay();
-  console.log("Resetting lastFiveTimes: " + lastFiveTimes);
   $('#alg-display').hide();
   $('#times-display').hide();
   $('#timer').hide();
@@ -173,7 +188,7 @@ $('#input-alg').on('click', () => {
   $('#alg-input').get(0)?.focus();
 });
 
-$('#submit-alg').on('click', () => {
+$('#train-alg').on('click', () => {
   const algInput = $('#alg-input').val()?.toString().trim();
   if (algInput) {
     inputMode = false;
@@ -192,7 +207,6 @@ $('#submit-alg').on('click', () => {
     setTimerState("READY");
     lastFiveTimes = [];
     updateTimesDisplay();
-    console.log("Resetting lastFiveTimes: " + lastFiveTimes);
   } else {
     $('#alg-input').show();
     if (conn) {
@@ -520,6 +534,10 @@ $('#connect').on('click', async () => {
     conn.disconnect();
     conn = null;
     releaseWakeLock();
+    $('#reset-gyro').prop('disabled', true);
+    $('#reset-state').prop('disabled', true);
+    $('#device-info').prop('disabled', true);
+    $('#train-alg').prop('disabled', true);
   } else {
     conn = await connectGanCube(customMacAddressProvider);
     conn.events$.subscribe(handleCubeEvent);
@@ -529,6 +547,12 @@ $('#connect').on('click', async () => {
     $('#deviceName').val(conn.deviceName);
     $('#deviceMAC').val(conn.deviceMAC);
     $('#connect').html('Disconnect');
+    $('#reset-gyro').prop('disabled', false);
+    $('#reset-state').prop('disabled', false);
+    $('#device-info').prop('disabled', false);
+    if (($('#alg-input').val()?.toString().trim().length ?? 0) > 0) {
+      $('#train-alg').prop('disabled', false);
+    }
     $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
     $('#alg-input').get(0)?.focus();
   }
@@ -540,7 +564,6 @@ var lastFiveTimes: number[] = [];
 let practiceCount = 0;
 
 function updateTimesDisplay() {
-  console.log("Updating times display: " + lastFiveTimes);
   const timesDisplay = $('#times-display');
   if (lastFiveTimes.length === 0) {
     timesDisplay.html('');
@@ -588,7 +611,6 @@ function setTimerState(state: typeof timerState) {
 
       // Store the time and update the display
       if (finalTime > 0) {
-        console.log("Pushing time: " + finalTime);
         lastFiveTimes.push(finalTime);
         if (lastFiveTimes.length > 5) {
           lastFiveTimes.shift(); // Keep only the last 5 times
@@ -713,3 +735,228 @@ function handleVisibilityChange() {
     }
   }
 }
+
+import defaultAlgs from './defaultAlgs.json';
+
+// Function to initialize the localStorage with default algorithms if empty
+function initializeDefaultAlgorithms() {
+  if (!localStorage.getItem('savedAlgs')) {
+    localStorage.setItem('savedAlgs', JSON.stringify(defaultAlgs));
+  }
+}
+
+// Call the function to initialize default algorithms
+initializeDefaultAlgorithms();
+
+// Function to save the algorithm to localStorage
+function saveAlgorithm(category: string, name: string, algorithm: string) {
+  const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
+  if (!savedAlgs[category]) {
+    savedAlgs[category] = [];
+  }
+  savedAlgs[category].push({ name, algorithm });
+  localStorage.setItem('savedAlgs', JSON.stringify(savedAlgs));
+}
+
+// Function to load categories from localStorage
+function loadCategories() {
+  const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
+  const categorySelect = $('#category-select');
+  categorySelect.empty();
+  categorySelect.append('<option value="">Filter by Category</option>');
+  Object.keys(savedAlgs).forEach(category => {
+    categorySelect.append(`<option value="${category}">${category}</option>`);
+  });
+}
+
+// Function to load algorithms based on selected category
+function loadAlgorithms(category?: string) {
+  const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
+  const algSelect = $('#alg-select');
+  algSelect.empty();
+  algSelect.append('<option value="">Select Algorithm</option>');
+
+  if (category) {
+    if (savedAlgs[category]) {
+      savedAlgs[category].forEach((alg: { name: string, algorithm: string }) => {
+        algSelect.append(`<option value="${alg.algorithm}">${alg.name}</option>`);
+      });
+    }
+  } else {
+    // Show all algorithms if no category is selected
+    Object.keys(savedAlgs).forEach(cat => {
+      savedAlgs[cat].forEach((alg: { name: string, algorithm: string }) => {
+        algSelect.append(`<option value="${alg.algorithm}">[${cat}] ${alg.name}</option>`);
+      });
+    });
+  }
+}
+
+// Function to delete an algorithm from localStorage
+function deleteAlgorithm(category: string, algorithm: string) {
+  const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
+  if (savedAlgs[category]) {
+    savedAlgs[category] = savedAlgs[category].filter((alg: { name: string, algorithm: string }) => alg.algorithm !== algorithm);
+    if (savedAlgs[category].length === 0) {
+      delete savedAlgs[category]; // Delete category if empty
+    }
+    localStorage.setItem('savedAlgs', JSON.stringify(savedAlgs));
+  }
+}
+
+// Function to export algorithms to a text file
+function exportAlgorithms() {
+  const savedAlgs = localStorage.getItem('savedAlgs');
+  if (savedAlgs) {
+    const blob = new Blob([savedAlgs], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Cubedex-Algorithms.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  } else {
+    alert('No algorithms to export.');
+  }
+}
+
+// Event listener for Delete Mode toggle
+$('#delete-mode-toggle').on('change', () => {
+  const isDeleteModeOn = $('#delete-mode-toggle').is(':checked');
+  $('#delete-alg').prop('disabled', !isDeleteModeOn);
+});
+
+// Event listener for Delete button
+$('#delete-alg').on('click', () => {
+  const category = $('#category-select').val()?.toString();
+  const algorithm = $('#alg-select').val()?.toString();
+  if (algorithm) {
+    if (confirm('Are you sure you want to delete this algorithm?')) {
+      if (category) {
+        deleteAlgorithm(category, algorithm);
+        loadAlgorithms(category); // Refresh the algorithm list
+        if ($('#alg-select').children().length === 1) { // If no algorithms left, refresh categories
+          loadCategories();
+        }
+      } else {
+        // If no category is selected, search through all categories
+        const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
+        for (const cat in savedAlgs) {
+          if (savedAlgs[cat].some((alg: { algorithm: string }) => alg.algorithm === algorithm)) {
+            deleteAlgorithm(cat, algorithm);
+            break;
+          }
+        }
+        loadAlgorithms(); // Refresh the algorithm list
+        loadCategories(); // Refresh categories
+      }
+    }
+  }
+});
+
+// Function to import algorithms from a text file
+function importAlgorithms(file: File) {
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    if (event.target?.result) {
+      try {
+        const importedAlgs = JSON.parse(event.target.result as string);
+        localStorage.setItem('savedAlgs', JSON.stringify(importedAlgs));
+        alert('Algorithms imported successfully.');
+        loadCategories();
+        loadAlgorithms();
+      } catch (e) {
+        alert('Failed to import algorithms. Please ensure the file is in the correct format.');
+      }
+    }
+  };
+  reader.readAsText(file);
+}
+
+// Event listener for Save button
+$('#save-alg').on('click', () => {
+  $('#save-container').toggle();
+  $('#load-container').hide();
+});
+
+// Event listener for Confirm Save button
+$('#confirm-save').on('click', () => {
+  const category = $('#category-input').val()?.toString().trim();
+  const name = $('#alg-name-input').val()?.toString().trim();
+  const algorithm = $('#alg-input').val()?.toString().trim();
+  if (category && name && algorithm) {
+    saveAlgorithm(category, name, algorithm);
+    $('#save-container').hide();
+    $('#category-input').val('');
+    $('#alg-name-input').val('');
+  }
+});
+
+// Event listener for Load button
+$('#load-alg').on('click', () => {
+  loadCategories();
+  loadAlgorithms(); // Load all algorithms initially
+  $('#load-container').toggle();
+  $('#save-container').hide();
+});
+
+// Event listener for Category select change
+$('#category-select').on('change', () => {
+  const category = $('#category-select').val()?.toString();
+  if (category) {
+    loadAlgorithms(category);
+  } else {
+    loadAlgorithms(); // Load all algorithms if no category is selected
+  }
+});
+
+// Event listener for Algorithm select change
+$('#alg-select').on('change', () => {
+  const algorithm = $('#alg-select').val()?.toString();
+  let category = $('#category-select').val()?.toString();
+  const validCategories = [
+    'PLL', 'CLS', 'OLL', 'EOLL', 'COLL', 'OCLL', 'CPLL', 'CLL', 'EPLL', 'ELL', 'ELS', 'LL', 'F2L', 'ZBLL', 'ZBLS', 'VLS', 'WVLS', 'LS', 'LSOLL', 'LSOCLL', 'EO', 'EOline', 'EOcross', 'CMLL', 'L10P', 'L6E', 'L6EO', 'Daisy', 'Cross'
+  ];
+
+  if (algorithm) {
+    $('#save-alg').prop('disabled', false);
+    if (conn) {
+      $('#train-alg').prop('disabled', false);
+    }
+    $('#alg-input').val(algorithm);
+    $('#train-alg').trigger('click');
+
+    // If no category is selected, search through all categories
+    const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
+    for (const cat in savedAlgs) {
+      if (savedAlgs[cat].some((alg: { algorithm: string }) => alg.algorithm === algorithm)) {
+        category = cat;
+        break;
+      }
+    }
+
+    if (category && validCategories.includes(category)) {
+      twistyPlayer.experimentalStickering = category;
+    } else {
+      twistyPlayer.experimentalStickering = 'full';
+    }
+  }
+});
+
+// Event listener for Export button
+$('#export-algs').on('click', () => {
+  exportAlgorithms();
+});
+
+// Event listener for Import button
+$('#import-algs').on('click', () => {
+  $('#import-file').trigger('click');
+});
+
+// Event listener for file input change
+$('#import-file').on('change', (event) => {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (file) {
+    importAlgorithms(file);
+  }
+});

@@ -114,6 +114,12 @@ body {
   color: var(--background-color);
 }
 
+.controls button:disabled {
+  background-color: var(--secondary-color);
+  color: #ccc;
+  cursor: not-allowed;
+}
+
 .info {
   display: none;
   grid-template-columns: minmax(auto, 5em) 1fr;
@@ -213,6 +219,50 @@ body {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.2);
   outline: none;
+}
+
+
+#save-container, #load-container {
+  margin-top: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+#category-input, #alg-name-input, #category-select, #alg-select {
+  padding: 0.5em;
+  border: 1px solid var(--secondary-color);
+  border-radius: var(--border-radius);
+  background-color: #ffffff;
+  color: var(--text-color);
+  box-shadow: 0 2px 4px var(--shadow-color);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#confirm-save, #delete-alg, #export-algs, #import-algs {
+  padding: var(--button-padding);
+  background-color: var(--primary-color);
+  color: var(--background-color);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#confirm-save:hover, #delete-alg:hover, #export-algs:hover, #import-algs:hover {
+  background-color: var(--primary-hover-color);
+}
+
+.delete-mode-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+#delete-alg:disabled {
+  background-color: var(--secondary-color);
+  color: #ccc;
+  cursor: not-allowed;
 }
 
 /* Responsive Styles */
