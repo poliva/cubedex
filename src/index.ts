@@ -926,15 +926,21 @@ $('#alg-select').on('change', () => {
     $('#alg-input').val(algorithm);
     $('#train-alg').trigger('click');
 
-    // If no category is selected, search through all categories
-    const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
-    for (const cat in savedAlgs) {
-      if (savedAlgs[cat].some((alg: { algorithm: string }) => alg.algorithm === algorithm)) {
-        category = cat;
-        break;
+    if (!category) {
+      const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
+      for (const cat in savedAlgs) {
+        if (savedAlgs[cat].some((alg: { algorithm: string }) => alg.algorithm === algorithm)) {
+          category = cat;
+          break;
+        }
       }
     }
 
+    if (category === '2-Look PLL') {
+      category = 'PLL';
+    } else if (category === '2-Look OLL') {
+      category = 'OLL';
+    }
     if (category && validCategories.includes(category)) {
       twistyPlayer.experimentalStickering = category;
     } else {
