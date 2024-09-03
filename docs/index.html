@@ -20,15 +20,18 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/cubedex/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/cubedex/favicon-16x16.png">
   <link rel="icon" type="image/x-icon" href="/cubedex/favicon.ico">
-  <script type="module" crossorigin src="/cubedex/assets/index-C3wlvPoB.js"></script>
-  <link rel="stylesheet" crossorigin href="/cubedex/assets/index-BYIl_Ezv.css">
+  <script type="module" crossorigin src="/cubedex/assets/index-DOQffCJH.js"></script>
+  <link rel="stylesheet" crossorigin href="/cubedex/assets/index-CGidA8NF.css">
 <link rel="manifest" href="/cubedex/manifest.json"><script id="vite-plugin-pwa:register-sw" src="/cubedex/registerSW.js"></script></head>
 
 <body>
 
   <div id="app">
-
-    <div id="cube"></div>
+    <div id="container">
+      <div id="times-display"></div> <!-- New div for displaying times -->
+      <div id="timer">0:00.000</div>
+      <div id="cube"></div>
+    </div>
 
     <input id="alg-input" type="text" placeholder="Please connect the smartcube first">
     <div id="alg-display"></div>
@@ -84,8 +87,6 @@
       <input id="velocity" type="text" readonly value="- n/a -">
 
     </div>
-
-    <div id="timer">0:00.000</div>
 
   </div>
 
