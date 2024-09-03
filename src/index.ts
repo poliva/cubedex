@@ -169,6 +169,7 @@ $('#alg-input').on('input', () => {
 
 $('#input-alg').on('click', () => {
   twistyPlayer.experimentalStickering = 'full';
+  twistyPlayer.alg = '';
   resetAlg();
   $('#alg-input').val('');
   if (conn) {
@@ -382,6 +383,8 @@ async function handleMoveEvent(event: GanCubeEvent) {
       $('#alg-input').val(function(_, currentValue) {
         return Alg.fromString(currentValue + " " + lastMoves[lastMoves.length - 1].move).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString();
       });
+      $('#train-alg').prop('disabled', false);
+      $('#save-alg').prop('disabled', false);
       return;
     };
 

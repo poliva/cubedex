@@ -266,14 +266,22 @@ body {
 
 #options-container {
   margin-top: 1em;
-  display: flex;
-  flex-direction: column;
+  display: none;
   gap: 0.5em;
+  padding: 1em;
+  border: 1px solid var(--secondary-color);
+  border-radius: var(--border-radius);
+  background-color: #ffffff;
+  color: var(--text-color);
+  box-shadow: 0 2px 4px var(--shadow-color);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 #options-container label {
   font-size: 1em;
   color: var(--text-color);
+  display: block;
+  margin-bottom: 0.5em;
 }
 
 #options-container select {
@@ -284,6 +292,7 @@ body {
   color: var(--text-color);
   box-shadow: 0 2px 4px var(--shadow-color);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 1em;
 }
 
 /* Responsive Styles */

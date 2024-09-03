@@ -20,8 +20,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/cubedex/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/cubedex/favicon-16x16.png">
   <link rel="icon" type="image/x-icon" href="/cubedex/favicon.ico">
-  <script type="module" crossorigin src="/cubedex/assets/index-DvAJe6-F.js"></script>
-  <link rel="stylesheet" crossorigin href="/cubedex/assets/index-vtyA_j5V.css">
+  <script type="module" crossorigin src="/cubedex/assets/index-CTDWIhO6.js"></script>
+  <link rel="stylesheet" crossorigin href="/cubedex/assets/index-YaZ4TEk2.css">
 <link rel="manifest" href="/cubedex/manifest.json"><script id="vite-plugin-pwa:register-sw" src="/cubedex/registerSW.js"></script></head>
 
 <body>
@@ -43,9 +43,6 @@
       <button id="save-alg" disabled>Save Alg</button>
       <button id="input-alg">Input Alg</button>
       <button id="connect">Connect</button>
-      <button id="reset-state" disabled>Reset State</button>
-      <button id="reset-gyro" disabled>Reset Gyro</button>
-      <button id="device-info" disabled>Device Info</button>
       <button id="show-options">Show Options</button>
       <button id="show-help">Show Help</button>
     </div>
@@ -116,30 +113,41 @@
 
     </div>
 
-    <div id="options-container" style="display: none;">
-      <button id="export-algs">Export Algs</button>
-      <button id="import-algs">Import Algs</button>
-      <label for="visualization-select">Cube Visualization:</label>
-      <select id="visualization-select">
-        <option value="PG3D">PG3D</option>
-        <option value="2D">2D</option>
-        <option value="3D">3D</option>
-        <option value="experimental-2D-LL">2D-LL</option>
-        <option value="experimental-2D-LL-face">2D-LL-face</option>
-      </select>
+    <div id="options-container" class="controls">
+      <div id="alg-options-container">
+        <label for="alg-options-container">Algorithms options:</label>
+        <button id="export-algs">Export Algs</button>
+        <button id="import-algs">Import Algs</button>
+      </div>
+      <div id="device-options-container">
+        <label for="device-options-container">Device options:</label>
+        <button id="reset-state" disabled>Reset State</button>
+        <button id="reset-gyro" disabled>Reset Gyro</button>
+        <button id="device-info" disabled>Device Info</button>
+      </div>
+      <div id="visualization-container">
+        <label for="visualization-select">Cube Visualization:</label>
+        <select id="visualization-select">
+          <option value="PG3D">PG3D</option>
+          <option value="2D">2D</option>
+          <option value="3D">3D</option>
+          <option value="experimental-2D-LL">2D-LL</option>
+          <option value="experimental-2D-LL-face">2D-LL-face</option>
+        </select>
 
-      <label for="hintFacelets-select">Hint Facelets:</label>
-      <select id="hintFacelets-select">
-        <option value="floating">Floating</option>
-        <option value="none">Disabled</option>
-      </select>
+        <label for="hintFacelets-select">Floating Facelets:</label>
+        <select id="hintFacelets-select">
+          <option value="floating">Enabled</option>
+          <option value="none">Disabled</option>
+        </select>
 
-      <label for="backview-select">Back view:</label>
-      <select id="backview-select">
-        <option value="none">Disabled</option>
-        <option value="side-by-side">Side-by-side</option>
-        <option value="top-right">Top Right</option>
-      </select>
+        <label for="backview-select">Back view:</label>
+        <select id="backview-select">
+          <option value="none">Disabled</option>
+          <option value="side-by-side">Side-by-side</option>
+          <option value="top-right">Top Right</option>
+        </select>
+      </div>
     </div>
   </div>
 
