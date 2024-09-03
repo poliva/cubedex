@@ -42,7 +42,7 @@ export default defineConfig({
         "description": "Cubedex allows to train Rubik's cube algorithms like PLL or OLL using a smartcube.",
         "start_url": "index.html",
         "display": "standalone",
-        "scope":"/cubedex/",
+        "scope":"/",
         "background_color": "#f0f2f5",
         "theme_color": "#007bff",
         "icons": [
