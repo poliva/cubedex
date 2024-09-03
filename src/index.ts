@@ -661,6 +661,14 @@ $("#cube").on('touchstart', () => {
 });
 */
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (confirm('New version available. Refresh now?')) {
+      window.location.reload();
+    }
+  });
+}
+
 let wakeLock: WakeLockSentinel | null = null;
 
 // Function to request a wake lock
