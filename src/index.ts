@@ -363,16 +363,15 @@ async function handleMoveEvent(event: GanCubeEvent) {
       $('#skew').val(skew + '%');
     }
 
-    // Check if the current move matches the user's alg
-    console.log("MOVE: " + event.move + " Index: " + currentMoveIndex + " currentValue: " + userAlg[currentMoveIndex]);
+    //console.log("MOVE: " + event.move + " Index: " + currentMoveIndex + " currentValue: " + userAlg[currentMoveIndex]);
     if (inputMode) {
       $('#alg-input').val(function(_, currentValue) {
-        return currentValue + lastMoves[lastMoves.length - 1].move + " ";
+        return Alg.fromString(currentValue + " " + lastMoves[lastMoves.length - 1].move).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString();
       });
       return;
     };
-    //if (lastMoves.length > 1 ) console.log("LAST MOVE: " + lastMoves[lastMoves.length - 1].move);
 
+    // Check if the current move matches the user's alg
     var found: boolean = false;
     patternStates.forEach((pattern, index) => {
       //console.log("obj[" + index + "]: " + JSON.stringify(pattern));
