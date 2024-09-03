@@ -1,5 +1,5 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/index-ZDIf-lJy.js","assets/index-DOQffCJH.js","assets/index-CGidA8NF.css"])))=>i.map(i=>d[i]);
-import{x as e,s as t,_ as B,v as D}from"./index-DOQffCJH.js";import{p as R}from"./chunk-Y3BVWVFU-DUU-FrW2.js";var a=null;async function S(){return a??(a=n())}async function n(){return R(await e.kpuzzle(),`SubgroupSizes 24 21 18 15 12 9 6
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/index-CC0Owwrl.js","assets/index-ugjsc9ui.js","assets/index-CGidA8NF.css"])))=>i.map(i=>d[i]);
+import{x as e,s as t,_ as B,v as D}from"./index-ugjsc9ui.js";import{p as R}from"./chunk-Y3BVWVFU-CweoJ34V.js";var a=null;async function S(){return a??(a=n())}async function n(){return R(await e.kpuzzle(),`SubgroupSizes 24 21 18 15 12 9 6
 
 Alg F
 Alg F2
@@ -98,7 +98,7 @@ Alg F D' F L' D F R2 U2 F' U'
 Alg F D' L D' L F D2 L2 B' R'
 Alg F L' D F R2 D2 L D F' U2
 Alg F L' D F2 D' L F L2 F2 U
-Alg F D F' D L2 F R' F' D' B2 U'`)}async function r(){const{getPuzzleGeometryByName:g,ExperimentalPGNotation:A}=await B(async()=>{const{getPuzzleGeometryByName:F,ExperimentalPGNotation:U}=await import("./index-ZDIf-lJy.js");return{getPuzzleGeometryByName:F,ExperimentalPGNotation:U}},__vite__mapDeps([0,1,2])),L=g("megaminx",{allMoves:!0,addRotations:!0}),l=new D(L.getKPuzzleDefinition(!0),{experimentalPGNotation:new A(L,L.getOrbitsDef(!0))});return l.definition.name="megaminx",l}var i=null;async function u(){return i??(i=r())}var o=null;async function h(){return o??(o=c())}async function c(){return R(await u(),`SubgroupSizes 12 5 60 58 60 56 54 57 52 50 54 48 46 51 44 42 48 40 45 38 36 42 34 32 39 30 36 28 26 33 24 30 22 20 27 18 24 16 14 21 12 18 10 15 8 6 2 12 9 3
+Alg F D F' D L2 F R' F' D' B2 U'`)}async function r(){const{getPuzzleGeometryByName:g,ExperimentalPGNotation:A}=await B(async()=>{const{getPuzzleGeometryByName:F,ExperimentalPGNotation:U}=await import("./index-CC0Owwrl.js");return{getPuzzleGeometryByName:F,ExperimentalPGNotation:U}},__vite__mapDeps([0,1,2])),L=g("megaminx",{allMoves:!0,addRotations:!0}),l=new D(L.getKPuzzleDefinition(!0),{experimentalPGNotation:new A(L,L.getOrbitsDef(!0))});return l.definition.name="megaminx",l}var i=null;async function u(){return i??(i=r())}var o=null;async function h(){return o??(o=c())}async function c(){return R(await u(),`SubgroupSizes 12 5 60 58 60 56 54 57 52 50 54 48 46 51 44 42 48 40 45 38 36 42 34 32 39 30 36 28 26 33 24 30 22 20 27 18 24 16 14 21 12 18 10 15 8 6 2 12 9 3
 
 Alg Rv
 Alg Rv2
@@ -1695,7 +1695,7 @@ Alg r
 Alg r'
 
 Alg u
-Alg u'`)}async function z(){const{getPuzzleGeometryByName:g,ExperimentalPGNotation:A}=await B(async()=>{const{getPuzzleGeometryByName:l,ExperimentalPGNotation:F}=await import("./index-ZDIf-lJy.js");return{getPuzzleGeometryByName:l,ExperimentalPGNotation:F}},__vite__mapDeps([0,1,2])),L=g("skewb",{allMoves:!0,addRotations:!0});return new D(L.getKPuzzleDefinition(!0),{experimentalPGNotation:new A(L,L.getOrbitsDef(!0))})}var v=null;async function d(){return v??(v=z())}var p=null;async function f(){return p??(p=P())}async function G(){return{ordering:(await f()).ordering.slice(1)}}async function P(){return R(await d(),`SubgroupSizes 24 6 5 12 9 3 4 9 3 3
+Alg u'`)}async function z(){const{getPuzzleGeometryByName:g,ExperimentalPGNotation:A}=await B(async()=>{const{getPuzzleGeometryByName:l,ExperimentalPGNotation:F}=await import("./index-CC0Owwrl.js");return{getPuzzleGeometryByName:l,ExperimentalPGNotation:F}},__vite__mapDeps([0,1,2])),L=g("skewb",{allMoves:!0,addRotations:!0});return new D(L.getKPuzzleDefinition(!0),{experimentalPGNotation:new A(L,L.getOrbitsDef(!0))})}var v=null;async function d(){return v??(v=z())}var p=null;async function f(){return p??(p=P())}async function G(){return{ordering:(await f()).ordering.slice(1)}}async function P(){return R(await d(),`SubgroupSizes 24 6 5 12 9 3 4 9 3 3
 
 Alg y
 Alg y2
