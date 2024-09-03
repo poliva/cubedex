@@ -25,8 +25,11 @@
 <body>
 
   <div id="app">
-
-    <div id="cube"></div>
+    <div id="container">
+      <div id="times-display"></div> <!-- New div for displaying times -->
+      <div id="timer">0:00.000</div>
+      <div id="cube"></div>
+    </div>
 
     <input id="alg-input" type="text" placeholder="Please connect the smartcube first">
     <div id="alg-display"></div>
@@ -82,8 +85,6 @@
       <input id="velocity" type="text" readonly value="- n/a -">
 
     </div>
-
-    <div id="timer">0:00.000</div>
 
   </div>
   <script type="module" src="/src/index.ts"></script>

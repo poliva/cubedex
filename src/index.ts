@@ -22,7 +22,8 @@ import {
   cubeTimestampLinearFit
 } from 'gan-web-bluetooth';
 
-import { faceletsToPattern, patternToFacelets } from './utils';
+//import { faceletsToPattern, patternToFacelets } from './utils';
+import { faceletsToPattern } from './utils';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -36,10 +37,27 @@ var twistyPlayer = new TwistyPlayer({
   hintFacelets: 'none',
   experimentalDragInput: 'none',
   cameraLatitude: 0,
+  cameraLongitude: -40,
+  cameraLatitudeLimit: 0,
+  tempoScale: 5,
+  experimentalStickering: 'PLL'
+});
+
+var twistyTracker = new TwistyPlayer({
+  puzzle: '3x3x3',
+  visualization: 'PG3D',
+  alg: '',
+  experimentalSetupAnchor: 'start',
+  background: 'none',
+  controlPanel: 'none',
+  hintFacelets: 'none',
+  experimentalDragInput: 'none',
+  cameraLatitude: 0,
   cameraLongitude: 0,
   cameraLatitudeLimit: 0,
   tempoScale: 5
 });
+
 
 $('#cube').append(twistyPlayer);
 
@@ -142,12 +160,17 @@ $('#input-alg').on('click', () => {
   if (conn) {
     inputMode = true;
     $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
-    $('#alg-input').get(0)?.focus();
   } else {
     $('#alg-input').attr('placeholder', 'Please connect the smartcube first');
   }
+  lastFiveTimes = [];
+  updateTimesDisplay();
+  console.log("Resetting lastFiveTimes: " + lastFiveTimes);
   $('#alg-display').hide();
+  $('#times-display').hide();
+  $('#timer').hide();
   $('#alg-input').show();
+  $('#alg-input').get(0)?.focus();
 });
 
 $('#submit-alg').on('click', () => {
@@ -157,12 +180,19 @@ $('#submit-alg').on('click', () => {
     userAlg = expandNotation(algInput).split(/\s+/); // Split the input string into moves
     $('#alg-display').text(userAlg.join(' ')); // Display the alg
     $('#alg-display').show();
+    $('#times-display').show();
+    $('#timer').show();
     $('#alg-input').hide();
     hideMistakes();
     requestWakeLock();
     patternStates = [];
     algPatternStates = [];
     fetchNextPatterns();
+    setTimerState("STOPPED");
+    setTimerState("READY");
+    lastFiveTimes = [];
+    updateTimesDisplay();
+    console.log("Resetting lastFiveTimes: " + lastFiveTimes);
   } else {
     $('#alg-input').show();
     if (conn) {
@@ -201,6 +231,11 @@ function fetchNextPatterns() {
     patternStates[index]=fixOrientation(patternStates[index]);
     //console.log("patternStates[" + index + "]=" + JSON.stringify(patternStates[index].patternData));
   });
+  drawAlgInCube();
+}
+
+function drawAlgInCube() {
+  twistyPlayer.alg = Alg.fromString(userAlg.join(' ')).invert().toString();
 }
 
 var showMistakesTimeout: number;
@@ -303,17 +338,21 @@ function updateAlgDisplay() {
   }
 
   // stay green in last move when alg is finished
-  if (currentMoveIndex === userAlg.length -1) currentMoveIndex=-1;
+  if (currentMoveIndex === userAlg.length - 1) currentMoveIndex = -1;
 }
 
 async function handleMoveEvent(event: GanCubeEvent) {
-  if (event.type == "MOVE") {
-    if (timerState == "READY") {
+  if (event.type === "MOVE") {
+    if (timerState === "READY") {
+      setTimerState("RUNNING");
+    }
+    if (timerState === "STOPPED") {
       setTimerState("RUNNING");
     }
     twistyPlayer.experimentalAddMove(event.move, { cancel: false });
+    twistyTracker.experimentalAddMove(event.move, { cancel: false });
     lastMoves.push(event);
-    if (timerState == "RUNNING") {
+    if (timerState === "RUNNING") {
       solutionMoves.push(event);
     }
     if (lastMoves.length > 256) {
@@ -342,6 +381,7 @@ async function handleMoveEvent(event: GanCubeEvent) {
         found = true;
         badAlg = [];
         if (currentMoveIndex === userAlg.length - 1){
+          setTimerState("STOPPED");
           resetAlg();
           fetchNextPatterns();
           currentMoveIndex = userAlg.length - 1;
@@ -404,9 +444,9 @@ async function handleFaceletsEvent(event: GanCubeEvent) {
       var kpattern = faceletsToPattern(event.facelets);
       var solution = await experimentalSolve3x3x3IgnoringCenters(kpattern);
       var scramble = solution.invert();
-      twistyPlayer.alg = scramble;
+      twistyTracker.alg = scramble;
     } else {
-      twistyPlayer.alg = '';
+      twistyTracker.alg = '';
     }
     cubeStateInitialized = true;
     console.log("Initial cube state is applied successfully", event.facelets);
@@ -432,6 +472,7 @@ function handleCubeEvent(event: GanCubeEvent) {
     $('#batteryLevel').val(event.batteryLevel + '%');
   } else if (event.type == "DISCONNECT") {
     twistyPlayer.alg = '';
+    twistyTracker.alg = '';
     $('.info input').val('- n/a -');
     $('#connect').html('Connect');
   }
@@ -468,6 +509,7 @@ $('#device-info').on('click', () => {
 $('#reset-state').on('click', async () => {
   await conn?.sendCubeCommand({ type: "REQUEST_RESET" });
   twistyPlayer.alg = '';
+  drawAlgInCube();
 });
 
 $('#reset-gyro').on('click', async () => {
@@ -495,6 +537,31 @@ $('#connect').on('click', async () => {
 
 var timerState: "IDLE" | "READY" | "RUNNING" | "STOPPED" = "IDLE";
 
+var lastFiveTimes: number[] = [];
+let practiceCount = 0;
+
+function updateTimesDisplay() {
+  console.log("Updating times display: " + lastFiveTimes);
+  const timesDisplay = $('#times-display');
+  if (lastFiveTimes.length === 0) {
+    timesDisplay.html('');
+    practiceCount = 0;
+    return;
+  }
+
+  const timesHtml = lastFiveTimes.map((time, index) => {
+    const t = makeTimeFromTimestamp(time);
+    let number = practiceCount < 5 ? index + 1 : practiceCount - 5 + index + 1;
+    return `<div>Time ${number}: ${t.minutes}:${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}</div>`;
+  }).join('');
+
+  const averageTime = lastFiveTimes.reduce((a, b) => a + b, 0) / lastFiveTimes.length;
+  const avg = makeTimeFromTimestamp(averageTime);
+  const averageHtml = `<div class="average">Average: ${avg.minutes}:${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}</div>`;
+
+  timesDisplay.html(timesHtml + averageHtml);
+}
+
 function setTimerState(state: typeof timerState) {
   timerState = state;
   switch (state) {
@@ -514,10 +581,22 @@ function setTimerState(state: typeof timerState) {
       break;
     case 'STOPPED':
       stopLocalTimer();
-      $('#timer').css('color', '#fff');
+      $('#timer').css('color', '#333');
       var fittedMoves = cubeTimestampLinearFit(solutionMoves);
       var lastMove = fittedMoves.slice(-1).pop();
-      setTimerValue(lastMove ? lastMove.cubeTimestamp! : 0);
+      const finalTime = lastMove ? lastMove.cubeTimestamp! : 0;
+      setTimerValue(finalTime);
+
+      // Store the time and update the display
+      if (finalTime > 0) {
+        console.log("Pushing time: " + finalTime);
+        lastFiveTimes.push(finalTime);
+        if (lastFiveTimes.length > 5) {
+          lastFiveTimes.shift(); // Keep only the last 5 times
+        }
+        practiceCount++; // Increment the practice count
+        updateTimesDisplay();
+      }
       break;
   }
 }
@@ -525,20 +604,22 @@ function setTimerState(state: typeof timerState) {
 var myKpattern: KPattern;
 var initialstate: KPattern;
 
-twistyPlayer.experimentalModel.currentPattern.addFreshListener(async (kpattern) => {
-  var facelets = patternToFacelets(kpattern);
+twistyTracker.experimentalModel.currentPattern.addFreshListener(async (kpattern) => {
   myKpattern = kpattern;
   if (patternStates.length > 0 && currentMoveIndex === 0 && myKpattern.isIdentical(initialstate)) {
     console.log("Returning to initial state")
     resetAlg();
     updateAlgDisplay();
   }
+  /*
+  var facelets = patternToFacelets(kpattern);
   if (facelets == SOLVED_STATE) {
     if (timerState == "RUNNING") {
       setTimerState("STOPPED");
     }
-    twistyPlayer.alg = '';
+    twistyTracker.alg = '';
   }
+  */
 });
 
 function setTimerValue(timestamp: number) {

@@ -29,13 +29,57 @@ body {
   box-sizing: border-box; /* Ensure padding and border are included in the width */
 }
 
+#container {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr; /* Three columns: 1fr for times, auto for cube, 1fr for timer */
+  grid-template-rows: auto; /* Single row */
+  align-items: start; /* Align items at the start vertically */
+  gap: 1em; /* Add some space between the timer and cube */
+}
+
+#times-display {
+  display: none;
+  grid-column: 1; /* Place times display in the first column */
+  justify-self: start; /* Align times display to the start (left) */
+  align-self: start; /* Align times display to the top */
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1em;
+  color: var(--text-color);
+  text-align: center;
+  margin-bottom: 1em;
+}
+
+#times-display .average {
+  font-weight: bold;
+}
+
+#timer {
+  display: none;
+  grid-column: 3; /* Place timer in the third column */
+  justify-self: end; /* Align timer to the end (right) */
+  align-self: start; /* Align timer to the top */
+  width: fit-content;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.7em;
+  padding: 0.5em;
+  border: 1px solid var(--secondary-color);
+  border-radius: var(--border-radius);
+  text-align: center;
+  margin-bottom: 1em;
+}
+
 #cube {
+  grid-column: 2; /* Place cube in the second column */
+  grid-row: 1; /* Ensure the cube is in the first row */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15em; /* Set a minimum width */
+  min-height: 15em; /* Set a minimum height */
   margin: 0;
   padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   margin-bottom: 1.5em;
+  justify-self: center; /* Center the cube horizontally */
 }
 
 #cube twisty-player {
@@ -103,24 +147,6 @@ body {
 
 .info label::after {
   content: ':';
-}
-
-#timer {
-  position: absolute;
-  font-size: 2em;
-  top: 9em;
-  left: 0.5em;
-  width: 8.3em;
-  padding: 1em;
-  border: 1px solid var(--secondary-color);
-  border-radius: var(--border-radius);
-  background-color: var(--primary-color);
-  color: white;
-  text-align: center;
-  z-index: 10;
-  font-family: 'Courier New', Courier, monospace;
-  font-weight: bold;
-  display: none;
 }
 
 .help {
@@ -203,15 +229,6 @@ body {
     padding: 1em; /* Less padding for smaller screens */
   }
 
-  #timer {
-    font-size: 1.5em; /* Smaller font size for timer on mobile */
-    top: 1em; /* Adjust position for mobile */
-    left: 50%;
-    transform: translateX(-50%); /* Center the timer on mobile */
-    width: auto; /* Adjust width to fit content */
-    padding: 0.5em 1em; /* Adjust padding */
-  }
-
   #alg-display, #alg-fix, #alg-input {
     font-size: 1em; /* Adjust font size for readability on small screens */
   }
@@ -222,5 +239,27 @@ body {
 
   .help, .info {
     font-size: 0.8em; /* Smaller font for help and info */
+  }
+
+  #container {
+    grid-template-columns: 1fr; /* Single column layout on small screens */
+    grid-template-rows: auto auto auto; /* Three rows: one for each element */
+  }
+
+  #times-display, #cube, #timer {
+    grid-column: 1; /* All elements span the single column */
+    justify-self: center; /* Center elements horizontally */
+  }
+
+  #times-display {
+    margin-bottom: 1em; /* Add some space below the times display */
+  }
+
+  #timer {
+    margin-top: 1em; /* Add some space above the timer */
+  }
+
+  #cube {
+    justify-self: center; /* Center the cube horizontally on small screens */
   }
 }
