@@ -276,12 +276,12 @@ body {
   box-shadow: 0 2px 4px var(--shadow-color);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
-.help-footer {
-  margin-top: 0.5em;
-  font-size: 0.9em;
+.footer {
+  font-size: 0.8em;
   display: block;
   padding: 0.5em;
   text-align: center;
+  line-height: 1.1;
   color: var(--secondary-color);
 }
 

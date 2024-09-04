@@ -20,8 +20,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <script type="module" crossorigin src="/assets/index-BW9-xPc1.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-DLSa8OxP.css">
+  <script type="module" crossorigin src="/assets/index-DaHlKxOT.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BKLkmQbm.css">
 <link rel="manifest" href="/manifest.json"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
 <body>
@@ -47,15 +47,20 @@
       <button id="show-help">Show Help</button>
     </div>
 
-    <div class="help" id="help">
-      <div class="help-content">
-        <p>Connect the smart cube and load or input the algorithm you want to practice.</p>
-        <p>Hold the cube with WHITE ON TOP and GREEN ON FRONT and click the Train button to start training.</p>
-      </div>
-      <div class="help-footer">
-        <p>Cubedex has been created with ♥ by <a href="https://twitter.com/pof" target="_blank" rel="noopener noreferrer">Pau Oliva Fora</a> using <a href="https://github.com/afedotov/gan-web-bluetooth" target="_blank" rel="noopener noreferrer">gan-web-bluetooth</a> and <a href="https://github.com/cubing/cubing.js" target="_blank" rel="noopener noreferrer">cubing.js</a>.</p>
-        <p>The <a href="https://github.com/poliva/cubedex" target="_blank" rel="noopener noreferrer">source code</a> is available on GitHub, feel free to contribute to it by sending a PR.</p>
-      </div>
+    <div class="help-content" id="help">
+      <p>To get started with Cubedex:</p>
+      <ol>
+        <li>Connect your smart cube by clicking the <strong>Connect</strong> button. For more details, refer to the <a href="https://gist.github.com/afedotov/52057533a8b27a0277598160c384ae71" target="_blank">FAQ</a>.</li>
+        <li>Load an algorithm from the list or input your own in the input field using standard Rubik's cube notation. You can also input the algorithm by performing it on the cube.</li>
+        <li>Ensure the cube is oriented with <strong>WHITE on top</strong> and <strong>GREEN on front</strong>.</li>
+        <li>Click the <strong>Train</strong> button to start practicing the algorithm.</li>
+      </ol>
+      <p>During training:</p>
+      <ul>
+        <li>The timer will start automatically when you begin the algorithm.</li>
+        <li>Upon successful completion, the timer will stop and your last 5 times along with their average will be displayed.</li>
+        <li>If you make a mistake, follow the moves shown in the <strong>Fix</strong> section to correct it. Ensure the top center is <strong>WHITE</strong> and the front center is <strong>GREEN</strong>.</li>
+      </ul>
     </div>
 
     <!-- Hidden elements for saving and loading algorithms -->
@@ -121,18 +126,20 @@
 
     <div id="options-container" class="controls">
       <div id="alg-options-container">
-        <label for="alg-options-container">Algorithms options:</label>
-        <button id="export-algs">Export Algs</button>
-        <button id="import-algs">Import Algs</button>
+        <p>Algorithms options:
+          <button id="export-algs">Export Algs</button>
+          <button id="import-algs">Import Algs</button>
+        </p>
       </div>
       <div id="device-options-container">
-        <label for="device-options-container">Device options:</label>
-        <button id="reset-state" disabled>Reset State</button>
-        <button id="reset-gyro" disabled>Reset Gyro</button>
-        <button id="device-info" disabled>Device Info</button>
+        <p>Device options:
+          <button id="reset-state" disabled>Reset State</button>
+          <button id="reset-gyro" disabled>Reset Gyro</button>
+          <button id="device-info" disabled>Device Info</button>
+        </p>
       </div>
       <div id="visualization-container">
-        <label for="visualization-select">Cube Visualization:</label>
+        <label for="visualization-select">Cube visualization mode:</label>
         <select id="visualization-select">
           <option value="PG3D">PG3D</option>
           <option value="2D">2D</option>
@@ -140,21 +147,33 @@
           <option value="experimental-2D-LL">2D-LL</option>
           <option value="experimental-2D-LL-face">2D-LL-face</option>
         </select>
-
-        <label for="hintFacelets-select">Floating Facelets:</label>
+        <label for="hintFacelets-select">Floating hint facelets:</label>
         <select id="hintFacelets-select">
           <option value="floating">Enabled</option>
           <option value="none">Disabled</option>
         </select>
-
         <label for="backview-select">Back view:</label>
         <select id="backview-select">
           <option value="none">Disabled</option>
           <option value="side-by-side">Side-by-side</option>
           <option value="top-right">Top Right</option>
         </select>
+        <label for="gyroscope-select">Animate cube orientation using gyroscope:</label>
+        <select id="gyroscope-select">
+          <option value="enabled">Enabled</option>
+          <option value="disabled">Disabled</option>
+        </select>
+        <label for="control-panel-select">Virtual cube controls:</label>
+        <select id="control-panel-select">
+          <option value="none">Disabled</option>
+          <option value="bottom-row">Enabled</option>
+        </select>
       </div>
     </div>
+  </div>
+  <div class="footer">
+    <p>Cubedex has been created with ♥ by <a href="https://twitter.com/pof" target="_blank">Pau Oliva Fora</a> using <a href="https://github.com/afedotov/gan-web-bluetooth" target="_blank">gan-web-bluetooth</a> and <a href="https://github.com/cubing/cubing.js" target="_blank">cubing.js</a>.</p>
+    <p>The <a href="https://github.com/poliva/cubedex" target="_blank">source code</a> is available on GitHub, feel free to contribute by sending a PR.</p>
   </div>
 
 </body>

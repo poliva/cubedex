@@ -34,11 +34,11 @@ var twistyPlayer = new TwistyPlayer({
   experimentalSetupAnchor: 'start',
   background: 'none',
   controlPanel: 'none',
+  viewerLink: 'none',
   hintFacelets: 'floating',
   experimentalDragInput: 'auto',
   cameraLatitude: 0,
   cameraLongitude: 0,
-  cameraLatitudeLimit: 0,
   tempoScale: 5,
   experimentalStickering: 'full'
 });
@@ -68,14 +68,21 @@ var solutionMoves: GanCubeMove[] = [];
 var twistyScene: THREE.Scene;
 var twistyVantage: any;
 
+var gyroscopeEnabled: boolean = true;
+var forceFix: boolean = false;
+
 const HOME_ORIENTATION = new THREE.Quaternion().setFromEuler(new THREE.Euler(15 * Math.PI / 180, -20 * Math.PI / 180, 0));
 var cubeQuaternion: THREE.Quaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(30 * Math.PI / 180, -30 * Math.PI / 180, 0));
 
 async function amimateCubeOrientation() {
-  if (!twistyScene || !twistyVantage) {
+  if (!gyroscopeEnabled) {
+    return;
+  }
+  if (!twistyScene || !twistyVantage || forceFix) {
     var vantageList = await twistyPlayer.experimentalCurrentVantages();
     twistyVantage = [...vantageList][0];
     twistyScene = await twistyVantage.scene.scene();
+    if (forceFix) forceFix = false;
   }
   twistyScene.quaternion.slerp(cubeQuaternion, 0.25);
   twistyVantage.render();
@@ -148,7 +155,7 @@ function expandNotation(input: string): string {
 }
 
 function resetAlg() {
-  console.log("RESET ALG");
+  //console.log("RESET ALG");
   currentMoveIndex = -1; // Reset the move index
   badAlg = [];
   hideMistakes();
@@ -608,7 +615,7 @@ function setTimerState(state: typeof timerState) {
     case 'READY':
       setTimerValue(0);
       $('#timer').show();
-      $('#timer').css('color', '#0f0');
+      $('#timer').css('color', '#080');
       break;
     case 'RUNNING':
       solutionMoves = [];
@@ -1026,10 +1033,20 @@ function loadConfiguration() {
   if (backview) {
     $('#backview-select').val(backview).trigger('change');
   }
+
+  const gyroscopeValue = localStorage.getItem('gyroscope');
+  if (gyroscopeValue) {
+    $('#gyroscope-select').val(gyroscopeValue).trigger('change');
+  }
+
+  const controlPanel = localStorage.getItem('control-panel');
+  if (controlPanel) {
+    $('#control-panel-select').val(controlPanel).trigger('change');
+  }
 }
 // Add event listeners for the selectors to update twistyPlayer settings
 $('#visualization-select').on('change', () => {
-  const visualizationValue = $('#visualization-select').val();
+  const visualizationValue = $('#visualization-select').val() || 'PG3D';
   localStorage.setItem('visualization', visualizationValue as string);
   switch (visualizationValue) {
     case '2D':
@@ -1049,6 +1066,13 @@ $('#visualization-select').on('change', () => {
       break;
     default:
       twistyPlayer.visualization = 'PG3D';
+  }
+  // fix for 3D visualization not animating after visualization change
+  if (conn && (visualizationValue as string).includes('3D')) {
+    forceFix = true;
+    requestAnimationFrame(amimateCubeOrientation);
+  } else {
+    forceFix = false;
   }
 });
 
@@ -1082,5 +1106,34 @@ $('#backview-select').on('change', () => {
       break;
     default:
       twistyPlayer.backView = 'none';
+  }
+});
+
+// Add event listener for Gyroscope selector
+$('#gyroscope-select').on('change', () => {
+  const gyroscopeValue = $('#gyroscope-select').val();
+  localStorage.setItem('gyroscope', gyroscopeValue as string);
+  if (gyroscopeValue === 'enabled') {
+    gyroscopeEnabled = true;
+    requestAnimationFrame(amimateCubeOrientation);
+  } else {
+    gyroscopeEnabled = false;
+    requestAnimationFrame(amimateCubeOrientation);
+  }
+});
+
+// Add event listener for Control Panel selector
+$('#control-panel-select').on('change', () => {
+  const controlPanelValue = $('#control-panel-select').val();
+  localStorage.setItem('control-panel', controlPanelValue as string);
+  switch (controlPanelValue) {
+    case 'none':
+      twistyPlayer.controlPanel = 'none';
+      break;
+    case 'bottom-row':
+      twistyPlayer.controlPanel = 'bottom-row';
+      break;
+    default:
+      twistyPlayer.controlPanel = 'none';
   }
 });
