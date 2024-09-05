@@ -20,15 +20,15 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <script type="module" crossorigin src="/assets/index-DTCuX_j7.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-CNVDn5qJ.css">
+  <script type="module" crossorigin src="/assets/index-BkwMQIHP.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-cTQQmlTy.css">
 <link rel="manifest" href="/manifest.json"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
-<body class="bg-gray-100 text-gray-900 font-sans leading-relaxed p-4 dark:bg-gray-900 dark:text-white">
-  <div id="app" class="max-w-4xl min-w-[400px] mx-auto p-8 bg-white shadow-lg rounded-lg dark:bg-gray-800">
+<body class="bg-gray-100 text-gray-900 font-sans leading-relaxed sm:p-4 p-1 dark:bg-gray-900 dark:text-white">
+  <div id="app" class="max-w-4xl min-w-[360px] mx-auto bg-white shadow-lg rounded-lg dark:bg-gray-800 sm:p-8 p-4">
     <div id="container" class="grid grid-cols-1 sm:grid-cols-3 items-start mb-3 gap-2">
       <div id="times-display" class="col-span-1 text-center font-mono text-base text-gray-900 dark:text-white"></div>
-      <div id="cube" class="col-span-1 flex items-center justify-center min-w-[15em] min-h-[15em]"></div>
+      <div id="cube" class="col-span-1 flex items-center justify-center min-w-[10em] min-h-[10em] sm:min-w-[15em] sm:min-h-[15em]"></div>
       <div class="col-span-1 flex flex-col items-center sm:items-end">
         <div id="timer" class="hidden text-right font-mono text-xl p-2 border border-gray-400 rounded-lg dark:border-gray-700 dark:text-white"></div>
       </div>
@@ -40,13 +40,13 @@
     <div id="alg-fix" class="hidden text-base text-red-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-red-500 dark:border-red-400"></div>
 
     <div class="controls flex flex-wrap gap-2 mb-6 justify-center">
-      <button id="train-alg" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">Train</button>
-      <button id="load-alg" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Load Alg</button>
-      <button id="save-alg" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">Save Alg</button>
-      <button id="input-alg" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Input Alg</button>
-      <button id="connect" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Connect</button>
-      <button id="show-options" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Show Options</button>
-      <button id="show-help" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Show Help</button>
+      <button id="train-alg" disabled class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed sm:py-2 sm:px-4 py-1 px-2 text-sm">Train</button>
+      <button id="load-alg" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm">Load Alg</button>
+      <button id="save-alg" disabled class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed sm:py-2 sm:px-4 py-1 px-2 text-sm">Save Alg</button>
+      <button id="input-alg" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm">Input Alg</button>
+      <button id="connect" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm">Connect</button>
+      <button id="show-options" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm">Show Options</button>
+      <button id="show-help" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm">Show Help</button>
     </div>
 
     <div id="help" class="help hidden text-gray-600 text-sm mt-4 leading-snug dark:text-gray-400">
@@ -77,9 +77,9 @@
 
     <div id="load-container" class="hidden flex-col gap-4 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700">
       <select id="category-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400">
-        <option value="">Select Category</option>
+        <option value="">Filter by Category</option>
       </select>
-      <select id="alg-select" class="p-2 border w-[400px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400">
+      <select id="alg-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400">
         <option value="">Select Algorithm</option>
       </select>
       <div class="delete-mode-container flex items-center gap-2">
@@ -99,34 +99,33 @@
     <div id="info" class="info hidden grid-cols-[auto_1fr] gap-4 my-4">
       <label for="deviceName" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Device Name:</label>
       <input id="deviceName" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
-      
+
       <label for="deviceMAC" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Device MAC:</label>
       <input id="deviceMAC" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
-      
+
       <label for="hardwareName" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Hardware Name:</label>
       <input id="hardwareName" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
-      
+
       <label for="hardwareVersion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Hardware Version:</label>
       <input id="hardwareVersion" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
-      
+
       <label for="softwareVersion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Software Version:</label>
       <input id="softwareVersion" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
-      
+
       <label for="productDate" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Product Date:</label>
       <input id="productDate" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
-      
+
       <label for="gyroSupported" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Gyro Supported:</label>
       <input id="gyroSupported" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
-      
+
       <label for="batteryLevel" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Battery:</label>
       <input id="batteryLevel" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
-      
+
       <label for="skew" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Clock Skew:</label>
       <input id="skew" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
-      
+
       <label for="quaternion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Quaternion:</label>
       <input id="quaternion" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
-      
       <label for="velocity" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Angular Velocity:</label>
       <input id="velocity" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
     </div>
@@ -186,7 +185,7 @@
 
       <div id="visualization-container">
         <label for="visualization-select" class="text-base text-gray-900 block mb-2 dark:text-white">Cube Visualization Mode:</label>
-        <select id="visualization-select" class="p-2 w-[150px] border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700">
+        <select id="visualization-select" class="p-2 w-[180px] border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700">
           <option value="PG3D">PG3D</option>
           <option value="2D">2D</option>
           <option value="3D">3D</option>
@@ -194,7 +193,7 @@
           <option value="experimental-2D-LL-face">2D-LL-face</option>
         </select>
         <label for="backview-select" class="text-base text-gray-900 block mb-2 dark:text-white">Cube Back View:</label>
-        <select id="backview-select" class="p-2 w-[150px] border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700">
+        <select id="backview-select" class="p-2 w-[180px] border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700">
           <option value="none">Disabled</option>
           <option value="side-by-side">Side-by-side</option>
           <option value="top-right">Top Right</option>
@@ -202,7 +201,7 @@
       </div>
     </div>
   </div>
-  <div class="footer min-w-[400px] text-xs block p-2 text-center leading-tight text-gray-600 dark:text-gray-400">
+  <div class="footer min-w-[360px] text-xs block p-2 text-center leading-tight text-gray-600 dark:text-gray-400">
     <p>Cubedex has been created with ♥ by <a href="https://twitter.com/pof" target="_blank" class="text-blue-500 hover:underline">Pau Oliva Fora</a> using <a href="https://github.com/afedotov/gan-web-bluetooth" target="_blank" class="text-blue-500 hover:underline">gan-web-bluetooth</a> and <a href="https://github.com/cubing/cubing.js" target="_blank" class="text-blue-500 hover:underline">cubing.js</a>.</p>
     <p>The <a href="https://github.com/poliva/cubedex" target="_blank" class="text-blue-500 hover:underline">source code</a> is available on GitHub, feel free to contribute by sending a PR.</p>
   </div>
