@@ -22,33 +22,33 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 
-<body class="bg-gray-100 text-gray-900 font-sans leading-relaxed sm:p-4 p-1 dark:bg-gray-900 dark:text-white">
-  <div id="app" class="max-w-4xl min-w-[360px] mx-auto bg-white shadow-lg rounded-lg dark:bg-gray-800 sm:p-8 p-4">
-    <div id="container" class="grid grid-cols-1 sm:grid-cols-3 items-start mb-3 gap-2">
-      <div id="times-display" class="col-span-1 text-center font-mono text-base text-gray-900 dark:text-white"></div>
-      <div id="cube" class="col-span-1 flex items-center justify-center min-w-[10em] min-h-[10em] sm:min-w-[15em] sm:min-h-[15em]"></div>
-      <div class="col-span-1 flex flex-col items-center sm:items-end">
-        <div id="timer" class="hidden text-right font-mono text-xl p-2 border border-gray-400 rounded-lg dark:border-gray-700 dark:text-white"></div>
+<body class="bg-gray-100 text-gray-900 font-sans leading-relaxed sm:p-4 p-1 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
+  <div id="app" class="max-w-4xl min-w-[360px] mx-auto bg-white shadow-lg rounded-lg dark:bg-gray-800 sm:p-8 p-4 text-sm sm:text-base">
+    <div id="container" class="grid grid-cols-1 sm:grid-cols-3 items-start mb-3 gap-2 text-sm sm:text-base">
+      <div id="times-display" class="col-span-1 text-center font-mono text-gray-900 dark:text-white text-xs sm:text-base"></div>
+      <div id="cube" class="col-span-1 flex items-center justify-center min-w-[10em] min-h-[10em] sm:min-w-[15em] sm:min-h-[15em] text-sm sm:text-base"></div>
+      <div class="col-span-1 flex flex-col items-center sm:items-end text-sm sm:text-base">
+        <div id="timer" class="hidden text-right font-mono p-2 border border-gray-400 rounded-lg dark:border-gray-700 dark:text-white text-sm sm:text-xl"></div>
       </div>
     </div>
 
-    <input id="alg-input" type="text" placeholder="Please connect the smartcube first" class="w-full text-lg p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700">
+    <input id="alg-input" type="text" placeholder="Please connect the smartcube first" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
 
-    <div id="alg-display" class="hidden text-xl font-bold tracking-wide text-gray-900 p-4 bg-white border border-gray-400 rounded-lg mb-4 dark:bg-gray-700 dark:text-white dark:border-gray-700"></div>
-    <div id="alg-fix" class="hidden text-base text-red-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-red-500 dark:border-red-400"></div>
+    <div id="alg-display" class="hidden font-bold tracking-wide text-gray-900 p-4 bg-white border border-gray-400 rounded-lg mb-4 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-xl"></div>
+    <div id="alg-fix" class="hidden text-red-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-red-500 dark:border-red-400 text-sm sm:text-base"></div>
 
-    <div class="controls flex flex-wrap gap-2 mb-6 justify-center">
-      <button id="train-alg" disabled class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed sm:py-2 sm:px-4 py-1 px-2 text-sm">Train</button>
-      <button id="load-alg" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm">Load Alg</button>
-      <button id="save-alg" disabled class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed sm:py-2 sm:px-4 py-1 px-2 text-sm">Save Alg</button>
-      <button id="input-alg" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm">Input Alg</button>
-      <button id="connect" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm">Connect</button>
-      <button id="show-options" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm">Show Options</button>
-      <button id="show-help" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm">Show Help</button>
+    <div class="controls flex flex-wrap gap-2 mb-6 justify-center text-sm sm:text-base">
+      <button id="train-alg" disabled class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed sm:py-2 sm:px-4 py-1 px-2 text-sm sm:text-base">Train</button>
+      <button id="load-alg" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm sm:text-base">Load Alg</button>
+      <button id="save-alg" disabled class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed sm:py-2 sm:px-4 py-1 px-2 text-sm sm:text-base">Save Alg</button>
+      <button id="input-alg" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm sm:text-base">Input Alg</button>
+      <button id="connect" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm sm:text-base">Connect</button>
+      <button id="show-options" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm sm:text-base">Show Options</button>
+      <button id="show-help" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm sm:text-base">Show Help</button>
     </div>
 
-    <div id="help" class="help hidden text-gray-600 text-sm mt-4 leading-snug dark:text-gray-400">
-      <div class="help-content block gap-2 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700">
+    <div id="help" class="help hidden text-gray-600 mt-4 leading-snug dark:text-gray-400 text-sm sm:text-base">
+      <div class="help-content block gap-2 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
         <p class="mb-3">To get started with Cubedex:</p>
         <ol class="list-disc list-inside mb-4">
           <li class="mb-1">Connect your smart cube by clicking the <strong>Connect</strong> button. For more details, refer to the <a href="https://gist.github.com/afedotov/52057533a8b27a0277598160c384ae71" target="_blank" class="text-blue-500 hover:underline">FAQ</a>.</li>
@@ -66,86 +66,85 @@
     </div>
 
     <!-- Hidden elements for saving and loading algorithms -->
-    <!-- <div id="save-container" class="hidden flex-col gap-4 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700"> -->
-    <div id="save-container" class="hidden flex-col gap-4 mt-4">
-      <input id="category-input" type="text" placeholder="Enter category" class="w-full text-lg p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700">
-      <input id="alg-name-input" type="text" placeholder="Enter algorithm name" class="w-full text-lg p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700">
-      <button id="confirm-save" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Confirm Save</button>
+    <div id="save-container" class="hidden flex-col gap-4 mt-4 text-sm sm:text-base">
+      <input id="category-input" type="text" placeholder="Enter category" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
+      <input id="alg-name-input" type="text" placeholder="Enter algorithm name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
+      <button id="confirm-save" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Confirm Save</button>
     </div>
 
-    <div id="load-container" class="hidden flex-col gap-4 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700">
-      <select id="category-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400">
+    <div id="load-container" class="hidden flex-col gap-4 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+      <select id="category-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400 text-sm sm:text-base">
         <option value="">Filter by Category</option>
       </select>
-      <select id="alg-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400">
+      <select id="alg-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400 text-sm sm:text-base">
         <option value="">Select Algorithm</option>
       </select>
-      <div class="delete-mode-container flex items-center gap-2">
+      <div class="delete-mode-container flex items-center gap-2 text-sm sm:text-base">
         <label for="delete-mode-toggle" class="relative inline-flex items-center cursor-pointer">
           <input type="checkbox" id="delete-mode-toggle" class="sr-only" />
           <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
           <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
         </label>
         <span class="ml-2 text-gray-900 dark:text-white">Delete Mode</span>
-        <button id="delete-alg" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">Delete Algorithm</button>
+        <button id="delete-alg" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Delete Algorithm</button>
       </div>
     </div>
 
     <!-- Hidden file input for importing algorithms -->
-    <input type="file" id="import-file" class="hidden">
+    <input type="file" id="import-file" class="hidden text-sm sm:text-base">
 
-    <div id="info" class="info hidden grid-cols-[auto_1fr] gap-4 my-4">
+    <div id="info" class="info hidden grid-cols-[auto_1fr] gap-4 my-4 text-sm sm:text-base">
       <label for="deviceName" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Device Name:</label>
-      <input id="deviceName" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <input id="deviceName" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
 
       <label for="deviceMAC" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Device MAC:</label>
-      <input id="deviceMAC" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <input id="deviceMAC" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
 
       <label for="hardwareName" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Hardware Name:</label>
-      <input id="hardwareName" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <input id="hardwareName" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
 
       <label for="hardwareVersion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Hardware Version:</label>
-      <input id="hardwareVersion" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <input id="hardwareVersion" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
 
       <label for="softwareVersion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Software Version:</label>
-      <input id="softwareVersion" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <input id="softwareVersion" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
 
       <label for="productDate" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Product Date:</label>
-      <input id="productDate" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <input id="productDate" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
 
       <label for="gyroSupported" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Gyro Supported:</label>
-      <input id="gyroSupported" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <input id="gyroSupported" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
 
       <label for="batteryLevel" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Battery:</label>
-      <input id="batteryLevel" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <input id="batteryLevel" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
 
       <label for="skew" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Clock Skew:</label>
-      <input id="skew" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <input id="skew" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
 
       <label for="quaternion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Quaternion:</label>
-      <input id="quaternion" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <input id="quaternion" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
       <label for="velocity" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Angular Velocity:</label>
-      <input id="velocity" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <input id="velocity" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
     </div>
 
-    <div id="options-container" class="hidden flex-col gap-2 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700">
+    <div id="options-container" class="hidden flex-col gap-2 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
       <div id="alg-options-container" class="mb-4">
         <p>Algorithms Options:</p>
         <div class="flex flex-wrap gap-2">
-          <button id="export-algs" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Export Algs</button>
-          <button id="import-algs" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Import Algs</button>
+          <button id="export-algs" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Export Algs</button>
+          <button id="import-algs" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Import Algs</button>
         </div>
       </div>
       <div id="device-options-container" class="mb-4">
         <p>Smartcube Options:</p>
         <div class="flex flex-wrap gap-2">
-          <button id="reset-state" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">Reset State</button>
-          <button id="reset-gyro" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">Reset Gyro</button>
-          <button id="device-info" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">Device Info</button>
+          <button id="reset-state" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Reset State</button>
+          <button id="reset-gyro" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Reset Gyro</button>
+          <button id="device-info" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Device Info</button>
         </div>
       </div>
 
-      <div class="flex items-center mb-4">
+      <div class="flex items-center mb-4 text-sm sm:text-base">
         <label for="dark-mode-toggle" class="relative inline-flex items-center cursor-pointer">
           <input type="checkbox" id="dark-mode-toggle" class="sr-only" />
           <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
@@ -154,7 +153,7 @@
         <span class="ml-2">Dark Mode</span>
       </div>
 
-      <div class="flex items-center mb-4">
+      <div class="flex items-center mb-4 text-sm sm:text-base">
         <label for="gyroscope-toggle" class="relative inline-flex items-center cursor-pointer">
           <input type="checkbox" id="gyroscope-toggle" class="sr-only" />
           <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
@@ -163,7 +162,7 @@
         <span class="ml-2">Animate Virtual Cube Orientation Using Gyroscope</span>
       </div>
 
-      <div class="flex items-center mb-4">
+      <div class="flex items-center mb-4 text-sm sm:text-base">
         <label for="control-panel-toggle" class="relative inline-flex items-center cursor-pointer">
           <input type="checkbox" id="control-panel-toggle" class="sr-only" />
           <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
@@ -172,7 +171,7 @@
         <span class="ml-2">Virtual Cube Control Panel</span>
       </div>
 
-      <div class="flex items-center mb-4">
+      <div class="flex items-center mb-4 text-sm sm:text-base">
         <label for="hintFacelets-toggle" class="relative inline-flex items-center cursor-pointer">
           <input type="checkbox" id="hintFacelets-toggle" class="sr-only" />
           <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
