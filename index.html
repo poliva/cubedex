@@ -22,158 +22,187 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 
-<body>
-
-  <div id="app">
-    <div id="container">
-      <div id="times-display"></div>
-      <div id="timer">0:00.000</div>
-      <div id="cube"></div>
+<body class="bg-gray-100 text-gray-900 font-sans leading-relaxed p-4 dark:bg-gray-900 dark:text-white">
+  <div id="app" class="max-w-4xl min-w-[400px] mx-auto p-8 bg-white shadow-lg rounded-lg dark:bg-gray-800">
+    <div id="container" class="grid grid-cols-1 sm:grid-cols-3 items-start mb-3 gap-2">
+      <div id="times-display" class="col-span-1 text-center font-mono text-base text-gray-900 dark:text-white"></div>
+      <div id="cube" class="col-span-1 flex items-center justify-center min-w-[15em] min-h-[15em]"></div>
+      <div class="col-span-1 flex flex-col items-center sm:items-end">
+        <div id="timer" class="hidden text-right font-mono text-xl p-2 border border-gray-400 rounded-lg dark:border-gray-700 dark:text-white"></div>
+      </div>
     </div>
 
-    <input id="alg-input" type="text" placeholder="Please connect the smartcube first">
-    <div id="alg-display"></div>
-    <div id="alg-fix"></div>
+    <input id="alg-input" type="text" placeholder="Please connect the smartcube first" class="w-full text-lg p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700">
 
-    <div class="controls">
-      <button id="train-alg" disabled>Train</button>
-      <button id="load-alg">Load Alg</button>
-      <button id="save-alg" disabled>Save Alg</button>
-      <button id="input-alg">Input Alg</button>
-      <button id="connect">Connect</button>
-      <button id="show-options">Show Options</button>
-      <button id="show-help">Show Help</button>
+    <div id="alg-display" class="hidden text-xl font-bold tracking-wide text-gray-900 p-4 bg-white border border-gray-400 rounded-lg mb-4 dark:bg-gray-700 dark:text-white dark:border-gray-700"></div>
+    <div id="alg-fix" class="hidden text-base text-red-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-red-500 dark:border-red-400"></div>
+
+    <div class="controls flex flex-wrap gap-2 mb-6 justify-center">
+      <button id="train-alg" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">Train</button>
+      <button id="load-alg" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Load Alg</button>
+      <button id="save-alg" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">Save Alg</button>
+      <button id="input-alg" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Input Alg</button>
+      <button id="connect" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Connect</button>
+      <button id="show-options" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Show Options</button>
+      <button id="show-help" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Show Help</button>
     </div>
 
-    <div class="help" id="help">
-      <div class="help-content">
-        <p>To get started with Cubedex:</p>
-        <ol>
-          <li>Connect your smart cube by clicking the <strong>Connect</strong> button. For more details, refer to the <a href="https://gist.github.com/afedotov/52057533a8b27a0277598160c384ae71" target="_blank">FAQ</a>.</li>
-          <li>Load an algorithm from the list or input your own in the input field using standard Rubik's cube notation. You can also input the algorithm by performing it on the cube.</li>
-          <li>Ensure the cube is oriented with <strong>WHITE on top</strong> and <strong>GREEN on front</strong>.</li>
-          <li>Click the <strong>Train</strong> button to start practicing the algorithm.</li>
+    <div id="help" class="help hidden text-gray-600 text-sm mt-4 leading-snug dark:text-gray-400">
+      <div class="help-content block gap-2 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700">
+        <p class="mb-3">To get started with Cubedex:</p>
+        <ol class="list-disc list-inside mb-4">
+          <li class="mb-1">Connect your smart cube by clicking the <strong>Connect</strong> button. For more details, refer to the <a href="https://gist.github.com/afedotov/52057533a8b27a0277598160c384ae71" target="_blank" class="text-blue-500 hover:underline">FAQ</a>.</li>
+          <li class="mb-1">Load an algorithm from the list or input your own in the input field using standard Rubik's cube notation. You can also input the algorithm by performing it on the cube.</li>
+          <li class="mb-1">Ensure the cube is oriented with <strong>WHITE on top</strong> and <strong>GREEN on front</strong>.</li>
+          <li class="mb-1">Click the <strong>Train</strong> button or turn the cube to start practicing the algorithm.</li>
         </ol>
-        <p>During training:</p>
-        <ul>
-          <li>The timer will start automatically when you begin the algorithm.</li>
-          <li>Upon successful completion, the timer will stop and your last 5 times along with their average will be displayed.</li>
-          <li>If you make a mistake, follow the moves shown in the <strong>Fix</strong> section to correct it. Ensure the top center is <strong>WHITE</strong> and the front center is <strong>GREEN</strong>.</li>
+        <p class="mb-3">During training:</p>
+        <ul class="list-disc list-inside mb-4">
+          <li class="mb-1">The timer will start automatically when you begin the algorithm.</li>
+          <li class="mb-1">Upon successful completion, the timer will stop and your last 5 times along with their average will be displayed.</li>
+          <li class="mb-1">If you make a mistake, follow the moves shown in the <strong>Fix</strong> section to correct it. Ensure the top center is <strong>WHITE</strong> and the front center is <strong>GREEN</strong>.</li>
         </ul>
       </div>
     </div>
 
     <!-- Hidden elements for saving and loading algorithms -->
-    <div id="save-container" style="display: none;">
-      <input id="category-input" type="text" placeholder="Enter category">
-      <input id="alg-name-input" type="text" placeholder="Enter algorithm name">
-      <button id="confirm-save">Confirm Save</button>
+    <!-- <div id="save-container" class="hidden flex-col gap-4 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700"> -->
+    <div id="save-container" class="hidden flex-col gap-4 mt-4">
+      <input id="category-input" type="text" placeholder="Enter category" class="w-full text-lg p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <input id="alg-name-input" type="text" placeholder="Enter algorithm name" class="w-full text-lg p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <button id="confirm-save" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Confirm Save</button>
     </div>
 
-    <div id="load-container" style="display: none;">
-      <select id="category-select">
+    <div id="load-container" class="hidden flex-col gap-4 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <select id="category-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400">
         <option value="">Select Category</option>
       </select>
-      <select id="alg-select">
+      <select id="alg-select" class="p-2 border w-[400px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400">
         <option value="">Select Algorithm</option>
       </select>
-      <div class="delete-mode-container">
-        <input type="checkbox" id="delete-mode-toggle">
-        <label for="delete-mode-toggle">Delete Mode</label>
-        <button id="delete-alg" disabled>Delete Algorithm</button>
+      <div class="delete-mode-container flex items-center gap-2">
+        <label for="delete-mode-toggle" class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="delete-mode-toggle" class="sr-only" />
+          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+        </label>
+        <span class="ml-2 text-gray-900 dark:text-white">Delete Mode</span>
+        <button id="delete-alg" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">Delete Algorithm</button>
       </div>
     </div>
 
     <!-- Hidden file input for importing algorithms -->
-    <input type="file" id="import-file" style="display: none;">
+    <input type="file" id="import-file" class="hidden">
 
-    <div class="info" id="info">
+    <div id="info" class="info hidden grid-cols-[auto_1fr] gap-4 my-4">
+      <label for="deviceName" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Device Name:</label>
+      <input id="deviceName" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
 
-      <label for="deviceName">Device Name</label>
-      <input id="deviceName" type="text" readonly value="- n/a -">
+      <label for="deviceMAC" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Device MAC:</label>
+      <input id="deviceMAC" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
 
-      <label for="deviceMAC">Device MAC</label>
-      <input id="deviceMAC" type="text" readonly value="- n/a -">
+      <label for="hardwareName" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Hardware Name:</label>
+      <input id="hardwareName" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
 
-      <label for="hardwareName">Hardware Name</label>
-      <input id="hardwareName" type="text" readonly value="- n/a -">
+      <label for="hardwareVersion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Hardware Version:</label>
+      <input id="hardwareVersion" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
 
-      <label for="hardwareVersion">Hardware Version</label>
-      <input id="hardwareVersion" type="text" readonly value="- n/a -">
+      <label for="softwareVersion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Software Version:</label>
+      <input id="softwareVersion" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
 
-      <label for="softwareVersion">Software Version</label>
-      <input id="softwareVersion" type="text" readonly value="- n/a -">
+      <label for="productDate" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Product Date:</label>
+      <input id="productDate" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
 
-      <label for="productDate">Product Date</label>
-      <input id="productDate" type="text" readonly value="- n/a -">
+      <label for="gyroSupported" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Gyro Supported:</label>
+      <input id="gyroSupported" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
 
-      <label for="gyroSupported">Gyro Supported</label>
-      <input id="gyroSupported" type="text" readonly value="- n/a -">
+      <label for="batteryLevel" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Battery:</label>
+      <input id="batteryLevel" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
 
-      <label for="batteryLevel">Battery</label>
-      <input id="batteryLevel" type="text" readonly value="- n/a -">
+      <label for="skew" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Clock Skew:</label>
+      <input id="skew" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
 
-      <label for="skew">Clock Skew</label>
-      <input id="skew" type="text" readonly value="- n/a -">
+      <label for="quaternion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Quaternion:</label>
+      <input id="quaternion" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
 
-      <label for="quaternion">Quaternion</label>
-      <input id="quaternion" type="text" readonly value="- n/a -">
-
-      <label for="velocity">Angular Velocity</label>
-      <input id="velocity" type="text" readonly value="- n/a -">
-
+      <label for="velocity" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Angular Velocity:</label>
+      <input id="velocity" type="text" readonly value="- n/a -" class="text-base font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700">
     </div>
 
-    <div id="options-container" class="controls">
-      <div id="alg-options-container">
-        <p>Algorithms options:
-          <button id="export-algs">Export Algs</button>
-          <button id="import-algs">Import Algs</button>
-        </p>
+    <div id="options-container" class="hidden flex-col gap-2 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700">
+      <div id="alg-options-container" class="mb-4">
+        <p>Algorithms Options:</p>
+        <div class="flex flex-wrap gap-2">
+          <button id="export-algs" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Export Algs</button>
+          <button id="import-algs" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700">Import Algs</button>
+        </div>
       </div>
-      <div id="device-options-container">
-        <p>Device options:
-          <button id="reset-state" disabled>Reset State</button>
-          <button id="reset-gyro" disabled>Reset Gyro</button>
-          <button id="device-info" disabled>Device Info</button>
-        </p>
+      <div id="device-options-container" class="mb-4">
+        <p>Smartcube Options:</p>
+        <div class="flex flex-wrap gap-2">
+          <button id="reset-state" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">Reset State</button>
+          <button id="reset-gyro" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">Reset Gyro</button>
+          <button id="device-info" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">Device Info</button>
+        </div>
       </div>
+
+      <div class="flex items-center mb-4">
+        <label for="dark-mode-toggle" class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="dark-mode-toggle" class="sr-only" />
+          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+        </label>
+        <span class="ml-2">Dark Mode</span>
+      </div>
+
+      <div class="flex items-center mb-4">
+        <label for="gyroscope-toggle" class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="gyroscope-toggle" class="sr-only" />
+          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+        </label>
+        <span class="ml-2">Animate Virtual Cube Orientation Using Gyroscope</span>
+      </div>
+
+      <div class="flex items-center mb-4">
+        <label for="control-panel-toggle" class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="control-panel-toggle" class="sr-only" />
+          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+        </label>
+        <span class="ml-2">Virtual Cube Control Panel</span>
+      </div>
+
+      <div class="flex items-center mb-4">
+        <label for="hintFacelets-toggle" class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="hintFacelets-toggle" class="sr-only" />
+          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+        </label>
+        <span class="ml-2">Floating Hint Facelets</span>
+      </div>
+
       <div id="visualization-container">
-        <label for="visualization-select">Cube visualization mode:</label>
-        <select id="visualization-select">
+        <label for="visualization-select" class="text-base text-gray-900 block mb-2 dark:text-white">Cube Visualization Mode:</label>
+        <select id="visualization-select" class="p-2 w-[150px] border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700">
           <option value="PG3D">PG3D</option>
           <option value="2D">2D</option>
           <option value="3D">3D</option>
           <option value="experimental-2D-LL">2D-LL</option>
           <option value="experimental-2D-LL-face">2D-LL-face</option>
         </select>
-        <label for="hintFacelets-select">Floating hint facelets:</label>
-        <select id="hintFacelets-select">
-          <option value="floating">Enabled</option>
-          <option value="none">Disabled</option>
-        </select>
-        <label for="backview-select">Back view:</label>
-        <select id="backview-select">
+        <label for="backview-select" class="text-base text-gray-900 block mb-2 dark:text-white">Cube Back View:</label>
+        <select id="backview-select" class="p-2 w-[150px] border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700">
           <option value="none">Disabled</option>
           <option value="side-by-side">Side-by-side</option>
           <option value="top-right">Top Right</option>
         </select>
-        <label for="gyroscope-select">Animate cube orientation using gyroscope:</label>
-        <select id="gyroscope-select">
-          <option value="enabled">Enabled</option>
-          <option value="disabled">Disabled</option>
-        </select>
-        <label for="control-panel-select">Virtual cube controls:</label>
-        <select id="control-panel-select">
-          <option value="none">Disabled</option>
-          <option value="bottom-row">Enabled</option>
-        </select>
       </div>
     </div>
   </div>
-  <div class="footer">
-    <p>Cubedex has been created with ♥ by <a href="https://twitter.com/pof" target="_blank">Pau Oliva Fora</a> using <a href="https://github.com/afedotov/gan-web-bluetooth" target="_blank">gan-web-bluetooth</a> and <a href="https://github.com/cubing/cubing.js" target="_blank">cubing.js</a>.</p>
-    <p>The <a href="https://github.com/poliva/cubedex" target="_blank">source code</a> is available on GitHub, feel free to contribute by sending a PR.</p>
+  <div class="footer min-w-[400px] text-xs block p-2 text-center leading-tight text-gray-600 dark:text-gray-400">
+    <p>Cubedex has been created with ♥ by <a href="https://twitter.com/pof" target="_blank" class="text-blue-500 hover:underline">Pau Oliva Fora</a> using <a href="https://github.com/afedotov/gan-web-bluetooth" target="_blank" class="text-blue-500 hover:underline">gan-web-bluetooth</a> and <a href="https://github.com/cubing/cubing.js" target="_blank" class="text-blue-500 hover:underline">cubing.js</a>.</p>
+    <p>The <a href="https://github.com/poliva/cubedex" target="_blank" class="text-blue-500 hover:underline">source code</a> is available on GitHub, feel free to contribute by sending a PR.</p>
   </div>
   <script type="module" src="/src/index.ts"></script>
 

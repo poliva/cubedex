@@ -68,9 +68,6 @@ var solutionMoves: GanCubeMove[] = [];
 var twistyScene: THREE.Scene;
 var twistyVantage: any;
 
-var gyroscopeEnabled: boolean = true;
-var forceFix: boolean = false;
-
 const HOME_ORIENTATION = new THREE.Quaternion().setFromEuler(new THREE.Euler(15 * Math.PI / 180, -20 * Math.PI / 180, 0));
 var cubeQuaternion: THREE.Quaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(30 * Math.PI / 180, -30 * Math.PI / 180, 0));
 
@@ -190,7 +187,7 @@ $('#input-alg').on('click', () => {
   lastFiveTimes = [];
   updateTimesDisplay();
   $('#alg-display').hide();
-  $('#times-display').hide();
+  $('#times-display').html('');
   $('#timer').hide();
   $('#alg-input').show();
   $('#alg-input').get(0)?.focus();
@@ -203,7 +200,6 @@ $('#train-alg').on('click', () => {
     userAlg = expandNotation(algInput).split(/\s+/); // Split the input string into moves
     $('#alg-display').text(userAlg.join(' ')); // Display the alg
     $('#alg-display').show();
-    $('#times-display').show();
     $('#timer').show();
     $('#alg-input').hide();
     hideMistakes();
@@ -302,8 +298,10 @@ function updateAlgDisplay() {
     }
   }
 
+  let parenthesisColor = darkModeToggle.checked ? 'white' : 'black';
+
   userAlg.forEach((move, index) => {
-    color = 'black'; // Default color
+    color = darkModeToggle.checked ? 'white' : 'black'; // Default color
 
     // Determine the color based on the move index
     if (index < currentMoveIndex) {
@@ -323,7 +321,7 @@ function updateAlgDisplay() {
         color = 'blue';
     }
 
-    if (previousColor === 'blue') color = 'black';
+    if (previousColor === 'blue') color = darkModeToggle.checked ? 'white' : 'black';
 
     // Build moveHtml excluding parentheses
     let circleHtml = '';
@@ -332,9 +330,9 @@ function updateAlgDisplay() {
 
     for (let char of move) {
       if (char === '(') {
-        preCircleHtml += `<span style="color: black;">${char}</span>`;
+        preCircleHtml += `<span style="color: ${parenthesisColor};">${char}</span>`;
       } else if (char === ')') {
-        postCircleHtml += `<span style="color: black;">${char}</span>`;
+        postCircleHtml += `<span style="color: ${parenthesisColor};">${char}</span>`;
       } else {
         circleHtml += `<span style="color: ${color};">${char}</span>`;
       }
@@ -600,7 +598,7 @@ function updateTimesDisplay() {
 
   const averageTime = lastFiveTimes.reduce((a, b) => a + b, 0) / lastFiveTimes.length;
   const avg = makeTimeFromTimestamp(averageTime);
-  const averageHtml = `<div class="average">Average: ${avg.minutes}:${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}</div>`;
+  const averageHtml = `<div class="average"><strong>Average: ${avg.minutes}:${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}</strong></div>`;
 
   timesDisplay.html(timesHtml + averageHtml);
 }
@@ -624,7 +622,8 @@ function setTimerState(state: typeof timerState) {
       break;
     case 'STOPPED':
       stopLocalTimer();
-      $('#timer').css('color', '#333');
+      let stoppedcolor = darkModeToggle.checked ? '#ccc' : '#333';
+      $('#timer').css('color', stoppedcolor);
       var fittedMoves = cubeTimestampLinearFit(solutionMoves);
       var lastMove = fittedMoves.slice(-1).pop();
       const finalTime = lastMove ? lastMove.cubeTimestamp! : 0;
@@ -1026,7 +1025,8 @@ function loadConfiguration() {
 
   const hintFacelets = localStorage.getItem('hintFacelets');
   if (hintFacelets) {
-    $('#hintFacelets-select').val(hintFacelets).trigger('change');
+    hintFaceletsToggle.checked = hintFacelets === 'floating';
+    twistyPlayer.hintFacelets = hintFacelets === 'floating' ? 'floating' : 'none';
   }
 
   const backview = localStorage.getItem('backview');
@@ -1036,15 +1036,44 @@ function loadConfiguration() {
 
   const gyroscopeValue = localStorage.getItem('gyroscope');
   if (gyroscopeValue) {
-    $('#gyroscope-select').val(gyroscopeValue).trigger('change');
+    gyroscopeToggle.checked = gyroscopeValue === 'enabled';
+    gyroscopeEnabled = gyroscopeValue === 'enabled';
   }
 
   const controlPanel = localStorage.getItem('control-panel');
   if (controlPanel) {
-    $('#control-panel-select').val(controlPanel).trigger('change');
+    controlPanelToggle.checked = controlPanel === 'bottom-row';
+    twistyPlayer.controlPanel = controlPanel === 'bottom-row' ? 'bottom-row' : 'none';
   }
 }
+
+// Add event listener for the gyroscope toggle
+var gyroscopeEnabled: boolean = true;
+const gyroscopeToggle = document.getElementById('gyroscope-toggle') as HTMLInputElement;
+gyroscopeToggle.addEventListener('change', () => {
+  gyroscopeEnabled = gyroscopeToggle.checked;
+  localStorage.setItem('gyroscope', gyroscopeEnabled ? 'enabled' : 'disabled');
+  requestAnimationFrame(amimateCubeOrientation);
+});
+
+// Add event listener for the control panel toggle
+const controlPanelToggle = document.getElementById('control-panel-toggle') as HTMLInputElement;
+controlPanelToggle.addEventListener('change', () => {
+  const controlPanelEnabled = controlPanelToggle.checked;
+  localStorage.setItem('control-panel', controlPanelEnabled ? 'bottom-row' : 'none');
+  twistyPlayer.controlPanel = controlPanelEnabled ? 'bottom-row' : 'none';
+});
+
+// Add event listener for the hint facelets toggle
+const hintFaceletsToggle = document.getElementById('hintFacelets-toggle') as HTMLInputElement;
+hintFaceletsToggle.addEventListener('change', () => {
+  const hintFaceletsEnabled = hintFaceletsToggle.checked;
+  localStorage.setItem('hintFacelets', hintFaceletsEnabled ? 'floating' : 'none');
+  twistyPlayer.hintFacelets = hintFaceletsEnabled ? 'floating' : 'none';
+});
+
 // Add event listeners for the selectors to update twistyPlayer settings
+var forceFix: boolean = false;
 $('#visualization-select').on('change', () => {
   const visualizationValue = $('#visualization-select').val() || 'PG3D';
   localStorage.setItem('visualization', visualizationValue as string);
@@ -1076,21 +1105,6 @@ $('#visualization-select').on('change', () => {
   }
 });
 
-$('#hintFacelets-select').on('change', () => {
-  const hintFaceletsValue = $('#hintFacelets-select').val();
-  localStorage.setItem('hintFacelets', hintFaceletsValue as string);
-  switch (hintFaceletsValue) {
-    case 'floating':
-      twistyPlayer.hintFacelets = 'floating';
-      break;
-    case 'none':
-      twistyPlayer.hintFacelets = 'none';
-      break;
-    default:
-      twistyPlayer.hintFacelets = 'none';
-  }
-});
-
 $('#backview-select').on('change', () => {
   const backviewValue = $('#backview-select').val();
   localStorage.setItem('backview', backviewValue as string);
@@ -1109,31 +1123,25 @@ $('#backview-select').on('change', () => {
   }
 });
 
-// Add event listener for Gyroscope selector
-$('#gyroscope-select').on('change', () => {
-  const gyroscopeValue = $('#gyroscope-select').val();
-  localStorage.setItem('gyroscope', gyroscopeValue as string);
-  if (gyroscopeValue === 'enabled') {
-    gyroscopeEnabled = true;
-    requestAnimationFrame(amimateCubeOrientation);
-  } else {
-    gyroscopeEnabled = false;
-    requestAnimationFrame(amimateCubeOrientation);
-  }
-});
+const darkModeToggle = document.getElementById('dark-mode-toggle') as HTMLInputElement;
 
-// Add event listener for Control Panel selector
-$('#control-panel-select').on('change', () => {
-  const controlPanelValue = $('#control-panel-select').val();
-  localStorage.setItem('control-panel', controlPanelValue as string);
-  switch (controlPanelValue) {
-    case 'none':
-      twistyPlayer.controlPanel = 'none';
-      break;
-    case 'bottom-row':
-      twistyPlayer.controlPanel = 'bottom-row';
-      break;
-    default:
-      twistyPlayer.controlPanel = 'none';
+// Check for saved user preference
+if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  document.documentElement.classList.add('dark');
+  darkModeToggle.checked = true; // Set checkbox to checked if dark mode is active
+} else {
+  document.documentElement.classList.remove('dark');
+  darkModeToggle.checked = false; // Set checkbox to unchecked if dark mode is not active
+}
+
+// Add event listener for the toggle checkbox
+darkModeToggle.addEventListener('change', () => {
+  document.documentElement.classList.toggle('dark', darkModeToggle.checked);
+  if (darkModeToggle.checked) {
+    localStorage.setItem('theme', 'dark');
+  } else {
+    localStorage.setItem('theme', 'light');
   }
+  // redraw input alg
+  updateAlgDisplay();
 });
