@@ -20,8 +20,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <script type="module" crossorigin src="/assets/index-S-3ZPFrO.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-DltaRRad.css">
+  <script type="module" crossorigin src="/assets/index-BhvmzuK9.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-_XdiZI_u.css">
 <link rel="manifest" href="/manifest.json"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
 <body class="bg-gray-100 text-gray-900 font-sans leading-relaxed sm:p-4 p-1 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
@@ -68,7 +68,6 @@
     </div>
 
     <!-- Hidden elements for saving and loading algorithms -->
-    <!-- <div id="save-container" class="hidden flex-col gap-4 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700"> -->
     <div id="save-container" class="hidden flex-col gap-4 mt-4 text-sm sm:text-base">
       <input id="category-input" type="text" placeholder="Enter category" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
       <input id="alg-name-input" type="text" placeholder="Enter algorithm name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
@@ -76,12 +75,31 @@
     </div>
 
     <div id="load-container" class="hidden flex-col gap-4 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+      <label for="category-select" class="text-base text-gray-900 block mb-2 dark:text-white">Category</label>
       <select id="category-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400 text-sm sm:text-base">
         <option value="">Filter by Category</option>
       </select>
-      <select id="alg-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400 text-sm sm:text-base">
-        <option value="">Select Algorithm</option>
-      </select>
+
+      <div class="flex items-center mb-4 text-sm sm:text-base">
+        <label for="select-all-toggle" class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="select-all-toggle" class="sr-only" />
+          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+        </label>
+        <span class="ml-2 text-gray-900 dark:text-white">Select All</span>
+      </div>
+
+      <div class="flex items-center mb-4 text-sm sm:text-base">
+        <label for="random-order-toggle" class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="random-order-toggle" class="sr-only" />
+          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+        </label>
+        <span class="ml-2 text-gray-900 dark:text-white">Random Order</span>
+      </div>
+
+      <div id="alg-cases" class="grid grid-cols-1 sm:grid-cols-3 p-2 sm:p-4 gap-2 sm:gap-4">
+      </div>
       <div class="delete-mode-container flex items-center gap-2 text-sm sm:text-base">
         <label for="delete-mode-toggle" class="relative inline-flex items-center cursor-pointer">
           <input type="checkbox" id="delete-mode-toggle" class="sr-only" />

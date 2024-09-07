@@ -152,7 +152,6 @@ function expandNotation(input: string): string {
 }
 
 function resetAlg() {
-  //console.log("RESET ALG");
   currentMoveIndex = -1; // Reset the move index
   badAlg = [];
   hideMistakes();
@@ -184,6 +183,7 @@ $('#input-alg').on('click', () => {
   } else {
     $('#alg-input').attr('placeholder', 'Please connect the smartcube first');
   }
+  checkedAlgorithms = [];
   lastFiveTimes = [];
   updateTimesDisplay();
   $('#alg-display').hide();
@@ -240,7 +240,11 @@ function fixOrientation(pattern: KPattern) {
 }
 
 function fetchNextPatterns() {
-  initialstate = patternStates.length === 0 ? myKpattern : patternStates[patternStates.length - 1];
+  if (keepInitialState) {
+    keepInitialState = false;
+  } else {
+    initialstate = patternStates.length === 0 ? myKpattern : patternStates[patternStates.length - 1];
+  }
   userAlg.forEach((move, index) => {
     move = move.replace(/[()]/g, "");
     if (index === 0) patternStates[index] = initialstate.applyMove(move);
@@ -361,6 +365,8 @@ function updateAlgDisplay() {
   if (currentMoveIndex === userAlg.length - 1) currentMoveIndex = -1;
 }
 
+let keepInitialState: boolean = false;
+
 async function handleMoveEvent(event: GanCubeEvent) {
   if (event.type === "MOVE") {
     if (timerState === "READY") {
@@ -406,7 +412,23 @@ async function handleMoveEvent(event: GanCubeEvent) {
           resetAlg();
           fetchNextPatterns();
           currentMoveIndex = userAlg.length - 1;
+          // switch to next algorithm
+          if (checkedAlgorithms.length > 1) {
+            let currentAlg = checkedAlgorithms[0];
+            checkedAlgorithms.shift();
+            // randomize checkedAlgorithms if random is enabled
+            if (randomAlgorithms) {
+              checkedAlgorithms = checkedAlgorithms.sort(() => Math.random() - 0.5);
+            }
+            checkedAlgorithms.push(currentAlg);
+            // this is the initial state for the new algorithm
+            initialstate = pattern;
+            keepInitialState = true;
+            $('#alg-input').val(checkedAlgorithms[0]);
+            $('#train-alg').trigger('click');
+          }
         }
+        return;
       }
     });
     if (!found) {
@@ -652,15 +674,6 @@ twistyTracker.experimentalModel.currentPattern.addFreshListener(async (kpattern)
     resetAlg();
     updateAlgDisplay();
   }
-  /*
-  var facelets = patternToFacelets(kpattern);
-  if (facelets == SOLVED_STATE) {
-    if (timerState == "RUNNING") {
-      setTimerState("STOPPED");
-    }
-    twistyTracker.alg = '';
-  }
-  */
 });
 
 function setTimerValue(timestamp: number) {
@@ -681,27 +694,6 @@ function stopLocalTimer() {
   localTimer = null;
 }
 
-/*
-function activateTimer() {
-  if (timerState == "IDLE" && conn) {
-    setTimerState("READY");
-  } else {
-    setTimerState("IDLE");
-  }
-}
-
-$(document).on('keydown', (event) => {
-  if (event.which == 32) {
-    event.preventDefault();
-    activateTimer();
-  }
-});
-
-$("#cube").on('touchstart', () => {
-  activateTimer();
-});
-*/
-
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (confirm('New version available. Refresh now?')) {
@@ -719,7 +711,7 @@ async function requestWakeLock() {
     if ('wakeLock' in navigator) {
       // Request a screen wake lock
       wakeLock = await navigator.wakeLock.request('screen');
-      console.log('Wake lock is active');
+      //console.log('Wake lock is active');
 
       // Add an event listener to detect visibility change
       document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -740,7 +732,7 @@ function releaseWakeLock() {
   if (wakeLock !== null) {
     wakeLock.release().then(() => {
       wakeLock = null;
-      console.log('Wake lock has been released');
+      //console.log('Wake lock has been released');
     });
   }
 }
@@ -783,32 +775,87 @@ function loadCategories() {
   const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
   const categorySelect = $('#category-select');
   categorySelect.empty();
-  categorySelect.append('<option value="">Filter by Category</option>');
   Object.keys(savedAlgs).forEach(category => {
     categorySelect.append(`<option value="${category}">${category}</option>`);
   });
+  // for the first category, load the algorithms
+  loadAlgorithms(Object.keys(savedAlgs)[0]);
 }
+
+var checkedAlgorithms: string[] = [];
+
+// Collect checked algorithms using event delegation
+$('#alg-cases').on('change', 'input[type="checkbox"]', function() {
+  const algorithm = $(this).data('algorithm');
+  if ((this as HTMLInputElement).checked) {
+    checkedAlgorithms.push(algorithm);
+  } else {
+    const index = checkedAlgorithms.indexOf(algorithm);
+    if (index > -1) {
+      checkedAlgorithms.splice(index, 1);
+    }
+  }
+  if (checkedAlgorithms.length > 0) {
+    $('#save-alg').prop('disabled', false);
+    if (conn) {
+      $('#train-alg').prop('disabled', false);
+    }
+    $('#alg-input').val(checkedAlgorithms[0]);
+    $('#train-alg').trigger('click');
+  }
+  console.log(checkedAlgorithms);
+});
 
 // Function to load algorithms based on selected category
 function loadAlgorithms(category?: string) {
   const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
-  const algSelect = $('#alg-select');
-  algSelect.empty();
-  algSelect.append('<option value="">Select Algorithm</option>');
+  const algCases = $('#alg-cases');
+  algCases.empty();
 
   if (category) {
     if (savedAlgs[category]) {
+      const validStickering = ['PLL', 'CLS', 'OLL', 'EOLL', 'COLL', 'OCLL', 'CPLL', 'CLL', 'EPLL', 'ELL', 'ELS', 'LL', 'F2L', 'ZBLL', 'ZBLS', 'VLS', 'WVLS', 'LS', 'LSOLL', 'LSOCLL', 'EO', 'EOline', 'EOcross', 'CMLL', 'L10P', 'L6E', 'L6EO', 'Daisy', 'Cross'];
+
+      let matchedStickering: string | undefined;
+      // Loop through validStickering to find a match
+      for (const item of validStickering) {
+        if (category.toLocaleLowerCase().includes(item.toLowerCase())) {
+          matchedStickering = item;
+          break;
+        }
+      }
+      // Set experimentalStickering if a match was found
+      if (matchedStickering) {
+        twistyPlayer.experimentalStickering = matchedStickering;
+      } else {
+        matchedStickering = 'full';
+        twistyPlayer.experimentalStickering = 'full';
+      }
+
+      let visualization = "3D";
+      if (category.toLowerCase().includes("ll")) visualization = "experimental-2D-LL";
+      let i = 0;
       savedAlgs[category].forEach((alg: { name: string, algorithm: string }) => {
-        algSelect.append(`<option value="${alg.algorithm}">${alg.name}</option>`);
+        alg.algorithm = expandNotation(alg.algorithm);
+        let gray = i % 2 == 0 ? "bg-gray-800" : "bg-gray-600";
+        algCases.append(`
+          <div class="case-wrapper rounded-lg shadow-md ${gray} dark:${gray} relative p-4">
+            <label for="case-toggle-${i}" class="cursor-pointer">
+            <span class="text-white text-sm">${alg.name}</span>
+            <div id="alg-case-${i}" class="flex items-center justify-center scale-50 -mx-20 -mt-10 -mb-10 relative z-10">
+              <twisty-player puzzle="3x3x3" visualization="${visualization}" experimental-stickering="${matchedStickering}" alg="${alg.algorithm}" experimental-setup-anchor="end" control-panel="none" hint-facelets="none" experimental-drag-input="none" background="none"></twisty-player>
+            </div>
+            <div class="flex mt-1 relative z-10">
+                <input type="checkbox" id="case-toggle-${i}" class="sr-only" data-algorithm="${alg.algorithm}" />
+                <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+                <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+            </div>
+            </label>
+          </div>
+        `);
+        i++;
       });
     }
-  } else {
-    // Show all algorithms if no category is selected
-    Object.keys(savedAlgs).forEach(cat => {
-      savedAlgs[cat].forEach((alg: { name: string, algorithm: string }) => {
-        algSelect.append(`<option value="${alg.algorithm}">[${cat}] ${alg.name}</option>`);
-      });
-    });
   }
 }
 
@@ -816,7 +863,7 @@ function loadAlgorithms(category?: string) {
 function deleteAlgorithm(category: string, algorithm: string) {
   const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
   if (savedAlgs[category]) {
-    savedAlgs[category] = savedAlgs[category].filter((alg: { name: string, algorithm: string }) => alg.algorithm !== algorithm);
+    savedAlgs[category] = savedAlgs[category].filter((alg: { name: string, algorithm: string }) => expandNotation(alg.algorithm) !== expandNotation(algorithm));
     if (savedAlgs[category].length === 0) {
       delete savedAlgs[category]; // Delete category if empty
     }
@@ -849,26 +896,23 @@ $('#delete-mode-toggle').on('change', () => {
 // Event listener for Delete button
 $('#delete-alg').on('click', () => {
   const category = $('#category-select').val()?.toString();
-  const algorithm = $('#alg-select').val()?.toString();
-  if (algorithm) {
-    if (confirm('Are you sure you want to delete this algorithm?')) {
-      if (category) {
-        deleteAlgorithm(category, algorithm);
-        loadAlgorithms(category); // Refresh the algorithm list
-        if ($('#alg-select').children().length === 1) { // If no algorithms left, refresh categories
-          loadCategories();
+  if (checkedAlgorithms.length > 0) {
+    if (confirm('Are you sure you want to delete the selected algorithms?')) {
+      for (const algorithm of checkedAlgorithms) {
+        if (algorithm && category) {
+          deleteAlgorithm(category, algorithm);
         }
-      } else {
-        // If no category is selected, search through all categories
-        const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
-        for (const cat in savedAlgs) {
-          if (savedAlgs[cat].some((alg: { algorithm: string }) => alg.algorithm === algorithm)) {
-            deleteAlgorithm(cat, algorithm);
-            break;
-          }
-        }
-        loadAlgorithms(); // Refresh the algorithm list
-        loadCategories(); // Refresh categories
+      }
+      loadAlgorithms(category); // Refresh the algorithm list
+      // make sure delete mode is off
+      const deleteModeToggle = $('#delete-mode-toggle');
+      deleteModeToggle.prop('checked', false);
+      deleteModeToggle.toggle();
+      $('#delete-alg').prop('disabled', true);
+      checkedAlgorithms = [];
+      // only re-load categories if alg-cases is empty
+      if ($('#alg-cases').children().length === 0) {
+        loadCategories();
       }
     }
   }
@@ -884,7 +928,6 @@ function importAlgorithms(file: File) {
         localStorage.setItem('savedAlgs', JSON.stringify(importedAlgs));
         alert('Algorithms imported successfully.');
         loadCategories();
-        loadAlgorithms();
       } catch (e) {
         alert('Failed to import algorithms. Please ensure the file is in the correct format.');
       }
@@ -908,8 +951,10 @@ $('#confirm-save').on('click', () => {
 
 // Event listener for Load button
 $('#load-alg').on('click', () => {
-  loadCategories();
-  loadAlgorithms(); // Load all algorithms initially
+  const categorySelect = $('#category-select');
+  if (categorySelect.val() === null || categorySelect.val() === '') {
+    loadCategories();
+  }
   $('#load-container').toggle();
   $('#save-container').hide();
   $('#options-container').hide();
@@ -935,48 +980,13 @@ $('#category-select').on('change', () => {
   const category = $('#category-select').val()?.toString();
   if (category) {
     loadAlgorithms(category);
-  } else {
-    loadAlgorithms(); // Load all algorithms if no category is selected
   }
-});
-
-// Event listener for Algorithm select change
-$('#alg-select').on('change', () => {
-  const algorithm = $('#alg-select').val()?.toString();
-  let category = $('#category-select').val()?.toString();
-  const validCategories = [
-    'PLL', 'CLS', 'OLL', 'EOLL', 'COLL', 'OCLL', 'CPLL', 'CLL', 'EPLL', 'ELL', 'ELS', 'LL', 'F2L', 'ZBLL', 'ZBLS', 'VLS', 'WVLS', 'LS', 'LSOLL', 'LSOCLL', 'EO', 'EOline', 'EOcross', 'CMLL', 'L10P', 'L6E', 'L6EO', 'Daisy', 'Cross'
-  ];
-
-  if (algorithm) {
-    $('#save-alg').prop('disabled', false);
-    if (conn) {
-      $('#train-alg').prop('disabled', false);
-    }
-    $('#alg-input').val(algorithm);
-    $('#train-alg').trigger('click');
-
-    if (!category) {
-      const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
-      for (const cat in savedAlgs) {
-        if (savedAlgs[cat].some((alg: { algorithm: string }) => alg.algorithm === algorithm)) {
-          category = cat;
-          break;
-        }
-      }
-    }
-
-    if (category === '2-Look PLL') {
-      category = 'PLL';
-    } else if (category === '2-Look OLL') {
-      category = 'OLL';
-    }
-    if (category && validCategories.includes(category)) {
-      twistyPlayer.experimentalStickering = category;
-    } else {
-      twistyPlayer.experimentalStickering = 'full';
-    }
-  }
+  // uncheck all checkboxes
+  checkedAlgorithms = [];
+  $('#select-all-toggle').prop('checked', false);
+  $('#random-order-toggle').prop('checked', false);
+  // reset cube alg
+  twistyPlayer.alg = '';
 });
 
 // Event listener for Export button
@@ -1134,7 +1144,7 @@ if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && w
   darkModeToggle.checked = false; // Set checkbox to unchecked if dark mode is not active
 }
 
-// Add event listener for the toggle checkbox
+// Add event listener for the dark mode toggle checkbox
 darkModeToggle.addEventListener('change', () => {
   document.documentElement.classList.toggle('dark', darkModeToggle.checked);
   if (darkModeToggle.checked) {
@@ -1144,4 +1154,25 @@ darkModeToggle.addEventListener('change', () => {
   }
   // redraw input alg
   updateAlgDisplay();
+});
+
+// Add event listener for the random order toggle
+let randomAlgorithms: boolean = false;
+const randomOrderToggle = document.getElementById('random-order-toggle') as HTMLInputElement;
+randomOrderToggle.addEventListener('change', () => {
+  if (randomOrderToggle.checked) {
+    randomAlgorithms = true;
+    checkedAlgorithms = checkedAlgorithms.sort(() => Math.random() - 0.5);
+    console.log(checkedAlgorithms);
+  } else {
+    randomAlgorithms = false;
+  }
+});
+
+// Add event listener for the select all toggle
+const selectAllToggle = document.getElementById('select-all-toggle') as HTMLInputElement;
+selectAllToggle.addEventListener('change', () => {
+  checkedAlgorithms = [];
+  const isChecked = selectAllToggle.checked;
+  $('#alg-cases input[type="checkbox"]').prop('checked', isChecked).trigger('change');
 });
