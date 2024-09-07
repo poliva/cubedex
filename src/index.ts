@@ -268,7 +268,7 @@ function showMistakesWithDelay(fixHtml: string) {
     clearTimeout(showMistakesTimeout);
     showMistakesTimeout = setTimeout(function() {
       $('#alg-fix').show();
-    }, 500);  // 0.5 second
+    }, 300);  // 0.3 second
   } else {
     hideMistakes();
   }
@@ -303,26 +303,37 @@ function updateAlgDisplay() {
   }
 
   let parenthesisColor = darkModeToggle.checked ? 'white' : 'black';
-
+  var isDoubleTurn = false;
   userAlg.forEach((move, index) => {
     color = darkModeToggle.checked ? 'white' : 'black'; // Default color
 
     // Determine the color based on the move index
-    if (index < currentMoveIndex) {
+    if (index <= currentMoveIndex) {
       color = 'green'; // Correct moves
-    } else if (index <= currentMoveIndex + simplifiedBadAlg.length) {
+    } else if (index < 1 + currentMoveIndex + simplifiedBadAlg.length) {
       color = 'red'; // Incorrect moves
     }
 
-    // Highlight the current move
-    if (index === currentMoveIndex) {
+    // Highlight the next move
+    if (index === currentMoveIndex + 1 && color !== 'red') {
       color = 'white';
     }
 
     // Don't mark double turns and slices as errors when they are not yet completed
     let cleanMove = move.replace(/[()']/g, "").trim();
-    if (index === currentMoveIndex + 1 && cleanMove.length > 1 && (simplifiedBadAlg.length === 1 || (simplifiedBadAlg.length === 2 && 'MES'.includes(cleanMove[0])))) {
-        color = 'blue';
+    if (index === currentMoveIndex + 1 && cleanMove.length > 1) {
+        const isSingleBadAlg = simplifiedBadAlg.length === 1;
+        const isDoubleBadAlg = simplifiedBadAlg.length === 2;
+        // when we have a U2 on an alg that contains slices or wide moves, the U turn is not really a U, but a different move depending on the orientation of the cube
+        // TODO: this is could be done better by checking the center state, but it works for now
+        const isSliceOrWideMove = /[MESudlrbfxyz]/.test(userAlg.slice(0, currentMoveIndex + 1).join(' '));
+
+        if ((isSingleBadAlg && simplifiedBadAlg[0][0] === cleanMove[0]) ||
+            (isDoubleBadAlg && 'MES'.includes(cleanMove[0])) ||
+            (isSingleBadAlg && isSliceOrWideMove)) {
+            color = 'blue';
+            isDoubleTurn = true;
+        }
     }
 
     if (previousColor === 'blue') color = darkModeToggle.checked ? 'white' : 'black';
@@ -343,7 +354,7 @@ function updateAlgDisplay() {
     }
 
     // Wrap non-parenthesis characters in circle class if it's the current move
-    if (index === currentMoveIndex) {
+    if (index === currentMoveIndex + 1) {
       displayHtml += `${preCircleHtml}<span class="circle">${circleHtml}</span>${postCircleHtml} `;
     } else {
       displayHtml += `${preCircleHtml}${circleHtml}${postCircleHtml} `;
@@ -354,7 +365,7 @@ function updateAlgDisplay() {
   // Update the display with the constructed HTML
   $('#alg-display').html(displayHtml);
 
-  if (color === 'blue') fixHtml = '';
+  if (isDoubleTurn) fixHtml = '';
   if (fixHtml.length > 0) {
     showMistakesWithDelay(fixHtml);
   } else {
@@ -362,7 +373,7 @@ function updateAlgDisplay() {
   }
 
   // stay green in last move when alg is finished
-  if (currentMoveIndex === userAlg.length - 1) currentMoveIndex = -1;
+  if (currentMoveIndex === userAlg.length - 1) currentMoveIndex = 0;
 }
 
 let keepInitialState: boolean = false;
@@ -497,8 +508,7 @@ async function handleFaceletsEvent(event: GanCubeEvent) {
 }
 
 function handleCubeEvent(event: GanCubeEvent) {
-  if (event.type != "GYRO")
-    console.log("GanCubeEvent", event);
+  //if (event.type != "GYRO") console.log("GanCubeEvent", event);
   if (event.type == "GYRO") {
     handleGyroEvent(event);
   } else if (event.type == "MOVE") {
