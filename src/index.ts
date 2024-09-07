@@ -940,14 +940,20 @@ function importAlgorithms(file: File) {
 $('#confirm-save').on('click', () => {
   const category = $('#category-input').val()?.toString().trim();
   const name = $('#alg-name-input').val()?.toString().trim();
-  const algorithm = $('#alg-input').val()?.toString().trim();
+  const algorithm = expandNotation($('#alg-input').val()?.toString().trim() || '');
   if (category && name && algorithm) {
     saveAlgorithm(category, name, algorithm);
-    $('#save-container').hide();
     $('#category-input').val('');
     $('#alg-name-input').val('');
+    $('#save-error').hide();
+    $('#save-success').text('Algorithm saved successfully');
+    $('#save-success').toggle();
     loadCategories();
     loadAlgorithms(category);
+  } else {
+    $('#save-success').hide();
+    $('#save-error').text('Please fill in all fields');
+    $('#save-error').toggle();
   }
 });
 
@@ -968,6 +974,8 @@ $('#load-alg').on('click', () => {
 
 // Event listener for Save button
 $('#save-alg').on('click', () => {
+  $('#save-success').hide();
+  $('#save-error').hide();
   $('#save-container').toggle();
   $('#load-container').hide();
   $('#options-container').hide();
