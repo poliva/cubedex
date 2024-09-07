@@ -184,6 +184,7 @@ $('#input-alg').on('click', () => {
     $('#alg-input').attr('placeholder', 'Please connect the smartcube first');
   }
   checkedAlgorithms = [];
+  checkedAlgorithmsCopy = [];
   lastFiveTimes = [];
   updateTimesDisplay();
   $('#alg-display').hide();
@@ -423,15 +424,22 @@ async function handleMoveEvent(event: GanCubeEvent) {
           resetAlg();
           fetchNextPatterns();
           currentMoveIndex = userAlg.length - 1;
-          // switch to next algorithm
-          if (checkedAlgorithms.length > 1) {
-            let currentAlg = checkedAlgorithms[0];
-            checkedAlgorithms.shift();
-            // randomize checkedAlgorithms if random is enabled
-            if (randomAlgorithms) {
-              checkedAlgorithms = checkedAlgorithms.sort(() => Math.random() - 0.5);
+
+          // Switch to next algorithm
+          if (checkedAlgorithms.length + checkedAlgorithmsCopy.length > 1) {
+            const currentAlg = checkedAlgorithms.shift(); // Remove the first algorithm
+            if (checkedAlgorithms.length === 0) {
+              checkedAlgorithms = [...checkedAlgorithmsCopy]; // Copy remaining algorithms
+              checkedAlgorithmsCopy = [];
             }
-            checkedAlgorithms.push(currentAlg);
+            // Randomize checkedAlgorithms if random is enabled
+            if (randomAlgorithms) {
+              checkedAlgorithms.sort(() => Math.random() - 0.5);
+            }
+            if (currentAlg) {
+              checkedAlgorithmsCopy.push(currentAlg); // Add current algorithm to the copy
+            }
+
             // this is the initial state for the new algorithm
             initialstate = pattern;
             keepInitialState = true;
@@ -793,6 +801,7 @@ function loadCategories() {
 }
 
 var checkedAlgorithms: string[] = [];
+var checkedAlgorithmsCopy: string[] = [];
 
 // Collect checked algorithms using event delegation
 $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
@@ -1180,13 +1189,7 @@ darkModeToggle.addEventListener('change', () => {
 let randomAlgorithms: boolean = false;
 const randomOrderToggle = document.getElementById('random-order-toggle') as HTMLInputElement;
 randomOrderToggle.addEventListener('change', () => {
-  if (randomOrderToggle.checked) {
-    randomAlgorithms = true;
-    checkedAlgorithms = checkedAlgorithms.sort(() => Math.random() - 0.5);
-    console.log(checkedAlgorithms);
-  } else {
-    randomAlgorithms = false;
-  }
+  randomAlgorithms = randomOrderToggle.checked;
 });
 
 // Add event listener for the select all toggle
