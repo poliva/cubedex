@@ -37,3 +37,13 @@ input:checked + div + .dot {
 .dot {
   transform: translateX(0); /* Initial position of the dot */
 }
+
+
+@keyframes flash {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 0; }
+}
+
+#flashing-indicator {
+  animation: flash 1s infinite;
+}
