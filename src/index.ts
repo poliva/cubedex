@@ -946,6 +946,8 @@ $('#confirm-save').on('click', () => {
     $('#save-container').hide();
     $('#category-input').val('');
     $('#alg-name-input').val('');
+    loadCategories();
+    loadAlgorithms(category);
   }
 });
 
