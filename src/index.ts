@@ -219,8 +219,7 @@ function showMistakesWithDelay(fixHtml: string) {
       $('#alg-fix').show();
       // Show the red flashing indicator if enabled and not already shown
       const flashingIndicator = document.getElementById('flashing-indicator');
-      const flashingIndicatorToggle = document.getElementById('flashing-indicator-toggle') as HTMLInputElement;
-      if (flashingIndicator && flashingIndicatorToggle.checked && !hasShownFlashingIndicator) {
+      if (flashingIndicator && flashingIndicatorEnabled && !hasShownFlashingIndicator) {
         flashingIndicator.style.backgroundColor = 'red';
         flashingIndicator.classList.remove('hidden');
         setTimeout(() => {
@@ -387,8 +386,7 @@ async function handleMoveEvent(event: GanCubeEvent) {
 
           // Show the flashing indicator
           const flashingIndicator = document.getElementById('flashing-indicator');
-          const flashingIndicatorToggle = document.getElementById('flashing-indicator-toggle') as HTMLInputElement;
-          if (flashingIndicator && flashingIndicatorToggle.checked) {
+          if (flashingIndicator && flashingIndicatorEnabled) {
             flashingIndicator.style.backgroundColor = 'green';
             flashingIndicator.classList.remove('hidden');
             setTimeout(() => {
@@ -572,7 +570,7 @@ function updateTimesDisplay() {
   const timesDisplay = $('#times-display');
 
   if (lastFiveTimes.length === 0) {
-    timesDisplay.html(`${currentAlgName}`);
+    timesDisplay.html(showAlgNameEnabled ? `${currentAlgName}` : '');
     practiceCount = 0;
     return;
   }
@@ -587,7 +585,11 @@ function updateTimesDisplay() {
   const avg = makeTimeFromTimestamp(averageTime);
   const averageHtml = `<div class="average"><strong>Average: ${avg.minutes}:${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}</strong></div>`;
 
-  timesDisplay.html(`${currentAlgName}<br>${timesHtml}${averageHtml}`);
+  if (showAlgNameEnabled) {
+    timesDisplay.html(`${currentAlgName}<br>${timesHtml}${averageHtml}`);
+  } else {
+    timesDisplay.html(`${timesHtml}${averageHtml}`);
+  }
 }
 
 function setTimerState(state: typeof timerState) {
@@ -844,6 +846,9 @@ function loadConfiguration() {
   if (hintFacelets) {
     hintFaceletsToggle.checked = hintFacelets === 'floating';
     twistyPlayer.hintFacelets = hintFacelets === 'floating' ? 'floating' : 'none';
+  } else {
+    hintFaceletsToggle.checked = false;
+    twistyPlayer.hintFacelets = 'none';
   }
 
   const backview = localStorage.getItem('backview');
@@ -855,13 +860,38 @@ function loadConfiguration() {
   if (gyroscopeValue) {
     gyroscopeToggle.checked = gyroscopeValue === 'enabled';
     gyroscopeEnabled = gyroscopeValue === 'enabled';
+  } else {
+    gyroscopeToggle.checked = true;
+    gyroscopeEnabled = true;
   }
 
   const controlPanel = localStorage.getItem('control-panel');
   if (controlPanel) {
     controlPanelToggle.checked = controlPanel === 'bottom-row';
     twistyPlayer.controlPanel = controlPanel === 'bottom-row' ? 'bottom-row' : 'none';
+  } else {
+    controlPanelToggle.checked = false;
+    twistyPlayer.controlPanel = 'none';
   }
+
+  const flashingIndicatorState = localStorage.getItem('flashingIndicatorEnabled');
+  if (flashingIndicatorState) {
+    flashingIndicatorToggle.checked = flashingIndicatorState === 'true';
+    flashingIndicatorEnabled = flashingIndicatorState === 'true';
+  } else {
+    flashingIndicatorToggle.checked = false;
+    flashingIndicatorEnabled = false;
+  }
+
+  const showAlgnameState = localStorage.getItem('showAlgName');
+  if (showAlgnameState) {
+    showAlgNameToggle.checked = showAlgnameState === 'true';
+    showAlgNameEnabled = showAlgnameState === 'true';
+  } else {
+    showAlgNameToggle.checked = true;
+    showAlgNameEnabled = true;
+  }
+
 }
 
 // Add event listener for the gyroscope toggle
@@ -876,19 +906,35 @@ gyroscopeToggle.addEventListener('change', () => {
 // Add event listener for the control panel toggle
 const controlPanelToggle = document.getElementById('control-panel-toggle') as HTMLInputElement;
 controlPanelToggle.addEventListener('change', () => {
-  const controlPanelEnabled = controlPanelToggle.checked;
-  localStorage.setItem('control-panel', controlPanelEnabled ? 'bottom-row' : 'none');
-  twistyPlayer.controlPanel = controlPanelEnabled ? 'bottom-row' : 'none';
+  localStorage.setItem('control-panel', controlPanelToggle.checked ? 'bottom-row' : 'none');
+  twistyPlayer.controlPanel = controlPanelToggle.checked ? 'bottom-row' : 'none';
 });
 
 // Add event listener for the hint facelets toggle
 const hintFaceletsToggle = document.getElementById('hintFacelets-toggle') as HTMLInputElement;
 hintFaceletsToggle.addEventListener('change', () => {
-  const hintFaceletsEnabled = hintFaceletsToggle.checked;
-  localStorage.setItem('hintFacelets', hintFaceletsEnabled ? 'floating' : 'none');
-  twistyPlayer.hintFacelets = hintFaceletsEnabled ? 'floating' : 'none';
+  localStorage.setItem('hintFacelets', hintFaceletsToggle.checked ? 'floating' : 'none');
+  twistyPlayer.hintFacelets = hintFaceletsToggle.checked ? 'floating' : 'none';
 });
 
+var flashingIndicatorEnabled: boolean = false;
+const flashingIndicatorToggle = document.getElementById('flashing-indicator-toggle') as HTMLInputElement;
+flashingIndicatorToggle.addEventListener('change', () => {
+  flashingIndicatorEnabled = flashingIndicatorToggle.checked;
+  localStorage.setItem('flashingIndicatorEnabled', flashingIndicatorToggle.checked.toString());
+});
+
+var showAlgNameEnabled: boolean = true;
+const showAlgNameToggle = document.getElementById('show-alg-name-toggle') as HTMLInputElement;
+showAlgNameToggle.addEventListener('change', () => {
+  showAlgNameEnabled = showAlgNameToggle.checked;
+  localStorage.setItem('showAlgName', showAlgNameToggle.checked.toString());
+  updateTimesDisplay(); // Update display immediately when toggled
+});
+
+
+// Call updateTimesDisplay initially to set the correct state
+updateTimesDisplay();
 // Add event listeners for the selectors to update twistyPlayer settings
 var forceFix: boolean = false;
 $('#visualization-select').on('change', () => {
@@ -974,21 +1020,5 @@ randomOrderToggle.addEventListener('change', () => {
 const selectAllToggle = document.getElementById('select-all-toggle') as HTMLInputElement;
 selectAllToggle.addEventListener('change', () => {
   checkedAlgorithms = [];
-  const isChecked = selectAllToggle.checked;
-  $('#alg-cases input[type="checkbox"]').prop('checked', isChecked).trigger('change');
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  const flashingIndicatorToggle = document.getElementById('flashing-indicator-toggle') as HTMLInputElement;
-  
-  // Load the state from localStorage
-  const flashingIndicatorState = localStorage.getItem('flashingIndicatorEnabled');
-  if (flashingIndicatorState !== null) {
-    flashingIndicatorToggle.checked = flashingIndicatorState === 'true';
-  }
-
-  // Save the state to localStorage on change
-  flashingIndicatorToggle.addEventListener('change', () => {
-    localStorage.setItem('flashingIndicatorEnabled', flashingIndicatorToggle.checked.toString());
-  });
+  $('#alg-cases input[type="checkbox"]').prop('checked', selectAllToggle.checked).trigger('change');
 });

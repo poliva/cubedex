@@ -236,11 +236,12 @@ export function loadAlgorithms(category?: string) {
       let i = 0;
       savedAlgs[category].forEach((alg: { name: string, algorithm: string }) => {
         alg.algorithm = expandNotation(alg.algorithm);
-        let gray = i % 2 == 0 ? "bg-gray-800" : "bg-gray-600";
+        let gray = i % 2 == 0 ? "bg-gray-400" : "bg-gray-50";
+        let grayDarkMode = i % 2 == 0 ? "bg-gray-800" : "bg-gray-600";
         algCases.append(`
-          <div class="case-wrapper rounded-lg shadow-md ${gray} dark:${gray} relative p-4">
+          <div class="case-wrapper rounded-lg shadow-md ${gray} dark:${grayDarkMode} relative p-4">
             <label for="case-toggle-${i}" class="cursor-pointer">
-            <span class="text-white text-sm">${alg.name}</span>
+            <span class="text-black dark:text-white text-sm">${alg.name}</span>
             <div id="alg-case-${i}" class="flex items-center justify-center scale-50 -mx-20 -mt-10 -mb-10 relative z-10">
               <twisty-player puzzle="3x3x3" visualization="${visualization}" experimental-stickering="${matchedStickering}" alg="${alg.algorithm}" experimental-setup-anchor="end" control-panel="none" hint-facelets="none" experimental-drag-input="none" background="none"></twisty-player>
             </div>
