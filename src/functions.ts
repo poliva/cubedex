@@ -245,7 +245,7 @@ export function loadAlgorithms(category?: string) {
               <twisty-player puzzle="3x3x3" visualization="${visualization}" experimental-stickering="${matchedStickering}" alg="${alg.algorithm}" experimental-setup-anchor="end" control-panel="none" hint-facelets="none" experimental-drag-input="none" background="none"></twisty-player>
             </div>
             <div class="flex mt-1 relative z-10">
-                <input type="checkbox" id="case-toggle-${i}" class="sr-only" data-algorithm="${alg.algorithm}" />
+                <input type="checkbox" id="case-toggle-${i}" class="sr-only" data-algorithm="${alg.algorithm}" data-name="${alg.name}" />
                 <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
                 <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
             </div>

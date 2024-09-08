@@ -161,6 +161,7 @@ $('#train-alg').on('click', () => {
   if (algInput) {
     inputMode = false;
     userAlg = expandNotation(algInput).split(/\s+/); // Split the input string into moves
+    currentAlgName = checkedAlgorithms[0]?.name || '';
     $('#alg-display').text(userAlg.join(' ')); // Display the alg
     $('#alg-display').show();
     $('#timer').show();
@@ -410,7 +411,7 @@ async function handleMoveEvent(event: GanCubeEvent) {
                 // this is the initial state for the new algorithm
                 initialstate = pattern;
                 keepInitialState = true;
-                $('#alg-input').val(checkedAlgorithms[0]);
+                $('#alg-input').val(checkedAlgorithms[0].algorithm);
                 $('#train-alg').trigger('click');
               }
             }, 200); // Hide after 0.2 seconds
@@ -569,8 +570,9 @@ let practiceCount = 0;
 
 function updateTimesDisplay() {
   const timesDisplay = $('#times-display');
+
   if (lastFiveTimes.length === 0) {
-    timesDisplay.html('');
+    timesDisplay.html(`${currentAlgName}`);
     practiceCount = 0;
     return;
   }
@@ -585,7 +587,7 @@ function updateTimesDisplay() {
   const avg = makeTimeFromTimestamp(averageTime);
   const averageHtml = `<div class="average"><strong>Average: ${avg.minutes}:${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}</strong></div>`;
 
-  timesDisplay.html(timesHtml + averageHtml);
+  timesDisplay.html(`${currentAlgName}<br>${timesHtml}${averageHtml}`);
 }
 
 function setTimerState(state: typeof timerState) {
@@ -668,16 +670,23 @@ if ('serviceWorker' in navigator) {
 // Call the function to initialize default algorithms
 initializeDefaultAlgorithms();
 
-var checkedAlgorithms: string[] = [];
-var checkedAlgorithmsCopy: string[] = [];
+interface Algorithm {
+  algorithm: string;
+  name: string;
+}
+
+let checkedAlgorithms: Algorithm[] = [];
+let checkedAlgorithmsCopy: Algorithm[] = [];
+let currentAlgName: string = '';
 
 // Collect checked algorithms using event delegation
 $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
   const algorithm = $(this).data('algorithm');
+  const name = $(this).data('name');
   if ((this as HTMLInputElement).checked) {
-    checkedAlgorithms.push(algorithm);
+    checkedAlgorithms.push({ algorithm, name });
   } else {
-    const index = checkedAlgorithms.indexOf(algorithm);
+    const index = checkedAlgorithms.findIndex(alg => alg.algorithm === algorithm && alg.name === name);
     if (index > -1) {
       checkedAlgorithms.splice(index, 1);
     }
@@ -687,12 +696,11 @@ $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
     if (conn) {
       $('#train-alg').prop('disabled', false);
     }
-    $('#alg-input').val(checkedAlgorithms[0]);
+    $('#alg-input').val(checkedAlgorithms[0].algorithm);
     $('#train-alg').trigger('click');
   }
   console.log(checkedAlgorithms);
 });
-
 
 // Event listener for Delete Mode toggle
 $('#delete-mode-toggle').on('change', () => {
@@ -707,7 +715,7 @@ $('#delete-alg').on('click', () => {
     if (confirm('Are you sure you want to delete the selected algorithms?')) {
       for (const algorithm of checkedAlgorithms) {
         if (algorithm && category) {
-          deleteAlgorithm(category, algorithm);
+          deleteAlgorithm(category, algorithm.algorithm);
         }
       }
       loadAlgorithms(category); // Refresh the algorithm list
