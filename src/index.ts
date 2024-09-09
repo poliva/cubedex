@@ -24,7 +24,7 @@ import {
 
 //import { faceletsToPattern, patternToFacelets } from './utils';
 import { faceletsToPattern } from './utils';
-import { expandNotation, fixOrientation, getInverseMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL } from './functions';
+import { expandNotation, fixOrientation, getInverseMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -257,6 +257,16 @@ function showMistakesWithDelay(fixHtml: string) {
           flashingIndicator.classList.add('hidden');
         }, 300); // Hide after 0.3 seconds
         hasShownFlashingIndicator = true; // Set the flag to true
+        // if the user fails the current alg, make the case appear more often
+        if (prioritizeFailedAlgs && !checkedAlgorithmsCopy.includes(checkedAlgorithms[0])) {
+          checkedAlgorithmsCopy.push(checkedAlgorithms[0]);
+        }
+        // mark the failed alg in red
+        console.log("Marking alg " + checkedAlgorithms[0].name + " in red: " + checkedAlgorithms[0].algorithm);
+        let algId = algToId(checkedAlgorithms[0].algorithm);
+        // defined in loadAlgorithms()
+        $('#' + algId).removeClass('bg-gray-50 bg-gray-400 dark:bg-gray-600 dark:bg-gray-800');
+        $('#' + algId).addClass('bg-red-500 dark:bg-red-500');
       }
     }, 300);  // 0.3 second
   } else {
@@ -841,6 +851,7 @@ $('#category-select').on('change', () => {
   $('#select-all-toggle').prop('checked', false);
   $('#random-order-toggle').prop('checked', false);
   $('#random-auf-toggle').prop('checked', false);
+  $('#prioritize-failed-toggle').prop('checked', false);
   // reset cube alg
   twistyPlayer.alg = '';
 });
@@ -1056,6 +1067,14 @@ darkModeToggle.addEventListener('change', () => {
   updateAlgDisplay();
 });
 
+// Add event listener for the select all toggle
+const selectAllToggle = document.getElementById('select-all-toggle') as HTMLInputElement;
+selectAllToggle.addEventListener('change', () => {
+  checkedAlgorithms = [];
+  checkedAlgorithmsCopy = [];
+  $('#alg-cases input[type="checkbox"]').prop('checked', selectAllToggle.checked).trigger('change');
+});
+
 // Add event listener for the random order toggle
 let randomAlgorithms: boolean = false;
 const randomOrderToggle = document.getElementById('random-order-toggle') as HTMLInputElement;
@@ -1070,10 +1089,9 @@ randomAUFToggle.addEventListener('change', () => {
   randomizeAUF = randomAUFToggle.checked;
 });
 
-// Add event listener for the select all toggle
-const selectAllToggle = document.getElementById('select-all-toggle') as HTMLInputElement;
-selectAllToggle.addEventListener('change', () => {
-  checkedAlgorithms = [];
-  checkedAlgorithmsCopy = [];
-  $('#alg-cases input[type="checkbox"]').prop('checked', selectAllToggle.checked).trigger('change');
+// Add event listener for the prioritize failed toggle
+let prioritizeFailedAlgs: boolean = false;
+const prioritizeFailedToggle = document.getElementById('prioritize-failed-toggle') as HTMLInputElement;
+prioritizeFailedToggle.addEventListener('change', () => {
+  prioritizeFailedAlgs = prioritizeFailedToggle.checked;
 });
