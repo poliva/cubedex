@@ -262,7 +262,6 @@ function showMistakesWithDelay(fixHtml: string) {
           checkedAlgorithmsCopy.push(checkedAlgorithms[0]);
         }
         // mark the failed alg in red
-        console.log("Marking alg " + checkedAlgorithms[0].name + " in red: " + checkedAlgorithms[0].algorithm);
         let algId = algToId(checkedAlgorithms[0].algorithm);
         // defined in loadAlgorithms()
         $('#' + algId).removeClass('bg-gray-50 bg-gray-400 dark:bg-gray-600 dark:bg-gray-800');
@@ -305,6 +304,7 @@ function updateAlgDisplay() {
 
   let parenthesisColor = darkModeToggle.checked ? 'white' : 'black';
   var isDoubleTurn = false;
+  var isAUF = false;
   userAlg.forEach((move, index) => {
     color = darkModeToggle.checked ? 'white' : 'black'; // Default color
 
@@ -320,8 +320,17 @@ function updateAlgDisplay() {
       color = 'white';
     }
 
-    // Don't mark double turns and slices as errors when they are not yet completed
     let cleanMove = move.replace(/[()']/g, "").trim();
+
+    // don't mark initial AUF as incorrect when randomAUF is enabled
+    if (index === 0 && currentMoveIndex === -1 && randomizeAUF){
+      if (simplifiedBadAlg.length === 1 && simplifiedBadAlg[0][0] === 'U' && cleanMove.length > 0 && cleanMove[0].charAt(0) === 'U') {
+        color = 'blue';
+        isAUF = true;
+      }
+    }
+
+    // Don't mark double turns and slices as errors when they are not yet completed
     if (index === currentMoveIndex + 1 && cleanMove.length > 1) {
         const isSingleBadAlg = simplifiedBadAlg.length === 1;
         const isDoubleBadAlg = simplifiedBadAlg.length === 2;
@@ -366,7 +375,7 @@ function updateAlgDisplay() {
   // Update the display with the constructed HTML
   $('#alg-display').html(displayHtml);
 
-  if (isDoubleTurn) fixHtml = '';
+  if (isDoubleTurn || isAUF) fixHtml = '';
   if (fixHtml.length > 0) {
     showMistakesWithDelay(fixHtml);
   } else {
@@ -742,7 +751,7 @@ $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
     $('#alg-input').val(checkedAlgorithms[0].algorithm);
     $('#train-alg').trigger('click');
   }
-  console.log(checkedAlgorithms);
+  //console.log(checkedAlgorithms);
 });
 
 // Event listener for Delete Mode toggle
