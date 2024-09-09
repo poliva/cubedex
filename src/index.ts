@@ -24,7 +24,7 @@ import {
 
 //import { faceletsToPattern, patternToFacelets } from './utils';
 import { faceletsToPattern } from './utils';
-import { expandNotation, fixOrientation, getInverseMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories } from './functions';
+import { expandNotation, fixOrientation, getInverseMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -188,6 +188,7 @@ $('#train-alg').on('click', () => {
 });
 
 function fetchNextPatterns() {
+  drawAlgInCube();
   if (keepInitialState) {
     keepInitialState = false;
   } else {
@@ -201,10 +202,40 @@ function fetchNextPatterns() {
     patternStates[index]=fixOrientation(patternStates[index]);
     //console.log("patternStates[" + index + "]=" + JSON.stringify(patternStates[index].patternData));
   });
-  drawAlgInCube();
 }
 
 function drawAlgInCube() {
+  if (randomizeAUF) {
+    let AUF = ["U", "U'", "U2", ""];
+    let randomAUF = AUF[Math.floor(Math.random() * AUF.length)];
+    if (randomAUF.length > 0) {
+      // check if we can add randomAUF to the beginning of the alg, as there are some tricky cases like Na, Nb, E, OLL-21, OLL-57, etc..
+      // Eg: Na + U' == U + Na but Sune + U' != U + Sune
+      let kpattern = faceletsToPattern(SOLVED_STATE);
+
+      let algWithStartU = Alg.fromString("U " + userAlg.join(' '));
+      let resultWithStartU = kpattern.applyAlg(algWithStartU);
+
+      let algWithEndU = Alg.fromString(userAlg.join(' ') + " U'");
+      let resultWithEndU = kpattern.applyAlg(algWithEndU);
+
+      let algWithStartU2 = Alg.fromString("U2 " + userAlg.join(' '));
+      let resultWithStartU2 = kpattern.applyAlg(algWithStartU2);
+
+      let algWithEndU2 = Alg.fromString(userAlg.join(' ') + " U2'");
+      let resultWithEndU2 = kpattern.applyAlg(algWithEndU2);
+
+      let category = $('#category-select').val()?.toString().toLowerCase();
+      let isOLL = category?.includes("oll");
+      let areNotIdentical = !resultWithStartU.isIdentical(resultWithEndU) && !resultWithStartU2.isIdentical(resultWithEndU2);
+
+      if ((areNotIdentical && !isOLL) || isOLL && !isSymmetricOLL(userAlg.join(' '))) {
+        userAlg.unshift(randomAUF); // add randomAUF to the beginning of the alg
+        userAlg = Alg.fromString(userAlg.join(' ')).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString().split(/\s+/); // simplify alg by cancelling possible U moves at the beginning
+        $('#alg-display').text(userAlg.join(' '));
+      }
+    }
+  }
   twistyPlayer.alg = Alg.fromString(userAlg.join(' ')).invert().toString();
 }
 
@@ -727,10 +758,16 @@ $('#delete-alg').on('click', () => {
       deleteModeToggle.toggle();
       $('#delete-alg').prop('disabled', true);
       checkedAlgorithms = [];
+      checkedAlgorithmsCopy = [];
       // only re-load categories if alg-cases is empty
       if ($('#alg-cases').children().length === 0) {
         loadCategories();
       }
+      $('#delete-success').text('Algorithms deleted successfully');
+      $('#delete-success').show();
+      setTimeout(() => {
+        $('#delete-success').fadeOut();
+      }, 3000); // Disappears after 3 seconds
     }
   }
 });
@@ -740,19 +777,27 @@ $('#confirm-save').on('click', () => {
   const category = $('#category-input').val()?.toString().trim();
   const name = $('#alg-name-input').val()?.toString().trim();
   const algorithm = expandNotation($('#alg-input').val()?.toString().trim() || '');
-  if (category && name && algorithm) {
+  if (category && name && algorithm.length > 0) {
     saveAlgorithm(category, name, algorithm);
     $('#category-input').val('');
     $('#alg-name-input').val('');
     $('#save-error').hide();
     $('#save-success').text('Algorithm saved successfully');
-    $('#save-success').toggle();
+    $('#save-success').show();
+    setTimeout(() => {
+      $('#save-success').fadeOut();
+    }, 3000); // Disappears after 3 seconds
     loadCategories();
     loadAlgorithms(category);
+    // select the new category
+    $('#category-select').val(category).trigger('change');
   } else {
     $('#save-success').hide();
     $('#save-error').text('Please fill in all fields');
-    $('#save-error').toggle();
+    $('#save-error').show();
+    setTimeout(() => {
+      $('#save-error').fadeOut();
+    }, 3000); // Disappears after 3 seconds
   }
 });
 
@@ -792,8 +837,10 @@ $('#category-select').on('change', () => {
   }
   // uncheck all checkboxes
   checkedAlgorithms = [];
+  checkedAlgorithmsCopy = [];
   $('#select-all-toggle').prop('checked', false);
   $('#random-order-toggle').prop('checked', false);
+  $('#random-auf-toggle').prop('checked', false);
   // reset cube alg
   twistyPlayer.alg = '';
 });
@@ -1016,9 +1063,17 @@ randomOrderToggle.addEventListener('change', () => {
   randomAlgorithms = randomOrderToggle.checked;
 });
 
+// Add event listener for the random AUF toggle
+let randomizeAUF: boolean = false;
+const randomAUFToggle = document.getElementById('random-auf-toggle') as HTMLInputElement;
+randomAUFToggle.addEventListener('change', () => {
+  randomizeAUF = randomAUFToggle.checked;
+});
+
 // Add event listener for the select all toggle
 const selectAllToggle = document.getElementById('select-all-toggle') as HTMLInputElement;
 selectAllToggle.addEventListener('change', () => {
   checkedAlgorithms = [];
+  checkedAlgorithmsCopy = [];
   $('#alg-cases input[type="checkbox"]').prop('checked', selectAllToggle.checked).trigger('change');
 });

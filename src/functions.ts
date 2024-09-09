@@ -1,5 +1,7 @@
 import { KPattern } from 'cubing/kpuzzle';
 import $ from 'jquery';
+import { Alg } from "cubing/alg";
+import { faceletsToPattern } from "./utils";
 
 export function expandNotation(input: string): string {
   // Replace characters
@@ -257,4 +259,35 @@ export function loadAlgorithms(category?: string) {
       });
     }
   }
+}
+
+function arraysEqual(arr1: number[], arr2: number[]): boolean {
+  if (arr1.length !== arr2.length) return false;
+  for (let i = 0; i < arr1.length; i++) {
+    if (arr1[i] !== arr2[i]) return false;
+  }
+  return true;
+}
+
+export function isSymmetricOLL(alg: string): boolean {
+  const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
+  let pattern = faceletsToPattern(SOLVED_STATE);
+
+  let algWithStartU = Alg.fromString("U " + alg);
+  let algWithStartUp = Alg.fromString("U' " + alg);
+  let algWithStartU2 = Alg.fromString("U2 " + alg);
+  const algs = [algWithStartU, algWithStartUp, algWithStartU2];
+
+  let scramble = pattern.applyAlg(Alg.fromString(alg).invert());
+  // Loop over the algorithms
+  for (const item of algs) {
+    const edgesOriented = arraysEqual(scramble.applyAlg(item).patternData.EDGES.orientation, [0,0,0,0,0,0,0,0,0,0,0,0]);
+    const cornersOriented = arraysEqual(scramble.applyAlg(item).patternData.CORNERS.orientation, [0,0,0,0,0,0,0,0]);
+    const centersOriented = arraysEqual(scramble.applyAlg(item).patternData.CENTERS.orientation, [0,0,0,0,0,0]);
+    if (edgesOriented && cornersOriented && centersOriented) {
+      //console.log("alg " + alg + " IS ORIENTED!!!! -> "+ JSON.stringify(scramble.applyAlg(item).patternData));
+      return true;
+    }
+  }
+  return false;
 }
