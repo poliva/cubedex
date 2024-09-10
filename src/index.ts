@@ -149,7 +149,7 @@ $('#input-alg').on('click', () => {
   checkedAlgorithmsCopy = [];
   lastFiveTimes = [];
   updateTimesDisplay();
-  $('#alg-display').hide();
+  $('#alg-display-container').hide();
   $('#times-display').html('');
   $('#timer').hide();
   $('#alg-input').show();
@@ -163,7 +163,7 @@ $('#train-alg').on('click', () => {
     userAlg = expandNotation(algInput).split(/\s+/); // Split the input string into moves
     currentAlgName = checkedAlgorithms[0]?.name || '';
     $('#alg-display').text(userAlg.join(' ')); // Display the alg
-    $('#alg-display').show();
+    $('#alg-display-container').show();
     $('#timer').show();
     $('#alg-input').hide();
     hideMistakes();
@@ -185,6 +185,9 @@ $('#train-alg').on('click', () => {
     $('#alg-input').get(0)?.focus();
   }
   resetAlg();
+  if ($('#alg-display').text() !== '') {
+    updateAlgDisplay();
+  }
 });
 
 function fetchNextPatterns() {
@@ -258,14 +261,18 @@ function showMistakesWithDelay(fixHtml: string) {
         }, 300); // Hide after 0.3 seconds
         hasShownFlashingIndicator = true; // Set the flag to true
         // if the user fails the current alg, make the case appear more often
-        if (prioritizeFailedAlgs && !checkedAlgorithmsCopy.includes(checkedAlgorithms[0])) {
-          checkedAlgorithmsCopy.push(checkedAlgorithms[0]);
+        if (checkedAlgorithms.length > 0) {
+          if (prioritizeFailedAlgs && !checkedAlgorithmsCopy.includes(checkedAlgorithms[0])) {
+            checkedAlgorithmsCopy.push(checkedAlgorithms[0]);
+          }
+          // mark the failed alg in red
+          if (checkedAlgorithms[0].algorithm) {
+            let algId = algToId(checkedAlgorithms[0].algorithm);
+            // defined in loadAlgorithms()
+            $('#' + algId).removeClass('bg-gray-50 bg-gray-400 dark:bg-gray-600 dark:bg-gray-800');
+            $('#' + algId).addClass('bg-red-500 dark:bg-red-500');
+          }
         }
-        // mark the failed alg in red
-        let algId = algToId(checkedAlgorithms[0].algorithm);
-        // defined in loadAlgorithms()
-        $('#' + algId).removeClass('bg-gray-50 bg-gray-400 dark:bg-gray-600 dark:bg-gray-800');
-        $('#' + algId).addClass('bg-red-500 dark:bg-red-500');
       }
     }, 300);  // 0.3 second
   } else {
@@ -359,7 +366,7 @@ function updateAlgDisplay() {
       } else if (char === ')') {
         postCircleHtml += `<span style="color: ${parenthesisColor};">${char}</span>`;
       } else {
-        circleHtml += `<span style="color: ${color};">${char}</span>`;
+        circleHtml += `<span class="move" style="color: ${color}; -webkit-text-security: ${isMoveMasked ? 'disc' : 'none'};">${char}</span>`;
       }
     }
 
@@ -1104,3 +1111,19 @@ const prioritizeFailedToggle = document.getElementById('prioritize-failed-toggle
 prioritizeFailedToggle.addEventListener('change', () => {
   prioritizeFailedAlgs = prioritizeFailedToggle.checked;
 });
+
+$('#toggle-move-mask').on('click', (event) => {
+  event.preventDefault();
+  toggleMoveMask();
+});
+
+let isMoveMasked: boolean = false;
+function toggleMoveMask() {
+  isMoveMasked = !isMoveMasked; // Toggle the state
+  $('.move').each(function() {
+      $(this).css('-webkit-text-security', isMoveMasked ? 'disc' : 'none');
+  });
+  // change color of toggle-move-mask button
+  $('#toggle-move-mask').toggleClass('bg-orange-500 hover:bg-orange-700', isMoveMasked).toggleClass('bg-blue-500 hover:bg-blue-700', !isMoveMasked);
+  $('#toggle-move-mask').text(isMoveMasked ? '👁 Unmask alg' : '👁 Mask alg');
+}

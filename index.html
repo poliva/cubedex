@@ -35,7 +35,13 @@
 
     <input id="alg-input" type="text" placeholder="Please connect the smartcube first" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
 
-    <div id="alg-display" class="hidden font-bold tracking-wide text-gray-900 p-4 bg-white border border-gray-400 rounded-lg mb-4 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-xl"></div>
+    <div id="alg-display-container" class="hidden justify-end relative">
+      <div class="flex justify-end">
+        <a href="#" id="toggle-move-mask" class="text-white bg-blue-500 hover:bg-blue-700 py-0 px-2 rounded-lg text-sm absolute top-0 right-0">👁 Mask alg</a>
+      </div>
+      <div id="alg-display" class="font-bold tracking-wide text-gray-900 p-4 bg-white border border-gray-400 rounded-lg mb-4 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-xl"></div>
+    </div>
+
     <div id="alg-fix" class="hidden text-red-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-red-500 dark:border-red-400 text-sm sm:text-base"></div>
 
     <div class="controls flex flex-wrap gap-2 mb-6 justify-center text-sm sm:text-base">
