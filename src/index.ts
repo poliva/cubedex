@@ -107,6 +107,7 @@ async function handleGyroEvent(event: GanCubeEvent) {
 
 // Define the type of userAlg explicitly as an array of strings
 var userAlg: string[] = [];
+var OriginalUserAlg: string[] = [];
 var badAlg: string[] = [];
 var patternStates: KPattern[] = [];
 var algPatternStates: KPattern[] = [];
@@ -147,7 +148,6 @@ $('#input-alg').on('click', () => {
   }
   checkedAlgorithms = [];
   checkedAlgorithmsCopy = [];
-  lastFiveTimes = [];
   updateTimesDisplay();
   $('#alg-display-container').hide();
   $('#times-display').html('');
@@ -168,12 +168,11 @@ $('#train-alg').on('click', () => {
     $('#alg-input').hide();
     hideMistakes();
     requestWakeLock();
+    hasFailedAlg = false;
     patternStates = [];
     algPatternStates = [];
     fetchNextPatterns();
-    setTimerState("STOPPED");
     setTimerState("READY");
-    lastFiveTimes = [];
     updateTimesDisplay();
   } else {
     $('#alg-input').show();
@@ -208,6 +207,7 @@ function fetchNextPatterns() {
 }
 
 function drawAlgInCube() {
+  OriginalUserAlg = [...userAlg];
   if (randomizeAUF) {
     let AUF = ["U", "U'", "U2", ""];
     let randomAUF = AUF[Math.floor(Math.random() * AUF.length)];
@@ -244,6 +244,7 @@ function drawAlgInCube() {
 
 var showMistakesTimeout: number;
 let hasShownFlashingIndicator = false;
+let hasFailedAlg = false;
 
 function showMistakesWithDelay(fixHtml: string) {
   if (fixHtml.length > 0) {
@@ -260,17 +261,25 @@ function showMistakesWithDelay(fixHtml: string) {
           flashingIndicator.classList.add('hidden');
         }, 300); // Hide after 0.3 seconds
         hasShownFlashingIndicator = true; // Set the flag to true
-        // if the user fails the current alg, make the case appear more often
-        if (checkedAlgorithms.length > 0) {
-          if (prioritizeFailedAlgs && !checkedAlgorithmsCopy.includes(checkedAlgorithms[0])) {
-            checkedAlgorithmsCopy.push(checkedAlgorithms[0]);
-          }
-          // mark the failed alg in red
-          if (checkedAlgorithms[0].algorithm) {
-            let algId = algToId(checkedAlgorithms[0].algorithm);
+      }
+      // if the user fails the current alg, make the case appear more often
+      if (checkedAlgorithms.length > 0) {
+        if (prioritizeFailedAlgs && !checkedAlgorithmsCopy.includes(checkedAlgorithms[0])) {
+          checkedAlgorithmsCopy.push(checkedAlgorithms[0]);
+          //console.log("+++ Pushing failed alg " + checkedAlgorithms[0].name + " to checkedAlgorithmsCopy: " + JSON.stringify(checkedAlgorithmsCopy));
+        }
+        // mark the failed alg in red
+        if (checkedAlgorithms[0].algorithm) {
+          let algId = algToId(checkedAlgorithms[0].algorithm);
+          if (algId && !hasFailedAlg) {
             // defined in loadAlgorithms()
             $('#' + algId).removeClass('bg-gray-50 bg-gray-400 dark:bg-gray-600 dark:bg-gray-800');
-            $('#' + algId).addClass('bg-red-500 dark:bg-red-500');
+            $('#' + algId).addClass('bg-red-400 dark:bg-red-400');
+            // Increase the data-failed count
+            let failedCount = parseInt($('#' + algId).data('failed')) || 0;
+            //console.log("+++ failedCount for " + algId + " is " + failedCount + " at currentMoveIndex: " + currentMoveIndex);
+            $('#' + algId).data('failed', failedCount + 1);
+            hasFailedAlg = true;
           }
         }
       }
@@ -289,7 +298,6 @@ function hideMistakes() {
 }
 
 function updateAlgDisplay() {
-
   let displayHtml = '';
   let color = '';
   let previousColor = '';
@@ -389,7 +397,7 @@ function updateAlgDisplay() {
     hideMistakes();
   }
 
-  // stay green in last move when alg is finished
+  // set the index to 0 when the alg is finished, displays the circle on the first move
   if (currentMoveIndex === userAlg.length - 1) currentMoveIndex = 0;
 }
 
@@ -448,28 +456,29 @@ async function handleMoveEvent(event: GanCubeEvent) {
             flashingIndicator.classList.remove('hidden');
             setTimeout(() => {
               flashingIndicator.classList.add('hidden');
-              // Switch to next algorithm
-              if (checkedAlgorithms.length + checkedAlgorithmsCopy.length > 1) {
-                const currentAlg = checkedAlgorithms.shift(); // Remove the first algorithm
-                if (checkedAlgorithms.length === 0) {
-                  checkedAlgorithms = [...checkedAlgorithmsCopy]; // Copy remaining algorithms
-                  checkedAlgorithmsCopy = [];
-                }
-                // Randomize checkedAlgorithms if random is enabled
-                if (randomAlgorithms) {
-                  checkedAlgorithms.sort(() => Math.random() - 0.5);
-                }
-                if (currentAlg) {
-                  checkedAlgorithmsCopy.push(currentAlg); // Add current algorithm to the copy
-                }
-
-                // this is the initial state for the new algorithm
-                initialstate = pattern;
-                keepInitialState = true;
-                $('#alg-input').val(checkedAlgorithms[0].algorithm);
-                $('#train-alg').trigger('click');
-              }
             }, 200); // Hide after 0.2 seconds
+          }
+
+          // Switch to next algorithm
+          if (checkedAlgorithms.length + checkedAlgorithmsCopy.length > 1) {
+            const currentAlg = checkedAlgorithms.shift(); // Remove the first algorithm
+            if (checkedAlgorithms.length === 0) {
+              checkedAlgorithms = [...checkedAlgorithmsCopy]; // Copy remaining algorithms
+              checkedAlgorithmsCopy = [];
+            }
+            // Randomize checkedAlgorithms if random is enabled
+            if (randomAlgorithms) {
+              checkedAlgorithms.sort(() => Math.random() - 0.5);
+            }
+            if (currentAlg) {
+              checkedAlgorithmsCopy.push(currentAlg); // Add current algorithm to the copy
+            }
+
+            // this is the initial state for the new algorithm
+            initialstate = pattern;
+            keepInitialState = true;
+            $('#alg-input').val(checkedAlgorithms[0].algorithm);
+            $('#train-alg').trigger('click');
           }
         }
         return;
@@ -477,22 +486,35 @@ async function handleMoveEvent(event: GanCubeEvent) {
     });
     if (!found) {
       badAlg.push(event.move);
-      console.log("Pushing 1 incorrect move. badAlg: " + badAlg)
+      //console.log("Pushing 1 incorrect move. badAlg: " + badAlg)
 
       if (currentMoveIndex === 0 && badAlg.length === 1 && lastMoves[lastMoves.length - 1].move === getInverseMove(userAlg[currentMoveIndex].replace(/[()]/g, ""))) { 
         currentMoveIndex--;
         badAlg.pop();
-        console.log("Cancelling first correct move");
+        //console.log("Cancelling first correct move");
       }  else if (lastMoves[lastMoves.length - 1].move === getInverseMove(badAlg[badAlg.length -2])) { 
         badAlg.pop();
         badAlg.pop();
-        console.log("Popping last incorrect move. badAlg=" + badAlg);
+        //console.log("Popping last incorrect move. badAlg=" + badAlg);
       } else if (badAlg.length > 3 && lastMoves.length > 3 && lastMoves[lastMoves.length - 1].move === lastMoves[lastMoves.length - 2].move && lastMoves[lastMoves.length - 2].move === lastMoves[lastMoves.length - 3].move && lastMoves[lastMoves.length - 3].move === lastMoves[lastMoves.length - 4].move ) {
         badAlg.pop();
         badAlg.pop();
         badAlg.pop();
         badAlg.pop();
-        console.log("Popping a turn (4 incorrect moves)");
+        //console.log("Popping a turn (4 incorrect moves)");
+      }
+
+      // workaround to cycle to next alg, but before reaching here the failed count is already updated :/
+      if (currentMoveIndex >= userAlg.length - 2 && badAlg.length > 0) {
+        //console.log("NOT FOUND @ currentMoveIndex: " + currentMoveIndex + " userAlg.length: " + userAlg.length + " badAlg: " + badAlg);
+        //console.log("myKpattern: " + JSON.stringify(myKpattern));
+        //console.log("initialstate.applyAlg(userAlg)): " + JSON.stringify(initialstate.applyAlg(Alg.fromString(userAlg.join(' '))) ));
+        if (myKpattern.isIdentical(initialstate.applyAlg(Alg.fromString(userAlg.join(' '))))) {
+          console.log(" +++ ============================ +++ Resetting alg because we reached the final state! - badAlg: " + badAlg);
+          setTimerState("STOPPED");
+          resetAlg();
+          fetchNextPatterns();
+        }
       }
     }
     updateAlgDisplay();
@@ -508,8 +530,10 @@ async function handleFaceletsEvent(event: GanCubeEvent) {
       var solution = await experimentalSolve3x3x3IgnoringCenters(kpattern);
       var scramble = solution.invert();
       twistyTracker.alg = scramble;
+      twistyPlayer.alg = scramble;
     } else {
       twistyTracker.alg = '';
+      twistyPlayer.alg = '';
     }
     cubeStateInitialized = true;
     console.log("Initial cube state is applied successfully", event.facelets);
@@ -541,11 +565,12 @@ function handleCubeEvent(event: GanCubeEvent) {
 }
 
 const customMacAddressProvider: MacAddressProvider = async (device, isFallbackCall): Promise<string | null> => {
+  const lastConnectedMAC = localStorage.getItem('lastConnectedDeviceMAC') || '';
   if (isFallbackCall) {
-    return prompt('Unable do determine cube MAC address!\nPlease enter MAC address manually:');
+    return prompt(`Unable to determine cube MAC address!\nPlease enter MAC address manually:`, lastConnectedMAC);
   } else {
     return typeof device.watchAdvertisements == 'function' ? null :
-      prompt('Seems like your browser does not support Web Bluetooth watchAdvertisements() API. Enable following flag in Chrome:\n\nchrome://flags/#enable-experimental-web-platform-features\n\nor enter cube MAC address manually:');
+      prompt(`Seems like your browser does not support Web Bluetooth watchAdvertisements() API. Enable following flag in Chrome:\n\nchrome://flags/#enable-experimental-web-platform-features\n\nor enter cube MAC address manually:`, lastConnectedMAC);
   }
 };
 
@@ -604,6 +629,8 @@ $('#connect').on('click', async () => {
     await conn.sendCubeCommand({ type: "REQUEST_HARDWARE" });
     await conn.sendCubeCommand({ type: "REQUEST_FACELETS" });
     await conn.sendCubeCommand({ type: "REQUEST_BATTERY" });
+    // save conn.deviceMAC in localStorage
+    localStorage.setItem('lastConnectedDeviceMAC', conn.deviceMAC);
     $('#deviceName').val(conn.deviceName);
     $('#deviceMAC').val(conn.deviceMAC);
     $('#connect').html('Disconnect');
@@ -620,43 +647,48 @@ $('#connect').on('click', async () => {
 
 var timerState: "IDLE" | "READY" | "RUNNING" | "STOPPED" = "IDLE";
 
-var lastFiveTimes: number[] = [];
-let practiceCount = 0;
-
 function updateTimesDisplay() {
   const timesDisplay = $('#times-display');
+  const algId = algToId(OriginalUserAlg.join(' '));
 
+  const lastFiveTimes: number[] = $('#' + algId).data('lastFiveTimes') || [];
   if (lastFiveTimes.length === 0) {
     timesDisplay.html(showAlgNameEnabled ? `${currentAlgName}` : '');
-    practiceCount = 0;
     return;
   }
 
-  const timesHtml = lastFiveTimes.map((time, index) => {
+  const practiceCount: number = $('#' + algId).data('count') || 0;
+  const timesHtml = lastFiveTimes.map((time: number, index: number) => {
     const t = makeTimeFromTimestamp(time);
     let number = practiceCount < 5 ? index + 1 : practiceCount - 5 + index + 1;
     return `<div>Time ${number}: ${t.minutes}:${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}</div>`;
   }).join('');
 
-  const averageTime = lastFiveTimes.reduce((a, b) => a + b, 0) / lastFiveTimes.length;
+  const averageTime = lastFiveTimes.reduce((a: number, b: number) => a + b, 0) / lastFiveTimes.length;
   const avg = makeTimeFromTimestamp(averageTime);
-  const averageHtml = `<div class="average"><strong>Average: ${avg.minutes}:${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}</strong></div>`;
+  const averageHtml = `<div id="average" class="font-bold">Average: ${avg.minutes}:${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}</div>`;
 
-  if (showAlgNameEnabled) {
-    timesDisplay.html(`${currentAlgName}<br>${timesHtml}${averageHtml}`);
-  } else {
-    timesDisplay.html(`${timesHtml}${averageHtml}`);
-  }
+  const displayHtml = showAlgNameEnabled ? `<p>${currentAlgName}</p>${timesHtml}${averageHtml}` : `${timesHtml}${averageHtml}`;
+  timesDisplay.html(displayHtml);
 }
 
 function setTimerState(state: typeof timerState) {
   timerState = state;
+  const algId = algToId(OriginalUserAlg.join(' '));
+  // check if the algId exists in the DOM, create it if it doesn't
+  if ($('#' + algId).length === 0) {
+    $('#default-alg-id').append(`<div id="${algId}" class="hidden"></div>`);
+  }
+  let lastFiveTimes = $('#' + algId).data('lastFiveTimes') || [];
+  let practiceCount = $('#' + algId).data('count') || 0;
+
   switch (state) {
     case "IDLE":
       stopLocalTimer();
       $('#timer').hide();
       break;
     case 'READY':
+      stopLocalTimer();
       setTimerValue(0);
       $('#timer').show();
       $('#timer').css('color', '#080');
@@ -682,7 +714,18 @@ function setTimerState(state: typeof timerState) {
           lastFiveTimes.shift(); // Keep only the last 5 times
         }
         practiceCount++; // Increment the practice count
-        updateTimesDisplay();
+        $('#' + algId).data('lastFiveTimes', lastFiveTimes);
+        $('#' + algId).data('count', practiceCount);
+        //console.log("[setTimerState] Setting lastFiveTimes to " + lastFiveTimes + " for algId " + algId);
+        //console.log("[setTimerState] Setting practiceCount to " + practiceCount + " for algId " + algId);
+
+        const failedCount: number = $('#' + algId).data('failed') || 0;
+        let successCount: number = practiceCount - failedCount;
+        $('#' + algId + '-success').html(`✅: ${successCount}`);
+        if (failedCount > 0) $('#' + algId + '-failed').html(`❌: ${failedCount}`);
+
+        // for single alg (no category, entered manually using input alg)
+        if (checkedAlgorithms.length === 0) updateTimesDisplay();
       }
       break;
   }
@@ -866,10 +909,19 @@ $('#category-select').on('change', () => {
   checkedAlgorithmsCopy = [];
   $('#select-all-toggle').prop('checked', false);
   $('#random-order-toggle').prop('checked', false);
+  randomAlgorithms = false;
   $('#random-auf-toggle').prop('checked', false);
+  randomizeAUF = false;
   $('#prioritize-failed-toggle').prop('checked', false);
+  prioritizeFailedAlgs = false;
   // reset cube alg
   twistyPlayer.alg = '';
+  // selecting a new category should reset the current practice drill
+  $('#times-display').html('');
+  $('#alg-display-container').hide();
+  $('#alg-display').html('');
+  $('#alg-input').val('');
+  $('#alg-input').show();
 });
 
 // Event listener for Export button
@@ -1006,9 +1058,6 @@ showAlgNameToggle.addEventListener('change', () => {
   updateTimesDisplay(); // Update display immediately when toggled
 });
 
-
-// Call updateTimesDisplay initially to set the correct state
-updateTimesDisplay();
 // Add event listeners for the selectors to update twistyPlayer settings
 var forceFix: boolean = false;
 $('#visualization-select').on('change', () => {

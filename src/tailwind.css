@@ -19,7 +19,7 @@ body {
 }
 
 .circle {
-  background-color: green;
+  background-color: orange;
   align-items: center;
   justify-content: center;
   border-radius: 25%; 
