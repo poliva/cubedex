@@ -24,7 +24,7 @@ import {
 
 //import { faceletsToPattern, patternToFacelets } from './utils';
 import { faceletsToPattern } from './utils';
-import { expandNotation, fixOrientation, getInverseMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId } from './functions';
+import { expandNotation, fixOrientation, getInverseMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -977,6 +977,15 @@ function loadConfiguration() {
     twistyPlayer.hintFacelets = 'none';
   }
 
+  const fullStickering = localStorage.getItem('fullStickering');
+  if (fullStickering) {
+    fullStickeringToggle.checked = fullStickering === 'true';
+    fullStickeringEnabled = fullStickering === 'true';
+  } else {
+    fullStickeringToggle.checked = false;
+    fullStickeringEnabled = false;
+  }
+
   const backview = localStorage.getItem('backview');
   if (backview) {
     $('#backview-select').val(backview).trigger('change');
@@ -1005,8 +1014,8 @@ function loadConfiguration() {
     flashingIndicatorToggle.checked = flashingIndicatorState === 'true';
     flashingIndicatorEnabled = flashingIndicatorState === 'true';
   } else {
-    flashingIndicatorToggle.checked = false;
-    flashingIndicatorEnabled = false;
+    flashingIndicatorToggle.checked = true;
+    flashingIndicatorEnabled = true;
   }
 
   const showAlgnameState = localStorage.getItem('showAlgName');
@@ -1043,7 +1052,21 @@ hintFaceletsToggle.addEventListener('change', () => {
   twistyPlayer.hintFacelets = hintFaceletsToggle.checked ? 'floating' : 'none';
 });
 
-var flashingIndicatorEnabled: boolean = false;
+// Add event listener for the full sticker toggle
+export var fullStickeringEnabled: boolean = false;
+const fullStickeringToggle = document.getElementById('full-stickering-toggle') as HTMLInputElement;
+fullStickeringToggle.addEventListener('change', () => {
+  fullStickeringEnabled = fullStickeringToggle.checked;
+  localStorage.setItem('fullStickering', fullStickeringToggle.checked.toString());
+  if (fullStickeringEnabled) {
+    twistyPlayer.experimentalStickering = 'full';
+  } else {
+    let category = $('#category-select').val()?.toString().toLowerCase() || 'pll';
+    setStickering(category);
+  }
+});
+
+var flashingIndicatorEnabled: boolean = true;
 const flashingIndicatorToggle = document.getElementById('flashing-indicator-toggle') as HTMLInputElement;
 flashingIndicatorToggle.addEventListener('change', () => {
   flashingIndicatorEnabled = flashingIndicatorToggle.checked;

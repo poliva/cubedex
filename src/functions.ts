@@ -2,6 +2,7 @@ import { KPattern } from 'cubing/kpuzzle';
 import $ from 'jquery';
 import { Alg } from "cubing/alg";
 import { faceletsToPattern } from "./utils";
+import { fullStickeringEnabled } from "./index";
 
 export function expandNotation(input: string): string {
   // Replace characters
@@ -203,6 +204,35 @@ export function loadCategories() {
   // for the first category, load the algorithms
   loadAlgorithms(Object.keys(savedAlgs)[0]);
 }
+
+export function setStickering(category: string): string {
+    let twistyPlayer = document.querySelector('twisty-player');
+    if (twistyPlayer && fullStickeringEnabled) {
+        twistyPlayer.experimentalStickering = 'full';
+        return 'full';
+    }
+
+    const validStickering = ['PLL', 'CLS', 'OLL', 'EOLL', 'COLL', 'OCLL', 'CPLL', 'CLL', 'EPLL', 'ELL', 'ELS', 'LL', 'F2L', 'ZBLL', 'ZBLS', 'VLS', 'WVLS', 'LS', 'LSOLL', 'LSOCLL', 'EO', 'EOline', 'EOcross', 'CMLL', 'L10P', 'L6E', 'L6EO', 'Daisy', 'Cross'];
+
+    let matchedStickering: string | undefined;
+    // Loop through validStickering to find a match
+    for (const item of validStickering) {
+      if (category.toLowerCase().includes(item.toLowerCase())) {
+        matchedStickering = item;
+        break;
+      }
+    }
+    // Set experimentalStickering if a match was found
+    if (twistyPlayer) {
+      if (matchedStickering) {
+        twistyPlayer.experimentalStickering = matchedStickering;
+      } else {
+        matchedStickering = 'full';
+        twistyPlayer.experimentalStickering = 'full';
+      }
+    }
+    return matchedStickering || 'full';
+}
  
 // Function to load algorithms based on selected category
 export function loadAlgorithms(category?: string) {
@@ -212,27 +242,7 @@ export function loadAlgorithms(category?: string) {
 
   if (category) {
     if (savedAlgs[category]) {
-      const validStickering = ['PLL', 'CLS', 'OLL', 'EOLL', 'COLL', 'OCLL', 'CPLL', 'CLL', 'EPLL', 'ELL', 'ELS', 'LL', 'F2L', 'ZBLL', 'ZBLS', 'VLS', 'WVLS', 'LS', 'LSOLL', 'LSOCLL', 'EO', 'EOline', 'EOcross', 'CMLL', 'L10P', 'L6E', 'L6EO', 'Daisy', 'Cross'];
-
-      let matchedStickering: string | undefined;
-      // Loop through validStickering to find a match
-      for (const item of validStickering) {
-        if (category.toLocaleLowerCase().includes(item.toLowerCase())) {
-          matchedStickering = item;
-          break;
-        }
-      }
-      // Set experimentalStickering if a match was found
-      let twistyPlayer = document.querySelector('twisty-player');
-      if (twistyPlayer) {
-        if (matchedStickering) {
-          twistyPlayer.experimentalStickering = matchedStickering;
-        } else {
-          matchedStickering = 'full';
-          twistyPlayer.experimentalStickering = 'full';
-        }
-      }
-
+      let matchedStickering = setStickering(category);
       let visualization = "3D";
       if (category.toLowerCase().includes("ll")) visualization = "experimental-2D-LL";
       let i = 0;
