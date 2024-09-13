@@ -20,8 +20,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <script type="module" crossorigin src="/assets/index-9tptmOWF.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-CCmS1yD8.css">
+  <script type="module" crossorigin src="/assets/index-BULZAORT.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CtI-ZwxU.css">
 <link rel="manifest" href="/manifest.json"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
 <body class="bg-gray-100 text-gray-900 font-sans leading-relaxed sm:p-4 p-1 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
@@ -58,39 +58,52 @@
 
     <div id="help" class="help hidden text-gray-600 mt-4 leading-snug dark:text-gray-400 text-sm sm:text-base">
       <div class="help-content block gap-2 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-        <p class="mb-3">To get started with Cubedex:</p>
+        <p class="mb-3 font-bold">To get started with Cubedex:</p>
         <ol class="list-disc list-inside mb-4">
           <li class="mb-1">Connect your smart cube by clicking the <strong>Connect</strong> button. For more details, refer to the <a href="https://gist.github.com/afedotov/52057533a8b27a0277598160c384ae71" target="_blank" class="text-blue-500 hover:underline">FAQ</a>.</li>
           <li class="mb-1">Load an algorithm from the list or input your own in the input field using standard Rubik's cube notation. You can also input the algorithm by performing it on the cube.</li>
           <li class="mb-1">Ensure the cube is oriented with <strong>WHITE on top</strong> and <strong>GREEN on front</strong>.</li>
           <li class="mb-1">Click the <strong>Train</strong> button or turn the cube to start practicing the algorithm.</li>
         </ol>
-        <p class="mb-3">During training:</p>
+        <p class="mb-3 font-bold">During training:</p>
         <ul class="list-disc list-inside mb-4">
           <li class="mb-1">The timer will start automatically when you begin the algorithm.</li>
           <li class="mb-1">Upon successful completion, the timer will stop and your last 5 times along with their average will be displayed.</li>
           <li class="mb-1">If you make a mistake, follow the moves shown in the <strong>Fix</strong> section to correct it. Ensure the top center is <strong>WHITE</strong> and the front center is <strong>GREEN</strong>.</li>
         </ul>
-        <p class="mb-3 mt-6">If you enjoy using Cubedex, please consider supporting the development on <a href="https://ko-fi.com/cubedex" target="_blank" class="text-blue-500 hover:underline">Ko-fi</a>.</p>
+        <p class="mb-3 font-bold">Customize your practice drills:</p>
+        <ul class="list-disc list-inside mb-4">
+          <li class="mb-1">Pick a category, choose subsets, and select the cases you want to work on.</li>
+          <li class="mb-1">Enable <strong>Random Order</strong> to mix up the algorithms.</li>
+          <li class="mb-1">Try <strong>Random AUF</strong> to practice with random orientations. For 2-sided recognition, turn off the Gyroscope Orientation and Mirror Sticker hints in Options, letting you view only two sides of the cube. For sets like PLL or ZBLL, you'll also get random post-AUFs to sharpen your AUF prediction.</li>
+          <li class="mb-1">Activate <strong>Prioritize Failed Cases</strong> to focus on the algorithms you find most challenging.</li>
+          <li class="mb-1">Want to change the algorithm for one or more cases? Use <strong>Export Algs</strong> in Options, modify the algorithm in the JSON file, then import it back.</li>
+        </ul>
+        <p class="mb-3 mt-6 text-center font-bold">Love Cubedex? Help us grow! Support the app's development on <a href="https://ko-fi.com/cubedex" target="_blank" class="text-blue-500 hover:underline">Ko-fi</a>:</p>
         <div class="text-center items-center justify-center"><script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Support Me on Ko-fi', '#29abe0', 'H2H6132Z3Z');kofiwidget2.draw();</script></div>
       </div>
     </div>
 
     <!-- Hidden elements for saving and loading algorithms -->
     <div id="save-container" class="hidden flex-col gap-4 mt-4 text-sm sm:text-base">
-      <input id="category-input" type="text" placeholder="Enter category" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
-      <input id="alg-name-input" type="text" placeholder="Enter case name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
-      <button id="confirm-save" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Confirm Save</button>
+      <input id="category-input" type="text" placeholder="Category name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
+      <input id="subset-input" type="text" placeholder="Subset name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
+      <input id="alg-name-input" type="text" placeholder="Case name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
+      <button id="confirm-save" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Save</button>
       <div id="save-error" class="hidden mt-4 text-red-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-red-500 dark:border-red-400 text-sm sm:text-base"></div>
       <div id="save-success" class="hidden mt-4 text-green-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-green-500 dark:border-green-400 text-sm sm:text-base"></div>
     </div>
 
     <div id="load-container" class="hidden flex-col gap-4 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
       <div id="default-alg-id" class="hidden bg-red-400"><!-- wildcard to add classes used in js --></div>
-      <label for="category-select" class="text-base text-gray-900 block mb-2 dark:text-white">Category</label>
+      <label for="category-select" class="text-sm sm:text-base text-gray-900 block mb-2 dark:text-white">Category:</label>
       <select id="category-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400 text-sm sm:text-base">
         <option value="">Filter by Category</option>
       </select>
+        <p class="text-sm sm:text-base mb-2 flex items-center">Subset: <input type="checkbox" id="select-all-subsets-toggle" class="form-checkbox h-5 w-5 text-blue-600 ml-2" /></p>
+      <div id="subset-checkboxes" class="flex flex-col space-y-2 p-4 mb-4 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+        <div id="subset-checkboxes-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
+      </div>
 
       <div class="flex items-center mb-4 text-sm sm:text-base">
         <label for="select-all-toggle" class="relative inline-flex items-center cursor-pointer">

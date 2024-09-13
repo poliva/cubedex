@@ -132,47 +132,85 @@ import defaultAlgs from './defaultAlgs.json';
 
 // Function to initialize the localStorage with default algorithms if empty
 export function initializeDefaultAlgorithms() {
-  if (!localStorage.getItem('savedAlgs')) {
-    localStorage.setItem('savedAlgs', JSON.stringify(defaultAlgs));
+
+  if (!localStorage.getItem('savedAlgorithms')) {
+    localStorage.setItem('savedAlgorithms', JSON.stringify(defaultAlgs));
+  } else {
+    // make sure all categories in defaultAlgs are in savedAlgorithms
+    const savedAlgorithms = JSON.parse(localStorage.getItem('savedAlgorithms') || '{}');
+    for (const category of Object.keys(defaultAlgs)) {
+      if (!savedAlgorithms[category]) {
+        savedAlgorithms[category] = defaultAlgs[category as keyof typeof defaultAlgs];
+      }
+    }
+    localStorage.setItem('savedAlgorithms', JSON.stringify(savedAlgorithms));
+  }
+
+  // migrate old saved algorithms without subsets
+  if (localStorage.getItem('savedAlgs')) {
+    const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
+    for (const category of Object.keys(savedAlgs)) {
+      savedAlgs[category] = [{ subset: 'All', algorithms: savedAlgs[category] }];
+    }
+    // append to savedAlgorithms
+    const savedAlgorithms = JSON.parse(localStorage.getItem('savedAlgorithms') || '{}');
+    for (const category of Object.keys(savedAlgs)) {
+      savedAlgorithms["old-" + category] = savedAlgs[category];
+    }
+    localStorage.setItem('savedAlgorithms', JSON.stringify(savedAlgorithms));
+    // remove old savedAlgs
+    localStorage.removeItem('savedAlgs');
+    alert('Algorithms have been migrated to a new format that includes subsets.\nYour old categories which did not include subsets have been prefixed with "old-".');
   }
 }
 
 // Function to save the algorithm to localStorage
-export function saveAlgorithm(category: string, name: string, algorithm: string) {
-  const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
-  if (!savedAlgs[category]) {
-    savedAlgs[category] = [];
+export function saveAlgorithm(category: string, subset: string, name: string, algorithm: string) {
+  const savedAlgorithms = JSON.parse(localStorage.getItem('savedAlgorithms') || '{}');
+  if (!savedAlgorithms[category]) {
+    savedAlgorithms[category] = [];
   }
-  savedAlgs[category].push({ name, algorithm });
-  localStorage.setItem('savedAlgs', JSON.stringify(savedAlgs));
+  const existingSubset = savedAlgorithms[category].find((s: { subset: string }) => s.subset === subset);
+  if (existingSubset) {
+    existingSubset.algorithms.push({ name, algorithm });
+  } else {
+    savedAlgorithms[category].push({
+      subset,
+      algorithms: [{ name, algorithm }],
+    });
+  }
+  localStorage.setItem('savedAlgorithms', JSON.stringify(savedAlgorithms));
 }
 
 // Function to delete an algorithm from localStorage
 export function deleteAlgorithm(category: string, algorithm: string) {
-  const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
-  if (savedAlgs[category]) {
-    savedAlgs[category] = savedAlgs[category].filter((alg: { name: string, algorithm: string }) => expandNotation(alg.algorithm) !== expandNotation(algorithm));
-    if (savedAlgs[category].length === 0) {
-      delete savedAlgs[category]; // Delete category if empty
+  const savedAlgorithms = JSON.parse(localStorage.getItem('savedAlgorithms') || '{}');
+  if (savedAlgorithms[category]) {
+    savedAlgorithms[category] = savedAlgorithms[category].map((subset: { subset: string, algorithms: { name: string, algorithm: string }[] }) => {
+      return {
+        subset: subset.subset,
+        algorithms: subset.algorithms.filter((alg: { name: string, algorithm: string }) => expandNotation(alg.algorithm) !== expandNotation(algorithm)),
+      };
+    }).filter((subset: { subset: string, algorithms: { name: string, algorithm: string }[] }) => subset.algorithms.length > 0);
+    // If the category is empty, delete it
+    if (savedAlgorithms[category].length === 0) {
+      delete savedAlgorithms[category];
     }
-    localStorage.setItem('savedAlgs', JSON.stringify(savedAlgs));
+    localStorage.setItem('savedAlgorithms', JSON.stringify(savedAlgorithms));
   }
 }
   
 // Function to export algorithms to a text file
 export function exportAlgorithms() {
-  const savedAlgs = localStorage.getItem('savedAlgs');
-  if (savedAlgs) {
-    const blob = new Blob([savedAlgs], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Cubedex-Algorithms.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  } else {
-    alert('No algorithms to export.');
-  }
+  const savedAlgorithms = JSON.parse(localStorage.getItem('savedAlgorithms') || '{}');
+  const exportData = JSON.stringify(savedAlgorithms, null, 2);
+  const blob = new Blob([exportData], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'cubedex_algorithms.json';
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 // Function to import algorithms from a text file
@@ -182,9 +220,9 @@ export function importAlgorithms(file: File) {
     if (event.target?.result) {
       try {
         const importedAlgs = JSON.parse(event.target.result as string);
-        localStorage.setItem('savedAlgs', JSON.stringify(importedAlgs));
-        alert('Algorithms imported successfully.');
+        localStorage.setItem('savedAlgorithms', JSON.stringify(importedAlgs));
         loadCategories();
+        alert('Algorithms imported successfully.');
       } catch (e) {
         alert('Failed to import algorithms. Please ensure the file is in the correct format.');
       }
@@ -195,14 +233,16 @@ export function importAlgorithms(file: File) {
 
 // Function to load categories from localStorage
 export function loadCategories() {
-  const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
+  const savedAlgorithms = JSON.parse(localStorage.getItem('savedAlgorithms') || '{}');
   const categorySelect = $('#category-select');
   categorySelect.empty();
-  Object.keys(savedAlgs).forEach(category => {
+  Object.keys(savedAlgorithms).forEach(category => {
     categorySelect.append(`<option value="${category}">${category}</option>`);
   });
-  // for the first category, load the algorithms
-  loadAlgorithms(Object.keys(savedAlgs)[0]);
+
+  // Load the subsets for the selected category
+  const selectedCategory = categorySelect.val() as string;
+  loadSubsets(selectedCategory);
 }
 
 export function setStickering(category: string): string {
@@ -212,16 +252,33 @@ export function setStickering(category: string): string {
         return 'full';
     }
 
-    const validStickering = ['PLL', 'CLS', 'OLL', 'EOLL', 'COLL', 'OCLL', 'CPLL', 'CLL', 'EPLL', 'ELL', 'ELS', 'LL', 'F2L', 'ZBLL', 'ZBLS', 'VLS', 'WVLS', 'LS', 'LSOLL', 'LSOCLL', 'EO', 'EOline', 'EOcross', 'CMLL', 'L10P', 'L6E', 'L6EO', 'Daisy', 'Cross'];
+    const validStickering = ['EOcross', 'LSOCLL', 'EOline', 'LSOLL', 'Daisy', 'Cross', 'ZBLS', 'ZBLL', 'WVLS', 'OCLL', 'L6EO', 'L10P', 'EPLL', 'EOLL', 'CPLL', 'COLL', 'CMLL', 'VLS', 'PLL', 'OLL', 'L6E', 'F2L', 'ELS', 'ELL', 'CLS', 'CLL', 'LS', 'LL', 'EO'];
 
     let matchedStickering: string | undefined;
     // Loop through validStickering to find a match
+    let categoryWithoutSymbols = category.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
     for (const item of validStickering) {
-      if (category.toLowerCase().includes(item.toLowerCase())) {
+      if (categoryWithoutSymbols === item.toLowerCase()) {
         matchedStickering = item;
         break;
       }
     }
+    if (!matchedStickering) {
+      let categoryWords = category.toLowerCase().split(/[^a-zA-Z0-9]+/);
+      for (const item of validStickering) {
+        for (const word of categoryWords) {
+          console.log(word + " === " + item.toLowerCase());
+          if (word === item.toLowerCase()) {
+            matchedStickering = item;
+            break;
+          }
+        }
+        if (matchedStickering) {
+          break;
+        }
+      }
+    }
+
     // Set experimentalStickering if a match was found
     if (twistyPlayer) {
       if (matchedStickering) {
@@ -234,45 +291,73 @@ export function setStickering(category: string): string {
     return matchedStickering || 'full';
 }
  
-// Function to load algorithms based on selected category
-export function loadAlgorithms(category?: string) {
-  const savedAlgs = JSON.parse(localStorage.getItem('savedAlgs') || '{}');
+// Function to load algorithms based on selected subset
+export function loadSubsets(category: string) {
+  const savedAlgorithms = JSON.parse(localStorage.getItem('savedAlgorithms') || '{}');
+  const subsetCheckboxes = $('#subset-checkboxes-container');
+  subsetCheckboxes.empty();
+  if (savedAlgorithms[category]) {
+    savedAlgorithms[category].forEach((subset: { subset: string }) => {
+      subsetCheckboxes.append(`
+        <label class="inline-flex items-center col-span-1">
+          <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" value="${subset.subset}">
+          <span class="ml-2">${subset.subset}</span>
+        </label>
+      `);
+    });
+  }
+  // Load algorithms for all checked subsets
+  loadAlgorithms(category);
+}
+
+export function loadAlgorithms(category: string) {
+  const savedAlgorithms = JSON.parse(localStorage.getItem('savedAlgorithms') || '{}');
   const algCases = $('#alg-cases');
   algCases.empty();
 
-  if (category) {
-    if (savedAlgs[category]) {
-      let matchedStickering = setStickering(category);
-      let visualization = "3D";
-      if (category.toLowerCase().includes("ll")) visualization = "experimental-2D-LL";
-      let i = 0;
-      savedAlgs[category].forEach((alg: { name: string, algorithm: string }) => {
-        alg.algorithm = expandNotation(alg.algorithm);
-        // if the colors are changed, match them in showMistakesWithDelay()
-        let gray = i % 2 == 0 ? "bg-gray-400" : "bg-gray-50";
-        let grayDarkMode = i % 2 == 0 ? "bg-gray-800" : "bg-gray-600";
-        algCases.append(`
-          <div class="case-wrapper rounded-lg shadow-md ${gray} dark:${grayDarkMode} relative p-4" id="${algToId(alg.algorithm)}" data-name="${alg.name}" data-algorithm="${alg.algorithm}" data-category="${category}">
-            <label for="case-toggle-${i}" class="cursor-pointer">
-            <span class="text-black dark:text-white text-sm">${alg.name}</span>
-            <div id="alg-case-${i}" class="flex items-center justify-center scale-50 -mx-20 -mt-10 -mb-10 relative z-10">
-              <twisty-player puzzle="3x3x3" visualization="${visualization}" experimental-stickering="${matchedStickering}" alg="${alg.algorithm}" experimental-setup-anchor="end" control-panel="none" hint-facelets="none" experimental-drag-input="none" background="none"></twisty-player>
+  if (category && savedAlgorithms[category]) {
+    let matchedStickering = setStickering(category);
+    let visualization = "3D";
+    if (category.toLowerCase().includes("ll")) visualization = "experimental-2D-LL";
+
+    // Get checked subsets
+    const checkedSubsets = $('#subset-checkboxes input:checked').map(function() {
+      return $(this).val();
+    }).get() as string[];
+
+    checkedSubsets.forEach((subset) => {
+      const subsetData = savedAlgorithms[category].find((s: { subset: string }) => s.subset === subset);
+      if (subsetData) {
+        let i = 0;
+        subsetData.algorithms.forEach((alg: { name: string, algorithm: string }) => {
+          alg.algorithm = expandNotation(alg.algorithm);
+          let algId = algToId(alg.algorithm);
+          // if the colors are changed, match them in showMistakesWithDelay()
+          let gray = i % 2 == 0 ? "bg-gray-400" : "bg-gray-50";
+          let grayDarkMode = i % 2 == 0 ? "bg-gray-800" : "bg-gray-600";
+          algCases.append(`
+            <div class="case-wrapper rounded-lg shadow-md ${gray} dark:${grayDarkMode} relative p-4" id="${algId}" data-name="${alg.name}" data-algorithm="${alg.algorithm}" data-category="${category}">
+              <label for="case-toggle-${algId}" class="cursor-pointer">
+              <span class="text-black dark:text-white text-sm">${alg.name}</span>
+              <div id="alg-case-${algId}" class="flex items-center justify-center scale-50 -mx-20 -mt-10 -mb-10 relative z-10">
+                <twisty-player puzzle="3x3x3" visualization="${visualization}" experimental-stickering="${matchedStickering}" alg="${alg.algorithm}" experimental-setup-anchor="end" control-panel="none" hint-facelets="none" experimental-drag-input="none" background="none"></twisty-player>
+              </div>
+              <div class="grid grid-cols-2 mt-1 relative z-10">
+                  <input type="checkbox" id="case-toggle-${algId}" class="sr-only" data-algorithm="${alg.algorithm}" data-name="${alg.name}" />
+                  <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+                  <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                  <div class="absolute right-0 grid grid-cols-2 gap-1">
+                    <div id="${algId}-failed" class="col-start-1 text-red-600 font-bold text-sm"></div>
+                    <div id="${algId}-success" class="col-start-2 text-green-600 font-bold text-sm"></div>
+                  </div>
+              </div>
+              </label>
             </div>
-            <div class="grid grid-cols-2 mt-1 relative z-10">
-                <input type="checkbox" id="case-toggle-${i}" class="sr-only" data-algorithm="${alg.algorithm}" data-name="${alg.name}" />
-                <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-                <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-                <div class="absolute right-0 grid grid-cols-2 gap-1">
-                  <div id="${algToId(alg.algorithm)}-failed" class="col-start-1 text-red-600 font-bold text-sm"></div>
-                  <div id="${algToId(alg.algorithm)}-success" class="col-start-2 text-green-600 font-bold text-sm"></div>
-                </div>
-            </div>
-            </label>
-          </div>
-        `);
-        i++;
-      });
-    }
+          `);
+          i++;
+        });
+      }
+    });
   }
 }
 

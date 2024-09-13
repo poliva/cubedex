@@ -24,7 +24,7 @@ import {
 
 //import { faceletsToPattern, patternToFacelets } from './utils';
 import { faceletsToPattern } from './utils';
-import { expandNotation, fixOrientation, getInverseMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering } from './functions';
+import { expandNotation, fixOrientation, getInverseMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -231,6 +231,14 @@ function drawAlgInCube() {
       let category = $('#category-select').val()?.toString().toLowerCase();
       let isOLL = category?.includes("oll");
       let areNotIdentical = !resultWithStartU.isIdentical(resultWithEndU) && !resultWithStartU2.isIdentical(resultWithEndU2);
+
+      // post AUF for pll and zbll
+      if (category?.includes("pll") || category?.includes("zbll")) {
+        let randomPostAUF = AUF[Math.floor(Math.random() * AUF.length)];
+        if (randomPostAUF.length > 0) {
+          userAlg.push(randomPostAUF);
+        }
+      }
 
       if ((areNotIdentical && !isOLL) || isOLL && !isSymmetricOLL(userAlg.join(' '))) {
         userAlg.unshift(randomAUF); // add randomAUF to the beginning of the alg
@@ -504,6 +512,7 @@ async function handleMoveEvent(event: GanCubeEvent) {
         //console.log("Popping a turn (4 incorrect moves)");
       }
 
+      /* XXX TODO - Take a look at this later
       // workaround to cycle to next alg, but before reaching here the failed count is already updated :/
       if (currentMoveIndex >= userAlg.length - 2 && badAlg.length > 0) {
         //console.log("NOT FOUND @ currentMoveIndex: " + currentMoveIndex + " userAlg.length: " + userAlg.length + " badAlg: " + badAlg);
@@ -516,6 +525,7 @@ async function handleMoveEvent(event: GanCubeEvent) {
           fetchNextPatterns();
         }
       }
+      */
     }
     updateAlgDisplay();
   }
@@ -794,12 +804,14 @@ $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
     }
   }
   if (checkedAlgorithms.length > 0) {
-    $('#save-alg').prop('disabled', false);
-    if (conn) {
-      $('#train-alg').prop('disabled', false);
+    if (name === checkedAlgorithms[0].name && algorithm === checkedAlgorithms[0].algorithm) {
+      $('#save-alg').prop('disabled', false);
+      if (conn) {
+        $('#train-alg').prop('disabled', false);
+      }
+      $('#alg-input').val(checkedAlgorithms[0].algorithm);
+      $('#train-alg').trigger('click');
     }
-    $('#alg-input').val(checkedAlgorithms[0].algorithm);
-    $('#train-alg').trigger('click');
   }
   //console.log(checkedAlgorithms);
 });
@@ -812,7 +824,7 @@ $('#delete-mode-toggle').on('change', () => {
 
 // Event listener for Delete button
 $('#delete-alg').on('click', () => {
-  const category = $('#category-select').val()?.toString();
+  const category = $('#category-select').val()?.toString() || '';
   if (checkedAlgorithms.length > 0) {
     if (confirm('Are you sure you want to delete the selected algorithms?')) {
       for (const algorithm of checkedAlgorithms) {
@@ -828,8 +840,12 @@ $('#delete-alg').on('click', () => {
       $('#delete-alg').prop('disabled', true);
       checkedAlgorithms = [];
       checkedAlgorithmsCopy = [];
-      // only re-load categories if alg-cases is empty
+      // only re-load subsets if there are no more alg-cases (subset has been deleted)
       if ($('#alg-cases').children().length === 0) {
+        loadSubsets(category);
+      }
+      // only re-load categories if there are no more subsets (category has been deleted)
+      if ($('#subset-checkboxes-container').children().length === 0) {
         loadCategories();
       }
       $('#delete-success').text('Algorithms deleted successfully');
@@ -843,13 +859,15 @@ $('#delete-alg').on('click', () => {
 
 // Event listener for Confirm Save button
 $('#confirm-save').on('click', () => {
-  const category = $('#category-input').val()?.toString().trim();
-  const name = $('#alg-name-input').val()?.toString().trim();
+  const category = $('#category-input').val()?.toString().trim() || '';
+  const subset = $('#subset-input').val()?.toString().trim() || '';
+  const name = $('#alg-name-input').val()?.toString().trim() || '';
   const algorithm = expandNotation($('#alg-input').val()?.toString().trim() || '');
-  if (category && name && algorithm.length > 0) {
-    saveAlgorithm(category, name, algorithm);
+  if (category.length > 0 && subset.length > 0 && name.length > 0 && algorithm.length > 0) {
+    saveAlgorithm(category, subset, name, algorithm);
     $('#category-input').val('');
     $('#alg-name-input').val('');
+    $('#subset-input').val('');
     $('#save-error').hide();
     $('#save-success').text('Algorithm saved successfully');
     $('#save-success').show();
@@ -857,7 +875,6 @@ $('#confirm-save').on('click', () => {
       $('#save-success').fadeOut();
     }, 3000); // Disappears after 3 seconds
     loadCategories();
-    loadAlgorithms(category);
     // select the new category
     $('#category-select').val(category).trigger('change');
   } else {
@@ -902,18 +919,19 @@ $('#save-alg').on('click', () => {
 $('#category-select').on('change', () => {
   const category = $('#category-select').val()?.toString();
   if (category) {
-    loadAlgorithms(category);
+    loadSubsets(category);
   }
   // uncheck all checkboxes
   checkedAlgorithms = [];
   checkedAlgorithmsCopy = [];
   $('#select-all-toggle').prop('checked', false);
-  $('#random-order-toggle').prop('checked', false);
-  randomAlgorithms = false;
-  $('#random-auf-toggle').prop('checked', false);
-  randomizeAUF = false;
-  $('#prioritize-failed-toggle').prop('checked', false);
-  prioritizeFailedAlgs = false;
+  $('#select-all-subsets-toggle').prop('checked', false);
+  //$('#random-order-toggle').prop('checked', false);
+  //randomAlgorithms = false;
+  //$('#random-auf-toggle').prop('checked', false);
+  //randomizeAUF = false;
+  //$('#prioritize-failed-toggle').prop('checked', false);
+  //prioritizeFailedAlgs = false;
   // reset cube alg
   twistyPlayer.alg = '';
   // selecting a new category should reset the current practice drill
@@ -923,6 +941,18 @@ $('#category-select').on('change', () => {
   $('#alg-input').val('');
   $('#alg-input').show();
 });
+
+// Add event listener for subset checkboxes
+$('#subset-checkboxes').on('change', 'input[type="checkbox"]', () => {
+  const selectedCategory = $('#category-select').val() as string;
+  loadAlgorithms(selectedCategory);
+  // check the checkboxes of all algorithms in #alg-cases
+  checkedAlgorithms = [];
+  checkedAlgorithmsCopy = [];
+  $('#alg-cases input[type="checkbox"]').prop('checked', true);
+  $('#alg-cases input[type="checkbox"]').trigger('change');
+});
+
 
 // Event listener for Export button
 $('#export-algs').on('click', () => {
@@ -1153,6 +1183,25 @@ darkModeToggle.addEventListener('change', () => {
   }
   // redraw input alg
   updateAlgDisplay();
+});
+
+// Event listener for the select all subsets toggle
+$('#select-all-subsets-toggle').on('change', function() {
+  const selectAllToggle = $('#select-all-toggle');
+  checkedAlgorithms = [];
+  checkedAlgorithmsCopy = [];
+  const isChecked = $(this).is(':checked');
+  if (isChecked) {
+    $('#subset-checkboxes-container input[type="checkbox"]').prop('checked', true);
+    const selectedCategory = $('#category-select').val() as string;
+    selectAllToggle.prop('checked', true);
+    loadAlgorithms(selectedCategory);
+    $('#alg-cases input[type="checkbox"]').prop('checked', true).trigger('change');
+  } else {
+    $('#subset-checkboxes-container input[type="checkbox"]').prop('checked', false);
+    selectAllToggle.prop('checked', false);
+    loadAlgorithms('');
+  }
 });
 
 // Add event listener for the select all toggle
