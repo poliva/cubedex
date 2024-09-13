@@ -729,7 +729,8 @@ function setTimerState(state: typeof timerState) {
         //console.log("[setTimerState] Setting lastFiveTimes to " + lastFiveTimes + " for algId " + algId);
         //console.log("[setTimerState] Setting practiceCount to " + practiceCount + " for algId " + algId);
 
-        const failedCount: number = $('#' + algId).data('failed') || 0;
+        let failedCount: number = $('#' + algId).data('failed') || 0;
+        if (failedCount < 0) failedCount = 0;
         let successCount: number = practiceCount - failedCount;
         $('#' + algId + '-success').html(`✅: ${successCount}`);
         if (failedCount > 0) $('#' + algId + '-failed').html(`❌: ${failedCount}`);

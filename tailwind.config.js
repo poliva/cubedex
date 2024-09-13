@@ -6,7 +6,13 @@ export default {
     './src/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      maxWidth: {
+        '4xl': '56rem', // 896px
+        '5xl': '64rem', // 1024px
+        '6xl': '72rem', // 1152px
+      },
+    },
   },
   plugins: [],
 }
