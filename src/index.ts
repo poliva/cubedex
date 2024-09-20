@@ -799,10 +799,9 @@ $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
   if ((this as HTMLInputElement).checked) {
     checkedAlgorithms.push({ algorithm, name });
   } else {
-    let index = checkedAlgorithms.findIndex(alg => alg.algorithm === algorithm && alg.name === name);
-    if (index > -1) checkedAlgorithms.splice(index, 1);
-    index = checkedAlgorithmsCopy.findIndex(alg => alg.algorithm === algorithm && alg.name === name);
-    if (index > -1) checkedAlgorithmsCopy.splice(index, 1);
+    // remove all occurrences of this algorithm from checkedAlgorithms and checkedAlgorithmsCopy
+    checkedAlgorithms = checkedAlgorithms.filter(alg => alg.algorithm !== algorithm || alg.name !== name);
+    checkedAlgorithmsCopy = checkedAlgorithmsCopy.filter(alg => alg.algorithm !== algorithm || alg.name !== name);
   }
   if (checkedAlgorithms.length > 0) {
     if (name === checkedAlgorithms[0].name && algorithm === checkedAlgorithms[0].algorithm) {
@@ -814,7 +813,8 @@ $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
       $('#train-alg').trigger('click');
     }
   }
-  //console.log(checkedAlgorithms);
+  //console.log("checkedAlgorithms: " + JSON.stringify(checkedAlgorithms));
+  //console.log("checkedAlgorithmsCopy: " + JSON.stringify(checkedAlgorithmsCopy));
 });
 
 // Event listener for Delete Mode toggle
