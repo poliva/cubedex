@@ -799,10 +799,10 @@ $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
   if ((this as HTMLInputElement).checked) {
     checkedAlgorithms.push({ algorithm, name });
   } else {
-    const index = checkedAlgorithms.findIndex(alg => alg.algorithm === algorithm && alg.name === name);
-    if (index > -1) {
-      checkedAlgorithms.splice(index, 1);
-    }
+    let index = checkedAlgorithms.findIndex(alg => alg.algorithm === algorithm && alg.name === name);
+    if (index > -1) checkedAlgorithms.splice(index, 1);
+    index = checkedAlgorithmsCopy.findIndex(alg => alg.algorithm === algorithm && alg.name === name);
+    if (index > -1) checkedAlgorithmsCopy.splice(index, 1);
   }
   if (checkedAlgorithms.length > 0) {
     if (name === checkedAlgorithms[0].name && algorithm === checkedAlgorithms[0].algorithm) {
