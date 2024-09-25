@@ -447,7 +447,7 @@ async function handleMoveEvent(event: GanCubeEvent) {
     var found: boolean = false;
     patternStates.forEach((pattern, index) => {
       //console.log("obj[" + index + "]: " + JSON.stringify(pattern));
-      if (myKpattern.applyMove(event.move).isIdentical(pattern)) {
+      if ((myKpattern.applyMove(event.move).isIdentical(pattern)) || (myKpattern.isIdentical(initialstate.applyAlg(Alg.fromString(userAlg.join(' ')))))) {
         currentMoveIndex=index;
         found = true;
         badAlg = [];
@@ -511,21 +511,6 @@ async function handleMoveEvent(event: GanCubeEvent) {
         badAlg.pop();
         //console.log("Popping a turn (4 incorrect moves)");
       }
-
-      /* XXX TODO - Take a look at this later
-      // workaround to cycle to next alg, but before reaching here the failed count is already updated :/
-      if (currentMoveIndex >= userAlg.length - 2 && badAlg.length > 0) {
-        //console.log("NOT FOUND @ currentMoveIndex: " + currentMoveIndex + " userAlg.length: " + userAlg.length + " badAlg: " + badAlg);
-        //console.log("myKpattern: " + JSON.stringify(myKpattern));
-        //console.log("initialstate.applyAlg(userAlg)): " + JSON.stringify(initialstate.applyAlg(Alg.fromString(userAlg.join(' '))) ));
-        if (myKpattern.isIdentical(initialstate.applyAlg(Alg.fromString(userAlg.join(' '))))) {
-          console.log(" +++ ============================ +++ Resetting alg because we reached the final state! - badAlg: " + badAlg);
-          setTimerState("STOPPED");
-          resetAlg();
-          fetchNextPatterns();
-        }
-      }
-      */
     }
     updateAlgDisplay();
   }
