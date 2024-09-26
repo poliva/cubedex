@@ -22,8 +22,7 @@ import {
   cubeTimestampLinearFit
 } from 'gan-web-bluetooth';
 
-//import { faceletsToPattern, patternToFacelets } from './utils';
-import { faceletsToPattern } from './utils';
+import { faceletsToPattern, patternToFacelets } from './utils';
 import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
@@ -427,6 +426,8 @@ function updateAlgDisplay() {
 }
 
 let keepInitialState: boolean = false;
+let previousFacelets: string = '';
+let isBugged = false;
 
 async function handleMoveEvent(event: GanCubeEvent) {
   if (event.type === "MOVE") {
@@ -450,7 +451,14 @@ async function handleMoveEvent(event: GanCubeEvent) {
       $('#skew').val(skew + '%');
     }
 
-    //console.log("MOVE: " + event.move + " Index: " + currentMoveIndex + " currentValue: " + userAlg[currentMoveIndex]);
+    //console.log("MOVE: " + event.move + " currentMoveIndex: " + currentMoveIndex + " currentValue: " + userAlg[currentMoveIndex]);
+    if (patternToFacelets(myKpattern) === previousFacelets && !isBugged) {
+      // we hit a bug when doing a slice we get the same myKpattern twice, so we need to retrieve a new myKpattern to fix the state
+      myKpattern = await twistyTracker.experimentalModel.currentPattern.get();
+      isBugged = true;
+    }
+    previousFacelets = patternToFacelets(myKpattern);
+
     if (inputMode) {
       $('#alg-input').val(function(_, currentValue) {
         return Alg.fromString(currentValue + " " + lastMoves[lastMoves.length - 1].move).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString();
@@ -463,7 +471,8 @@ async function handleMoveEvent(event: GanCubeEvent) {
     // Check if the current move matches the user's alg
     var found: boolean = false;
     patternStates.forEach((pattern, index) => {
-      if ((myKpattern.applyMove(event.move).isIdentical(pattern)) || (myKpattern.applyMove(event.move).isIdentical(initialstate.applyAlg(Alg.fromString(userAlg.join(' ')))) && index === patternStates.length - 1)) {
+      if (myKpattern.applyMove(event.move).isIdentical(pattern) || (isBugged && myKpattern.isIdentical(pattern))) {
+        isBugged = false;
         currentMoveIndex=index;
         found = true;
         badAlg = [];
