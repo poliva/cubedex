@@ -372,20 +372,20 @@ function updateAlgDisplay() {
     }
 
     // don't mark a R as incorrect if it's followed by a L move, or a U as incorrect if it's followed by a D move
+    let inverseMove = getInverseMove(simplifiedBadAlg[0]);
+    let currentMove = userAlg[index]?.replace(/[()']/g, "");
     if (index === currentMoveIndex + 1 && simplifiedBadAlg.length === 1) {
-      const inverseMove = getInverseMove(simplifiedBadAlg[0]);
-      if (inverseMove === userAlg[index + 1]?.replace(/[()]/g, "") &&
-          getOppositeMove(inverseMove) === userAlg[index]?.replace(/[()]/g, "")) {
-        color = 'white';
-        isOppositeMove = true;
+      //console.log("inverseMove=" + inverseMove + " == nextMove=" + nextMove + " && oppositeMove=" + oppositeMove + " == currentMove=" + currentMove);
+      let oppositeMove = getOppositeMove(inverseMove?.replace(/[()'2]/g, ""));
+      let nextMove = userAlg[index + 1]?.replace(/[()]/g, "");
+      if ((inverseMove === nextMove || (inverseMove?.charAt(0) === nextMove?.charAt(0) && nextMove?.charAt(1)=='2')) &&
+          (oppositeMove === currentMove || (oppositeMove === currentMove?.charAt(0) && currentMove?.charAt(1)=='2'))) {
+          color = 'white';
+          isOppositeMove = true;
       }
     }
-    if (index === currentMoveIndex + 2 && isOppositeMove) {
-      color = 'green';
-    }
-
-    if (previousColor === 'blue') color = darkModeToggle.checked ? 'white' : 'black';
-    if (previousColor !== 'blue' && color !== 'blue' && isDoubleTurn) color = darkModeToggle.checked ? 'white' : 'black';
+    if (index === currentMoveIndex + 2 && isOppositeMove) color = move.endsWith('2') && inverseMove != currentMove ? 'blue' : 'green';
+    if (previousColor === 'blue' || (previousColor !== 'blue' && color !== 'blue' && isDoubleTurn)) color = darkModeToggle.checked ? 'white' : 'black';
 
     // Build moveHtml excluding parentheses
     let circleHtml = '';
