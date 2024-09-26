@@ -24,7 +24,7 @@ import {
 
 //import { faceletsToPattern, patternToFacelets } from './utils';
 import { faceletsToPattern } from './utils';
-import { expandNotation, fixOrientation, getInverseMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets } from './functions';
+import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -327,6 +327,7 @@ function updateAlgDisplay() {
 
   let parenthesisColor = darkModeToggle.checked ? 'white' : 'black';
   var isDoubleTurn = false;
+  var isOppositeMove = false;
   var isAUF = false;
   userAlg.forEach((move, index) => {
     color = darkModeToggle.checked ? 'white' : 'black'; // Default color
@@ -357,19 +358,35 @@ function updateAlgDisplay() {
     if (index === currentMoveIndex + 1 && cleanMove.length > 1) {
         const isSingleBadAlg = simplifiedBadAlg.length === 1;
         const isDoubleBadAlg = simplifiedBadAlg.length === 2;
+        const isTripleBadAlg = simplifiedBadAlg.length === 3;
         // when we have a U2 on an alg that contains slices or wide moves, the U turn is not really a U, but a different move depending on the orientation of the cube
         // TODO: this is could be done better by checking the center state, but it works for now
         const isSliceOrWideMove = /[MESudlrbfxyz]/.test(userAlg.slice(0, currentMoveIndex + 1).join(' '));
 
         if ((isSingleBadAlg && simplifiedBadAlg[0][0] === cleanMove[0]) ||
+            (isSingleBadAlg && isSliceOrWideMove) ||
             (isDoubleBadAlg && 'MES'.includes(cleanMove[0])) ||
-            (isSingleBadAlg && isSliceOrWideMove)) {
+            (isTripleBadAlg && 'MES'.includes(cleanMove[0]))) {
             color = 'blue';
             isDoubleTurn = true;
         }
     }
 
+    // don't mark a R as incorrect if it's followed by a L move, or a U as incorrect if it's followed by a D move
+    if (index === currentMoveIndex + 1 && simplifiedBadAlg.length === 1) {
+      const inverseMove = getInverseMove(simplifiedBadAlg[0]);
+      if (inverseMove === userAlg[index + 1]?.replace(/[()]/g, "") &&
+          getOppositeMove(inverseMove) === userAlg[index]?.replace(/[()]/g, "")) {
+        color = 'white';
+        isOppositeMove = true;
+      }
+    }
+    if (index === currentMoveIndex + 2 && isOppositeMove) {
+      color = 'green';
+    }
+
     if (previousColor === 'blue') color = darkModeToggle.checked ? 'white' : 'black';
+    if (previousColor !== 'blue' && color !== 'blue' && isDoubleTurn) color = darkModeToggle.checked ? 'white' : 'black';
 
     // Build moveHtml excluding parentheses
     let circleHtml = '';
@@ -398,7 +415,7 @@ function updateAlgDisplay() {
   // Update the display with the constructed HTML
   $('#alg-display').html(displayHtml);
 
-  if (isDoubleTurn || isAUF) fixHtml = '';
+  if (isDoubleTurn || isAUF || isOppositeMove) fixHtml = '';
   if (fixHtml.length > 0) {
     showMistakesWithDelay(fixHtml);
   } else {
@@ -446,8 +463,7 @@ async function handleMoveEvent(event: GanCubeEvent) {
     // Check if the current move matches the user's alg
     var found: boolean = false;
     patternStates.forEach((pattern, index) => {
-      //console.log("obj[" + index + "]: " + JSON.stringify(pattern));
-      if ((myKpattern.applyMove(event.move).isIdentical(pattern)) || (myKpattern.isIdentical(initialstate.applyAlg(Alg.fromString(userAlg.join(' ')))))) {
+      if ((myKpattern.applyMove(event.move).isIdentical(pattern)) || (myKpattern.applyMove(event.move).isIdentical(initialstate.applyAlg(Alg.fromString(userAlg.join(' ')))) && index === patternStates.length - 1)) {
         currentMoveIndex=index;
         found = true;
         badAlg = [];
@@ -482,12 +498,15 @@ async function handleMoveEvent(event: GanCubeEvent) {
               checkedAlgorithmsCopy.push(currentAlg); // Add current algorithm to the copy
             }
 
-            // this is the initial state for the new algorithm
-            initialstate = pattern;
-            keepInitialState = true;
-            $('#alg-input').val(checkedAlgorithms[0].algorithm);
-            $('#train-alg').trigger('click');
           }
+          // this is the initial state for the new algorithm
+          initialstate = pattern;
+          keepInitialState = true;
+          if (checkedAlgorithms.length > 0) {
+            $('#alg-input').val(checkedAlgorithms[0].algorithm);
+          }
+          $('#train-alg').trigger('click');
+          return;
         }
         return;
       }
@@ -719,9 +738,6 @@ function setTimerState(state: typeof timerState) {
         let successCount: number = practiceCount - failedCount;
         $('#' + algId + '-success').html(`✅: ${successCount}`);
         if (failedCount > 0) $('#' + algId + '-failed').html(`❌: ${failedCount}`);
-
-        // for single alg (no category, entered manually using input alg)
-        if (checkedAlgorithms.length === 0) updateTimesDisplay();
       }
       break;
   }
@@ -789,14 +805,12 @@ $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
     checkedAlgorithmsCopy = checkedAlgorithmsCopy.filter(alg => alg.algorithm !== algorithm || alg.name !== name);
   }
   if (checkedAlgorithms.length > 0) {
-    if (name === checkedAlgorithms[0].name && algorithm === checkedAlgorithms[0].algorithm) {
-      $('#save-alg').prop('disabled', false);
-      if (conn) {
-        $('#train-alg').prop('disabled', false);
-      }
-      $('#alg-input').val(checkedAlgorithms[0].algorithm);
-      $('#train-alg').trigger('click');
+    $('#save-alg').prop('disabled', false);
+    if (conn) {
+      $('#train-alg').prop('disabled', false);
     }
+    $('#alg-input').val(checkedAlgorithms[0].algorithm);
+    $('#train-alg').trigger('click');
   }
   //console.log("checkedAlgorithms: " + JSON.stringify(checkedAlgorithms));
   //console.log("checkedAlgorithmsCopy: " + JSON.stringify(checkedAlgorithmsCopy));

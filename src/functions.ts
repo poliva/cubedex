@@ -82,6 +82,19 @@ export function getInverseMove(move: string): string {
   return inverseMoves[move] || move; // Return the move itself if not found
 }
 
+export function getOppositeMove(move: string): string {
+  const oppositeMoves: { [key: string]: string } = {
+      'U': 'D', 'D': 'U',
+      'U\'': 'D\'', 'D\'': 'U\'',
+      'L': 'R', 'R': 'L',
+      'L\'': 'R\'', 'R\'': 'L\'',
+      'F': 'B', 'B': 'F',
+      'F\'': 'B\'', 'B\'': 'F\''
+  };
+  return oppositeMoves[move] || move; // Return the move itself if not found
+}
+
+
 let wakeLock: WakeLockSentinel | null = null;
 
 // Function to request a wake lock
@@ -267,7 +280,6 @@ export function setStickering(category: string): string {
       let categoryWords = category.toLowerCase().split(/[^a-zA-Z0-9]+/);
       for (const item of validStickering) {
         for (const word of categoryWords) {
-          console.log(word + " === " + item.toLowerCase());
           if (word === item.toLowerCase()) {
             matchedStickering = item;
             break;
