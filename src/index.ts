@@ -1279,9 +1279,9 @@ let randomAlgorithms: boolean = false;
 const randomOrderToggle = document.getElementById('random-order-toggle') as HTMLInputElement;
 randomOrderToggle.addEventListener('change', () => {
   randomAlgorithms = randomOrderToggle.checked;
-  if (randomAlgorithms) {
-    randomOrderToggle.checked = false
-    randomAlgorithms = false
+  if (prioritizeSlowAlgs) {
+    prioritizeSlowToggle.checked = false
+    prioritizeSlowAlgs = false
   }
 });
 
@@ -1297,9 +1297,9 @@ let prioritizeSlowAlgs: boolean = false;
 const prioritizeSlowToggle = document.getElementById('prioritize-slow-toggle') as HTMLInputElement;
 prioritizeSlowToggle.addEventListener('change', () => {
   prioritizeSlowAlgs = prioritizeSlowToggle.checked;
-  if (prioritizeSlowAlgs) {
-    prioritizeSlowToggle.checked = false
-    prioritizeSlowAlgs = false
+  if (randomAlgorithms) {
+    randomOrderToggle.checked = false
+    randomAlgorithms = false
   }
 });
 
