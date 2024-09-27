@@ -3,6 +3,7 @@ import $ from 'jquery';
 import { Alg } from "cubing/alg";
 import { faceletsToPattern } from "./utils";
 import { fullStickeringEnabled } from "./index";
+import { makeTimeFromTimestamp } from 'gan-web-bluetooth';
 
 export function expandNotation(input: string): string {
   // Replace characters
@@ -209,6 +210,10 @@ export function deleteAlgorithm(category: string, algorithm: string) {
     if (savedAlgorithms[category].length === 0) {
       delete savedAlgorithms[category];
     }
+    const algId = algToId(algorithm);
+    localStorage.removeItem('Best-' + algId);
+    localStorage.removeItem('LastFiveTimes-' + algId);
+
     localStorage.setItem('savedAlgorithms', JSON.stringify(savedAlgorithms));
   }
 }
@@ -347,15 +352,19 @@ export function loadAlgorithms(category: string) {
           // if the colors are changed, match them in showMistakesWithDelay()
           let gray = i % 2 == 0 ? "bg-gray-400" : "bg-gray-50";
           let grayDarkMode = i % 2 == 0 ? "bg-gray-800" : "bg-gray-600";
+          const bestTime = bestTimeNumber(algId)
+
           algCases.append(`
             <div class="case-wrapper rounded-lg shadow-md ${gray} dark:${grayDarkMode} relative p-4" id="${algId}" data-name="${alg.name}" data-algorithm="${alg.algorithm}" data-category="${category}">
               <label for="case-toggle-${algId}" class="cursor-pointer">
               <span class="text-black dark:text-white text-sm">${alg.name}</span>
+              <div id="best-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">${bestTimeString(bestTime)}</div>
+              <div id="ao5-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">${averageTimeString(averageTimeNumber(algId))}</div>
               <div id="alg-case-${algId}" class="flex items-center justify-center scale-50 -mx-20 -mt-10 -mb-10 relative z-10">
                 <twisty-player puzzle="3x3x3" visualization="${visualization}" experimental-stickering="${matchedStickering}" alg="${alg.algorithm}" experimental-setup-anchor="end" control-panel="none" hint-facelets="none" experimental-drag-input="none" background="none"></twisty-player>
               </div>
               <div class="grid grid-cols-2 mt-1 relative z-10">
-                  <input type="checkbox" id="case-toggle-${algId}" class="sr-only" data-algorithm="${alg.algorithm}" data-name="${alg.name}" />
+                  <input type="checkbox" id="case-toggle-${algId}" class="sr-only" data-algorithm="${alg.algorithm}" data-name="${alg.name}" data-best="${bestTime}" />
                   <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
                   <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
                   <div class="absolute right-0 grid grid-cols-2 gap-1">
@@ -379,6 +388,33 @@ export function algToId(alg: string): string {
     id = "default-alg-id";
   }
   return id;
+}
+
+export function bestTimeNumber(algId: string): number | null {
+  const bestTime = localStorage.getItem('Best-' + algId);
+  if (!bestTime) return null;
+  return Number(bestTime)
+}
+
+export function bestTimeString(time: number | null): string {
+  if (!time) return 'Best: -';
+  const best = makeTimeFromTimestamp(time)
+  return `Best: ${best.seconds.toString(10).padStart(2, '0')}.${best.milliseconds.toString(10).padStart(3, '0')}`;
+}
+
+export function averageTimeNumber(algId: string): number | null {
+  const lastFiveTimesStorage = localStorage.getItem(`LastFiveTimes-${algId}`);
+  if (!lastFiveTimesStorage) return null;
+  const lastFiveTimes = lastFiveTimesStorage.split(',').map(num => Number(num.trim()));
+  return lastFiveTimes.length == 5 
+    ? lastFiveTimes.reduce((sum, time) => sum + time, 0) / 5 
+    : null;
+}
+
+export function averageTimeString(time: number | null): string {
+  if (!time) return 'Ao5: -';
+  const avg = makeTimeFromTimestamp(time);
+  return `Ao5: ${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}`;
 }
 
 function arraysEqual(arr1: number[], arr2: number[]): boolean {

@@ -23,7 +23,7 @@ import {
 } from 'gan-web-bluetooth';
 
 import { faceletsToPattern, patternToFacelets } from './utils';
-import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets } from './functions';
+import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageTimeNumber } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -249,7 +249,7 @@ function drawAlgInCube() {
   twistyPlayer.alg = Alg.fromString(userAlg.join(' ')).invert().toString();
 }
 
-var showMistakesTimeout: number;
+var showMistakesTimeout: NodeJS.Timeout;
 let hasShownFlashingIndicator = false;
 let hasFailedAlg = false;
 
@@ -498,6 +498,9 @@ async function handleMoveEvent(event: GanCubeEvent) {
             if (checkedAlgorithms.length === 0) {
               checkedAlgorithms = [...checkedAlgorithmsCopy]; // Copy remaining algorithms
               checkedAlgorithmsCopy = [];
+              if (prioritizeSlowAlgs) {
+                checkedAlgorithms.sort((a, b) => b.bestTime - a.bestTime);
+              }
             }
             // Randomize checkedAlgorithms if random is enabled
             if (randomAlgorithms) {
@@ -674,8 +677,14 @@ function updateTimesDisplay() {
   const timesDisplay = $('#times-display');
   const algId = algToId(OriginalUserAlg.join(' '));
 
-  const lastFiveTimes: number[] = $('#' + algId).data('lastFiveTimes') || [];
-  if (lastFiveTimes.length === 0) {
+  const lastFiveTimesStorage = localStorage.getItem('LastFiveTimes-' + algId);
+
+  var lastFiveTimes: number[] = []
+  if (lastFiveTimesStorage) {
+    lastFiveTimes = lastFiveTimesStorage.split(',').map(num => Number(num.trim()));
+  }
+  const bestTime = bestTimeNumber(algId)
+  if (lastFiveTimes.length === 0 && !bestTime) {
     timesDisplay.html(showAlgNameEnabled ? `${currentAlgName}` : '');
     return;
   }
@@ -691,7 +700,8 @@ function updateTimesDisplay() {
   const avg = makeTimeFromTimestamp(averageTime);
   const averageHtml = `<div id="average" class="font-bold">Average: ${avg.minutes}:${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}</div>`;
 
-  const displayHtml = showAlgNameEnabled ? `<p>${currentAlgName}</p>${timesHtml}${averageHtml}` : `${timesHtml}${averageHtml}`;
+  const bestTimeHtml = bestTimeString(bestTime)
+  const displayHtml = showAlgNameEnabled ? `<p>${currentAlgName}</p>${timesHtml}${averageHtml}${bestTimeHtml}` : `${timesHtml}${averageHtml}${bestTimeHtml}`;
   timesDisplay.html(displayHtml);
 }
 
@@ -702,7 +712,6 @@ function setTimerState(state: typeof timerState) {
   if ($('#' + algId).length === 0) {
     $('#default-alg-id').append(`<div id="${algId}" class="hidden"></div>`);
   }
-  let lastFiveTimes = $('#' + algId).data('lastFiveTimes') || [];
   let practiceCount = $('#' + algId).data('count') || 0;
 
   switch (state) {
@@ -732,13 +741,27 @@ function setTimerState(state: typeof timerState) {
 
       // Store the time and update the display
       if (finalTime > 0) {
+        const lastFiveTimesStorage = localStorage.getItem('LastFiveTimes-' + algId);
+        var lastFiveTimes: number[] = []
+        if (lastFiveTimesStorage) {
+          lastFiveTimes = lastFiveTimesStorage.split(',').map(num => Number(num.trim()));
+        }
         lastFiveTimes.push(finalTime);
         if (lastFiveTimes.length > 5) {
           lastFiveTimes.shift(); // Keep only the last 5 times
         }
         practiceCount++; // Increment the practice count
-        $('#' + algId).data('lastFiveTimes', lastFiveTimes);
+
+        localStorage.setItem('LastFiveTimes-' + algId, lastFiveTimes.join(','));
         $('#' + algId).data('count', practiceCount);
+
+        const bestTime = localStorage.getItem('Best-' + algId);
+        if (!bestTime || finalTime < Number(bestTime)) {
+          localStorage.setItem('Best-' + algId, String(finalTime));
+          $('#best-time-' + algId).html(bestTimeString(finalTime));
+        }
+        $('#ao5-time-' + algId).html(averageTimeString(averageTimeNumber(algId)));
+
         //console.log("[setTimerState] Setting lastFiveTimes to " + lastFiveTimes + " for algId " + algId);
         //console.log("[setTimerState] Setting practiceCount to " + practiceCount + " for algId " + algId);
 
@@ -796,6 +819,7 @@ initializeDefaultAlgorithms();
 interface Algorithm {
   algorithm: string;
   name: string;
+  bestTime: number;
 }
 
 let checkedAlgorithms: Algorithm[] = [];
@@ -806,8 +830,21 @@ let currentAlgName: string = '';
 $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
   const algorithm = $(this).data('algorithm');
   const name = $(this).data('name');
+  const bestTime = $(this).data('best');
   if ((this as HTMLInputElement).checked) {
-    checkedAlgorithms.push({ algorithm, name });
+    const currentAlg: Algorithm = { algorithm, name, bestTime };
+    if (prioritizeSlowAlgs) {
+      const index = (!bestTime)
+        ? checkedAlgorithms.reduceRight((lastIndex, alg, i) => !alg.bestTime ? lastIndex : i, -1)
+        : checkedAlgorithms.findIndex(alg => alg.bestTime && alg.bestTime < bestTime);
+      if (index === -1) {
+        checkedAlgorithms.push(currentAlg);
+      } else {
+        checkedAlgorithms.splice(index, 0, currentAlg);
+      }
+    } else {
+      checkedAlgorithms.push(currentAlg);
+    }
   } else {
     // remove all occurrences of this algorithm from checkedAlgorithms and checkedAlgorithmsCopy
     checkedAlgorithms = checkedAlgorithms.filter(alg => alg.algorithm !== algorithm || alg.name !== name);
@@ -829,6 +866,22 @@ $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
 $('#delete-mode-toggle').on('change', () => {
   const isDeleteModeOn = $('#delete-mode-toggle').is(':checked');
   $('#delete-alg').prop('disabled', !isDeleteModeOn);
+  $('#delete-times').prop('disabled', !isDeleteModeOn);
+});
+
+$('#delete-times').on('click', () => {
+  if (confirm('Are you sure you want to remove the times for the selected algorithms?')) {
+    const category = $('#category-select').val()?.toString() || '';
+    for (const algorithm of checkedAlgorithms) {
+      if (algorithm) {
+        const algId = algToId(algorithm.algorithm);
+        localStorage.removeItem('Best-' + algId);
+        localStorage.removeItem('LastFiveTimes-' + algId);
+      }
+    }
+    loadAlgorithms(category); // Refresh the algorithm list
+    updateTimesDisplay();
+  }
 });
 
 // Event listener for Delete button
@@ -1226,6 +1279,10 @@ let randomAlgorithms: boolean = false;
 const randomOrderToggle = document.getElementById('random-order-toggle') as HTMLInputElement;
 randomOrderToggle.addEventListener('change', () => {
   randomAlgorithms = randomOrderToggle.checked;
+  if (randomAlgorithms) {
+    randomOrderToggle.checked = false
+    randomAlgorithms = false
+  }
 });
 
 // Add event listener for the random AUF toggle
@@ -1233,6 +1290,17 @@ let randomizeAUF: boolean = false;
 const randomAUFToggle = document.getElementById('random-auf-toggle') as HTMLInputElement;
 randomAUFToggle.addEventListener('change', () => {
   randomizeAUF = randomAUFToggle.checked;
+});
+
+// Add event listener for the prioritize slow toggle
+let prioritizeSlowAlgs: boolean = false;
+const prioritizeSlowToggle = document.getElementById('prioritize-slow-toggle') as HTMLInputElement;
+prioritizeSlowToggle.addEventListener('change', () => {
+  prioritizeSlowAlgs = prioritizeSlowToggle.checked;
+  if (prioritizeSlowAlgs) {
+    prioritizeSlowToggle.checked = false
+    prioritizeSlowAlgs = false
+  }
 });
 
 // Add event listener for the prioritize failed toggle
