@@ -119,42 +119,6 @@ function resetAlg() {
   hideMistakes();
 }
 
-$('#alg-input').on('input', () => {
-  const algInput = $('#alg-input').val()?.toString().trim();
-  if (algInput && algInput.length > 0) {
-    $('#save-alg').prop('disabled', false);
-    if (conn) {
-      $('#train-alg').prop('disabled', false);
-    }
-  } else {
-    $('#save-alg').prop('disabled', true);
-    $('#train-alg').prop('disabled', true);
-  }
-});
-
-$('#input-alg').on('click', () => {
-  twistyPlayer.experimentalStickering = 'full';
-  twistyPlayer.alg = '';
-  resetAlg();
-  $('#alg-input').val('');
-  if (conn) {
-    inputMode = true;
-    $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
-    $('#train-alg').prop('disabled', false);
-    $('#save-alg').prop('disabled', false);
-  } else {
-    $('#alg-input').attr('placeholder', 'Please connect the smartcube first');
-  }
-  checkedAlgorithms = [];
-  checkedAlgorithmsCopy = [];
-  updateTimesDisplay();
-  $('#alg-display-container').hide();
-  $('#times-display').html('');
-  $('#timer').hide();
-  $('#alg-input').show();
-  $('#alg-input').get(0)?.focus();
-});
-
 $('#train-alg').on('click', () => {
   const algInput = $('#alg-input').val()?.toString().trim();
   if (algInput) {
@@ -165,6 +129,7 @@ $('#train-alg').on('click', () => {
     $('#alg-display-container').show();
     $('#timer').show();
     $('#alg-input').hide();
+    $('#save-container').hide();
     hideMistakes();
     requestWakeLock();
     hasFailedAlg = false;
@@ -463,8 +428,6 @@ async function handleMoveEvent(event: GanCubeEvent) {
       $('#alg-input').val(function(_, currentValue) {
         return Alg.fromString(currentValue + " " + lastMoves[lastMoves.length - 1].move).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString();
       });
-      $('#train-alg').prop('disabled', false);
-      $('#save-alg').prop('disabled', false);
       return;
     };
 
@@ -582,11 +545,31 @@ function handleCubeEvent(event: GanCubeEvent) {
     $('#gyroSupported').val(event.gyroSupported ? "YES" : "NO");
   } else if (event.type == "BATTERY") {
     $('#batteryLevel').val(event.batteryLevel + '%');
+    $('#bluetooth-indicator').hide();
+    $('#battery-indicator').attr('title', event.batteryLevel + '%');
+    if (event.batteryLevel >= 75) {
+      $('#battery-indicator').html('<svg fill="none" class="h-8 w-8 inline-block" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M18.5 7.5L3.5 7.50001V16.5L18.5 16.5V14.3571H20.5V9.21429H18.5V7.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5C5.5 9.94772 5.94772 9.5 6.5 9.5H7.5C8.05228 9.5 8.5 9.94772 8.5 10.5V13.5C8.5 14.0523 8.05228 14.5 7.5 14.5H6.5C5.94772 14.5 5.5 14.0523 5.5 13.5V10.5Z" fill="currentColor"/><path d="M9.5 10.5C9.5 9.94772 9.94772 9.5 10.5 9.5H11.5C12.0523 9.5 12.5 9.94772 12.5 10.5V13.5C12.5 14.0523 12.0523 14.5 11.5 14.5H10.5C9.94772 14.5 9.5 14.0523 9.5 13.5V10.5Z" fill="currentColor"/><path d="M13.5 10.5C13.5 9.94772 13.9477 9.5 14.5 9.5H15.5C16.0523 9.5 16.5 9.94772 16.5 10.5V13.5C16.5 14.0523 16.0523 14.5 15.5 14.5H14.5C13.9477 14.5 13.5 14.0523 13.5 13.5V10.5Z" fill="currentColor"/></svg>');
+      $('#battery-indicator').css('color', 'green');
+    }
+    else if (event.batteryLevel >= 50) {
+      $('#battery-indicator').html('<svg fill="none" class="h-8 w-8 inline-block" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M18.5 7.5L3.5 7.50001V16.5L18.5 16.5V14.3571H20.5V9.21429H18.5V7.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5C5.5 9.94772 5.94772 9.5 6.5 9.5H7.5C8.05228 9.5 8.5 9.94772 8.5 10.5V13.5C8.5 14.0523 8.05228 14.5 7.5 14.5H6.5C5.94772 14.5 5.5 14.0523 5.5 13.5V10.5Z" fill="currentColor"/><path d="M9.5 10.5C9.5 9.94772 9.94772 9.5 10.5 9.5H11.5C12.0523 9.5 12.5 9.94772 12.5 10.5V13.5C12.5 14.0523 12.0523 14.5 11.5 14.5H10.5C9.94772 14.5 9.5 14.0523 9.5 13.5V10.5Z" fill="currentColor"/></svg>');
+      $('#battery-indicator').css('color', 'yellow');
+    }
+    else if (event.batteryLevel >= 20) {
+      $('#battery-indicator').html('<svg fill="none" class="h-8 w-8 inline-block" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M18.5 7.5L3.5 7.50001V16.5L18.5 16.5V14.3571H20.5V9.21429H18.5V7.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10.5C5.5 9.94772 5.94772 9.5 6.5 9.5H7.5C8.05228 9.5 8.5 9.94772 8.5 10.5V13.5C8.5 14.0523 8.05228 14.5 7.5 14.5H6.5C5.94772 14.5 5.5 14.0523 5.5 13.5V10.5Z" fill="currentColor"/></svg>');
+      $('#battery-indicator').css('color', 'orange');
+    }
+    else if (event.batteryLevel < 20) {
+      $('#battery-indicator').html('<svg fill="none" class="h-8 w-8 inline-block" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M18.5 7.5L3.5 7.50001V16.5L18.5 16.5V14.3571H20.5V9.21429H18.5V7.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 10V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M11.75 14.25C11.75 14.6642 11.4142 15 11 15C10.5858 15 10.25 14.6642 10.25 14.25C10.25 13.8358 10.5858 13.5 11 13.5C11.4142 13.5 11.75 13.8358 11.75 14.25Z" fill="currentColor"/></svg>');
+      $('#battery-indicator').css('color', 'red');
+    }
   } else if (event.type == "DISCONNECT") {
     twistyPlayer.alg = '';
     twistyTracker.alg = '';
     $('.info input').val('- n/a -');
     $('#connect').html('Connect');
+    $('#battery-indicator').hide();
+    $('#bluetooth-indicator').show();
   }
 }
 
@@ -600,19 +583,63 @@ const customMacAddressProvider: MacAddressProvider = async (device, isFallbackCa
   }
 };
 
-$('#show-help').on('click', () => {
-  const helpDiv = $('#help');
-  helpDiv.toggle();
-  if (helpDiv.css('display') === 'none') {
-    $('#show-help').html('Show Help');
+$('#alg-display').on('click', () => {
+  if (conn) {
+    inputMode = true;
+    $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
   } else {
-    $('#show-help').html('Hide Help');
-    $('#options-container').hide();
-    $('#load-container').hide();
-    $('#save-container').hide();
-    $('#info').hide();
-    $('#show-options').html('Show Options');
+    $('#alg-input').attr('placeholder', 'Please connect the smartcube first');
   }
+  $('#alg-display-container').hide();
+  $('#alg-input').show();
+  $('#alg-input').get(0)?.focus();
+  $('#app-top').show();
+  $('#save-success').hide();
+  $('#save-error').hide();
+  let currentAlgName = checkedAlgorithms[0]?.name || '';
+  let algId = algToId(checkedAlgorithms[0]?.algorithm) || algToId($('#alg-input').val() as string);
+  let subset = $('#' + algId).data('subset') || '';
+  let category = $('#' + algId).data('category') || '';
+  $('#subset-input').val(subset);
+  $('#category-input').val(category);
+  $('#alg-name-input').val(currentAlgName);
+  $('#save-container').show();
+});
+
+$('#input-alg').on('click', () => {
+  twistyPlayer.experimentalStickering = 'full';
+  twistyPlayer.alg = '';
+  resetAlg();
+  $('#alg-input').val('');
+  if (conn) {
+    inputMode = true;
+    $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
+  } else {
+    $('#alg-input').attr('placeholder', 'Please connect the smartcube first');
+  }
+  checkedAlgorithms = [];
+  checkedAlgorithmsCopy = [];
+  updateTimesDisplay();
+  $('#alg-display-container').hide();
+  $('#times-display').html('');
+  $('#timer').hide();
+  $('#alg-input').show();
+  $('#alg-input').get(0)?.focus();
+  $('#app-top').show();
+  $('#help').hide();
+  $('#options-container').hide();
+  $('#load-container').hide();
+  $('#save-container').hide();
+  $('#info').hide();
+});
+
+$('#show-help').on('click', () => {
+  $('#help').show();
+  $('#app-top').hide();
+  $('#options-container').hide();
+  $('#load-container').hide();
+  $('#save-container').hide();
+  $('#info').hide();
 });
 
 $('#device-info').on('click', () => {
@@ -623,8 +650,6 @@ $('#device-info').on('click', () => {
     $('#load-container').hide();
     $('#save-container').hide();
     $('#help').hide();
-    $('#show-options').html('Show Options');
-    $('#show-help').html('Show Help');
   } else {
     infoDiv.css('display', 'none');
   }
@@ -640,7 +665,7 @@ $('#reset-gyro').on('click', async () => {
   basis = null;
 });
 
-$('#connect').on('click', async () => {
+$('#connect-button').on('click', async () => {
   if (conn) {
     conn.disconnect();
     conn = null;
@@ -660,14 +685,13 @@ $('#connect').on('click', async () => {
     $('#deviceName').val(conn.deviceName);
     $('#deviceMAC').val(conn.deviceMAC);
     $('#connect').html('Disconnect');
+    $('#bluetooth-indicator').hide();
+    $('#battery-indicator').show();
     $('#reset-gyro').prop('disabled', false);
     $('#reset-state').prop('disabled', false);
     $('#device-info').prop('disabled', false);
-    if (($('#alg-input').val()?.toString().trim().length ?? 0) > 0) {
-      $('#train-alg').prop('disabled', false);
-    }
+    $('#train-alg').prop('disabled', false);
     $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
-    $('#alg-input').get(0)?.focus();
   }
 });
 
@@ -851,10 +875,6 @@ $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
     checkedAlgorithmsCopy = checkedAlgorithmsCopy.filter(alg => alg.algorithm !== algorithm || alg.name !== name);
   }
   if (checkedAlgorithms.length > 0) {
-    $('#save-alg').prop('disabled', false);
-    if (conn) {
-      $('#train-alg').prop('disabled', false);
-    }
     $('#alg-input').val(checkedAlgorithms[0].algorithm);
     $('#train-alg').trigger('click');
   }
@@ -900,6 +920,7 @@ $('#delete-alg').on('click', () => {
       deleteModeToggle.prop('checked', false);
       deleteModeToggle.toggle();
       $('#delete-alg').prop('disabled', true);
+      $('#delete-times').prop('disabled', true);
       checkedAlgorithms = [];
       checkedAlgorithmsCopy = [];
       // only re-load subsets if there are no more alg-cases (subset has been deleted)
@@ -917,6 +938,12 @@ $('#delete-alg').on('click', () => {
       }, 3000); // Disappears after 3 seconds
     }
   }
+});
+
+// Event listener for Cancel button
+$('#cancel-save').on('click', () => {
+  $('#save-container').hide();
+  $('#train-alg').trigger('click');
 });
 
 // Event listener for Confirm Save button
@@ -951,30 +978,40 @@ $('#confirm-save').on('click', () => {
 
 // Event listener for Load button
 $('#load-alg').on('click', () => {
+  $('#app-top').show();
   const categorySelect = $('#category-select');
   if (categorySelect.val() === null || categorySelect.val() === '') {
     loadCategories();
   }
-  $('#load-container').toggle();
+  $('#load-container').show();
   $('#save-container').hide();
   $('#options-container').hide();
   $('#help').hide();
   $('#info').hide();
-  $('#show-options').html('Show Options');
-  $('#show-help').html('Show Help');
+  $('#train-alg').trigger('click');
 });
 
 // Event listener for Save button
 $('#save-alg').on('click', () => {
+  if (conn) {
+    inputMode = true;
+    $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
+  } else {
+    $('#alg-input').attr('placeholder', 'Please connect the smartcube first');
+  }
+  $('#alg-display-container').hide();
+  $('#times-display').html('');
+  $('#timer').hide();
+  $('#alg-input').show();
+  $('#alg-input').get(0)?.focus();
+  $('#app-top').show();
   $('#save-success').hide();
   $('#save-error').hide();
-  $('#save-container').toggle();
+  $('#save-container').show();
   $('#load-container').hide();
   $('#options-container').hide();
   $('#help').hide();
   $('#info').hide();
-  $('#show-options').html('Show Options');
-  $('#show-help').html('Show Help');
 });
 
 // Event listener for Category select change
@@ -1034,20 +1071,13 @@ $('#import-file').on('change', (event) => {
   }
 });
 
-// Add event listener for Options button
 $('#show-options').on('click', () => {
-  const optionsDiv = $('#options-container');
-  optionsDiv.toggle();
-  if (optionsDiv.css('display') === 'none') {
-    $('#show-options').html('Show Options');
-  } else {
-    $('#show-options').html('Hide Options');
-    $('#load-container').hide();
-    $('#save-container').hide();
-    $('#info').hide();
-    $('#help').hide();
-    $('#show-help').html('Show Help');
-  }
+  $('#app-top').hide();
+  $('#load-container').hide();
+  $('#save-container').hide();
+  $('#info').hide();
+  $('#help').hide();
+  $('#options-container').show();
 });
 
 $(function() {
@@ -1323,5 +1353,36 @@ function toggleMoveMask() {
   });
   // change color of toggle-move-mask button
   $('#toggle-move-mask').toggleClass('bg-orange-500 hover:bg-orange-700', isMoveMasked).toggleClass('bg-blue-500 hover:bg-blue-700', !isMoveMasked);
-  $('#toggle-move-mask').text(isMoveMasked ? '👁 Unmask alg' : '👁 Mask alg');
+  $('#toggle-move-mask').html(isMoveMasked ? '<svg fill="currentColor" class="h-6 w-6 inline-block" viewBox="-5.5 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M10.32 22.32c-5.6 0-9.92-5.56-10.12-5.8-0.24-0.32-0.24-0.72 0-1.040 0.2-0.24 4.52-5.8 10.12-5.8s9.92 5.56 10.12 5.8c0.24 0.32 0.24 0.72 0 1.040-0.2 0.24-4.56 5.8-10.12 5.8zM1.96 16c1.16 1.32 4.52 4.64 8.36 4.64s7.2-3.32 8.36-4.64c-1.16-1.32-4.52-4.64-8.36-4.64s-7.2 3.32-8.36 4.64zM10.32 20c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.84 4-4 4zM10.32 13.68c-1.28 0-2.32 1.040-2.32 2.32s1.040 2.32 2.32 2.32 2.32-1.040 2.32-2.32-1.040-2.32-2.32-2.32z"></path></svg> Unmask alg' : '<svg fill="currentColor" class="h-6 w-6 inline-block" viewBox="-5.5 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M20.44 15.48c-0.12-0.16-2.28-2.92-5.48-4.56l0.92-3c0.12-0.44-0.12-0.92-0.56-1.040s-0.92 0.12-1.040 0.56l-0.88 2.8c-0.96-0.32-2-0.56-3.080-0.56-5.6 0-9.92 5.56-10.12 5.8-0.24 0.32-0.24 0.72 0 1.040 0.16 0.24 4.2 5.36 9.48 5.76l-0.56 1.8c-0.12 0.44 0.12 0.92 0.56 1.040 0.080 0.040 0.16 0.040 0.24 0.040 0.36 0 0.68-0.24 0.8-0.6l0.72-2.36c5-0.68 8.8-5.48 9-5.72 0.24-0.28 0.24-0.68 0-1zM1.96 16c1.16-1.32 4.52-4.64 8.36-4.64 0.88 0 1.76 0.2 2.6 0.48l-0.28 0.88c-0.68-0.48-1.48-0.72-2.32-0.72-2.2 0-4 1.8-4 4s1.8 4 4 4c0.040 0 0.040 0 0.080 0l-0.2 0.64c-3.8-0.080-7.080-3.36-8.24-4.64zM10.88 18.24c-0.2 0.040-0.4 0.080-0.6 0.080-1.28 0-2.32-1.040-2.32-2.32s1.040-2.32 2.32-2.32c0.68 0 1.32 0.32 1.76 0.8l-1.16 3.76zM12 20.44l2.4-7.88c1.96 1.080 3.52 2.64 4.24 3.44-0.96 1.12-3.52 3.68-6.64 4.44z"></path></svg> Mask alg');
+}
+
+const menuToggle = document.getElementById('menu-toggle');
+const menuItems = document.getElementById('menu-items');
+if (menuToggle && menuItems) {
+  menuToggle.addEventListener('click', () => {
+    menuItems.classList.toggle('hidden');
+  });
+
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement;
+    if (!menuToggle.contains(target) && !menuItems.contains(target)) {
+      menuItems.classList.add('hidden');
+    }
+  });
+}
+
+// Add event listeners to menu items
+const menuButtons = document.querySelectorAll('#menu-items button');
+menuButtons.forEach(item => {
+  item.addEventListener('click', () => {
+    // Remove 'selected' class from all menu items
+    menuButtons.forEach(i => i.classList.remove('selected'));
+    // Add 'selected' class to the clicked item
+    item.classList.add('selected');
+  });
+});
+
+const categorySelect = $('#category-select');
+if (categorySelect.val() === null || categorySelect.val() === '') {
+  loadCategories();
 }

@@ -38,7 +38,6 @@ input:checked + div + .dot {
   transform: translateX(0); /* Initial position of the dot */
 }
 
-
 @keyframes flash {
   0%, 100% { opacity: 0.75; }
   50% { opacity: 0; }
@@ -46,4 +45,8 @@ input:checked + div + .dot {
 
 #flashing-indicator {
   animation: flash 1s infinite;
+}
+
+.selected {
+  @apply bg-blue-100 dark:bg-gray-700;
 }

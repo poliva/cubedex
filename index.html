@@ -22,291 +22,361 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 
-<body class="bg-gray-100 text-gray-900 font-sans leading-relaxed sm:p-4 p-1 dark:bg-gray-900 dark:text-white text-sm sm:text-base">
-  <div id="app" class="max-w-6xl min-w-[360px] mx-auto bg-white shadow-lg rounded-lg dark:bg-gray-800 sm:p-8 p-4 text-sm sm:text-base">
-    <div id="container" class="relative grid grid-cols-1 sm:grid-cols-3 items-start mb-3 gap-2 text-sm sm:text-base">
-      <div id="flashing-indicator" class="hidden absolute inset-0 opacity-75 z-50 rounded-lg"></div>
-      <div id="times-display" class="col-span-1 text-center font-mono text-gray-900 dark:text-white text-xs sm:text-base"></div>
-      <div id="cube" class="col-span-1 flex items-center justify-center min-w-[10em] min-h-[10em] sm:min-w-[15em] sm:min-h-[15em] text-sm sm:text-base"></div>
-      <div class="col-span-1 flex flex-col items-center sm:items-end text-sm sm:text-base">
-        <div id="timer" class="hidden text-right font-mono p-2 border border-gray-400 rounded-lg dark:border-gray-700 dark:text-white text-sm sm:text-xl"></div>
-      </div>
-    </div>
+<body class="bg-gray-100 text-gray-900 font-sans leading-relaxed sm:p-4 p-1 dark:bg-gray-900 dark:text-white text-sm sm:text-base flex flex-col min-h-screen">
 
-    <input id="alg-input" type="text" placeholder="Please connect the smartcube first" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
-
-    <div id="alg-display-container" class="hidden justify-end relative">
-      <div class="flex justify-end">
-        <a href="#" id="toggle-move-mask" class="text-white bg-blue-500 hover:bg-blue-700 py-0 px-2 rounded-lg text-sm absolute top-0 right-0">👁 Mask alg</a>
-      </div>
-      <div id="alg-display" class="font-bold tracking-wide text-gray-900 p-4 bg-white border border-gray-400 rounded-lg mb-4 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-xl"></div>
-    </div>
-
-    <div id="alg-fix" class="hidden text-red-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-red-500 dark:border-red-400 text-sm sm:text-base"></div>
-
-    <div class="controls flex flex-wrap gap-2 mb-6 justify-center text-sm sm:text-base">
-      <button id="train-alg" disabled class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed sm:py-2 sm:px-4 py-1 px-2 text-sm sm:text-base">Train</button>
-      <button id="load-alg" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm sm:text-base">Load Alg</button>
-      <button id="save-alg" disabled class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed sm:py-2 sm:px-4 py-1 px-2 text-sm sm:text-base">Save Alg</button>
-      <button id="input-alg" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm sm:text-base">Input Alg</button>
-      <button id="connect" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm sm:text-base">Connect</button>
-      <button id="show-options" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm sm:text-base">Show Options</button>
-      <button id="show-help" class="bg-blue-500 text-white font-bold rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 sm:py-2 sm:px-4 py-1 px-2 text-sm sm:text-base">Show Help</button>
-    </div>
-
-    <div id="help" class="help hidden text-gray-600 mt-4 leading-snug dark:text-gray-400 text-sm sm:text-base">
-      <div class="help-content block gap-2 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-        <p class="mb-3 font-bold">To get started with Cubedex:</p>
-        <ol class="list-disc list-inside mb-4">
-          <li class="mb-1">🔗 Connect your smart cube by clicking the <strong>Connect</strong> button. For more details, refer to the <a href="https://gist.github.com/afedotov/52057533a8b27a0277598160c384ae71" target="_blank" class="text-blue-500 hover:underline">FAQ</a>.</li>
-          <li class="mb-1">📜 Load an algorithm from the list or input your own in the input field using standard Rubik's cube notation. You can also input the algorithm by performing it on the cube.</li>
-          <li class="mb-1">🟩 Ensure the cube is oriented with <strong>WHITE on top</strong> and <strong>GREEN on front</strong>.</li>
-          <li class="mb-1">🏁 Click the <strong>Train</strong> button or turn the cube to start practicing the algorithm.</li>
-        </ol>
-        <p class="mb-3 font-bold">During training:</p>
-        <ul class="list-disc list-inside mb-4">
-          <li class="mb-1">⏱️ The timer will start automatically when you begin the algorithm.</li>
-          <li class="mb-1">🏆 Upon successful completion, the timer will stop and your last 5 times along with their average will be displayed.</li>
-          <li class="mb-1">🔄 If you make a mistake, follow the moves shown in the <strong>Fix</strong> section to correct it. Ensure the top center is <strong>WHITE</strong> and the front center is <strong>GREEN</strong>.</li>
-        </ul>
-        <p class="mb-3 font-bold">Customize your practice drills:</p>
-        <ul class="list-disc list-inside mb-4">
-          <li class="mb-1">📂 Pick a category, choose subsets, and select the cases you want to work on.</li>
-          <li class="mb-1">🎲 Enable <strong>Random Order</strong> to mix up the algorithms.</li>
-          <li class="mb-1">🔀 Try <strong>Random AUF</strong> to practice with random orientations. For 2-sided recognition, turn off the Gyroscope Orientation and Mirror Sticker hints in Options, letting you view only two sides of the cube. For sets like PLL or ZBLL, you'll also get random post-AUFs to sharpen your AUF prediction.</li>
-          <li class="mb-1">🐌 Activate <strong>Prioritize Slow Cases</strong> to improve these slow algorithms.</li>
-          <li class="mb-1">🎯 Activate <strong>Prioritize Failed Cases</strong> to focus on the algorithms you find most challenging.</li>
-          <li class="mb-1">📝 Want to change the algorithm for one or more cases? Use <strong>Export Algs</strong> in Options, modify the algorithm in the JSON file, then import it back.</li>
-          <li class="mb-1">⏳ Training for PLL Time Attack? Create a new category and add all your PLL algorithms in sequence for a timed practice session.</li>
-        </ul>
-        <p class="mb-3 mt-6 text-center"><strong>Love Cubedex? Help us grow! 🌱</strong> Support the app's development on <a href="https://ko-fi.com/cubedex" target="_blank" class="text-blue-500 hover:underline">Ko-fi</a>:</p>
-        <div class="text-center items-center justify-center"><script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Support Me on Ko-fi', '#29abe0', 'H2H6132Z3Z');kofiwidget2.draw();</script></div>
-      </div>
-    </div>
-
-    <!-- Hidden elements for saving and loading algorithms -->
-    <div id="save-container" class="hidden flex-col gap-4 mt-4 text-sm sm:text-base">
-      <input id="category-input" type="text" placeholder="Category name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
-      <input id="subset-input" type="text" placeholder="Subset name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
-      <input id="alg-name-input" type="text" placeholder="Case name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-6 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
-      <button id="confirm-save" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Save</button>
-      <div id="save-error" class="hidden mt-4 text-red-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-red-500 dark:border-red-400 text-sm sm:text-base"></div>
-      <div id="save-success" class="hidden mt-4 text-green-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-green-500 dark:border-green-400 text-sm sm:text-base"></div>
-    </div>
-
-    <div id="load-container" class="hidden flex-col gap-4 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-      <div id="default-alg-id" class="hidden bg-red-400"><!-- wildcard to add classes used in js --></div>
-      <label for="category-select" class="text-sm sm:text-base text-gray-900 block mb-2 dark:text-white">Category:</label>
-      <select id="category-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400 text-sm sm:text-base">
-        <option value="">Filter by Category</option>
-      </select>
-        <p class="text-sm sm:text-base mb-2 flex items-center">Subset: <input type="checkbox" id="select-all-subsets-toggle" class="form-checkbox h-5 w-5 text-blue-600 ml-2" /></p>
-      <div id="subset-checkboxes" class="flex flex-col space-y-2 p-4 mb-4 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-        <div id="subset-checkboxes-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"></div>
-      </div>
-
-      <div class="flex items-center mb-4 text-sm sm:text-base">
-        <label for="select-all-toggle" class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="select-all-toggle" class="sr-only" />
-          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-        </label>
-        <span class="ml-2 text-gray-900 dark:text-white">Select All</span>
-      </div>
-
-      <div class="flex items-center mb-4 text-sm sm:text-base">
-        <label for="random-order-toggle" class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="random-order-toggle" class="sr-only" />
-          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-        </label>
-        <span class="ml-2 text-gray-900 dark:text-white">Random Order</span>
-      </div>
-
-      <div class="flex items-center mb-4 text-sm sm:text-base">
-        <label for="random-auf-toggle" class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="random-auf-toggle" class="sr-only" />
-          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-        </label>
-        <span class="ml-2 text-gray-900 dark:text-white">Random AUF</span>
-      </div>
-
-      <div class="flex items-center mb-4 text-sm sm:text-base">
-        <label for="prioritize-slow-toggle" class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="prioritize-slow-toggle" class="sr-only" />
-          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-        </label>
-        <span class="ml-2 text-gray-900 dark:text-white">Prioritize Slow Cases</span>
-      </div>
-
-      <div class="flex items-center mb-4 text-sm sm:text-base">
-        <label for="prioritize-failed-toggle" class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="prioritize-failed-toggle" class="sr-only" />
-          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-        </label>
-        <span class="ml-2 text-gray-900 dark:text-white">Prioritize Failed Cases</span>
-      </div>
-
-      <div id="alg-cases" class="grid grid-cols-1 sm:grid-cols-3 p-2 sm:p-4 gap-2 sm:gap-4">
-      </div>
-      <div class="delete-mode-container flex items-center gap-2 text-sm sm:text-base">
-        <label for="delete-mode-toggle" class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="delete-mode-toggle" class="sr-only" />
-          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-        </label>
-        <span class="ml-2 text-gray-900 dark:text-white">Delete Mode</span>
-        <button id="delete-alg" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Delete Algorithm</button>
-        <button id="delete-times" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Delete Times</button>
-      </div>
-      <div id="delete-success" class="hidden mt-4 text-green-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-green-500 dark:border-green-400 text-sm sm:text-base"></div>
-    </div>
-
-    <!-- Hidden file input for importing algorithms -->
-    <input type="file" id="import-file" class="hidden text-sm sm:text-base">
-
-    <div id="info" class="info hidden grid-cols-[auto_1fr] gap-4 my-4 text-sm sm:text-base">
-      <label for="deviceName" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Device Name:</label>
-      <input id="deviceName" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-
-      <label for="deviceMAC" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Device MAC:</label>
-      <input id="deviceMAC" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-
-      <label for="hardwareName" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Hardware Name:</label>
-      <input id="hardwareName" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-
-      <label for="hardwareVersion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Hardware Version:</label>
-      <input id="hardwareVersion" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-
-      <label for="softwareVersion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Software Version:</label>
-      <input id="softwareVersion" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-
-      <label for="productDate" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Product Date:</label>
-      <input id="productDate" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-
-      <label for="gyroSupported" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Gyro Supported:</label>
-      <input id="gyroSupported" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-
-      <label for="batteryLevel" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Battery:</label>
-      <input id="batteryLevel" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-
-      <label for="skew" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Clock Skew:</label>
-      <input id="skew" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-
-      <label for="quaternion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Quaternion:</label>
-      <input id="quaternion" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-      <label for="velocity" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Angular Velocity:</label>
-      <input id="velocity" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-    </div>
-
-    <div id="options-container" class="hidden flex-col gap-2 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-      <div id="alg-options-container" class="mb-4">
-        <p>Algorithms Options:</p>
-        <div class="flex flex-wrap gap-2">
-          <button id="export-algs" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Export Algs</button>
-          <button id="import-algs" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Import Algs</button>
+  <div class="flex flex-row flex-grow">
+    <div id="menu-container" class="z-50 relative justify-center flex-shrink-0 md:flex-shrink-0 md:w-44">
+      <div id="menu-toggle-container" class="fixed top-4 left-4">
+        <button id="menu-toggle" class="absolute text-blue-500 hover:text-blue-700 focus:outline-none md:hidden">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <div id="menu-items" class="z-50 hidden md:block absolute top-12 md:top-0 left-0 mt-2 w-44 bg-white dark:bg-gray-800 rounded-lg shadow-lg text-gray-700 dark:text-gray-200">
+          <button id="load-alg" class="block w-full text-left px-4 py-2 hover:bg-blue-100 dark:hover:bg-gray-700 rounded-t-lg selected">
+            <svg class="h6 w-6 inline-block mr-2 fill-current" viewBox="0 0 512.018 512.018" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <g>
+                <g>
+                  <path d="M512.009,106.652c0-0.491-0.019-0.977-0.051-1.457c-0.011-0.166-0.032-0.331-0.047-0.497
+                    c-0.028-0.313-0.058-0.626-0.099-0.935c-0.031-0.235-0.071-0.468-0.11-0.701c-0.036-0.216-0.073-0.432-0.115-0.646
+                    c-0.061-0.313-0.132-0.624-0.207-0.935c-0.021-0.087-0.043-0.173-0.066-0.259c-1.492-5.847-5.424-11.125-11.813-13.978
+                    c-0.5-0.228-1.01-0.434-1.527-0.624c-0.002-0.001-0.005-0.002-0.007-0.003l-0.091-0.033c-0.172-0.062-0.341-0.129-0.515-0.187
+                    L263.3,1.284c-4.709-1.713-9.872-1.713-14.581,0L14.658,86.398c-0.171,0.057-0.338,0.123-0.507,0.185l-0.098,0.036
+                    c-0.003,0.001-0.005,0.002-0.008,0.003c-0.517,0.19-1.027,0.395-1.527,0.624c-6.39,2.852-10.322,8.131-11.813,13.978
+                    c-0.022,0.086-0.044,0.172-0.066,0.259c-0.075,0.31-0.145,0.621-0.207,0.934c-0.043,0.215-0.079,0.432-0.116,0.65
+                    c-0.038,0.232-0.079,0.464-0.109,0.697c-0.042,0.311-0.071,0.625-0.1,0.941c-0.015,0.164-0.035,0.327-0.046,0.491
+                    c-0.033,0.486-0.052,0.977-0.052,1.473v298.667c0,8.971,5.612,16.983,14.043,20.049l234.667,85.333
+                    c0.002,0.001,0.005,0.001,0.007,0.002c1.641,0.601,3.364,1.005,5.135,1.185c0.038,0.004,0.075,0.009,0.113,0.013
+                    c0.328,0.032,0.658,0.052,0.988,0.068c0.123,0.006,0.245,0.016,0.368,0.02c0.226,0.007,0.453,0.005,0.68,0.005
+                    c0.227,0,0.454,0.002,0.68-0.005c0.122-0.004,0.245-0.014,0.368-0.02c0.331-0.016,0.661-0.037,0.988-0.068
+                    c0.038-0.004,0.075-0.009,0.113-0.013c1.771-0.18,3.493-0.584,5.135-1.185c0.002-0.001,0.005-0.001,0.007-0.002l234.667-85.333
+                    c8.431-3.066,14.043-11.078,14.043-20.049V106.668C512.009,106.663,512.009,106.658,512.009,106.652z M256.009,44.033
+                    l172.242,62.633L256.009,169.3L83.768,106.667L256.009,44.033z M42.676,137.124l192,69.818v253.267l-192-69.818V137.124z
+                     M469.343,390.391l-192,69.818V206.943l128.676-46.791l63.324-23.027V390.391z"/>
+                </g>
+              </g>
+            </svg>
+            Practice</button>
+          <button id="save-alg" class="block w-full text-left px-4 py-2 hover:bg-blue-100 dark:hover:bg-gray-700">
+            <svg fill="none" class="h-6 w-6 inline-block mr-2 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M19.186 2.09c.521.25 1.136.612 1.625 1.101.49.49.852 1.104 1.1 1.625.313.654.11 1.408-.401 1.92l-7.214 7.213c-.31.31-.688.541-1.105.675l-4.222 1.353a.75.75 0 0 1-.943-.944l1.353-4.221a2.75 2.75 0 0 1 .674-1.105l7.214-7.214c.512-.512 1.266-.714 1.92-.402zm.211 2.516a3.608 3.608 0 0 0-.828-.586l-6.994 6.994a1.002 1.002 0 0 0-.178.241L9.9 14.102l2.846-1.496c.09-.047.171-.107.242-.178l6.994-6.994a3.61 3.61 0 0 0-.586-.828zM4.999 5.5A.5.5 0 0 1 5.47 5l5.53.005a1 1 0 0 0 0-2L5.5 3A2.5 2.5 0 0 0 3 5.5v12.577c0 .76.082 1.185.319 1.627.224.419.558.754.977.978.442.236.866.318 1.627.318h12.154c.76 0 1.185-.082 1.627-.318.42-.224.754-.559.978-.978.236-.442.318-.866.318-1.627V13a1 1 0 1 0-2 0v5.077c0 .459-.021.571-.082.684a.364.364 0 0 1-.157.157c-.113.06-.225.082-.684.082H5.923c-.459 0-.57-.022-.684-.082a.363.363 0 0 1-.157-.157c-.06-.113-.082-.225-.082-.684V5.5z" fill="currentColor"/>
+            </svg>
+            New Alg</button>
+          <button id="show-options" class="block w-full text-left px-4 py-2 hover:bg-blue-100 dark:hover:bg-gray-700">
+            <svg fill="currentColor" class="fill-current h-6 w-6 inline-block mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 569.16 569.16">
+              <path d="M513.217,216.366c-18.427,0-31.318-4.568-34.492-12.218c-3.17-7.647,2.702-19.982,15.704-32.999l33.109-33.109
+                l6.493-6.493l-6.493-6.49l-83.474-83.44l-6.49-6.49l-6.49,6.49l-33.079,33.082c-14.422,14.419-24.076,16.573-28.547,16.573
+                c-3.295,0-5.915-1.083-8.24-3.415c-3.151-3.161-8.434-11.5-8.391-31.864c0-0.386-0.021-0.768-0.067-1.147V9.18V0h-9.18H225.599
+                h-9.18v9.18v46.931c-0.024,8.229-1.3,35.166-16.741,35.166c-4.464,0-14.104-2.154-28.519-16.576l-33.103-33.085l-6.49-6.487
+                l-6.49,6.49l-83.44,83.44l-6.487,6.487l6.484,6.49l33.082,33.112c13.018,13.011,18.896,25.343,15.729,32.996
+                c-3.17,7.65-16.046,12.222-34.446,12.222H9.18H0v9.18V343.58v9.18h9.18h46.815c18.396,0,31.273,4.568,34.443,12.219
+                c3.173,7.656-2.705,20.004-15.722,33.025l-33.079,33.08l-6.49,6.49l6.49,6.492l83.44,83.475l6.493,6.496l6.494-6.496
+                l33.097-33.113c14.407-14.4,24.049-16.551,28.51-16.551c15.45,0,16.726,26.918,16.75,35.168v46.936v9.18h9.18h117.984h9.18v-9.18
+                v-45.662c0.046-0.377,0.067-0.752,0.067-1.135c-0.042-20.373,5.239-28.713,8.391-31.871c2.329-2.334,4.951-3.42,8.25-3.42
+                c4.471,0,14.125,2.148,28.544,16.539l33.069,33.104l6.49,6.498l6.493-6.496l83.474-83.471l6.493-6.492l-6.496-6.494
+                l-33.112-33.082c-12.999-13.023-18.871-25.373-15.698-33.023c3.174-7.648,16.065-12.215,34.489-12.215h46.761h9.18v-9.18V225.546
+                v-9.18h-9.18H513.217z M413.1,284.58c0,70.867-57.653,128.52-128.52,128.52c-70.867,0-128.52-57.652-128.52-128.52
+                c0-70.867,57.653-128.52,128.52-128.52C355.446,156.06,413.1,213.713,413.1,284.58z"/>
+            </svg>
+            Options</button>
+          <button id="show-help" class="block w-full text-left px-4 py-2 hover:bg-blue-100 dark:hover:bg-gray-700 rounded-b-lg">
+            <svg viewBox="0 0 24 24" fill="none" class="h-6 w-6 inline-block mr-2 fill-current" xmlns="http://www.w3.org/2000/svg">
+              <path d="M23 12C23 18.0751 18.0751 23 12 23C5.92487 23 1 18.0751 1 12C1 5.92487 5.92487 1 12 1C18.0751 1 23 5.92487 23 12ZM3.00683 12C3.00683 16.9668 7.03321 20.9932 12 20.9932C16.9668 20.9932 20.9932 16.9668 20.9932 12C20.9932 7.03321 16.9668 3.00683 12 3.00683C7.03321 3.00683 3.00683 7.03321 3.00683 12Z" fill="currentColor"/>
+              <path d="M13.5 18C13.5 18.8284 12.8284 19.5 12 19.5C11.1716 19.5 10.5 18.8284 10.5 18C10.5 17.1716 11.1716 16.5 12 16.5C12.8284 16.5 13.5 17.1716 13.5 18Z" fill="currentColor"/>
+              <path d="M11 12V14C11 14 11 15 12 15C13 15 13 14 13 14V12C13 12 13.4792 11.8629 13.6629 11.7883C13.6629 11.7883 13.9969 11.6691 14.2307 11.4896C14.4646 11.3102 14.6761 11.097 14.8654 10.8503C15.0658 10.6035 15.2217 10.3175 15.333 9.99221C15.4443 9.66693 15.5 9.4038 15.5 9C15.5 8.32701 15.3497 7.63675 15.0491 7.132C14.7596 6.61604 14.3476 6.21786 13.8132 5.93745C13.2788 5.64582 12.6553 5.5 11.9427 5.5C11.4974 5.5 11.1021 5.55608 10.757 5.66825C10.4118 5.7692 10.1057 5.9094 9.83844 6.08887C9.58236 6.25712 9.36525 6.4478 9.18711 6.66091C9.02011 6.86281 8.8865 7.0591 8.78629 7.24978C8.68609 7.44046 8.61929 7.6087 8.58589 7.75452C8.51908 7.96763 8.49125 8.14149 8.50238 8.27609C8.52465 8.41069 8.59145 8.52285 8.70279 8.61258C8.81413 8.70231 8.9867 8.79765 9.22051 8.8986C9.46546 8.97712 9.65473 9.00516 9.78834 8.98273C9.93308 8.96029 10.05 8.89299 10.1391 8.78083C10.1391 8.78083 10.6138 8.10569 10.7474 7.97109C10.8922 7.82528 11.0703 7.71312 11.2819 7.6346C11.4934 7.54487 11.7328 7.5 12 7.5C12.579 7.5 13.0076 7.64021 13.286 7.92062C13.5754 8.18982 13.6629 8.41629 13.6629 8.93225C13.6629 9.27996 13.6017 9.56038 13.4792 9.77349C13.3567 9.9866 13.1953 10.1605 12.9949 10.2951C12.9949 10.2951 12.7227 10.3991 12.5 10.5C12.2885 10.5897 11.9001 10.7381 11.6997 10.8503C11.5104 10.9512 11.4043 11.0573 11.2819 11.2144C11.1594 11.3714 11 11.7308 11 12Z" fill="currentColor"/>
+            </svg>
+            Help</button>
         </div>
       </div>
-      <div id="device-options-container" class="mb-4">
-        <p>Smartcube Options:</p>
-        <div class="flex flex-wrap gap-2">
-          <button id="reset-state" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Reset State</button>
-          <button id="reset-gyro" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Reset Gyro</button>
-          <button id="device-info" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Device Info</button>
+    </div>
+
+    <div id="app" class="p-2 flex-grow ml-0">
+      <div id="app-top">
+        <div id="container" class="relative grid grid-cols-1 sm:grid-cols-3 items-start mb-3 gap-2 text-sm sm:text-base">
+          <div id="flashing-indicator" class="hidden absolute inset-0 opacity-75 z-50 rounded-lg"></div>
+          <div id="times-display" class="col-span-1 text-center font-mono text-gray-900 dark:text-white text-xs sm:text-base order-2 sm:order-1"></div>
+          <div id="cube" class="col-span-1 flex items-center justify-center min-w-[10em] min-h-[10em] sm:min-w-[15em] sm:min-h-[15em] text-sm sm:text-base order-3 sm:order-2"></div>
+          <div id="right-side" class="col-span-1 flex flex-col items-center sm:items-end text-sm sm:text-base order-1 sm:order-3">
+            <button id="connect-button" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base align-middle flex items-center">
+              <div id="connect">Connect</div>
+              <div id="bluetooth-indicator" class="ml-2">
+                <svg fill="currentColor" class="h-8 w-8 inline-block fill-current" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M 16 2 C 12.886719 2 10.03125 2.742188 8.03125 4.96875 C 6.03125 7.195313 5 10.714844 5 16 C 5 21.285156 6.03125 24.804688 8.03125 27.03125 C 10.03125 29.257813 12.886719 30 16 30 C 19.113281 30 21.972656 29.257813 23.96875 27.03125 C 25.964844 24.804688 27 21.285156 27 16 C 27 10.714844 25.964844 7.195313 23.96875 4.96875 C 21.972656 2.742188 19.113281 2 16 2 Z M 16 4 C 18.808594 4 20.945313 4.617188 22.46875 6.3125 C 23.992188 8.007813 25 10.980469 25 16 C 25 21.019531 23.992188 23.992188 22.46875 25.6875 C 20.945313 27.382813 18.808594 28 16 28 C 13.191406 28 11.054688 27.382813 9.53125 25.6875 C 8.007813 23.992188 7 21.019531 7 16 C 7 10.980469 8.007813 8.007813 9.53125 6.3125 C 11.054688 4.617188 13.191406 4 16 4 Z M 15 7 L 15 13.5625 L 12.71875 11.28125 L 11.28125 12.71875 L 14.5625 16 L 11.28125 19.28125 L 12.71875 20.71875 L 15 18.4375 L 15 25 L 16.59375 23.8125 L 20.59375 20.8125 L 21.53125 20.09375 L 17.4375 16 L 21.53125 11.90625 L 20.59375 11.1875 L 16.59375 8.1875 Z M 17 11 L 18.46875 12.09375 L 17 13.5625 Z M 17 18.4375 L 18.46875 19.90625 L 17 21 Z"/></svg>
+              </div>
+              <div id="battery-indicator" class="hidden ml-2">
+              </div>
+            </button>
+            <div id="timer" class="hidden text-right font-mono p-2 border border-gray-400 rounded-lg dark:border-gray-700 dark:text-white text-sm sm:text-xl mt-2"></div>
+          </div>
+        </div>
+
+        <div id="alg-bar" class="flex flex-row">
+          <button id="train-alg" disabled class="mt-2 mr-4 cursor-pointer inline-flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </button>
+
+          <input id="alg-input" type="text" placeholder="Please connect the smartcube first" class="w-full p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md mb-4 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
+
+          <div id="alg-display-container" class="hidden justify-end relative w-full">
+            <div class="flex justify-end">
+              <a href="#" id="toggle-move-mask" class="text-white bg-blue-500 hover:bg-blue-700 py-0 px-2 rounded-lg text-sm absolute top-0 right-0"><svg fill="currentColor" class="h-6 w-6 inline-block" viewBox="-5.5 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M20.44 15.48c-0.12-0.16-2.28-2.92-5.48-4.56l0.92-3c0.12-0.44-0.12-0.92-0.56-1.040s-0.92 0.12-1.040 0.56l-0.88 2.8c-0.96-0.32-2-0.56-3.080-0.56-5.6 0-9.92 5.56-10.12 5.8-0.24 0.32-0.24 0.72 0 1.040 0.16 0.24 4.2 5.36 9.48 5.76l-0.56 1.8c-0.12 0.44 0.12 0.92 0.56 1.040 0.080 0.040 0.16 0.040 0.24 0.040 0.36 0 0.68-0.24 0.8-0.6l0.72-2.36c5-0.68 8.8-5.48 9-5.72 0.24-0.28 0.24-0.68 0-1zM1.96 16c1.16-1.32 4.52-4.64 8.36-4.64 0.88 0 1.76 0.2 2.6 0.48l-0.28 0.88c-0.68-0.48-1.48-0.72-2.32-0.72-2.2 0-4 1.8-4 4s1.8 4 4 4c0.040 0 0.040 0 0.080 0l-0.2 0.64c-3.8-0.080-7.080-3.36-8.24-4.64zM10.88 18.24c-0.2 0.040-0.4 0.080-0.6 0.080-1.28 0-2.32-1.040-2.32-2.32s1.040-2.32 2.32-2.32c0.68 0 1.32 0.32 1.76 0.8l-1.16 3.76zM12 20.44l2.4-7.88c1.96 1.080 3.52 2.64 4.24 3.44-0.96 1.12-3.52 3.68-6.64 4.44z"></path></svg> Mask alg</a>
+            </div>
+            <div id="alg-display" class="font-bold tracking-wide text-gray-900 p-4 bg-white border border-gray-400 rounded-lg mb-4 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-xl"></div>
+          </div>
+        </div>
+        <div id="alg-fix" class="hidden text-red-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-red-500 dark:border-red-400 text-sm sm:text-base"></div>
+      </div>
+      <div id="help" class="help hidden md:mt-0 sm:mt-5 mt-8 text-gray-600 leading-snug dark:text-gray-400 text-sm sm:text-base">
+        <div class="help-content block gap-2 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+          <p class="mb-3 font-bold">To get started with Cubedex:</p>
+          <ol class="list-disc list-inside mb-4">
+            <li class="mb-1">🔗 Connect your smart cube by clicking the <strong>Connect</strong> button. For more details, refer to the <a href="https://gist.github.com/afedotov/52057533a8b27a0277598160c384ae71" target="_blank" class="text-blue-500 hover:underline">FAQ</a>.</li>
+            <li class="mb-1">📜 Load an algorithm from the list or input your own in the input field using standard Rubik's cube notation. You can also input the algorithm by performing it on the cube.</li>
+            <li class="mb-1">🟩 Ensure the cube is oriented with <strong>WHITE on top</strong> and <strong>GREEN on front</strong>.</li>
+            <li class="mb-1">🏁 Click the <strong>▶️ Train</strong> button and turn the cube to start practicing the algorithm.</li>
+          </ol>
+          <p class="mb-3 font-bold">During training:</p>
+          <ul class="list-disc list-inside mb-4">
+            <li class="mb-1">⏱️ The timer will start automatically when you begin the algorithm.</li>
+            <li class="mb-1">🏆 Upon successful completion, the timer will stop and your last 5 times along with their average will be displayed.</li>
+            <li class="mb-1">🔄 If you make a mistake, follow the moves shown in the <strong>Fix</strong> section to correct it. Ensure the top center is <strong>WHITE</strong> and the front center is <strong>GREEN</strong>.</li>
+          </ul>
+          <p class="mb-3 font-bold">Customize your practice drills:</p>
+          <ul class="list-disc list-inside mb-4">
+            <li class="mb-1">📂 Pick a category, choose subsets, and select the cases you want to work on.</li>
+            <li class="mb-1">🔀 Try <strong>Random AUF</strong> to practice with random orientations. For 2-sided recognition, turn off the Gyroscope Orientation and Mirror Sticker hints in Options, letting you view only two sides of the cube. For sets like PLL or ZBLL, you'll also get random post-AUFs to sharpen your AUF prediction.</li>
+            <li class="mb-1">🎲 Enable <strong>Random Order</strong> to mix up the algorithms.</li>
+            <li class="mb-1">🐌 Turn on <strong>Slow Cases First</strong> to improve these slow algorithms.</li>
+            <li class="mb-1">🎯 Activate <strong>Prioritize Failed Cases</strong> to focus on the algorithms you find most challenging.</li>
+            <li class="mb-1">📝 Want to change the algorithm for one or more cases? Click on the algorithm to edit it. You can also <strong>Export Algs</strong> in Options, modify the algorithm in the JSON file, then import it back.</li>
+            <li class="mb-1">⏳ Training for PLL Time Attack? Create a new category and add all your PLL algorithms in sequence for a timed practice session.</li>
+          </ul>
+          <p class="mb-3 mt-6 text-center"><strong>Love Cubedex? Help us grow! 🌱</strong> Support the app's development on <a href="https://ko-fi.com/cubedex" target="_blank" class="text-blue-500 hover:underline">Ko-fi</a>:</p>
+          <div class="text-center items-center justify-center"><script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Support Me on Ko-fi', '#29abe0', 'H2H6132Z3Z');kofiwidget2.draw();</script></div>
         </div>
       </div>
 
-      <div class="flex items-center mb-4 text-sm sm:text-base">
-        <label for="dark-mode-toggle" class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="dark-mode-toggle" class="sr-only" />
-          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-        </label>
-        <span class="ml-2">Dark Mode</span>
+      <!-- Hidden elements for saving and loading algorithms -->
+      <div id="save-container" class="hidden flex-col gap-4 text-sm sm:text-base">
+        <div id="save-wrapper" class="grid grid-cols-[auto_1fr] items-center gap-4 mb-4">
+          <label for="category-input" class="text-right my-auto pr-2">Category:</label>
+          <input id="category-input" type="text" placeholder="Category name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
+          <label for="subset-input" class="text-right my-auto pr-2">Subset:</label>
+          <input id="subset-input" type="text" placeholder="Subset name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
+          <label for="alg-name-input" class="text-right my-auto pr-2">Name:</label>
+          <input id="alg-name-input" type="text" placeholder="Case name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
+        </div>
+        <button id="confirm-save" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Save</button>
+        <button id="cancel-save" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Cancel</button>
+        <div id="save-error" class="hidden mt-4 text-red-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-red-500 dark:border-red-400 text-sm sm:text-base"></div>
+        <div id="save-success" class="hidden mt-4 text-green-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-green-500 dark:border-green-400 text-sm sm:text-base"></div>
       </div>
 
-      <div class="flex items-center mb-4 text-sm sm:text-base">
-        <label for="gyroscope-toggle" class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="gyroscope-toggle" class="sr-only" />
-          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-        </label>
-        <span class="ml-2">Animate Virtual Cube Orientation Using Gyroscope</span>
-      </div>
-
-      <div class="flex items-center mb-4 text-sm sm:text-base">
-        <label for="control-panel-toggle" class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="control-panel-toggle" class="sr-only" />
-          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-        </label>
-        <span class="ml-2">Virtual Cube Control Panel</span>
-      </div>
-
-      <div class="flex items-center mb-4 text-sm sm:text-base">
-        <label for="hintFacelets-toggle" class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="hintFacelets-toggle" class="sr-only" />
-          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-        </label>
-        <span class="ml-2">Floating Mirror Stickers</span>
-      </div>
-
-      <div class="flex items-center mb-4 text-sm sm:text-base">
-        <label for="full-stickering-toggle" class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="full-stickering-toggle" class="sr-only" />
-          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-        </label>
-        <span class="ml-2">Always Show Full Stickers</span>
-      </div>
-
-      <div class="flex items-center mb-4 text-sm sm:text-base">
-        <label for="flashing-indicator-toggle" class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="flashing-indicator-toggle" class="sr-only" />
-          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-        </label>
-        <span class="ml-2">Flashing Indicator</span>
-      </div>
-
-      <div class="flex items-center mb-4 text-sm sm:text-base">
-        <label for="show-alg-name-toggle" class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" id="show-alg-name-toggle" class="sr-only" />
-          <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-          <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-        </label>
-        <span class="ml-2">Show Case Name</span>
-      </div>
-
-      <div id="visualization-container">
-        <label for="visualization-select" class="text-base text-gray-900 block mb-2 dark:text-white">Cube Visualization Mode:</label>
-        <select id="visualization-select" class="p-2 w-[180px] border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700">
-          <option value="PG3D">PG3D</option>
-          <option value="2D">2D</option>
-          <option value="3D">3D</option>
-          <option value="experimental-2D-LL">2D-LL</option>
-          <option value="experimental-2D-LL-face">2D-LL-face</option>
+      <div id="load-container" class="flex-col gap-4 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+        <div id="default-alg-id" class="hidden bg-red-400"><!-- wildcard to add classes used in js --></div>
+        <label for="category-select" class="text-sm sm:text-base text-gray-900 block mb-2 dark:text-white">Category:</label>
+        <select id="category-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400 text-sm sm:text-base">
+          <option value="">Filter by Category</option>
         </select>
-        <label for="backview-select" class="text-base text-gray-900 block mb-2 dark:text-white">Cube Back View:</label>
-        <select id="backview-select" class="p-2 w-[180px] border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700">
-          <option value="none">Disabled</option>
-          <option value="side-by-side">Side-by-side</option>
-          <option value="top-right">Top Right</option>
-        </select>
+          <p class="text-sm sm:text-base mb-2 flex items-center">Subset: <input type="checkbox" id="select-all-subsets-toggle" class="form-checkbox h-5 w-5 text-blue-600 ml-2" /></p>
+        <div id="subset-checkboxes" class="flex flex-col space-y-2 p-4 mb-4 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+          <div id="subset-checkboxes-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2"></div>
+        </div>
+
+        <div class="flex items-center mb-4 text-sm sm:text-base">
+          <label for="select-all-toggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="select-all-toggle" class="sr-only" />
+            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+          </label>
+          <span class="ml-2 text-gray-900 dark:text-white">Select All</span>
+        </div>
+
+        <div class="flex items-center mb-4 text-sm sm:text-base">
+          <label for="random-auf-toggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="random-auf-toggle" class="sr-only" />
+            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+          </label>
+          <span class="ml-2 text-gray-900 dark:text-white">Random AUF</span>
+        </div>
+
+        <div class="flex items-center mb-4 text-sm sm:text-base">
+          <label for="random-order-toggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="random-order-toggle" class="sr-only" />
+            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+          </label>
+          <span class="ml-2 text-gray-900 dark:text-white">Random Order</span>
+        </div>
+
+        <div class="flex items-center mb-4 text-sm sm:text-base">
+          <label for="prioritize-slow-toggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="prioritize-slow-toggle" class="sr-only" />
+            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+          </label>
+          <span class="ml-2 text-gray-900 dark:text-white">Slow Cases First</span>
+        </div>
+
+        <div class="flex items-center mb-4 text-sm sm:text-base">
+          <label for="prioritize-failed-toggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="prioritize-failed-toggle" class="sr-only" />
+            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+          </label>
+          <span class="ml-2 text-gray-900 dark:text-white">Prioritize Failed Cases</span>
+        </div>
+
+        <div id="alg-cases" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 p-2 sm:p-4 gap-2 sm:gap-4">
+        </div>
+        <div class="delete-mode-container flex items-center gap-2 text-sm sm:text-base">
+          <label for="delete-mode-toggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="delete-mode-toggle" class="sr-only" />
+            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+          </label>
+          <span class="ml-2 text-gray-900 dark:text-white">Delete Mode</span>
+          <button id="delete-alg" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Delete Algorithm</button>
+          <button id="delete-times" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Delete Times</button>
+        </div>
+        <div id="delete-success" class="hidden mt-4 text-green-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-green-500 dark:border-green-400 text-sm sm:text-base"></div>
       </div>
 
+      <!-- Hidden file input for importing algorithms -->
+      <input type="file" id="import-file" class="hidden text-sm sm:text-base">
+
+      <div id="info" class="info hidden grid-cols-[auto_1fr] gap-4 my-4 text-sm sm:text-base">
+        <label for="deviceName" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Device Name:</label>
+        <input id="deviceName" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+        <label for="deviceMAC" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Device MAC:</label>
+        <input id="deviceMAC" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+        <label for="hardwareName" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Hardware Name:</label>
+        <input id="hardwareName" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+        <label for="hardwareVersion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Hardware Version:</label>
+        <input id="hardwareVersion" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+        <label for="softwareVersion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Software Version:</label>
+        <input id="softwareVersion" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+        <label for="productDate" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Product Date:</label>
+        <input id="productDate" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+        <label for="gyroSupported" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Gyro Supported:</label>
+        <input id="gyroSupported" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+        <label for="batteryLevel" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Battery:</label>
+        <input id="batteryLevel" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+        <label for="skew" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Clock Skew:</label>
+        <input id="skew" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+        <label for="quaternion" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Quaternion:</label>
+        <input id="quaternion" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+        <label for="velocity" class="text-sm text-gray-600 text-right my-auto pr-2 dark:text-gray-400">Angular Velocity:</label>
+        <input id="velocity" type="text" readonly value="- n/a -" class="font-bold text-gray-900 bg-white border border-gray-400 p-2 rounded-lg outline-none transition-colors duration-300 ease-in-out focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+      </div>
+
+      <div id="options-container" class="flex-col hidden gap-2 md:mt-0 sm:mt-5 mt-8 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+        <div id="alg-options-container" class="mb-4">
+          <p>Algorithms Options:</p>
+          <div class="flex flex-wrap gap-2">
+            <button id="export-algs" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Export Algs</button>
+            <button id="import-algs" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Import Algs</button>
+          </div>
+        </div>
+        <div id="device-options-container" class="mb-4">
+          <p>Smartcube Options:</p>
+          <div class="flex flex-wrap gap-2">
+            <button id="reset-state" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Reset State</button>
+            <button id="reset-gyro" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Reset Gyro</button>
+            <button id="device-info" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Device Info</button>
+          </div>
+        </div>
+
+        <div class="flex items-center mb-4 text-sm sm:text-base">
+            <label for="dark-mode-toggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="dark-mode-toggle" class="sr-only" />
+            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+          </label>
+          <span class="ml-2">Dark Mode</span>
+        </div>
+
+        <div class="flex items-center mb-4 text-sm sm:text-base">
+          <label for="gyroscope-toggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="gyroscope-toggle" class="sr-only" />
+            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+          </label>
+          <span class="ml-2">Animate Virtual Cube Orientation Using Gyroscope</span>
+        </div>
+
+        <div class="flex items-center mb-4 text-sm sm:text-base">
+          <label for="control-panel-toggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="control-panel-toggle" class="sr-only" />
+            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+          </label>
+          <span class="ml-2">Virtual Cube Control Panel</span>
+        </div>
+
+        <div class="flex items-center mb-4 text-sm sm:text-base">
+          <label for="hintFacelets-toggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="hintFacelets-toggle" class="sr-only" />
+            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+          </label>
+          <span class="ml-2">Floating Mirror Stickers</span>
+        </div>
+
+        <div class="flex items-center mb-4 text-sm sm:text-base">
+          <label for="full-stickering-toggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="full-stickering-toggle" class="sr-only" />
+            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+          </label>
+          <span class="ml-2">Always Show Full Stickers</span>
+        </div>
+
+        <div class="flex items-center mb-4 text-sm sm:text-base">
+          <label for="flashing-indicator-toggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="flashing-indicator-toggle" class="sr-only" />
+            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+          </label>
+          <span class="ml-2">Flashing Indicator</span>
+        </div>
+
+        <div class="flex items-center mb-4 text-sm sm:text-base">
+          <label for="show-alg-name-toggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="show-alg-name-toggle" class="sr-only" />
+            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+          </label>
+          <span class="ml-2">Show Case Name</span>
+        </div>
+
+        <div id="visualization-container">
+          <label for="visualization-select" class="text-base text-gray-900 block mb-2 dark:text-white">Cube Visualization Mode:</label>
+          <select id="visualization-select" class="p-2 w-[180px] border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700">
+            <option value="PG3D">PG3D</option>
+            <option value="2D">2D</option>
+            <option value="3D">3D</option>
+            <option value="experimental-2D-LL">2D-LL</option>
+            <option value="experimental-2D-LL-face">2D-LL-face</option>
+          </select>
+          <label for="backview-select" class="text-base text-gray-900 block mb-2 dark:text-white">Cube Back View:</label>
+          <select id="backview-select" class="p-2 w-[180px] border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700">
+            <option value="none">Disabled</option>
+            <option value="side-by-side">Side-by-side</option>
+            <option value="top-right">Top Right</option>
+          </select>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="footer min-w-[360px] text-xs block p-2 text-center leading-tight text-gray-600 dark:text-gray-400">
+
+  <div id="footer" class="footer min-w-[360px] text-xs block p-2 text-center leading-tight text-gray-600 dark:text-gray-400">
     <p>Cubedex has been created with ♥ by <a href="https://twitter.com/pof" target="_blank" class="text-blue-500 hover:underline">Pau Oliva Fora</a> using <a href="https://github.com/afedotov/gan-web-bluetooth" target="_blank" class="text-blue-500 hover:underline">gan-web-bluetooth</a> and <a href="https://github.com/cubing/cubing.js" target="_blank" class="text-blue-500 hover:underline">cubing.js</a>.</p>
     <p>The <a href="https://github.com/poliva/cubedex" target="_blank" class="text-blue-500 hover:underline">source code</a> is available on GitHub, feel free to contribute by sending a PR or <a href="https://ko-fi.com/cubedex" target="_blank" class="text-blue-500 hover:underline">buy me a coffee</a>.</p>
   </div>
   <script type="module" src="/src/index.ts"></script>
 
 </body>
-
 </html>

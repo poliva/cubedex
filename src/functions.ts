@@ -186,8 +186,16 @@ export function saveAlgorithm(category: string, subset: string, name: string, al
   }
   const existingSubset = savedAlgorithms[category].find((s: { subset: string }) => s.subset === subset);
   if (existingSubset) {
-    existingSubset.algorithms.push({ name, algorithm });
+    const existingAlgorithmIndex = existingSubset.algorithms.findIndex((alg: { name: string }) => alg.name === name);
+    if (existingAlgorithmIndex !== -1) {
+      // Replace the existing algorithm
+      existingSubset.algorithms[existingAlgorithmIndex] = { name, algorithm };
+    } else {
+      // Add a new algorithm
+      existingSubset.algorithms.push({ name, algorithm });
+    }
   } else {
+    // Add a new subset with the algorithm
     savedAlgorithms[category].push({
       subset,
       algorithms: [{ name, algorithm }],
@@ -317,7 +325,7 @@ export function loadSubsets(category: string) {
     savedAlgorithms[category].forEach((subset: { subset: string }) => {
       subsetCheckboxes.append(`
         <label class="inline-flex items-center col-span-1">
-          <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" value="${subset.subset}">
+          <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" name="${subset.subset}" value="${subset.subset}">
           <span class="ml-2">${subset.subset}</span>
         </label>
       `);
@@ -355,7 +363,7 @@ export function loadAlgorithms(category: string) {
           const bestTime = bestTimeNumber(algId)
 
           algCases.append(`
-            <div class="case-wrapper rounded-lg shadow-md ${gray} dark:${grayDarkMode} relative p-4" id="${algId}" data-name="${alg.name}" data-algorithm="${alg.algorithm}" data-category="${category}">
+            <div class="case-wrapper rounded-lg shadow-md ${gray} dark:${grayDarkMode} relative p-4" id="${algId}" data-name="${alg.name}" data-algorithm="${alg.algorithm}" data-category="${category}" data-subset="${subset}">
               <label for="case-toggle-${algId}" class="cursor-pointer">
               <span class="text-black dark:text-white text-sm">${alg.name}</span>
               <div id="best-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">${bestTimeString(bestTime)}</div>
@@ -383,8 +391,8 @@ export function loadAlgorithms(category: string) {
 }
 
 export function algToId(alg: string): string {
-  let id = alg.trim().replace(/\s+/g, '-').replace(/[']/g, 'p').replace(/[(]/g, 'o').replace(/[)]/g, 'c');
-  if (id.length == 0) {
+  let id = alg?.trim().replace(/\s+/g, '-').replace(/[']/g, 'p').replace(/[(]/g, 'o').replace(/[)]/g, 'c');
+  if (id == null || id.length == 0) {
     id = "default-alg-id";
   }
   return id;
