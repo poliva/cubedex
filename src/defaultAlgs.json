@@ -635,7 +635,7 @@
         },
         {
           "name": "F2L 15 - Back Right",
-          "algorithm": "L' U L U2 F U F'"
+          "algorithm": "R' U R U2 f R f'"
         },
         {
           "name": "F2L 15 - Back Left",
