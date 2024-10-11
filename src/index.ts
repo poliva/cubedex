@@ -717,15 +717,26 @@ function updateTimesDisplay() {
   const timesHtml = lastFiveTimes.map((time: number, index: number) => {
     const t = makeTimeFromTimestamp(time);
     let number = practiceCount < 5 ? index + 1 : practiceCount - 5 + index + 1;
-    return `<div>Time ${number}: ${t.minutes}:${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}</div>`;
+    // Add emoji if the time is a PB
+    const emojiPB = time === bestTime ? ' 🎉' : '';
+    const minutesPart = t.minutes > 0 ? `${t.minutes}:` : '';
+    return `<div class="text-right">Time ${number}:</div><div class="text-left">${minutesPart}${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}${emojiPB}</div>`;
   }).join('');
 
   const averageTime = lastFiveTimes.reduce((a: number, b: number) => a + b, 0) / lastFiveTimes.length;
   const avg = makeTimeFromTimestamp(averageTime);
-  const averageHtml = `<div id="average" class="font-bold">Average: ${avg.minutes}:${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}</div>`;
+  const avgMinutesPart = avg.minutes > 0 ? `${avg.minutes}:` : '';
+  const averageHtml = `<div id="average" class="font-bold text-right">Average:</div><div class="font-bold text-left">${avgMinutesPart}${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}</div>`;
 
-  const bestTimeHtml = bestTimeString(bestTime)
-  const displayHtml = showAlgNameEnabled ? `<p>${currentAlgName}</p>${timesHtml}${averageHtml}${bestTimeHtml}` : `${timesHtml}${averageHtml}${bestTimeHtml}`;
+  let bestTimeHtml = '';
+  if (bestTime) {
+    const best = makeTimeFromTimestamp(bestTime);
+    const bestMinutesPart = best.minutes > 0 ? `${best.minutes}:` : '';
+    bestTimeHtml = `<div id="best" class="text-right">Best:</div><div class="text-left">${bestMinutesPart}${best.seconds.toString(10).padStart(2, '0')}.${best.milliseconds.toString(10).padStart(3, '0')}</div>`;
+  }
+
+  const gridHtml = `<div class="grid grid-cols-2 items-center gap-1">${timesHtml}${averageHtml}${bestTimeHtml}</div>`;
+  const displayHtml = showAlgNameEnabled ? `<p>${currentAlgName}</p>${gridHtml}` : gridHtml;
   timesDisplay.html(displayHtml);
 }
 
