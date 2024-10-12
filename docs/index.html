@@ -20,8 +20,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <script type="module" crossorigin src="/assets/index-DmeWs1Mn.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-76LUJ1LQ.css">
+  <script type="module" crossorigin src="/assets/index-DB0uJqni.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BNfKNj8G.css">
 <link rel="manifest" href="/manifest.json"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
 <body class="bg-gray-100 text-gray-900 font-sans leading-relaxed sm:p-4 p-1 dark:bg-gray-900 dark:text-white text-sm sm:text-base flex flex-col min-h-screen">
@@ -112,7 +112,8 @@
         </div>
 
         <div id="alg-bar" class="flex flex-row">
-          <button id="train-alg" disabled class="mt-2 mr-4 cursor-pointer inline-flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">
+
+          <button id="train-alg" disabled title="Train" class="mt-2 mr-4 cursor-pointer inline-flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
@@ -126,9 +127,20 @@
             </div>
             <div id="alg-display" class="font-bold tracking-wide text-gray-900 p-4 bg-white border border-gray-400 rounded-lg mb-4 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-xl"></div>
           </div>
+
+          <button id="scramble-to" disabled title="Scramble To..." class="mt-2 ml-4 cursor-pointer inline-flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">
+            <svg viewBox="0 0 24 24" fill="none" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 4V2M15 16V14M8 9H10M20 9H22M17.8 11.8L19 13M17.8 6.2L19 5M3 21L12 12M12.2 6.2L11 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+
         </div>
+
         <div id="alg-fix" class="hidden text-red-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-red-500 dark:border-red-400 text-sm sm:text-base"></div>
+        <div id="alg-scramble" class="hidden text-green-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-green-500 dark:border-green-400 text-sm sm:text-base"></div>
+
       </div>
+
       <div id="help" class="help hidden md:mt-0 sm:mt-5 mt-8 text-gray-600 leading-snug dark:text-gray-400 text-sm sm:text-base">
         <div class="help-content block gap-2 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
           <p class="mb-3 font-bold">To get started with Cubedex:</p>
@@ -137,6 +149,7 @@
             <li class="mb-1">📜 Load an algorithm from the list or input your own in the input field using standard Rubik's cube notation. You can also input the algorithm by performing it on the cube.</li>
             <li class="mb-1">🟩 Ensure the cube is oriented with <strong>WHITE on top</strong> and <strong>GREEN on front</strong>.</li>
             <li class="mb-1">🏁 Click the <strong>▶️ Train</strong> button and turn the cube to start practicing the algorithm.</li>
+            <li class="mb-1">🪄 If you want the smartcube to match the virtual cube, click the <strong>Scramble To...</strong> button and follow the scramble.</li>
           </ol>
           <p class="mb-3 font-bold">During training:</p>
           <ul class="list-disc list-inside mb-4">

@@ -7,6 +7,9 @@ import { Alg } from "cubing/alg";
 import { cube3x3x3 } from "cubing/puzzles";
 import { KPattern } from 'cubing/kpuzzle';
 import { experimentalSolve3x3x3IgnoringCenters } from 'cubing/search';
+import min2phase from './lib/min2phase';
+
+min2phase.initFull();
 
 import * as THREE from 'three';
 
@@ -112,6 +115,7 @@ var patternStates: KPattern[] = [];
 var algPatternStates: KPattern[] = [];
 var currentMoveIndex = 0;
 var inputMode: boolean = true;
+var scrambleMode: boolean = false;
 
 function resetAlg() {
   currentMoveIndex = -1; // Reset the move index
@@ -131,7 +135,8 @@ $('#train-alg').on('click', () => {
     $('#alg-input').hide();
     $('#save-container').hide();
     hideMistakes();
-    requestWakeLock();
+    $('#alg-scramble').hide();
+    scrambleMode = false;
     hasFailedAlg = false;
     patternStates = [];
     algPatternStates = [];
@@ -396,14 +401,35 @@ let isBugged = false;
 
 async function handleMoveEvent(event: GanCubeEvent) {
   if (event.type === "MOVE") {
+
+    twistyPlayer.experimentalAddMove(event.move, { cancel: false });
+    twistyTracker.experimentalAddMove(event.move, { cancel: false });
+
+    if (scrambleMode) {
+
+      let cubePattern = await twistyTracker.experimentalModel.currentPattern.get();
+      let scramble = getScrambleToSolution(userAlg.join(' '), cubePattern);
+
+      $('#alg-scramble').text(scramble);
+
+      if (scramble.length === 0) {
+        $('#alg-scramble').hide();
+        scrambleMode = false;
+
+        // this is the initial state for the new algorithm
+        initialstate = cubePattern;
+        keepInitialState = true;
+        $('#train-alg').trigger('click');
+      }
+      return;
+    }
+
     if (timerState === "READY") {
       setTimerState("RUNNING");
     }
     if (timerState === "STOPPED") {
       setTimerState("RUNNING");
     }
-    twistyPlayer.experimentalAddMove(event.move, { cancel: false });
-    twistyTracker.experimentalAddMove(event.move, { cancel: false });
     lastMoves.push(event);
     if (timerState === "RUNNING") {
       solutionMoves.push(event);
@@ -620,6 +646,9 @@ $('#input-alg').on('click', () => {
   checkedAlgorithms = [];
   checkedAlgorithmsCopy = [];
   updateTimesDisplay();
+  hideMistakes();
+  scrambleMode = false;
+  $('#alg-scramble').hide();
   $('#alg-display-container').hide();
   $('#times-display').html('');
   $('#timer').hide();
@@ -674,6 +703,7 @@ $('#connect-button').on('click', async () => {
     $('#reset-state').prop('disabled', true);
     $('#device-info').prop('disabled', true);
     $('#train-alg').prop('disabled', true);
+    $('#scramble-to').prop('disabled', true);
   } else {
     conn = await connectGanCube(customMacAddressProvider);
     conn.events$.subscribe(handleCubeEvent);
@@ -691,7 +721,9 @@ $('#connect-button').on('click', async () => {
     $('#reset-state').prop('disabled', false);
     $('#device-info').prop('disabled', false);
     $('#train-alg').prop('disabled', false);
+    $('#scramble-to').prop('disabled', false);
     $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
+    requestWakeLock();
   }
 });
 
@@ -985,6 +1017,35 @@ $('#confirm-save').on('click', () => {
       $('#save-error').fadeOut();
     }, 3000); // Disappears after 3 seconds
   }
+});
+
+function getScrambleToSolution(alg: string, state: KPattern) {
+  let faceCube = patternToFacelets(state);
+  var solvedcube = min2phase.solve(faceCube);
+  let inverseAlg = Alg.fromString(expandNotation(alg).replace(/[()]/g, '')).invert();
+  let finalState = Alg.fromString(solvedcube + ' ' + inverseAlg.toString()).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 });
+  let scramble = Alg.fromString(min2phase.solve(patternToFacelets(faceletsToPattern(SOLVED_STATE).applyAlg(finalState)))).invert().toString();
+  let result = Alg.fromString(scramble).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString().trim();
+  return result;
+}
+
+$('#scramble-to').on('click', () => {
+  (async() => {
+    let cubePattern = await twistyTracker.experimentalModel.currentPattern.get();
+    let scramble = getScrambleToSolution(userAlg.join(' '), cubePattern);
+    if (scramble.length > 0) {
+      scrambleMode = true;
+      resetAlg();
+      $('#alg-scramble').show();
+      $('#alg-scramble').text(scramble);
+      // draw real cube state
+      var solution = await experimentalSolve3x3x3IgnoringCenters(cubePattern);
+      twistyPlayer.alg = solution.invert();
+    } else {
+      scrambleMode = false;
+      $('#alg-scramble').hide();
+    }
+  })();
 });
 
 // Event listener for Load button
