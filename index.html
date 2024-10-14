@@ -158,6 +158,7 @@
           <p class="mb-3 font-bold">Customize your practice drills:</p>
           <ul class="list-disc list-inside mb-4">
             <li class="mb-1">📂 Pick a category, choose subsets, and select the cases you want to work on.</li>
+            <li class="mb-1">🔖 Mark the algs you're learning or have already learned. You can use the <strong>Select Learning</strong> option to filter algs by learning status.</li>
             <li class="mb-1">🔀 Try <strong>Random AUF</strong> to practice with random orientations. For 2-sided recognition, turn off the Gyroscope Orientation and Mirror Sticker hints in Options, letting you view only two sides of the cube. For sets like PLL or ZBLL, you'll also get random post-AUFs to sharpen your AUF prediction.</li>
             <li class="mb-1">🎲 Enable <strong>Random Order</strong> to mix up the algorithms.</li>
             <li class="mb-1">🐌 Turn on <strong>Slow Cases First</strong> to improve these slow algorithms.</li>
@@ -165,7 +166,8 @@
             <li class="mb-1">📝 Want to change the algorithm for one or more cases? Click on the algorithm to edit it. You can also <strong>Export Algs</strong> in Options, modify the algorithm in the JSON file, then import it back.</li>
             <li class="mb-1">⏳ Training for PLL Time Attack? Create a new category and add all your PLL algorithms in sequence for a timed practice session.</li>
           </ul>
-          <p class="mb-3 mt-6 text-center"><strong>Love Cubedex? Help us grow! 🌱</strong> Support the app's development on <a href="https://ko-fi.com/cubedex" target="_blank" class="text-blue-500 hover:underline">Ko-fi</a>:</p>
+          <p class="mb-3 mt-6 text-center"><strong>Love Cubedex? Help us grow! 🌱</strong></p>
+          <p class="mb-3 text-center">No Ads here 🤗 Support the app's development on <a href="https://ko-fi.com/cubedex" target="_blank" class="text-blue-500 hover:underline">Ko-fi</a>:</p>
           <div class="text-center items-center justify-center"><script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Support Me on Ko-fi', '#29abe0', 'H2H6132Z3Z');kofiwidget2.draw();</script></div>
         </div>
       </div>
@@ -206,8 +208,8 @@
                   <input type="checkbox" id="select-all-toggle" checked class="sr-only" />
                   <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
                   <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                  <span class="ml-2 text-gray-900 dark:text-white">Select All</span>
                 </label>
-                <span class="ml-2 text-gray-900 dark:text-white">Select All</span>
               </div>
 
               <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
@@ -215,8 +217,8 @@
                   <input type="checkbox" id="select-learning-toggle" class="sr-only" />
                   <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
                   <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                  <span class="ml-2 text-gray-900 dark:text-white">Select Learning</span>
                 </label>
-                <span class="ml-2 text-gray-900 dark:text-white">Select Learning</span>
               </div>
 
               <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
@@ -224,8 +226,8 @@
                   <input type="checkbox" id="random-auf-toggle" class="sr-only" />
                   <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
                   <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                  <span class="ml-2 text-gray-900 dark:text-white">Random AUF</span>
                 </label>
-                <span class="ml-2 text-gray-900 dark:text-white">Random AUF</span>
               </div>
 
               <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
@@ -233,8 +235,8 @@
                   <input type="checkbox" id="random-order-toggle" class="sr-only" />
                   <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
                   <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                  <span class="ml-2 text-gray-900 dark:text-white">Random Order</span>
                 </label>
-                <span class="ml-2 text-gray-900 dark:text-white">Random Order</span>
               </div>
 
               <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
@@ -242,8 +244,8 @@
                   <input type="checkbox" id="prioritize-slow-toggle" class="sr-only" />
                   <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
                   <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                  <span class="ml-2 text-gray-900 dark:text-white">Slow Cases First</span>
                 </label>
-                <span class="ml-2 text-gray-900 dark:text-white">Slow Cases First</span>
               </div>
 
               <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
@@ -251,8 +253,8 @@
                   <input type="checkbox" id="prioritize-failed-toggle" class="sr-only" />
                   <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
                   <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                  <span class="ml-2 text-gray-900 dark:text-white">Prioritize Failed Cases</span>
                 </label>
-                <span class="ml-2 text-gray-900 dark:text-white">Prioritize Failed Cases</span>
               </div>
 
             </div>

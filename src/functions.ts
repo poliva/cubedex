@@ -325,7 +325,7 @@ export function loadSubsets(category: string) {
   if (savedAlgorithms[category]) {
     savedAlgorithms[category].forEach((subset: { subset: string }) => {
       subsetCheckboxes.append(`
-        <label class="inline-flex items-center col-span-1">
+        <label class="inline-flex items-center col-span-1 cursor-pointer">
           <input type="checkbox" class="form-checkbox h-5 w-5 text-blue-600" name="${subset.subset}" value="${subset.subset}">
           <span class="ml-2">${subset.subset}</span>
         </label>
