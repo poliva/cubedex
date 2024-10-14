@@ -109,7 +109,8 @@ async function handleGyroEvent(event: GanCubeEvent) {
 
 // Define the type of userAlg explicitly as an array of strings
 var userAlg: string[] = [];
-var OriginalUserAlg: string[] = [];
+var originalUserAlg: string[] = [];
+var scrambleToAlg: string[] = [];
 var badAlg: string[] = [];
 var patternStates: KPattern[] = [];
 var algPatternStates: KPattern[] = [];
@@ -135,14 +136,17 @@ $('#train-alg').on('click', () => {
     $('#alg-input').hide();
     $('#save-container').hide();
     hideMistakes();
-    $('#alg-scramble').hide();
-    scrambleMode = false;
+    if (scrambleMode) {
+      $('#alg-scramble').hide();
+      scrambleMode = false;
+    }
     hasFailedAlg = false;
     patternStates = [];
     algPatternStates = [];
     fetchNextPatterns();
     setTimerState("READY");
     updateTimesDisplay();
+    scrambleToAlg = [];
   } else {
     $('#alg-input').show();
     if (conn) {
@@ -176,8 +180,8 @@ function fetchNextPatterns() {
 }
 
 function drawAlgInCube() {
-  OriginalUserAlg = [...userAlg];
-  if (randomizeAUF) {
+  originalUserAlg = [...userAlg];
+  if (randomizeAUF && scrambleToAlg.length === 0) {
     let AUF = ["U", "U'", "U2", ""];
     let randomAUF = AUF[Math.floor(Math.random() * AUF.length)];
     if (randomAUF.length > 0) {
@@ -215,6 +219,11 @@ function drawAlgInCube() {
         $('#alg-display').text(userAlg.join(' '));
       }
     }
+  }
+  if (randomizeAUF && scrambleToAlg.length > 0) {
+    userAlg = [...scrambleToAlg];
+    $('#alg-display').text(userAlg.join(' '));
+    scrambleToAlg = [];
   }
   twistyPlayer.alg = Alg.fromString(userAlg.join(' ')).invert().toString();
 }
@@ -731,7 +740,7 @@ var timerState: "IDLE" | "READY" | "RUNNING" | "STOPPED" = "IDLE";
 
 function updateTimesDisplay() {
   const timesDisplay = $('#times-display');
-  const algId = algToId(OriginalUserAlg.join(' '));
+  const algId = algToId(originalUserAlg.join(' '));
 
   const lastFiveTimesStorage = localStorage.getItem('LastFiveTimes-' + algId);
 
@@ -774,7 +783,7 @@ function updateTimesDisplay() {
 
 function setTimerState(state: typeof timerState) {
   timerState = state;
-  const algId = algToId(OriginalUserAlg.join(' '));
+  const algId = algToId(originalUserAlg.join(' '));
   // check if the algId exists in the DOM, create it if it doesn't
   if ($('#' + algId).length === 0) {
     $('#default-alg-id').append(`<div id="${algId}" class="hidden"></div>`);
@@ -1027,6 +1036,7 @@ function getScrambleToSolution(alg: string, state: KPattern) {
   let finalState = Alg.fromString(solvedcube + ' ' + inverseAlg.toString()).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 });
   let scramble = Alg.fromString(min2phase.solve(patternToFacelets(faceletsToPattern(SOLVED_STATE).applyAlg(finalState)))).invert().toString();
   let result = Alg.fromString(scramble).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString().trim();
+  console.log('alg= ' + alg + ' result= ' + result);
   return result;
 }
 
@@ -1036,6 +1046,7 @@ $('#scramble-to').on('click', () => {
     let scramble = getScrambleToSolution(userAlg.join(' '), cubePattern);
     if (scramble.length > 0) {
       scrambleMode = true;
+      scrambleToAlg = [...userAlg];
       resetAlg();
       $('#alg-scramble').show();
       $('#alg-scramble').text(scramble);
