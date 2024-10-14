@@ -416,8 +416,27 @@ async function handleMoveEvent(event: GanCubeEvent) {
 
     if (scrambleMode) {
 
-      let cubePattern = await twistyTracker.experimentalModel.currentPattern.get();
+      const cubePattern = await twistyTracker.experimentalModel.currentPattern.get();
       let scramble = getScrambleToSolution(userAlg.join(' '), cubePattern);
+      const currentScramble = $('#alg-scramble').text();
+      const scrambleMoves = scramble.split(' ');
+      const currentScrambleMoves = currentScramble.split(' ');
+      const firstCurrentScrambleMove = currentScrambleMoves[0];
+      const isDoubleTurn = firstCurrentScrambleMove.charAt(1) === '2';
+
+      if (scrambleMoves.length >= currentScrambleMoves.length && scrambleMoves.length > 2) {
+        if (event.move === firstCurrentScrambleMove || (event.move.charAt(0) === firstCurrentScrambleMove.charAt(0) && isDoubleTurn)) {
+          // Remove the first move from the scramble if not a double turn
+          scramble = currentScrambleMoves.slice(1).join(' ');
+          if (isDoubleTurn) {
+            scramble = event.move + " " + scramble;
+          }
+        }
+      }
+      // fix for opposite moves in different order, eg: U' D2 F2 -> D2 U' F2
+      if (scrambleMoves.length === currentScrambleMoves.length - 1 && scrambleMoves.length > 2 && event.move === firstCurrentScrambleMove) {
+          scramble = currentScrambleMoves.slice(1).join(' ');
+      }
 
       $('#alg-scramble').text(scramble);
 
@@ -1034,9 +1053,8 @@ function getScrambleToSolution(alg: string, state: KPattern) {
   var solvedcube = min2phase.solve(faceCube);
   let inverseAlg = Alg.fromString(expandNotation(alg).replace(/[()]/g, '')).invert();
   let finalState = Alg.fromString(solvedcube + ' ' + inverseAlg.toString()).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 });
-  let scramble = Alg.fromString(min2phase.solve(patternToFacelets(faceletsToPattern(SOLVED_STATE).applyAlg(finalState)))).invert().toString();
-  let result = Alg.fromString(scramble).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString().trim();
-  console.log('alg= ' + alg + ' result= ' + result);
+  let scramble = Alg.fromString(min2phase.solve(patternToFacelets(faceletsToPattern(SOLVED_STATE).applyAlg(finalState)))).invert();
+  let result = scramble.experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString().trim();
   return result;
 }
 
