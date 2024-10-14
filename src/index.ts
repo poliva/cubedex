@@ -26,7 +26,7 @@ import {
 } from 'gan-web-bluetooth';
 
 import { faceletsToPattern, patternToFacelets } from './utils';
-import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageTimeNumber } from './functions';
+import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageTimeNumber, learnedStatus } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -1371,9 +1371,49 @@ $('#select-all-subsets-toggle').on('change', function() {
 // Add event listener for the select all toggle
 const selectAllToggle = document.getElementById('select-all-toggle') as HTMLInputElement;
 selectAllToggle.addEventListener('change', () => {
+  // when select all toggle is checked, uncheck the select learning toggle
+  $('#select-learning-toggle').prop('checked', false);
   checkedAlgorithms = [];
   checkedAlgorithmsCopy = [];
   $('#alg-cases input[type="checkbox"]').prop('checked', selectAllToggle.checked).trigger('change');
+});
+
+// Add event listener for the select learning toggle
+$('#select-learning-toggle').on('change', function() {
+  // when select learning toggle is checked, uncheck the select all toggle
+  $('#select-all-toggle').prop('checked', false);
+  // when select learning toggle is checked, uncheck all the selected algorithms
+  $('#alg-cases input[type="checkbox"]:checked').prop('checked', false);
+  const isChecked = $(this).is(':checked');
+  const currentCategory = $('#category-select').val() as string;
+  const checkedSubsets = $('#subset-checkboxes-container input[type="checkbox"]:checked')
+    .map((_, el) => $(el).val())
+    .get();
+
+  // Clear current selections
+  checkedAlgorithms = [];
+  checkedAlgorithmsCopy = [];
+
+  if (isChecked) {
+    // Iterate over the current category and checked subsets
+    const savedAlgorithms = JSON.parse(localStorage.getItem('savedAlgorithms') || '{}');
+    if (savedAlgorithms[currentCategory]) {
+      savedAlgorithms[currentCategory].forEach((subset: { subset: string, algorithms: { name: string, algorithm: string }[] }) => {
+        if (checkedSubsets.includes(subset.subset)) {
+          subset.algorithms.forEach(alg => {
+            const algId = algToId(alg.algorithm);
+            if (learnedStatus(algId) === 1) {
+              // Check the checkbox for this algorithm
+              $(`#alg-cases input[data-algorithm="${alg.algorithm}"][data-name="${alg.name}"]`).prop('checked', true).trigger('change');
+            }
+          });
+        }
+      });
+    }
+  } else {
+    // Uncheck all checkboxes if the toggle is unchecked
+    $('#alg-cases input[type="checkbox"]').prop('checked', false).trigger('change');
+  }
 });
 
 // Add event listener for the random order toggle
