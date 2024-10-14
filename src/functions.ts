@@ -221,6 +221,7 @@ export function deleteAlgorithm(category: string, algorithm: string) {
     const algId = algToId(algorithm);
     localStorage.removeItem('Best-' + algId);
     localStorage.removeItem('LastFiveTimes-' + algId);
+    localStorage.removeItem('Learned-' + algId);
 
     localStorage.setItem('savedAlgorithms', JSON.stringify(savedAlgorithms));
   }

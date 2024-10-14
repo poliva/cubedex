@@ -188,72 +188,83 @@
 
       <div id="load-container" class="flex-col gap-4 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
         <div id="default-alg-id" class="hidden bg-red-400"><!-- wildcard to add classes used in js --></div>
-        <label for="category-select" class="text-sm sm:text-base text-gray-900 block mb-2 dark:text-white">Category:</label>
-        <select id="category-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400 text-sm sm:text-base">
-          <option value="">Filter by Category</option>
-        </select>
-          <p class="text-sm sm:text-base mb-2 flex items-center">Subset: <input type="checkbox" id="select-all-subsets-toggle" class="form-checkbox h-5 w-5 text-blue-600 ml-2" /></p>
-        <div id="subset-checkboxes" class="flex flex-col space-y-2 p-4 mb-4 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+
+        <div class="block gap-2 sm:flex sm:flex-row">
+          <div id="category-selector" class="max-w-[200px]">
+            <label for="category-select" class="text-sm sm:text-base text-gray-900 block mb-2 dark:text-white">Category:</label>
+            <select id="category-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400 text-sm sm:text-base">
+              <option value="">Filter by Category</option>
+            </select>
+          </div>
+          <div id="options-selector" class="w-full">
+
+            <p class="text-sm sm:text-base mb-2">Options:</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2 lg:max-w-[500px] xl:max-w-[750px] p-4 pb-0 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+
+              <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
+                <label for="select-all-toggle" class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="select-all-toggle" checked class="sr-only" />
+                  <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+                  <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                </label>
+                <span class="ml-2 text-gray-900 dark:text-white">Select All</span>
+              </div>
+
+              <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
+                <label for="select-learning-toggle" class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="select-learning-toggle" class="sr-only" />
+                  <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+                  <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                </label>
+                <span class="ml-2 text-gray-900 dark:text-white">Select Learning</span>
+              </div>
+
+              <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
+                <label for="random-auf-toggle" class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="random-auf-toggle" class="sr-only" />
+                  <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+                  <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                </label>
+                <span class="ml-2 text-gray-900 dark:text-white">Random AUF</span>
+              </div>
+
+              <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
+                <label for="random-order-toggle" class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="random-order-toggle" class="sr-only" />
+                  <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+                  <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                </label>
+                <span class="ml-2 text-gray-900 dark:text-white">Random Order</span>
+              </div>
+
+              <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
+                <label for="prioritize-slow-toggle" class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="prioritize-slow-toggle" class="sr-only" />
+                  <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+                  <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                </label>
+                <span class="ml-2 text-gray-900 dark:text-white">Slow Cases First</span>
+              </div>
+
+              <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
+                <label for="prioritize-failed-toggle" class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="prioritize-failed-toggle" class="sr-only" />
+                  <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+                  <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                </label>
+                <span class="ml-2 text-gray-900 dark:text-white">Prioritize Failed Cases</span>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <p class="text-sm sm:text-base mb-2 mt-2 flex items-center">Subset: <input type="checkbox" id="select-all-subsets-toggle" class="form-checkbox h-5 w-5 text-blue-600 ml-2" /></p>
+        <div id="subset-checkboxes" class="flex flex-col space-y-2 p-4 mb-2 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-sm sm:text-base">
           <div id="subset-checkboxes-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2"></div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 justify-start sm:max-w-[500px] lg:max-w-[750px]">
-
-          <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
-            <label for="select-all-toggle" class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="select-all-toggle" class="sr-only" />
-              <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            </label>
-            <span class="ml-2 text-gray-900 dark:text-white">Select All</span>
-          </div>
-
-          <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
-            <label for="select-learning-toggle" class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="select-learning-toggle" class="sr-only" />
-              <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            </label>
-            <span class="ml-2 text-gray-900 dark:text-white">Select Learning</span>
-          </div>
-
-          <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
-            <label for="random-auf-toggle" class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="random-auf-toggle" class="sr-only" />
-              <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            </label>
-            <span class="ml-2 text-gray-900 dark:text-white">Random AUF</span>
-          </div>
-
-          <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
-            <label for="random-order-toggle" class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="random-order-toggle" class="sr-only" />
-              <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            </label>
-            <span class="ml-2 text-gray-900 dark:text-white">Random Order</span>
-          </div>
-
-          <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
-            <label for="prioritize-slow-toggle" class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="prioritize-slow-toggle" class="sr-only" />
-              <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            </label>
-            <span class="ml-2 text-gray-900 dark:text-white">Slow Cases First</span>
-          </div>
-
-          <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
-            <label for="prioritize-failed-toggle" class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="prioritize-failed-toggle" class="sr-only" />
-              <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            </label>
-            <span class="ml-2 text-gray-900 dark:text-white">Prioritize Failed Cases</span>
-          </div>
-
-        </div>
 
         <div id="alg-cases" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 p-2 sm:p-4 gap-2 sm:gap-4">
         </div>

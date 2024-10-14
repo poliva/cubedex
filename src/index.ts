@@ -1095,14 +1095,7 @@ $('#category-select').on('change', () => {
   // uncheck all checkboxes
   checkedAlgorithms = [];
   checkedAlgorithmsCopy = [];
-  $('#select-all-toggle').prop('checked', false);
   $('#select-all-subsets-toggle').prop('checked', false);
-  //$('#random-order-toggle').prop('checked', false);
-  //randomAlgorithms = false;
-  //$('#random-auf-toggle').prop('checked', false);
-  //randomizeAUF = false;
-  //$('#prioritize-failed-toggle').prop('checked', false);
-  //prioritizeFailedAlgs = false;
   // reset cube alg
   twistyPlayer.alg = '';
   // selecting a new category should reset the current practice drill
@@ -1117,13 +1110,24 @@ $('#category-select').on('change', () => {
 $('#subset-checkboxes').on('change', 'input[type="checkbox"]', () => {
   const selectedCategory = $('#category-select').val() as string;
   loadAlgorithms(selectedCategory);
-  // check the checkboxes of all algorithms in #alg-cases
   checkedAlgorithms = [];
   checkedAlgorithmsCopy = [];
-  $('#alg-cases input[type="checkbox"]').prop('checked', true);
-  $('#alg-cases input[type="checkbox"]').trigger('change');
+  // if select all toggle is checked select all alg-cases, if select learning toggle is checked select learning alg-cases
+  const selectAllToggle = $('#select-all-toggle');
+  const selectLearningToggle = $('#select-learning-toggle');
+  if (selectAllToggle.is(':checked')) {
+    $('#alg-cases input[type="checkbox"]').prop('checked', true).trigger('change');
+  } else if (selectLearningToggle.is(':checked')) {
+    $('#alg-cases input[type="checkbox"]').each(function() {
+      const algId = algToId($(this).data('algorithm'));
+      if (learnedStatus(algId) === 1) {
+        $(this).prop('checked', true).trigger('change');
+      } else {
+        $(this).prop('checked', false).trigger('change');
+      }
+    });
+  }
 });
-
 
 // Event listener for Export button
 $('#export-algs').on('click', () => {
@@ -1352,18 +1356,32 @@ darkModeToggle.addEventListener('change', () => {
 // Event listener for the select all subsets toggle
 $('#select-all-subsets-toggle').on('change', function() {
   const selectAllToggle = $('#select-all-toggle');
+  const selectLearningToggle = $('#select-learning-toggle');
   checkedAlgorithms = [];
   checkedAlgorithmsCopy = [];
   const isChecked = $(this).is(':checked');
   if (isChecked) {
     $('#subset-checkboxes-container input[type="checkbox"]').prop('checked', true);
     const selectedCategory = $('#category-select').val() as string;
-    selectAllToggle.prop('checked', true);
     loadAlgorithms(selectedCategory);
-    $('#alg-cases input[type="checkbox"]').prop('checked', true).trigger('change');
+    // if select all toggle is checked select all alg-cases, if select learning toggle is checked select learning alg-cases
+    if (selectAllToggle.is(':checked')) {
+      console.log('selectAllToggle is checked');
+      $('#alg-cases input[type="checkbox"]').prop('checked', true).trigger('change');
+    } else if (selectLearningToggle.is(':checked')) {
+      console.log('selectLearningToggle is checked');
+      // check learnedStatus for each algorithm and select the ones that are learned
+      $('#alg-cases input[type="checkbox"]').each(function() {
+        const algId = algToId($(this).data('algorithm'));
+        if (learnedStatus(algId) === 1) {
+          $(this).prop('checked', true).trigger('change');
+        } else {
+          $(this).prop('checked', false).trigger('change');
+        }
+      });
+    }
   } else {
     $('#subset-checkboxes-container input[type="checkbox"]').prop('checked', false);
-    selectAllToggle.prop('checked', false);
     loadAlgorithms('');
   }
 });

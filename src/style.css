@@ -867,6 +867,10 @@ video {
   min-width: 360px;
 }
 
+.max-w-\[200px\] {
+  max-width: 200px;
+}
+
 .max-w-\[250px\] {
   max-width: 250px;
 }
@@ -931,10 +935,6 @@ video {
 
 .items-center {
   align-items: center;
-}
-
-.justify-start {
-  justify-content: flex-start;
 }
 
 .justify-end {
@@ -1087,6 +1087,10 @@ video {
 .py-2 {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+}
+
+.pb-0 {
+  padding-bottom: 0px;
 }
 
 .pr-2 {
@@ -1486,6 +1490,10 @@ input:checked + div + .dot {
     margin-top: 1.25rem;
   }
 
+  .sm\:flex {
+    display: flex;
+  }
+
   .sm\:min-h-\[15em\] {
     min-height: 15em;
   }
@@ -1494,16 +1502,16 @@ input:checked + div + .dot {
     min-width: 15em;
   }
 
-  .sm\:max-w-\[500px\] {
-    max-width: 500px;
-  }
-
   .sm\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .sm\:grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .sm\:flex-row {
+    flex-direction: row;
   }
 
   .sm\:items-end {
@@ -1565,12 +1573,12 @@ input:checked + div + .dot {
 }
 
 @media (min-width: 1024px) {
-  .lg\:max-w-\[750px\] {
-    max-width: 750px;
+  .lg\:max-w-\[500px\] {
+    max-width: 500px;
   }
 
-  .lg\:grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .lg\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .lg\:grid-cols-4 {
@@ -1579,6 +1587,14 @@ input:checked + div + .dot {
 }
 
 @media (min-width: 1280px) {
+  .xl\:max-w-\[750px\] {
+    max-width: 750px;
+  }
+
+  .xl\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
   .xl\:grid-cols-5 {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
