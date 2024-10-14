@@ -972,6 +972,7 @@ $('#delete-alg').on('click', () => {
       }
       // only re-load categories if there are no more subsets (category has been deleted)
       if ($('#subset-checkboxes-container').children().length === 0) {
+        $('#select-all-subsets-toggle').prop('checked', false);
         loadCategories();
       }
       $('#delete-success').text('Algorithms deleted successfully');
