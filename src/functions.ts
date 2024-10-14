@@ -364,8 +364,11 @@ export function loadAlgorithms(category: string) {
 
           algCases.append(`
             <div class="case-wrapper rounded-lg shadow-md ${gray} dark:${grayDarkMode} relative p-4" id="${algId}" data-name="${alg.name}" data-algorithm="${alg.algorithm}" data-category="${category}" data-subset="${subset}">
+              <div class="flex justify-between">
+                <div class="text-left text-sm w-full">${alg.name}</div>
+                <div class="text-right"><button id="bookmark-${algId}" data-value="${learnedStatus(algId)}" title="Learning status" class="block">${learnedSVG(learnedStatus(algId))}</button></div>
+              </div>
               <label for="case-toggle-${algId}" class="cursor-pointer">
-              <span class="text-black dark:text-white text-sm">${alg.name}</span>
               <div id="best-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">${bestTimeString(bestTime)}</div>
               <div id="ao5-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">${averageTimeString(averageTimeNumber(algId))}</div>
               <div id="alg-case-${algId}" class="flex items-center justify-center scale-50 -mx-20 -mt-10 -mb-10 relative z-10">
@@ -390,12 +393,47 @@ export function loadAlgorithms(category: string) {
   }
 }
 
+// Add an event listener for the bookmark button
+document.addEventListener('click', (event) => {
+  const target = event.target as HTMLElement;
+  if (target.closest('button[id^="bookmark-"]')) {
+    const button = target.closest('button') as HTMLButtonElement;
+    const algId = button.id.replace('bookmark-', '');
+    let currentStatus = learnedStatus(algId);
+    // Cycle the status
+    currentStatus = (currentStatus + 1) % 3;
+    // Update the localStorage
+    localStorage.setItem('Learned-' + algId, currentStatus.toString());
+    // Update the button's SVG
+    button.innerHTML = `${learnedSVG(currentStatus)}`;
+  }
+});
+
 export function algToId(alg: string): string {
   let id = alg?.trim().replace(/\s+/g, '-').replace(/[']/g, 'p').replace(/[(]/g, 'o').replace(/[)]/g, 'c');
   if (id == null || id.length == 0) {
     id = "default-alg-id";
   }
   return id;
+}
+
+function learnedSVG(status: number): string {
+  const notLearnedSVG = `<svg fill="none" class="h-6 w-6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 7.5L14.5 12.5M14.5 7.5L9.5 12.5M19 21V7.8C19 6.11984 19 5.27976 18.673 4.63803C18.3854 4.07354 17.9265 3.6146 17.362 3.32698C16.7202 3 15.8802 3 14.2 3H9.8C8.11984 3 7.27976 3 6.63803 3.32698C6.07354 3.6146 5.6146 4.07354 5.32698 4.63803C5 5.27976 5 6.11984 5 7.8V21L12 17L19 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const learnedSVG = `<svg fill="green" class="h-6 w-6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9 10.5L11 12.5L15.5 8M19 21V7.8C19 6.11984 19 5.27976 18.673 4.63803C18.3854 4.07354 17.9265 3.6146 17.362 3.32698C16.7202 3 15.8802 3 14.2 3H9.8C8.11984 3 7.27976 3 6.63803 3.32698C6.07354 3.6146 5.6146 4.07354 5.32698 4.63803C5 5.27976 5 6.11984 5 7.8V21L12 17L19 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const learningSVG = `<svg fill="orange" class="h-6 w-6" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 13V7M9 10H15M19 21V7.8C19 6.11984 19 5.27976 18.673 4.63803C18.3854 4.07354 17.9265 3.6146 17.362 3.32698C16.7202 3 15.8802 3 14.2 3H9.8C8.11984 3 7.27976 3 6.63803 3.32698C6.07354 3.6146 5.6146 4.07354 5.32698 4.63803C5 5.27976 5 6.11984 5 7.8V21L12 17L19 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  if (status === 1) {
+      return learningSVG;
+  } else if (status === 2) {
+      return learnedSVG;
+  } else {
+      return notLearnedSVG;
+  }
+}
+
+export function learnedStatus(algId: string): number {
+  const learnedStatus = localStorage.getItem('Learned-' + algId);
+  if (!learnedStatus) return 0;
+  return Number(learnedStatus);
 }
 
 export function bestTimeNumber(algId: string): number | null {
