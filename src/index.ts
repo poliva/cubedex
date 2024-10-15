@@ -805,7 +805,10 @@ function setTimerState(state: typeof timerState) {
       break;
     case 'READY':
       stopLocalTimer();
-      setTimerValue(0);
+      let timerText = $('#timer').text();
+      if (timerText === '') {
+        setTimerValue(0);
+      }
       $('#timer').show();
       $('#timer').css('color', '#080');
       break;
@@ -1130,9 +1133,12 @@ $('#category-select').on('change', () => {
   // reset cube alg
   twistyPlayer.alg = '';
   // selecting a new category should reset the current practice drill
+  $('#timer').hide();
+  $('#timer').text('');
   $('#times-display').html('');
   $('#alg-display-container').hide();
   $('#alg-display').html('');
+  inputMode = true;
   $('#alg-input').val('');
   $('#alg-input').show();
 });
@@ -1558,18 +1564,21 @@ function activateTimer() {
 $(document).on('keydown', (event) => {
   if (!conn && !inputMode && event.which === 32) {
     event.preventDefault();
+    showFlashingIndicator('gray', 200);
     activateTimer();
   }
 });
 
 $("#touch-timer").on('touchstart', () => {
   if (!conn && !inputMode) {
+    showFlashingIndicator('gray', 200);
     activateTimer();
   }
 });
 
 $("#times-display").on('touchstart', () => {
   if (!conn && !inputMode) {
+    showFlashingIndicator('gray', 200);
     activateTimer();
   }
 });
