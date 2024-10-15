@@ -1,12 +1,12 @@
 ## Cubedex 
-
-[Cubedex](https://cubedex.app) is a lightweight Progressive Web App (PWA) that connects to your GAN smartcube using Bluetooth. It's designed to help you drill, time, and master algorithms like PLL and OLL, making it easier to build them into your muscle memory faster and more effectively.  
+[Cubedex](https://cubedex.app) is an alg trainer that helps you drill, time, and master Rubik's Cube algorithms like OLL and PLL, enabling you to build them into your muscle memory more quickly and effectively.
 
 📱 How to Get Started:  
 
 ✅ Visit [CubeDex.app](https://cubedex.app) in your browser  
 ✅ Add Cubedex to your home screen for an app-like experience  
 ✅ You can use it offline - Cubedex works perfectly without an internet connection  
+✅ Compatible with GAN smartcubes and regular non-Bluetooth cubes!  
 
 Cubedex has been created with ♥ by [Pau Oliva Fora](https://twitter.com/pof) using [gan-web-bluetooth](https://github.com/afedotov/gan-web-bluetooth) and [cubing.js](https://github.com/cubing/cubing.js).  
 
