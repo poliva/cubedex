@@ -862,6 +862,7 @@ function setTimerState(state: typeof timerState) {
 
         let failedCount: number = $('#' + algId).data('failed') || 0;
         if (failedCount < 0) failedCount = 0;
+        if (practiceCount < failedCount) failedCount = practiceCount;
         let successCount: number = practiceCount - failedCount;
         $('#' + algId + '-success').html(`✅: ${successCount}`);
         if (failedCount > 0) $('#' + algId + '-failed').html(`❌: ${failedCount}`);
