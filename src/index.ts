@@ -149,11 +149,6 @@ $('#train-alg').on('click', () => {
     scrambleToAlg = [];
   } else {
     $('#alg-input').show();
-    if (conn) {
-      $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
-    } else {
-      $('#alg-input').attr('placeholder', "Please connect the smartcube first");
-    }
     $('#alg-input').get(0)?.focus();
   }
   resetAlg();
@@ -239,14 +234,9 @@ function showMistakesWithDelay(fixHtml: string) {
     showMistakesTimeout = setTimeout(function() {
       $('#alg-fix').show();
       // Show the red flashing indicator if enabled and not already shown
-      const flashingIndicator = document.getElementById('flashing-indicator');
-      if (flashingIndicator && flashingIndicatorEnabled && !hasShownFlashingIndicator) {
-        flashingIndicator.style.backgroundColor = 'red';
-        flashingIndicator.classList.remove('hidden');
-        setTimeout(() => {
-          flashingIndicator.classList.add('hidden');
-        }, 300); // Hide after 0.3 seconds
-        hasShownFlashingIndicator = true; // Set the flag to true
+      if (!hasShownFlashingIndicator) {
+        showFlashingIndicator('red', 300);
+        hasShownFlashingIndicator = true;
       }
       // if the user fails the current alg, make the case appear more often
       if (checkedAlgorithms.length > 0) {
@@ -499,35 +489,9 @@ async function handleMoveEvent(event: GanCubeEvent) {
           fetchNextPatterns();
           currentMoveIndex = userAlg.length - 1;
 
-          // Show the flashing indicator
-          const flashingIndicator = document.getElementById('flashing-indicator');
-          if (flashingIndicator && flashingIndicatorEnabled) {
-            flashingIndicator.style.backgroundColor = 'green';
-            flashingIndicator.classList.remove('hidden');
-            setTimeout(() => {
-              flashingIndicator.classList.add('hidden');
-            }, 200); // Hide after 0.2 seconds
-          }
-
           // Switch to next algorithm
-          if (checkedAlgorithms.length + checkedAlgorithmsCopy.length > 1) {
-            const currentAlg = checkedAlgorithms.shift(); // Remove the first algorithm
-            if (checkedAlgorithms.length === 0) {
-              checkedAlgorithms = [...checkedAlgorithmsCopy]; // Copy remaining algorithms
-              checkedAlgorithmsCopy = [];
-              if (prioritizeSlowAlgs) {
-                checkedAlgorithms.sort((a, b) => b.bestTime - a.bestTime);
-              }
-            }
-            // Randomize checkedAlgorithms if random is enabled
-            if (randomAlgorithms) {
-              checkedAlgorithms.sort(() => Math.random() - 0.5);
-            }
-            if (currentAlg) {
-              checkedAlgorithmsCopy.push(currentAlg); // Add current algorithm to the copy
-            }
+          switchToNextAlgorithm();
 
-          }
           // this is the initial state for the new algorithm
           initialstate = pattern;
           keepInitialState = true;
@@ -564,8 +528,43 @@ async function handleMoveEvent(event: GanCubeEvent) {
   }
 }
 
-var cubeStateInitialized = false;
+function showFlashingIndicator(color: string, duration: number) {
+  // Show the flashing indicator
+  const flashingIndicator = document.getElementById('flashing-indicator');
+  if (flashingIndicator && flashingIndicatorEnabled) {
+    flashingIndicator.style.backgroundColor = color;
+    flashingIndicator.classList.remove('hidden');
+    setTimeout(() => {
+      flashingIndicator.classList.add('hidden');
+    }, duration); // Hide after duration in milliseconds
+  }
+}
 
+function switchToNextAlgorithm() {
+  // Show the flashing indicator
+  showFlashingIndicator('green', 200);
+
+  // switch to next algorithm
+  if (checkedAlgorithms.length + checkedAlgorithmsCopy.length > 1) {
+    const currentAlg = checkedAlgorithms.shift(); // Remove the first algorithm
+    if (checkedAlgorithms.length === 0) {
+      checkedAlgorithms = [...checkedAlgorithmsCopy]; // Copy remaining algorithms
+      checkedAlgorithmsCopy = [];
+      if (prioritizeSlowAlgs) {
+        checkedAlgorithms.sort((a, b) => b.bestTime - a.bestTime);
+      }
+    }
+    // Randomize checkedAlgorithms if random is enabled
+    if (randomAlgorithms) {
+      checkedAlgorithms.sort(() => Math.random() - 0.5);
+    }
+    if (currentAlg) {
+      checkedAlgorithmsCopy.push(currentAlg); // Add current algorithm to the copy
+    }
+  }
+}
+
+var cubeStateInitialized = false;
 async function handleFaceletsEvent(event: GanCubeEvent) {
   if (event.type == "FACELETS" && !cubeStateInitialized) {
     if (event.facelets != SOLVED_STATE) {
@@ -640,9 +639,6 @@ const customMacAddressProvider: MacAddressProvider = async (device, isFallbackCa
 $('#alg-display').on('click', () => {
   if (conn) {
     inputMode = true;
-    $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
-  } else {
-    $('#alg-input').attr('placeholder', 'Please connect the smartcube first');
   }
   $('#alg-display-container').hide();
   $('#alg-input').show();
@@ -667,9 +663,6 @@ $('#input-alg').on('click', () => {
   $('#alg-input').val('');
   if (conn) {
     inputMode = true;
-    $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
-  } else {
-    $('#alg-input').attr('placeholder', 'Please connect the smartcube first');
   }
   checkedAlgorithms = [];
   checkedAlgorithmsCopy = [];
@@ -730,8 +723,6 @@ $('#connect-button').on('click', async () => {
     $('#reset-gyro').prop('disabled', true);
     $('#reset-state').prop('disabled', true);
     $('#device-info').prop('disabled', true);
-    $('#train-alg').prop('disabled', true);
-    $('#scramble-to').prop('disabled', true);
   } else {
     conn = await connectGanCube(customMacAddressProvider);
     conn.events$.subscribe(handleCubeEvent);
@@ -748,8 +739,6 @@ $('#connect-button').on('click', async () => {
     $('#reset-gyro').prop('disabled', false);
     $('#reset-state').prop('disabled', false);
     $('#device-info').prop('disabled', false);
-    $('#train-alg').prop('disabled', false);
-    $('#scramble-to').prop('disabled', false);
     $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
     requestWakeLock();
   }
@@ -826,12 +815,15 @@ function setTimerState(state: typeof timerState) {
       $('#timer').css('color', '#999');
       break;
     case 'STOPPED':
+      let finalTime = currentTimerValue;
       stopLocalTimer();
       let stoppedcolor = darkModeToggle.checked ? '#ccc' : '#333';
       $('#timer').css('color', stoppedcolor);
-      var fittedMoves = cubeTimestampLinearFit(solutionMoves);
-      var lastMove = fittedMoves.slice(-1).pop();
-      const finalTime = lastMove ? lastMove.cubeTimestamp! : 0;
+      if (conn) {
+        var fittedMoves = cubeTimestampLinearFit(solutionMoves);
+        var lastMove = fittedMoves.slice(-1).pop();
+        finalTime = lastMove ? lastMove.cubeTimestamp! : 0;
+      }
       setTimerValue(finalTime);
 
       // Store the time and update the display
@@ -866,6 +858,15 @@ function setTimerState(state: typeof timerState) {
         let successCount: number = practiceCount - failedCount;
         $('#' + algId + '-success').html(`✅: ${successCount}`);
         if (failedCount > 0) $('#' + algId + '-failed').html(`❌: ${failedCount}`);
+
+        if (!conn) {
+          updateTimesDisplay();
+          switchToNextAlgorithm();
+          if (checkedAlgorithms.length > 0) {
+            $('#alg-input').val(checkedAlgorithms[0].algorithm);
+          }
+          $('#train-alg').trigger('click');
+        }
       }
       break;
   }
@@ -888,11 +889,13 @@ function setTimerValue(timestamp: number) {
   $('#timer').html(`${t.minutes}:${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}`);
 }
 
+let currentTimerValue = 0;
 var localTimer: Subscription | null = null;
 function startLocalTimer() {
   var startTime = now();
   localTimer = interval(30).subscribe(() => {
-    setTimerValue(now() - startTime);
+    currentTimerValue = now() - startTime;
+    setTimerValue(currentTimerValue);
   });
 }
 
@@ -1098,9 +1101,6 @@ $('#load-alg').on('click', () => {
 $('#save-alg').on('click', () => {
   if (conn) {
     inputMode = true;
-    $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
-  } else {
-    $('#alg-input').attr('placeholder', 'Please connect the smartcube first');
   }
   $('#alg-display-container').hide();
   $('#times-display').html('');
@@ -1545,3 +1545,44 @@ const categorySelect = $('#category-select');
 if (categorySelect.val() === null || categorySelect.val() === '') {
   loadCategories();
 }
+
+// functions to activate timer when using a dumb cube
+function activateTimer() {
+  if (timerState == "STOPPED" || timerState == "IDLE" || timerState == "READY") {
+    setTimerState("RUNNING");
+  } else {
+    setTimerState("STOPPED");
+  }
+}
+
+$(document).on('keydown', (event) => {
+  if (!conn && !inputMode && event.which === 32) {
+    event.preventDefault();
+    activateTimer();
+  }
+});
+
+$("#touch-timer").on('touchstart', () => {
+  if (!conn && !inputMode) {
+    activateTimer();
+  }
+});
+
+$("#times-display").on('touchstart', () => {
+  if (!conn && !inputMode) {
+    activateTimer();
+  }
+});
+
+// event listener for the dumbcube toggle
+$('#dumbcube-toggle').on('click', () => {
+  $('#help-content-smartcube').toggleClass('hidden');
+  $('#help-content-dumbcube').toggleClass('hidden');
+  if ($('#help-content-smartcube').hasClass('hidden')) {
+    $('#help-title').text('DUMBCUBE HELP');
+    $('#dumbcube-toggle').html('🛜 USING a smart cube? <a href="#" class="text-blue-500 hover:underline">CLICK HERE</a>');
+  } else {
+    $('#help-title').text('SMARTCUBE HELP');
+    $('#dumbcube-toggle').html('🛜 NOT using a smart cube? <a href="#" class="text-blue-500 hover:underline">CLICK HERE</a>');
+  }
+});

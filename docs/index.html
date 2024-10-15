@@ -20,8 +20,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <script type="module" crossorigin src="/assets/index-DV7bpdGF.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-CSWR93TD.css">
+  <script type="module" crossorigin src="/assets/index-CERgrY6s.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-QntTYHFn.css">
 <link rel="manifest" href="/manifest.json"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
 <body class="bg-gray-100 text-gray-900 font-sans leading-relaxed sm:p-4 p-1 dark:bg-gray-900 dark:text-white text-sm sm:text-base flex flex-col min-h-screen">
@@ -94,11 +94,11 @@
 
     <div id="app" class="p-2 flex-grow ml-0">
       <div id="app-top">
-        <div id="container" class="relative grid grid-cols-1 sm:grid-cols-3 items-start mb-3 gap-2 text-sm sm:text-base">
+        <div id="container" class="relative grid grid-cols-1 sm:grid-cols-3 items-start mb-3 gap-2 text-sm sm:text-base h-full">
           <div id="flashing-indicator" class="hidden absolute inset-0 opacity-75 z-50 rounded-lg"></div>
-          <div id="times-display" class="col-span-1 text-center font-mono text-gray-900 dark:text-white text-xs sm:text-base order-2 sm:order-1"></div>
+          <div id="times-display" class="col-span-1 text-center font-mono text-gray-900 dark:text-white text-xs sm:text-base order-2 sm:order-1 h-full"></div>
           <div id="cube" class="col-span-1 flex items-center justify-center min-w-[10em] min-h-[10em] sm:min-w-[15em] sm:min-h-[15em] text-sm sm:text-base order-3 sm:order-2"></div>
-          <div id="right-side" class="col-span-1 flex flex-col items-center sm:items-end text-sm sm:text-base order-1 sm:order-3">
+          <div id="right-side" class="col-span-1 flex flex-col flex-grow items-center sm:items-end text-sm sm:text-base order-1 sm:order-3 h-full">
             <button id="connect-button" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base align-middle flex items-center">
               <div id="connect">Connect</div>
               <div id="bluetooth-indicator" class="ml-2">
@@ -107,19 +107,21 @@
               <div id="battery-indicator" class="hidden ml-2">
               </div>
             </button>
-            <div id="timer" class="hidden text-right font-mono p-2 border border-gray-400 rounded-lg dark:border-gray-700 dark:text-white text-sm sm:text-xl mt-2"></div>
+            <div id="touch-timer" class="flex justify-center items-center h-full w-full">
+              <div id="timer" class="hidden text-right font-mono p-2 border border-gray-400 rounded-lg dark:border-gray-700 dark:text-white text-sm sm:text-xl md:text-2xl lg:text-3xl mt-2 sm:ml-8"></div>
+            </div>
           </div>
         </div>
 
         <div id="alg-bar" class="flex flex-row">
 
-          <button id="train-alg" disabled title="Train" class="mt-2 mr-4 cursor-pointer inline-flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">
+          <button id="train-alg" title="Train" class="mt-2 mr-4 cursor-pointer inline-flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
           </button>
 
-          <input id="alg-input" type="text" placeholder="Please connect the smartcube first" class="w-full p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md mb-4 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
+          <input id="alg-input" type="text" placeholder="Enter alg e.g., (R U R' U) (R U2' R')" class="w-full p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md mb-4 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
 
           <div id="alg-display-container" class="hidden justify-end relative w-full">
             <div class="flex justify-end">
@@ -128,7 +130,7 @@
             <div id="alg-display" class="font-bold tracking-wide text-gray-900 p-4 bg-white border border-gray-400 rounded-lg mb-4 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-xl"></div>
           </div>
 
-          <button id="scramble-to" disabled title="Scramble To..." class="mt-2 ml-4 cursor-pointer inline-flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">
+          <button id="scramble-to" title="Scramble To..." class="mt-2 ml-4 cursor-pointer inline-flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">
             <svg viewBox="0 0 24 24" fill="none" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg">
               <path d="M15 4V2M15 16V14M8 9H10M20 9H22M17.8 11.8L19 13M17.8 6.2L19 5M3 21L12 12M12.2 6.2L11 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
@@ -143,34 +145,64 @@
 
       <div id="help" class="help hidden md:mt-0 sm:mt-5 mt-8 text-gray-600 leading-snug dark:text-gray-400 text-sm sm:text-base">
         <div class="help-content block gap-2 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-          <p class="mb-3 font-bold">To get started with Cubedex:</p>
-          <ol class="list-disc list-inside mb-4">
-            <li class="mb-1">🔗 Connect your smart cube by clicking the <strong>Connect</strong> button. For more details, refer to the <a href="https://gist.github.com/afedotov/52057533a8b27a0277598160c384ae71" target="_blank" class="text-blue-500 hover:underline">FAQ</a>.</li>
-            <li class="mb-1">📜 Load an algorithm from the list or input your own in the input field using standard Rubik's cube notation. You can also input the algorithm by performing it on the cube.</li>
-            <li class="mb-1">🟩 Ensure the cube is oriented with <strong>WHITE on top</strong> and <strong>GREEN on front</strong>.</li>
-            <li class="mb-1">🏁 Click the <strong>▶️ Train</strong> button and turn the cube to start practicing the algorithm.</li>
-            <li class="mb-1">🪄 If you want the smartcube to match the virtual cube, click the <strong>Scramble To...</strong> button and follow the scramble.</li>
-          </ol>
-          <p class="mb-3 font-bold">During training:</p>
-          <ul class="list-disc list-inside mb-4">
-            <li class="mb-1">⏱️ The timer will start automatically when you begin the algorithm.</li>
-            <li class="mb-1">🏆 Upon successful completion, the timer will stop and your last 5 times along with their average will be displayed.</li>
-            <li class="mb-1">🔄 If you make a mistake, follow the moves shown in the <strong>Fix</strong> section to correct it. Ensure the top center is <strong>WHITE</strong> and the front center is <strong>GREEN</strong>.</li>
-          </ul>
-          <p class="mb-3 font-bold">Customize your practice drills:</p>
-          <ul class="list-disc list-inside mb-4">
-            <li class="mb-1">📂 Pick a category, choose subsets, and select the cases you want to work on.</li>
-            <li class="mb-1">🔖 Mark the algs you're learning or have already learned. You can use the <strong>Select Learning</strong> option to filter algs by learning status.</li>
-            <li class="mb-1">🔀 Try <strong>Random AUF</strong> to practice with random orientations. For 2-sided recognition, turn off the Gyroscope Orientation and Mirror Sticker hints in Options, letting you view only two sides of the cube. For sets like PLL or ZBLL, you'll also get random post-AUFs to sharpen your AUF prediction.</li>
-            <li class="mb-1">🎲 Enable <strong>Random Order</strong> to mix up the algorithms.</li>
-            <li class="mb-1">🐌 Turn on <strong>Slow Cases First</strong> to improve these slow algorithms.</li>
-            <li class="mb-1">🎯 Activate <strong>Prioritize Failed Cases</strong> to focus on the algorithms you find most challenging.</li>
-            <li class="mb-1">📝 Want to change the algorithm for one or more cases? Click on the algorithm to edit it. You can also <strong>Export Algs</strong> in Options, modify the algorithm in the JSON file, then import it back.</li>
-            <li class="mb-1">⏳ Training for PLL Time Attack? Create a new category and add all your PLL algorithms in sequence for a timed practice session.</li>
-          </ul>
-          <p class="mb-3 mt-6 text-center"><strong>Love Cubedex? Help us grow! 🌱</strong></p>
-          <p class="mb-3 text-center">No Ads here 🤗 Support the app's development on <a href="https://ko-fi.com/cubedex" target="_blank" class="text-blue-500 hover:underline">Ko-fi</a>:</p>
-          <div class="text-center items-center justify-center"><script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Support Me on Ko-fi', '#1d4ed8', 'H2H6132Z3Z');kofiwidget2.draw();</script></div>
+          <div class="grid grid-cols-1 sm:grid-cols-2">
+            <p id="help-title" class="font-bold text-xl">SMARTCUBE HELP</p>
+            <p id="dumbcube-toggle" class="text-right font-bold text-xl cursor-pointer">🛜 NOT using a smart cube? <a href="#" class="text-blue-500 hover:underline">CLICK HERE</a></p>
+          </div>
+          <p class="mb-3 mt-6 font-bold text-lg">To get started with Cubedex:</p>
+          <div id="help-content-smartcube">
+            <ul class="list-disc list-inside mb-4">
+              <li class="mb-1">🔗 Connect your smart cube by clicking the <strong>Connect</strong> button. For more details, refer to the <a href="https://gist.github.com/afedotov/52057533a8b27a0277598160c384ae71" target="_blank" class="text-blue-500 hover:underline">FAQ</a>.</li>
+              <li class="mb-1">📜 Load an algorithm from the list or input your own in the input field using standard Rubik's cube notation. You can also input the algorithm by performing it on the cube.</li>
+              <li class="mb-1">🟩 Ensure the cube is oriented with <strong>WHITE on top</strong> and <strong>GREEN on front</strong>.</li>
+              <li class="mb-1">🏁 Click the <strong>▶️ Train</strong> button and turn the cube to start practicing the algorithm.</li>
+              <li class="mb-1">🪄 If you want the smartcube to match the virtual cube, click the <strong>Scramble To...</strong> button and follow the scramble.</li>
+            </ul>
+            <p class="mb-3 mt-6 font-bold text-lg">During training:</p>
+            <ul class="list-disc list-inside mb-4">
+              <li class="mb-1">⏱️ The timer will start automatically when you begin the algorithm.</li>
+              <li class="mb-1">🏆 Upon successful completion, the timer will stop and your last 5 times along with their average will be displayed.</li>
+              <li class="mb-1">🔄 If you make a mistake, follow the moves shown in the <strong>Fix</strong> section to correct it. Ensure the top center is <strong>WHITE</strong> and the front center is <strong>GREEN</strong>.</li>
+            </ul>
+            <p class="mb-3 mt-6 font-bold text-lg">Customize your practice drills:</p>
+            <ul class="list-disc list-inside mb-4">
+              <li class="mb-1">📂 Pick a category, choose subsets, and select the cases you want to work on.</li>
+              <li class="mb-1">🔖 Mark the algs you're learning or have already learned. You can use the <strong>Select Learning</strong> option to filter algs by learning status.</li>
+              <li class="mb-1">🔀 Try <strong>Random AUF</strong> to practice with random orientations. For 2-sided recognition, turn off the Gyroscope Orientation and Mirror Sticker hints in Options, letting you view only two sides of the cube. For sets like PLL or ZBLL, you'll also get random post-AUFs to sharpen your AUF prediction.</li>
+              <li class="mb-1">🎲 Enable <strong>Random Order</strong> to mix up the algorithms.</li>
+              <li class="mb-1">🐌 Turn on <strong>Slow Cases First</strong> to improve these slow algorithms.</li>
+              <li class="mb-1">🎯 Activate <strong>Prioritize Failed Cases</strong> to focus on the algorithms you find most challenging.</li>
+              <li class="mb-1">📝 Want to change the algorithm for one or more cases? Click on the algorithm to edit it. You can also <strong>Export Algs</strong> in Options, modify the algorithm in the JSON file, then import it back.</li>
+              <li class="mb-1">⏳ Training for PLL Time Attack? Create a new category and add all your PLL algorithms in sequence for a timed practice session.</li>
+            </ul>
+          </div>
+          <div id="help-content-dumbcube" class="hidden">
+            <ul class="list-disc list-inside mb-4">
+              <li class="mb-1">📜 Load an algorithm from the list or input your own in the input field using standard Rubik's cube notation.</li>
+              <li class="mb-1">🏁 Press the spacebar (on computer) or touch the timer (on touchscreen enabled devices) to start and stop the timer.</li>
+            <p class="mb-3 mt-4 font-bold text-lg">During training:</p>
+            <ul class="list-disc list-inside mb-4">
+              <li class="mb-1">🪄 If you want to setup the case on your cube, click the <strong>Scramble To...</strong> button and follow the scramble.</li>
+              <li class="mb-1">🏆 When you stop the timer your last 5 times along with their average will be displayed.</li>
+            </ul>
+            <p class="mb-3 mt-6 font-bold text-lg">Customize your practice drills:</p>
+            <ul class="list-disc list-inside mb-4">
+              <li class="mb-1">📂 Pick a category, choose subsets, and select the cases you want to work on.</li>
+              <li class="mb-1">🔖 Mark the algs you're learning or have already learned. You can use the <strong>Select Learning</strong> option to filter algs by learning status.</li>
+              <li class="mb-1">🔀 Try <strong>Random AUF</strong> to practice with random orientations. For 2-sided recognition, turn off Mirror Sticker hints in Options, letting you view only two sides of the cube.</li>
+              <li class="mb-1">🎲 Enable <strong>Random Order</strong> to mix up the algorithms.</li>
+              <li class="mb-1">🐌 Turn on <strong>Slow Cases First</strong> to improve these slow algorithms.</li>
+              <li class="mb-1">📝 Want to change the algorithm for one or more cases? Click on the algorithm to edit it. You can also <strong>Export Algs</strong> in Options, modify the algorithm in the JSON file, then import it back.</li>
+              <li class="mb-1">⏳ Training for PLL Time Attack? Create a new category and add all your PLL algorithms in sequence for a timed practice session.</li>
+            </ul>
+          </div>
+          <div class="flex justify-center items-center w-full">
+            <div id="help-footer" class="w-full sm:w-[95%] lg:w-[90%] xl:w-[70%] 2xl:w-[50%] p-4 sm:pr-10 sm:pl-10 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700">
+              <p class="mb-3 mt-4 text-center"><strong>Love Cubedex? Help us grow! 🌱</strong></p>
+              <p class="mb-3 text-center">No Ads here 🤗 Support the app's development on <a href="https://ko-fi.com/cubedex" target="_blank" class="text-blue-500 hover:underline">Ko-fi</a>:</p>
+              <div class="text-center items-center justify-center"><script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Support Me on Ko-fi', '#1d4ed8', 'H2H6132Z3Z');kofiwidget2.draw();</script></div>
+            </div>
+          </div>
         </div>
       </div>
 
