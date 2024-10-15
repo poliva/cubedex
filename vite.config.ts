@@ -43,8 +43,8 @@ export default defineConfig({
         "start_url": "index.html",
         "display": "standalone",
         "scope":"/",
-        "background_color": "#f0f2f5",
-        "theme_color": "#007bff",
+        "background_color": "#111827",
+        "theme_color": "#111827",
         "icons": [
           {
             "src": "icons/icon-192x192.png",
@@ -60,19 +60,19 @@ export default defineConfig({
         "screenshots": [
           {
             "src": "icons/cubedex_screenshot_wide.png",
-            "sizes": "1002x684",
+            "sizes": "1915x1423",
             "type": "image/png",
             "form_factor": "wide"
           },
           {
             "src": "icons/cubedex_screenshot_narrow.png",
-            "sizes": "612x845",
+            "sizes": "733x1456",
             "type": "image/png",
             "form_factor": "narrow"
           },
           {
             "src": "icons/cubedex_screenshot_narrow.png",
-            "sizes": "612x845",
+            "sizes": "733x1456",
             "type": "image/png"
           }
         ]
