@@ -1569,15 +1569,32 @@ $(document).on('keydown', (event) => {
   }
 });
 
-$("#touch-timer").on('touchstart', () => {
-  if (!conn && !inputMode) {
+let isScrolling = false;
+
+$(document).on('touchstart', function () {
+    isScrolling = false;
+});
+
+$(document).on('touchmove', function () {
+    isScrolling = true;
+});
+
+$("#touch-timer").on('touchend', () => {
+  if (!conn && !inputMode && !isScrolling) {
     showFlashingIndicator('gray', 200);
     activateTimer();
   }
 });
 
-$("#times-display").on('touchstart', () => {
-  if (!conn && !inputMode) {
+$("#times-display").on('touchend', () => {
+  if (!conn && !inputMode && !isScrolling) {
+    showFlashingIndicator('gray', 200);
+    activateTimer();
+  }
+});
+
+$("#cube").on('touchend', () => {
+  if (!conn && !inputMode && !isScrolling) {
     showFlashingIndicator('gray', 200);
     activateTimer();
   }
