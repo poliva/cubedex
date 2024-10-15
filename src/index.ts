@@ -1397,10 +1397,8 @@ $('#select-all-subsets-toggle').on('change', function() {
     loadAlgorithms(selectedCategory);
     // if select all toggle is checked select all alg-cases, if select learning toggle is checked select learning alg-cases
     if (selectAllToggle.is(':checked')) {
-      console.log('selectAllToggle is checked');
       $('#alg-cases input[type="checkbox"]').prop('checked', true).trigger('change');
     } else if (selectLearningToggle.is(':checked')) {
-      console.log('selectLearningToggle is checked');
       // check learnedStatus for each algorithm and select the ones that are learned
       $('#alg-cases input[type="checkbox"]').each(function() {
         const algId = algToId($(this).data('algorithm'));
