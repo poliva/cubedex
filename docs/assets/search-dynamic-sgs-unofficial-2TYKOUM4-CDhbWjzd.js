@@ -1,4 +1,4 @@
-import{p as H}from"./chunk-Y3BVWVFU-BLQd2sDw.js";import{s as J,J as N,R as y}from"./index-Bzplq540.js";var E=null;async function pB(){return E??(E=K())}async function K(){return H(await J.fto.kpuzzle(),`SubgroupSizes 24 12 11 12 12 11 10 9 11 8 10 9 7 8 10 10 6 9 8 5 7 6 5 4 4 8 7 3 6 6 360
+import{p as H}from"./chunk-Y3BVWVFU-DwYa-m0n.js";import{s as J,J as N,R as y}from"./index-CIYnVq9D.js";var E=null;async function pB(){return E??(E=K())}async function K(){return H(await J.fto.kpuzzle(),`SubgroupSizes 24 12 11 12 12 11 10 9 11 8 10 9 7 8 10 10 6 9 8 5 7 6 5 4 4 8 7 3 6 6 360
 
 Alg T
 Alg B
