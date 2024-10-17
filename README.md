@@ -1,5 +1,5 @@
 ## Cubedex 
-[Cubedex](https://cubedex.app) is an alg trainer that helps you drill, time, and master Rubik's Cube algorithms like OLL and PLL, enabling you to build them into your muscle memory more quickly and effectively.
+[Cubedex](https://cubedex.app) is an alg trainer that helps you drill, time, and master Rubik's Cube algorithm sets like OLL and PLL, building them into your muscle memory more quickly and effectively.
 
 📱 How to Get Started:  
 
@@ -7,6 +7,9 @@
 ✅ Add Cubedex to your home screen for an app-like experience  
 ✅ You can use it offline - Cubedex works perfectly without an internet connection  
 ✅ Compatible with GAN smartcubes and regular non-Bluetooth cubes!  
+
+📺 Watch the Tutorial Video:  
+[![Watch the Tutorial Video](https://img.youtube.com/vi/AZcFMiT2Vm0/hqdefault.jpg)](https://www.youtube.com/watch?v=AZcFMiT2Vm0)  
 
 Cubedex has been created with ♥ by [Pau Oliva Fora](https://twitter.com/pof) using [gan-web-bluetooth](https://github.com/afedotov/gan-web-bluetooth) and [cubing.js](https://github.com/cubing/cubing.js).  
 
