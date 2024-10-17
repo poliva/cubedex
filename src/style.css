@@ -879,6 +879,10 @@ video {
   max-width: 250px;
 }
 
+.max-w-full {
+  max-width: 100%;
+}
+
 .flex-shrink-0 {
   flex-shrink: 0;
 }
@@ -969,6 +973,10 @@ video {
   --tw-space-y-reverse: 0;
   margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(0.5rem * var(--tw-space-y-reverse));
+}
+
+.overflow-hidden {
+  overflow: hidden;
 }
 
 .rounded-full {
@@ -1575,6 +1583,14 @@ input:checked + div + .dot {
 @media (min-width: 768px) {
   .md\:top-0 {
     top: 0px;
+  }
+
+  .md\:ml-\[10\%\] {
+    margin-left: 10%;
+  }
+
+  .md\:mr-\[10\%\] {
+    margin-right: 10%;
   }
 
   .md\:mt-0 {
