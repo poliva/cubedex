@@ -136,7 +136,7 @@ $('#train-alg').on('click', () => {
     $('#alg-input').hide();
     $('#save-container').hide();
     hideMistakes();
-    if (scrambleMode) {
+    if (scrambleMode && !alwaysScrambleTo) {
       $('#alg-scramble').hide();
       scrambleMode = false;
     }
@@ -147,6 +147,9 @@ $('#train-alg').on('click', () => {
     setTimerState("READY");
     updateTimesDisplay();
     scrambleToAlg = [];
+    if (alwaysScrambleTo) {
+      $('#scramble-to').trigger('click');
+    }
   } else {
     $('#alg-input').show();
     $('#alg-input').get(0)?.focus();
@@ -1076,8 +1079,10 @@ $('#scramble-to').on('click', () => {
       $('#alg-scramble').show();
       $('#alg-scramble').text(scramble);
       // draw real cube state
-      var solution = await experimentalSolve3x3x3IgnoringCenters(cubePattern);
-      twistyPlayer.alg = solution.invert();
+      if (conn) {
+        var solution = await experimentalSolve3x3x3IgnoringCenters(cubePattern);
+        twistyPlayer.alg = solution.invert();
+      }
     } else {
       scrambleMode = false;
       $('#alg-scramble').hide();
@@ -1108,6 +1113,7 @@ $('#save-alg').on('click', () => {
   $('#alg-display-container').hide();
   $('#times-display').html('');
   $('#timer').hide();
+  $('#alg-scramble').hide();
   $('#alg-input').show();
   $('#alg-input').get(0)?.focus();
   $('#app-top').show();
@@ -1138,6 +1144,8 @@ $('#category-select').on('change', () => {
   $('#times-display').html('');
   $('#alg-display-container').hide();
   $('#alg-display').html('');
+  $('#alg-scramble').hide();
+  $('#alg-scramble').text('');
   inputMode = true;
   $('#alg-input').val('');
   $('#alg-input').show();
@@ -1262,6 +1270,13 @@ function loadConfiguration() {
     showAlgNameEnabled = true;
   }
 
+  const alwaysScrambleToState = localStorage.getItem('alwaysScrambleTo');
+  if (alwaysScrambleToState) {
+    alwaysScrambleTo = alwaysScrambleToState === 'true';
+  } else {
+    alwaysScrambleTo = false;
+  }
+  $('#always-scramble-to-toggle').prop('checked', alwaysScrambleTo);
 }
 
 // Add event listener for the gyroscope toggle
@@ -1314,6 +1329,12 @@ showAlgNameToggle.addEventListener('change', () => {
   showAlgNameEnabled = showAlgNameToggle.checked;
   localStorage.setItem('showAlgName', showAlgNameToggle.checked.toString());
   updateTimesDisplay(); // Update display immediately when toggled
+});
+
+var alwaysScrambleTo: boolean = false;
+$('#always-scramble-to-toggle').on('change', () => {
+  alwaysScrambleTo = $('#always-scramble-to-toggle').is(':checked');
+  localStorage.setItem('alwaysScrambleTo', alwaysScrambleTo.toString());
 });
 
 // Add event listeners for the selectors to update twistyPlayer settings
