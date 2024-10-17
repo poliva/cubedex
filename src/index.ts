@@ -620,12 +620,7 @@ function handleCubeEvent(event: GanCubeEvent) {
       $('#battery-indicator').css('color', 'red');
     }
   } else if (event.type == "DISCONNECT") {
-    twistyPlayer.alg = '';
-    twistyTracker.alg = '';
-    $('.info input').val('- n/a -');
-    $('#connect').html('Connect');
-    $('#battery-indicator').hide();
-    $('#bluetooth-indicator').show();
+    deviceDisconnected();
   }
 }
 
@@ -718,14 +713,24 @@ $('#reset-gyro').on('click', async () => {
   basis = null;
 });
 
+function deviceDisconnected() {
+  conn = null;
+  twistyPlayer.alg = '';
+  twistyTracker.alg = '';
+  releaseWakeLock();
+  $('#reset-gyro').prop('disabled', true);
+  $('#reset-state').prop('disabled', true);
+  $('#device-info').prop('disabled', true);
+  $('.info input').val('- n/a -');
+  $('#connect').html('Connect');
+  $('#battery-indicator').hide();
+  $('#bluetooth-indicator').show();
+}
+
 $('#connect-button').on('click', async () => {
   if (conn) {
     conn.disconnect();
-    conn = null;
-    releaseWakeLock();
-    $('#reset-gyro').prop('disabled', true);
-    $('#reset-state').prop('disabled', true);
-    $('#device-info').prop('disabled', true);
+    deviceDisconnected();
   } else {
     conn = await connectGanCube(customMacAddressProvider);
     conn.events$.subscribe(handleCubeEvent);
