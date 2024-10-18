@@ -97,9 +97,22 @@
 
     <div id="app" class="p-2 flex-grow ml-0">
       <div id="app-top">
-        <div id="container" class="relative grid grid-cols-1 sm:grid-cols-3 items-start mb-3 gap-2 text-sm sm:text-base h-full">
+        <div id="container" class="relative grid grid-cols-1 sm:grid-cols-3 items-center justify-center mb-3 gap-1 sm:gap-2 text-sm sm:text-base h-full">
           <div id="flashing-indicator" class="hidden absolute inset-0 opacity-75 z-50 rounded-lg"></div>
-          <div id="times-display" class="col-span-1 text-center font-mono text-gray-900 dark:text-white text-xs sm:text-base order-2 sm:order-1 h-full"></div>
+          <div id="left-side" class="col-span-1 flex flex-col flex-grow items-center justify-items-center order-2 sm:order-1 h-full min-w-[240px]">
+            <div id="alg-name-display-container" class="flex items-center justify-center text-center font-mono text-gray-900 dark:text-white text-xs sm:text-base w-full">
+                <button id="toggle-display" class="cursor-pointer inline-flex items-center justify-center dark:text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="-2 0 19 19">
+                    <path d="M13.55 15.256H1.45a.554.554 0 0 1-.553-.554V3.168a.554.554 0 1 1 1.108 0v10.98h11.544a.554.554 0 0 1 0 1.108zM3.121 13.02V6.888a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v6.132zm2.785 0V3.507a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v9.513zm2.785 0V6.888a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v6.132zm2.786 0v-2.753a.476.476 0 0 1 .475-.475h.785a.476.476 0 0 1 .475.475v2.753z"/>
+                  </svg>
+                </button>
+                <p id="alg-name-display"></p>
+            </div>
+            <div id="times-display" class="hidden col-span-1 text-center font-mono text-gray-900 dark:text-white text-xs sm:text-base h-full"></div>
+            <div id="graph-display" class="flex items-center justify-items-center justify-center col-span-1 w-[230px] max-w-[230px] max-h-[230px]">
+              <canvas id="timeGraph"></canvas>
+            </div>
+          </div>
           <div id="cube" class="col-span-1 flex items-center justify-center min-w-[10em] min-h-[10em] sm:min-w-[15em] sm:min-h-[15em] text-sm sm:text-base order-3 sm:order-2"></div>
           <div id="right-side" class="col-span-1 flex flex-col flex-grow items-center sm:items-end text-sm sm:text-base order-1 sm:order-3 h-full">
             <button id="connect-button" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base align-middle flex items-center">

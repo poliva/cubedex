@@ -4,6 +4,10 @@ import { Alg } from "cubing/alg";
 import { faceletsToPattern } from "./utils";
 import { fullStickeringEnabled } from "./index";
 import { makeTimeFromTimestamp } from 'gan-web-bluetooth';
+import { Chart, registerables } from 'chart.js';
+
+// Register the components needed for Chart.js
+Chart.register(...registerables);
 
 export function expandNotation(input: string): string {
   // Replace characters
@@ -494,3 +498,77 @@ export function isSymmetricOLL(alg: string): boolean {
   }
   return false;
 }
+
+// Store the chart instance
+let myChart: Chart | null = null;
+
+// Function to create the graph
+export function createTimeGraph(times: number[]) {
+  const ctx = document.getElementById('timeGraph') as HTMLCanvasElement;
+
+  // If a chart instance already exists, destroy it
+  if (myChart) {
+    myChart.destroy();
+  }
+
+  if (ctx) {
+      const minTime = Math.min(...times);
+      const backgroundColors = times.map((time: number) =>
+          time === minTime ? 'rgba(75, 192, 192, 0.2)' : 'rgba(54, 162, 235, 0.2)'
+      );
+      const borderColors = times.map((time: number) =>
+          time === minTime ? 'rgba(75, 192, 192, 1)' : 'rgba(54, 162, 235, 1)'
+      );
+      const timesInSeconds = times.map((time: number) => time / 1000);
+
+      myChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+              labels: times.map((_, index) => `Attempt ${index + 1}`),
+              datasets: [
+                  {
+                      label: 'Seconds',
+                      data: timesInSeconds,
+                      backgroundColor: backgroundColors,
+                      borderColor: borderColors,
+                      borderWidth: 1,
+                  },
+              ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1, // Ensures the canvas is square
+            plugins: {
+              legend: {
+                display: false, // Disable the legend
+              },
+              title: {
+                display: false, // Disable the title
+              },
+            },
+              scales: {
+                  y: {
+                      beginAtZero: true,
+                  },
+              },
+          },
+      });
+  }
+}
+
+$('#toggle-display').on('click', function() {
+  const timesDisplay = $('#times-display');
+  const graphDisplay = $('#graph-display');
+  const algNameDisplayContainer = $('#alg-name-display-container');
+
+  if (timesDisplay.is(':visible')) {
+    timesDisplay.hide();
+    graphDisplay.css('display', 'flex').show();
+    algNameDisplayContainer.show();
+  } else {
+    timesDisplay.show();
+    graphDisplay.hide();
+    algNameDisplayContainer.show();
+  }
+});

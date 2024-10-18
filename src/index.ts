@@ -26,7 +26,7 @@ import {
 } from 'gan-web-bluetooth';
 
 import { faceletsToPattern, patternToFacelets } from './utils';
-import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageTimeNumber, learnedStatus } from './functions';
+import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageTimeNumber, learnedStatus, createTimeGraph } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -754,24 +754,41 @@ $('#connect-button').on('click', async () => {
 
 var timerState: "IDLE" | "READY" | "RUNNING" | "STOPPED" = "IDLE";
 
+function getLastTimes(algId: string): number[] {
+  // Check if the old key exists and rename it if necessary
+  const oldKey = 'LastFiveTimes-' + algId;
+  const newKey = 'LastTimes-' + algId;
+
+  if (localStorage.getItem(oldKey)) {
+    const value = localStorage.getItem(oldKey);
+    if (value) {
+      localStorage.setItem(newKey, value);
+      localStorage.removeItem(oldKey);
+    }
+  }
+
+  // Retrieve the times using the new key
+  const lastTimesStorage = localStorage.getItem(newKey);
+  return lastTimesStorage ? lastTimesStorage.split(',').map(num => Number(num.trim())) : [];
+}
+
 function updateTimesDisplay() {
   const timesDisplay = $('#times-display');
+  const algNameDisplay = $('#alg-name-display');
   const algId = algToId(originalUserAlg.join(' '));
 
-  const lastFiveTimesStorage = localStorage.getItem('LastFiveTimes-' + algId);
+  // Use the new function to get last times
+  const lastTimes = getLastTimes(algId);
+  const bestTime = bestTimeNumber(algId);
 
-  var lastFiveTimes: number[] = []
-  if (lastFiveTimesStorage) {
-    lastFiveTimes = lastFiveTimesStorage.split(',').map(num => Number(num.trim()));
-  }
-  const bestTime = bestTimeNumber(algId)
-  if (lastFiveTimes.length === 0 && !bestTime) {
-    timesDisplay.html(showAlgNameEnabled ? `${currentAlgName}` : '');
+  algNameDisplay.text(showAlgNameEnabled ? currentAlgName : '');
+
+  if (lastTimes.length === 0 && !bestTime) {
     return;
   }
 
   const practiceCount: number = $('#' + algId).data('count') || 0;
-  const timesHtml = lastFiveTimes.map((time: number, index: number) => {
+  const timesHtml = lastTimes.slice(-5).map((time: number, index: number) => {
     const t = makeTimeFromTimestamp(time);
     let number = practiceCount < 5 ? index + 1 : practiceCount - 5 + index + 1;
     // Add emoji if the time is a PB
@@ -780,7 +797,7 @@ function updateTimesDisplay() {
     return `<div class="text-right">Time ${number}:</div><div class="text-left">${minutesPart}${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}${emojiPB}</div>`;
   }).join('');
 
-  const averageTime = lastFiveTimes.reduce((a: number, b: number) => a + b, 0) / lastFiveTimes.length;
+  const averageTime = lastTimes.slice(-5).reduce((a: number, b: number) => a + b, 0) / Math.min(5, lastTimes.length);
   const avg = makeTimeFromTimestamp(averageTime);
   const avgMinutesPart = avg.minutes > 0 ? `${avg.minutes}:` : '';
   const averageHtml = `<div id="average" class="font-bold text-right">Average:</div><div class="font-bold text-left">${avgMinutesPart}${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}</div>`;
@@ -792,9 +809,12 @@ function updateTimesDisplay() {
     bestTimeHtml = `<div id="best" class="text-right">Best:</div><div class="text-left">${bestMinutesPart}${best.seconds.toString(10).padStart(2, '0')}.${best.milliseconds.toString(10).padStart(3, '0')}</div>`;
   }
 
-  const gridHtml = `<div class="grid grid-cols-2 items-center gap-1">${timesHtml}${averageHtml}${bestTimeHtml}</div>`;
-  const displayHtml = showAlgNameEnabled ? `<p>${currentAlgName}</p>${gridHtml}` : gridHtml;
+  const displayHtml = `<div class="grid grid-cols-2 items-center gap-1">${timesHtml}${averageHtml}${bestTimeHtml}</div>`;
   timesDisplay.html(displayHtml);
+
+  if (lastTimes.length > 0) {
+    createTimeGraph(lastTimes.slice(-5));
+  }
 }
 
 function setTimerState(state: typeof timerState) {
@@ -839,18 +859,18 @@ function setTimerState(state: typeof timerState) {
 
       // Store the time and update the display
       if (finalTime > 0) {
-        const lastFiveTimesStorage = localStorage.getItem('LastFiveTimes-' + algId);
-        var lastFiveTimes: number[] = []
-        if (lastFiveTimesStorage) {
-          lastFiveTimes = lastFiveTimesStorage.split(',').map(num => Number(num.trim()));
+        const lastTimesStorage = localStorage.getItem('LastTimes-' + algId);
+        var lastTimes: number[] = []
+        if (lastTimesStorage) {
+          lastTimes = lastTimesStorage.split(',').map(num => Number(num.trim()));
         }
-        lastFiveTimes.push(finalTime);
-        if (lastFiveTimes.length > 5) {
-          lastFiveTimes.shift(); // Keep only the last 5 times
+        lastTimes.push(finalTime);
+        if (lastTimes.length > 1000) {
+          lastTimes.shift(); // Keep only the last 1000 times
         }
         practiceCount++; // Increment the practice count
 
-        localStorage.setItem('LastFiveTimes-' + algId, lastFiveTimes.join(','));
+        localStorage.setItem('LastTimes-' + algId, lastTimes.join(','));
         $('#' + algId).data('count', practiceCount);
 
         const bestTime = localStorage.getItem('Best-' + algId);
@@ -860,7 +880,7 @@ function setTimerState(state: typeof timerState) {
         }
         $('#ao5-time-' + algId).html(averageTimeString(averageTimeNumber(algId)));
 
-        //console.log("[setTimerState] Setting lastFiveTimes to " + lastFiveTimes + " for algId " + algId);
+        //console.log("[setTimerState] Setting lastTimes to " + lastTimes + " for algId " + algId);
         //console.log("[setTimerState] Setting practiceCount to " + practiceCount + " for algId " + algId);
 
         let failedCount: number = $('#' + algId).data('failed') || 0;
