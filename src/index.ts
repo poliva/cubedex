@@ -1601,17 +1601,38 @@ if (categorySelect.val() === null || categorySelect.val() === '') {
 // functions to activate timer when using a dumb cube
 function activateTimer() {
   if (timerState == "STOPPED" || timerState == "IDLE" || timerState == "READY") {
+    showFlashingIndicator('gray', 200);
     setTimerState("RUNNING");
   } else {
     setTimerState("STOPPED");
   }
 }
 
+let isKeyboardTimerActive: boolean = false;
+
 $(document).on('keydown', (event) => {
   if (!conn && !inputMode && event.which === 32) {
     event.preventDefault();
-    showFlashingIndicator('gray', 200);
-    activateTimer();
+    if (timerState == "STOPPED" || timerState == "IDLE") {
+      setTimerValue(0);
+      setTimerState("READY");
+    } else if (timerState == "RUNNING") {
+      setTimerState("STOPPED");
+    } else if (timerState == "READY" && !isKeyboardTimerActive) {
+      setTimerValue(0);
+    }
+  }
+});
+
+$(document).on('keyup', (event) => {
+  if (!conn && !inputMode && event.which === 32) {
+    event.preventDefault();
+    if (timerState == "READY" && !isKeyboardTimerActive) {
+      activateTimer();
+      isKeyboardTimerActive = true;
+    } else {
+      isKeyboardTimerActive = false;
+    }
   }
 });
 
@@ -1627,21 +1648,18 @@ $(document).on('touchmove', function () {
 
 $("#touch-timer").on('touchend', () => {
   if (!conn && !inputMode && !isScrolling) {
-    showFlashingIndicator('gray', 200);
     activateTimer();
   }
 });
 
 $("#times-display").on('touchend', () => {
   if (!conn && !inputMode && !isScrolling) {
-    showFlashingIndicator('gray', 200);
     activateTimer();
   }
 });
 
 $("#cube").on('touchend', () => {
   if (!conn && !inputMode && !isScrolling) {
-    showFlashingIndicator('gray', 200);
     activateTimer();
   }
 });
