@@ -150,6 +150,8 @@ $('#train-alg').on('click', () => {
     if (alwaysScrambleTo) {
       $('#scramble-to').trigger('click');
     }
+    $("#toggle-display").css("display", "inline-flex");
+    $('#left-side-inner').show();
   } else {
     $('#alg-input').show();
     $('#alg-input').get(0)?.focus();
@@ -635,9 +637,7 @@ const customMacAddressProvider: MacAddressProvider = async (device, isFallbackCa
 };
 
 $('#alg-display').on('click', () => {
-  if (conn) {
-    inputMode = true;
-  }
+  inputMode = true;
   $('#alg-display-container').hide();
   $('#alg-input').show();
   $('#alg-input').get(0)?.focus();
@@ -659,9 +659,7 @@ $('#input-alg').on('click', () => {
   twistyPlayer.alg = '';
   resetAlg();
   $('#alg-input').val('');
-  if (conn) {
-    inputMode = true;
-  }
+  inputMode = true;
   checkedAlgorithms = [];
   checkedAlgorithmsCopy = [];
   updateTimesDisplay();
@@ -865,8 +863,8 @@ function setTimerState(state: typeof timerState) {
           lastTimes = lastTimesStorage.split(',').map(num => Number(num.trim()));
         }
         lastTimes.push(finalTime);
-        if (lastTimes.length > 1000) {
-          lastTimes.shift(); // Keep only the last 1000 times
+        if (lastTimes.length > 100) {
+          lastTimes.shift(); // Keep only the last 100 times
         }
         practiceCount++; // Increment the practice count
 
@@ -1132,12 +1130,11 @@ $('#load-alg').on('click', () => {
 
 // Event listener for Save button
 $('#save-alg').on('click', () => {
-  if (conn) {
-    inputMode = true;
-  }
+  inputMode = true;
   $('#alg-display-container').hide();
   $('#times-display').html('');
   $('#timer').hide();
+  $('#left-side-inner').hide();
   $('#alg-scramble').hide();
   $('#alg-input').show();
   $('#alg-input').get(0)?.focus();

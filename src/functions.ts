@@ -557,18 +557,18 @@ export function createTimeGraph(times: number[]) {
   }
 }
 
-$('#toggle-display').on('click', function() {
+function toggleGraphTimesDisplay() {
   const timesDisplay = $('#times-display');
   const graphDisplay = $('#graph-display');
-  const algNameDisplayContainer = $('#alg-name-display-container');
 
   if (timesDisplay.is(':visible')) {
     timesDisplay.hide();
     graphDisplay.css('display', 'flex').show();
-    algNameDisplayContainer.show();
   } else {
     timesDisplay.show();
     graphDisplay.hide();
-    algNameDisplayContainer.show();
   }
-});
+}
+
+$('#toggle-display').on('click', toggleGraphTimesDisplay);
+$('#alg-name-display').on('click', toggleGraphTimesDisplay);

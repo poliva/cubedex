@@ -1,7 +1,7 @@
 {
   "name": "cubedex",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -20,6 +20,7 @@
   "dependencies": {
     "@types/jquery": "^3.5.30",
     "@types/web-bluetooth": "^0.0.20",
+    "chart.js": "^4.4.5",
     "cubing": "^0.51.0",
     "gan-web-bluetooth": "^3.0.2",
     "jquery": "^3.7.1",
