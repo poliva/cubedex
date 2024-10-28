@@ -26,7 +26,7 @@ import {
 } from 'gan-web-bluetooth';
 
 import { faceletsToPattern, patternToFacelets } from './utils';
-import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageTimeNumber, learnedStatus, createTimeGraph } from './functions';
+import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageTimeNumber, learnedStatus, createTimeGraph, createStatsGraph, countMovesETM } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -152,8 +152,11 @@ $('#train-alg').on('click', () => {
     }
     $("#toggle-display").css("display", "inline-flex");
     $('#left-side-inner').show();
+    $('#alg-stats').css("display", "flex");
   } else {
     $('#alg-input').show();
+    $('#alg-stats').hide();
+    $('#left-side-inner').hide();
     $('#alg-input').get(0)?.focus();
   }
   resetAlg();
@@ -640,6 +643,8 @@ $('#alg-display').on('click', () => {
   inputMode = true;
   $('#alg-display-container').hide();
   $('#alg-input').show();
+  $('#alg-stats').hide();
+  $('#left-side-inner').hide();
   $('#alg-input').get(0)?.focus();
   $('#app-top').show();
   $('#save-success').hide();
@@ -669,6 +674,8 @@ $('#input-alg').on('click', () => {
   $('#alg-display-container').hide();
   $('#times-display').html('');
   $('#timer').hide();
+  $('#alg-stats').hide();
+  $('#left-side-inner').hide();
   $('#alg-input').show();
   $('#alg-input').get(0)?.focus();
   $('#app-top').show();
@@ -686,6 +693,8 @@ $('#show-help').on('click', () => {
   $('#load-container').hide();
   $('#save-container').hide();
   $('#info').hide();
+  $('#alg-stats').hide();
+  $('#left-side-inner').hide();
 });
 
 $('#device-info').on('click', () => {
@@ -773,6 +782,7 @@ function getLastTimes(algId: string): number[] {
 function updateTimesDisplay() {
   const timesDisplay = $('#times-display');
   const algNameDisplay = $('#alg-name-display');
+  const algNameDisplay2 = $('#alg-name-display2');
   const algId = algToId(originalUserAlg.join(' '));
 
   // Use the new function to get last times
@@ -780,8 +790,29 @@ function updateTimesDisplay() {
   const bestTime = bestTimeNumber(algId);
 
   algNameDisplay.text(showAlgNameEnabled ? currentAlgName : '');
+  algNameDisplay2.text(showAlgNameEnabled ? currentAlgName : '');
 
-  if (lastTimes.length === 0 && !bestTime) {
+  createTimeGraph(lastTimes.slice(-5));
+  createStatsGraph(lastTimes);
+
+  // Calculate average time
+  const timesInSeconds = lastTimes.map((time: number) => time / 1000);
+  const averageTime = timesInSeconds.reduce((a: number, b: number) => a + b, 0) / timesInSeconds.length;
+  const averageTimeString = averageTime ? `${Math.floor(averageTime)}.${Math.round((averageTime % 1) * 1000)}` : '-';
+  $('#average-time-box').html(`Average Time<br />${averageTimeString}`);
+
+  // Calculate average TPS
+  const moveCount = countMovesETM(userAlg.join(' '));
+  const averageTPS = averageTime ? (moveCount / averageTime).toFixed(2) : '-';
+  $('#average-tps-box').html(`Average TPS<br />${averageTPS}`);
+
+  // Get single PB
+  const bestTimeString = bestTime ? `${Math.floor(bestTime / 1000)}.${Math.round((bestTime % 1000) / 10)}` : '-';
+  $('#single-pb-box').html(`Single PB<br />${bestTimeString}`);
+
+  if (lastTimes.length === 0) {
+    $('#alg-stats').hide();
+    $('#left-side-inner').hide();
     return;
   }
 
@@ -795,8 +826,8 @@ function updateTimesDisplay() {
     return `<div class="text-right">Time ${number}:</div><div class="text-left">${minutesPart}${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}${emojiPB}</div>`;
   }).join('');
 
-  const averageTime = lastTimes.slice(-5).reduce((a: number, b: number) => a + b, 0) / Math.min(5, lastTimes.length);
-  const avg = makeTimeFromTimestamp(averageTime);
+  const avgTime = lastTimes.slice(-5).reduce((a: number, b: number) => a + b, 0) / Math.min(5, lastTimes.length);
+  const avg = makeTimeFromTimestamp(avgTime);
   const avgMinutesPart = avg.minutes > 0 ? `${avg.minutes}:` : '';
   const averageHtml = `<div id="average" class="font-bold text-right">Average:</div><div class="font-bold text-left">${avgMinutesPart}${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}</div>`;
 
@@ -809,10 +840,6 @@ function updateTimesDisplay() {
 
   const displayHtml = `<div class="grid grid-cols-2 items-center gap-1">${timesHtml}${averageHtml}${bestTimeHtml}</div>`;
   timesDisplay.html(displayHtml);
-
-  if (lastTimes.length > 0) {
-    createTimeGraph(lastTimes.slice(-5));
-  }
 }
 
 function setTimerState(state: typeof timerState) {
@@ -1125,6 +1152,8 @@ $('#load-alg').on('click', () => {
   $('#options-container').hide();
   $('#help').hide();
   $('#info').hide();
+  $('#alg-stats').hide();
+  $('#left-side-inner').hide();
   $('#train-alg').trigger('click');
 });
 
@@ -1135,6 +1164,7 @@ $('#save-alg').on('click', () => {
   $('#times-display').html('');
   $('#timer').hide();
   $('#left-side-inner').hide();
+  $('#alg-stats').hide();
   $('#alg-scramble').hide();
   $('#alg-input').show();
   $('#alg-input').get(0)?.focus();
@@ -1171,6 +1201,8 @@ $('#category-select').on('change', () => {
   inputMode = true;
   $('#alg-input').val('');
   $('#alg-input').show();
+  $('#alg-stats').hide();
+  $('#left-side-inner').hide();
 });
 
 // Add event listener for subset checkboxes
@@ -1220,6 +1252,8 @@ $('#show-options').on('click', () => {
   $('#save-container').hide();
   $('#info').hide();
   $('#help').hide();
+  $('#alg-stats').hide();
+  $('#left-side-inner').hide();
   $('#options-container').show();
 });
 

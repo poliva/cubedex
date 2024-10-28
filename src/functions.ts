@@ -1,6 +1,7 @@
 import { KPattern } from 'cubing/kpuzzle';
 import $ from 'jquery';
 import { Alg } from "cubing/alg";
+import { experimentalCountMovesETM } from "cubing/notation";
 import { faceletsToPattern } from "./utils";
 import { fullStickeringEnabled } from "./index";
 import { makeTimeFromTimestamp } from 'gan-web-bluetooth';
@@ -500,15 +501,16 @@ export function isSymmetricOLL(alg: string): boolean {
 }
 
 // Store the chart instance
-let myChart: Chart | null = null;
+let myTimeChart: Chart | null = null;
+let myStatsChart: Chart | null = null;
 
 // Function to create the graph
 export function createTimeGraph(times: number[]) {
   const ctx = document.getElementById('timeGraph') as HTMLCanvasElement;
 
   // If a chart instance already exists, destroy it
-  if (myChart) {
-    myChart.destroy();
+  if (myTimeChart) {
+    myTimeChart.destroy();
   }
 
   if (ctx) {
@@ -521,10 +523,10 @@ export function createTimeGraph(times: number[]) {
       );
       const timesInSeconds = times.map((time: number) => time / 1000);
 
-      myChart = new Chart(ctx, {
+      myTimeChart = new Chart(ctx, {
           type: 'bar',
           data: {
-              labels: times.map((_, index) => `Attempt ${index + 1}`),
+              labels: times.map((_, index) => `${index + 1}`),
               datasets: [
                   {
                       label: 'Seconds',
@@ -537,6 +539,7 @@ export function createTimeGraph(times: number[]) {
           },
           options: {
             responsive: true,
+            animation: false,
             maintainAspectRatio: true,
             aspectRatio: 1, // Ensures the canvas is square
             plugins: {
@@ -557,6 +560,11 @@ export function createTimeGraph(times: number[]) {
   }
 }
 
+// given an alg, count the Execution Turn Metric (ETM) number
+export function countMovesETM(alg: string): number {
+  return experimentalCountMovesETM(Alg.fromString(alg));
+}
+
 function toggleGraphTimesDisplay() {
   const timesDisplay = $('#times-display');
   const graphDisplay = $('#graph-display');
@@ -572,3 +580,99 @@ function toggleGraphTimesDisplay() {
 
 $('#toggle-display').on('click', toggleGraphTimesDisplay);
 $('#alg-name-display').on('click', toggleGraphTimesDisplay);
+
+// Function to create the stats graph
+export function createStatsGraph(times: number[]) {
+  const ctx = document.getElementById('statsGraph') as HTMLCanvasElement;
+
+  // If a chart instance already exists, destroy it
+  if (myStatsChart) {
+    myStatsChart.destroy();
+  }
+
+  if (ctx) {
+    const timesInSeconds = times.map((time: number) => time / 1000);
+
+    // Calculate averages
+    const ao5 = calculateTrimmedAverage(timesInSeconds, 5, 3);
+    const ao12 = calculateTrimmedAverage(timesInSeconds, 12, 10);
+
+    myStatsChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: times.map((_, index) => `${index + 1}`),
+        datasets: [
+          {
+            label: 'Single',
+            data: timesInSeconds,
+            backgroundColor: 'rgba(54, 162, 235, 1)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
+            fill: {
+              target: 'origin',
+              above: 'rgba(54, 162, 235, 0.2)',
+              below: 'rgba(54, 162, 235, 0.1)',
+            }
+          },
+          {
+            label: 'Average of 5',
+            data: ao5,
+            backgroundColor: 'rgba(255, 159, 64, 1)',
+            borderColor: 'rgba(255, 159, 64, 1)',
+            borderWidth: 1,
+            fill: false,
+          },
+          {
+            label: 'Average of 12',
+            data: ao12,
+            backgroundColor: 'rgba(75, 192, 192, 1)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1,
+            fill: false,
+          },
+        ],
+      },
+      options: {
+        elements: {
+          point: {
+            pointStyle: 'circle',
+          },
+        },
+        animation: false,
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 1.25,
+        plugins: {
+          legend: {
+            display: true,
+          },
+          title: {
+            display: false,
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+  }
+}
+
+// Helper function to calculate trimmed averages
+function calculateTrimmedAverage(data: number[], windowSize: number, meanSize: number): (number | null)[] {
+  const averages: (number | null)[] = [];
+  for (let i = 0; i < data.length; i++) {
+    if (i < windowSize - 1) {
+      averages.push(null); // Not enough data points to calculate the average
+    } else {
+      const window = data.slice(i - windowSize + 1, i + 1);
+      const sortedWindow = [...window].sort((a, b) => a - b);
+      const trimmedWindow = sortedWindow.slice(1, -1); // Remove the best and worst
+      const average = trimmedWindow.reduce((sum, value) => sum + value, 0) / meanSize;
+      averages.push(average);
+    }
+  }
+  return averages;
+}

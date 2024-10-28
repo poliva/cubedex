@@ -25,8 +25,8 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-  <script type="module" crossorigin src="/assets/index-BDp-RxJK.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-64yxSAq1.css">
+  <script type="module" crossorigin src="/assets/index-CPn27ZlC.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BF6G450p.css">
 <link rel="manifest" href="/manifest.json"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
 <body class="bg-gray-100 text-gray-900 font-sans leading-relaxed sm:p-4 p-1 dark:bg-gray-900 dark:text-white text-sm sm:text-base flex flex-col min-h-screen min-w-[360px]">
@@ -133,7 +133,7 @@
           </div>
         </div>
 
-        <div id="alg-bar" class="flex flex-row">
+        <div id="alg-bar" class="flex flex-row mx-auto max-w-[1125px]">
 
           <button id="train-alg" title="Train" class="mt-2 mr-4 cursor-pointer inline-flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -255,6 +255,18 @@
         <div id="save-success" class="hidden mt-4 text-green-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-green-500 dark:border-green-400 text-sm sm:text-base"></div>
       </div>
 
+      <div id="alg-stats" class="hidden flex-col lg:flex-row max-w-[1032px] mx-auto border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-800 dark:text-white dark:border-gray-700">
+        <div id="stats-container" class="p-2 sm:p-4 min-h-[240px] max-h-[600px] flex-grow">
+          <canvas id="statsGraph"></canvas>
+        </div>
+        <div id="metrics-container">
+          <div id="alg-name-display2" class="text-center text-base md:text-xl lg:text-2xl font-bold pt-2 sm:pt-4 mt-2 sm:mt-4 pl-4 pr-4 mb-0 pb-0"></div>
+          <div id="average-time-box" class="items-center justify-center text-center border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-base md:text-xl lg:text-2xl font-bold p-4 sm:p-8 m-4 sm:m-8">Average Time<br />-</div>
+          <div id="average-tps-box" class="items-center justify-center text-center border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-base md:text-xl lg:text-2xl font-bold p-4 sm:p-8 m-4 sm:m-8">Average TPS<br />-</div>
+          <div id="single-pb-box" class="items-center justify-center text-center border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-base md:text-xl lg:text-2xl font-bold p-4 sm:p-8 m-4 sm:m-8">Single PB<br />-</div>
+        </div>
+      </div>
+
       <div id="load-container" class="flex-col gap-4 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
         <div id="default-alg-id" class="hidden bg-red-400"><!-- wildcard to add classes used in js --></div>
 
@@ -333,8 +345,6 @@
         <div id="subset-checkboxes" class="flex flex-col space-y-2 p-4 mb-2 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-sm sm:text-base">
           <div id="subset-checkboxes-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2"></div>
         </div>
-
-
         <div id="alg-cases" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 p-2 sm:p-4 gap-2 sm:gap-4">
         </div>
         <div class="delete-mode-container flex items-center gap-2 text-sm sm:text-base">
