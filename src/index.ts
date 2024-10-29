@@ -762,20 +762,7 @@ $('#connect-button').on('click', async () => {
 var timerState: "IDLE" | "READY" | "RUNNING" | "STOPPED" = "IDLE";
 
 function getLastTimes(algId: string): number[] {
-  // Check if the old key exists and rename it if necessary
-  const oldKey = 'LastFiveTimes-' + algId;
-  const newKey = 'LastTimes-' + algId;
-
-  if (localStorage.getItem(oldKey)) {
-    const value = localStorage.getItem(oldKey);
-    if (value) {
-      localStorage.setItem(newKey, value);
-      localStorage.removeItem(oldKey);
-    }
-  }
-
-  // Retrieve the times using the new key
-  const lastTimesStorage = localStorage.getItem(newKey);
+  const lastTimesStorage = localStorage.getItem('LastTimes-' + algId);
   return lastTimesStorage ? lastTimesStorage.split(',').map(num => Number(num.trim())) : [];
 }
 
@@ -796,19 +783,16 @@ function updateTimesDisplay() {
   createStatsGraph(lastTimes);
 
   // Calculate average time
-  const timesInSeconds = lastTimes.map((time: number) => time / 1000);
-  const averageTime = timesInSeconds.reduce((a: number, b: number) => a + b, 0) / timesInSeconds.length;
-  const averageTimeString = averageTime ? `${Math.floor(averageTime)}.${Math.round((averageTime % 1) * 1000)}` : '-';
-  $('#average-time-box').html(`Average Time<br />${averageTimeString}`);
+  const averageTime = lastTimes.reduce((a: number, b: number) => a + b, 0) / lastTimes.length;
+  $('#average-time-box').html(`Average Time<br />${averageTimeString(averageTime)}`);
 
   // Calculate average TPS
   const moveCount = countMovesETM(userAlg.join(' '));
-  const averageTPS = averageTime ? (moveCount / averageTime).toFixed(2) : '-';
+  const averageTPS = averageTime ? (moveCount / (averageTime / 1000)).toFixed(2) : '-';
   $('#average-tps-box').html(`Average TPS<br />${averageTPS}`);
 
   // Get single PB
-  const bestTimeString = bestTime ? `${Math.floor(bestTime / 1000)}.${Math.round((bestTime % 1000) / 10)}` : '-';
-  $('#single-pb-box').html(`Single PB<br />${bestTimeString}`);
+  $('#single-pb-box').html(`Single PB<br />${bestTimeString(bestTime)}`);
 
   if (lastTimes.length === 0) {
     $('#alg-stats').hide();
@@ -905,9 +889,9 @@ function setTimerState(state: typeof timerState) {
         const bestTime = localStorage.getItem('Best-' + algId);
         if (!bestTime || finalTime < Number(bestTime)) {
           localStorage.setItem('Best-' + algId, String(finalTime));
-          $('#best-time-' + algId).html(bestTimeString(finalTime));
+          $('#best-time-' + algId).html(`Best: ${bestTimeString(finalTime)}`);
         }
-        $('#ao5-time-' + algId).html(averageTimeString(averageTimeNumber(algId)));
+        $('#ao5-time-' + algId).html(`Ao5: ${averageTimeString(averageTimeNumber(algId))}`);
 
         //console.log("[setTimerState] Setting lastTimes to " + lastTimes + " for algId " + algId);
         //console.log("[setTimerState] Setting practiceCount to " + practiceCount + " for algId " + algId);
@@ -1031,7 +1015,7 @@ $('#delete-times').on('click', () => {
       if (algorithm) {
         const algId = algToId(algorithm.algorithm);
         localStorage.removeItem('Best-' + algId);
-        localStorage.removeItem('LastFiveTimes-' + algId);
+        localStorage.removeItem('LastTimes-' + algId);
       }
     }
     loadAlgorithms(category); // Refresh the algorithm list
@@ -1262,8 +1246,20 @@ $('#show-options').on('click', () => {
 });
 
 $(function() {
+  renameOldKeys();
   loadConfiguration();
 });
+
+function renameOldKeys() {
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('LastFiveTimes-')) {
+      const newKey = key.replace('LastFiveTimes-', 'LastTimes-');
+      localStorage.setItem(newKey, localStorage.getItem(key) ?? '');
+      localStorage.removeItem(key);
+    }
+  }
+}
 
 function loadConfiguration() {
   const visualization = localStorage.getItem('visualization');

@@ -225,7 +225,7 @@ export function deleteAlgorithm(category: string, algorithm: string) {
     }
     const algId = algToId(algorithm);
     localStorage.removeItem('Best-' + algId);
-    localStorage.removeItem('LastFiveTimes-' + algId);
+    localStorage.removeItem('LastTimes-' + algId);
     localStorage.removeItem('Learned-' + algId);
 
     localStorage.setItem('savedAlgorithms', JSON.stringify(savedAlgorithms));
@@ -375,8 +375,8 @@ export function loadAlgorithms(category: string) {
                 <div class="text-right"><button id="bookmark-${algId}" data-value="${learnedStatus(algId)}" title="Learning status" class="block">${learnedSVG(learnedStatus(algId))}</button></div>
               </div>
               <label for="case-toggle-${algId}" class="cursor-pointer">
-              <div id="best-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">${bestTimeString(bestTime)}</div>
-              <div id="ao5-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">${averageTimeString(averageTimeNumber(algId))}</div>
+              <div id="best-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">Best: ${bestTimeString(bestTime)}</div>
+              <div id="ao5-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">Ao5: ${averageTimeString(averageTimeNumber(algId))}</div>
               <div id="alg-case-${algId}" class="flex items-center justify-center scale-50 -mx-20 -mt-10 -mb-10 relative z-10">
                 <twisty-player puzzle="3x3x3" visualization="${visualization}" experimental-stickering="${matchedStickering}" alg="${alg.algorithm}" experimental-setup-anchor="end" control-panel="none" hint-facelets="none" experimental-drag-input="none" background="none"></twisty-player>
               </div>
@@ -449,24 +449,22 @@ export function bestTimeNumber(algId: string): number | null {
 }
 
 export function bestTimeString(time: number | null): string {
-  if (!time) return 'Best: -';
+  if (!time) return '-';
   const best = makeTimeFromTimestamp(time)
-  return `Best: ${best.seconds.toString(10).padStart(2, '0')}.${best.milliseconds.toString(10).padStart(3, '0')}`;
+  return `${best.seconds.toString(10)}.${best.milliseconds.toString(10).padStart(3, '0')}`;
 }
 
 export function averageTimeNumber(algId: string): number | null {
-  const lastFiveTimesStorage = localStorage.getItem(`LastFiveTimes-${algId}`);
-  if (!lastFiveTimesStorage) return null;
-  const lastFiveTimes = lastFiveTimesStorage.split(',').map(num => Number(num.trim()));
-  return lastFiveTimes.length == 5 
-    ? lastFiveTimes.reduce((sum, time) => sum + time, 0) / 5 
-    : null;
+  const lastTimesStorage = localStorage.getItem(`LastTimes-${algId}`);
+  if (!lastTimesStorage) return null;
+  const lastTimes = lastTimesStorage.split(',').slice(-5).map(num => Number(num.trim()));
+  return lastTimes.length == 5 ? lastTimes.reduce((sum: number, time: number) => sum + time, 0) / 5 : null;
 }
 
 export function averageTimeString(time: number | null): string {
-  if (!time) return 'Ao5: -';
+  if (!time) return '-';
   const avg = makeTimeFromTimestamp(time);
-  return `Ao5: ${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}`;
+  return `${avg.seconds.toString(10)}.${avg.milliseconds.toString(10).padStart(3, '0')}`;
 }
 
 function arraysEqual(arr1: number[], arr2: number[]): boolean {
