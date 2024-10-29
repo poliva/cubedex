@@ -371,10 +371,10 @@ export function loadAlgorithms(category: string) {
           algCases.append(`
             <div class="case-wrapper rounded-lg shadow-md ${gray} dark:${grayDarkMode} relative p-4" id="${algId}" data-name="${alg.name}" data-algorithm="${alg.algorithm}" data-category="${category}" data-subset="${subset}">
               <div class="flex justify-between">
-                <div class="text-left text-sm w-full">${alg.name}</div>
+                <div class="text-left text-sm w-full" title="${alg.algorithm}">${alg.name}</div>
                 <div class="text-right"><button id="bookmark-${algId}" data-value="${learnedStatus(algId)}" title="Learning status" class="block">${learnedSVG(learnedStatus(algId))}</button></div>
               </div>
-              <label for="case-toggle-${algId}" class="cursor-pointer">
+              <label for="case-toggle-${algId}" class="cursor-pointer" title="${alg.algorithm}">
               <div id="best-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">Best: ${bestTimeString(bestTime)}</div>
               <div id="ao5-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">Ao5: ${averageTimeString(averageTimeNumber(algId))}</div>
               <div id="alg-case-${algId}" class="flex items-center justify-center scale-50 -mx-20 -mt-10 -mb-10 relative z-10">
@@ -615,7 +615,7 @@ export function createStatsGraph(times: number[]) {
             }
           },
           {
-            label: 'Average of 5',
+            label: 'Ao5',
             data: ao5,
             backgroundColor: 'rgba(255, 159, 64, 1)',
             borderColor: 'rgba(255, 159, 64, 1)',
@@ -623,7 +623,7 @@ export function createStatsGraph(times: number[]) {
             fill: false,
           },
           {
-            label: 'Average of 12',
+            label: 'Ao12',
             data: ao12,
             backgroundColor: 'rgba(75, 192, 192, 1)',
             borderColor: 'rgba(75, 192, 192, 1)',
