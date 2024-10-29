@@ -640,8 +640,7 @@ export function createStatsGraph(times: number[]) {
         },
         animation: false,
         responsive: true,
-        maintainAspectRatio: true,
-        aspectRatio: 1.25,
+        maintainAspectRatio: false,
         plugins: {
           legend: {
             display: true,

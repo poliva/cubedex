@@ -822,7 +822,7 @@ function updateTimesDisplay() {
     bestTimeHtml = `<div id="best" class="text-right">Best:</div><div class="text-left">${bestMinutesPart}${best.seconds.toString(10).padStart(2, '0')}.${best.milliseconds.toString(10).padStart(3, '0')}</div>`;
   }
 
-  const displayHtml = `<div class="grid grid-cols-2 items-center gap-1">${timesHtml}${averageHtml}${bestTimeHtml}</div>`;
+  const displayHtml = `<div class="grid grid-cols-2 items-center gap-1 pt-2">${timesHtml}${averageHtml}${bestTimeHtml}</div>`;
   timesDisplay.html(displayHtml);
 }
 
