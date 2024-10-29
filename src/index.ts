@@ -855,6 +855,7 @@ function setTimerState(state: typeof timerState) {
     case "IDLE":
       stopLocalTimer();
       $('#timer').hide();
+      $('#train-alg').html('<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>');
       break;
     case 'READY':
       stopLocalTimer();
@@ -864,11 +865,13 @@ function setTimerState(state: typeof timerState) {
       }
       $('#timer').show();
       $('#timer').css('color', '#080');
+      $('#train-alg').html('<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>');
       break;
     case 'RUNNING':
       solutionMoves = [];
       startLocalTimer();
       $('#timer').css('color', '#999');
+      $('#train-alg').html('<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 32 32"><path d="M8 8h16v16H8z"/></svg>');
       break;
     case 'STOPPED':
       let finalTime = currentTimerValue;
@@ -881,6 +884,7 @@ function setTimerState(state: typeof timerState) {
         finalTime = lastMove ? lastMove.cubeTimestamp! : 0;
       }
       setTimerValue(finalTime);
+      $('#train-alg').html('<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>');
 
       // Store the time and update the display
       if (finalTime > 0) {
