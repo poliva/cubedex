@@ -791,8 +791,14 @@ function updateTimesDisplay() {
   const averageTPS = averageTime ? (moveCount / (averageTime / 1000)).toFixed(2) : '-';
   $('#average-tps-box').html(`Average TPS<br />${averageTPS}`);
 
+  // check if the last item added to lastTimes is a PB
+  const lastTime = lastTimes.slice(-1)[0];
+  const isPB = lastTime === bestTime;
+
   // Get single PB
-  $('#single-pb-box').html(`Single PB<br />${bestTimeString(bestTime)}`);
+  const singlePB = isPB ? `${bestTimeString(bestTime)} 🎉` : bestTimeString(bestTime);
+  $('#single-pb-box').html(`Single PB<br />${singlePB}`);
+
 
   if (lastTimes.length === 0) {
     $('#alg-stats').hide();
