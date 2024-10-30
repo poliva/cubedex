@@ -552,6 +552,14 @@ export function createTimeGraph(times: number[]) {
                   y: {
                       beginAtZero: true,
                   },
+                  x: {
+                    grid: {
+                      display: false
+                    },
+                    ticks: {
+                      display: false // Hide x-axis labels
+                    },
+                  },
               },
           },
       });
@@ -652,6 +660,14 @@ export function createStatsGraph(times: number[]) {
         scales: {
           y: {
             beginAtZero: true,
+          },
+          x: {
+            grid: {
+              display: false
+            },
+            ticks: {
+              display: false // Hide x-axis labels
+            },
           },
         },
       },

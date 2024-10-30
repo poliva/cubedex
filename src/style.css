@@ -836,8 +836,8 @@ video {
   height: 100%;
 }
 
-.max-h-\[230px\] {
-  max-height: 230px;
+.max-h-\[200px\] {
+  max-height: 200px;
 }
 
 .max-h-\[600px\] {
@@ -888,8 +888,8 @@ video {
   width: 180px;
 }
 
-.w-\[230px\] {
-  width: 230px;
+.w-\[200px\] {
+  width: 200px;
 }
 
 .w-full {
@@ -926,10 +926,6 @@ video {
 
 .max-w-\[200px\] {
   max-width: 200px;
-}
-
-.max-w-\[230px\] {
-  max-width: 230px;
 }
 
 .max-w-\[250px\] {
