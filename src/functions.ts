@@ -599,79 +599,84 @@ export function createStatsGraph(times: number[]) {
   }
 
   if (ctx) {
+    const context = ctx.getContext('2d');
     const timesInSeconds = times.map((time: number) => time / 1000);
 
     // Calculate averages
     const ao5 = calculateTrimmedAverage(timesInSeconds, 5, 3);
     const ao12 = calculateTrimmedAverage(timesInSeconds, 12, 10);
 
-    myStatsChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: times.map((_, index) => `${index + 1}`),
-        datasets: [
-          {
-            label: 'Single',
-            data: timesInSeconds,
-            backgroundColor: 'rgba(54, 162, 235, 1)',
-            borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1,
-            fill: {
-              target: 'origin',
-              above: 'rgba(54, 162, 235, 0.2)',
-              below: 'rgba(54, 162, 235, 0.1)',
-            }
-          },
-          {
-            label: 'Ao5',
-            data: ao5,
-            backgroundColor: 'rgba(255, 159, 64, 1)',
-            borderColor: 'rgba(255, 159, 64, 1)',
-            borderWidth: 1,
-            fill: false,
-          },
-          {
-            label: 'Ao12',
-            data: ao12,
-            backgroundColor: 'rgba(75, 192, 192, 1)',
-            borderColor: 'rgba(75, 192, 192, 1)',
-            borderWidth: 1,
-            fill: false,
-          },
-        ],
-      },
-      options: {
-        elements: {
-          point: {
-            pointStyle: 'circle',
-          },
-        },
-        animation: false,
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: true,
-          },
-          title: {
-            display: false,
-          },
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-          },
-          x: {
-            grid: {
-              display: false
+    if (context) {
+      // Get the current dimensions of the canvas
+      const canvasHeight = ctx.clientHeight || ctx.getBoundingClientRect().height;
+      const gradient = context.createLinearGradient(0, 0, 0, canvasHeight);
+      gradient.addColorStop(0, 'rgba(54, 162, 235, 0.6)'); // Start color
+      gradient.addColorStop(1, 'rgba(54, 162, 235, 0.0)'); // End color
+
+      myStatsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: times.map((_, index) => `${index + 1}`),
+          datasets: [
+            {
+              label: 'Single',
+              data: timesInSeconds,
+              backgroundColor: gradient, // Apply the gradient
+              borderColor: 'rgba(54, 162, 235, 1)',
+              borderWidth: 1,
+              fill: true, // Enable fill to use the gradient
             },
-            ticks: {
-              display: false // Hide x-axis labels
+            {
+              label: 'Ao5',
+              data: ao5,
+              backgroundColor: 'rgba(255, 159, 64, 1)',
+              borderColor: 'rgba(255, 159, 64, 1)',
+              borderWidth: 1,
+              fill: false,
+            },
+            {
+              label: 'Ao12',
+              data: ao12,
+              backgroundColor: 'rgba(75, 192, 192, 1)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1,
+              fill: false,
+            },
+          ],
+        },
+        options: {
+          elements: {
+            point: {
+              pointStyle: 'circle',
             },
           },
+          animation: false,
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+            },
+            title: {
+              display: false,
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                display: false // Hide x-axis labels
+              },
+            },
+          },
         },
-      },
-    });
+      });
+    }
   }
 }
 
