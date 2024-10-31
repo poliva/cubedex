@@ -1002,7 +1002,9 @@ $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
   }
   if (checkedAlgorithms.length > 0) {
     $('#alg-input').val(checkedAlgorithms[0].algorithm);
-    $('#train-alg').trigger('click');
+    if (algorithm === checkedAlgorithms[0].algorithm) {
+      $('#train-alg').trigger('click');
+    }
   }
   //console.log("checkedAlgorithms: " + JSON.stringify(checkedAlgorithms));
   //console.log("checkedAlgorithmsCopy: " + JSON.stringify(checkedAlgorithmsCopy));
