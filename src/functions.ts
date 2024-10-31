@@ -376,7 +376,7 @@ export function loadAlgorithms(category: string) {
               </div>
               <label for="case-toggle-${algId}" class="cursor-pointer" title="${alg.algorithm}">
               <div id="best-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">Best: ${bestTimeString(bestTime)}</div>
-              <div id="ao5-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">Ao5: ${averageTimeString(averageTimeNumber(algId))}</div>
+              <div id="ao5-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">Ao5: ${averageTimeString(averageOfFiveTimeNumber(algId))}</div>
               <div id="alg-case-${algId}" class="flex items-center justify-center scale-50 -mx-20 -mt-10 -mb-10 relative z-10">
                 <twisty-player puzzle="3x3x3" visualization="${visualization}" experimental-stickering="${matchedStickering}" alg="${alg.algorithm}" experimental-setup-anchor="end" control-panel="none" hint-facelets="none" experimental-drag-input="none" background="none"></twisty-player>
               </div>
@@ -454,11 +454,12 @@ export function bestTimeString(time: number | null): string {
   return `${best.seconds.toString(10)}.${best.milliseconds.toString(10).padStart(3, '0')}`;
 }
 
-export function averageTimeNumber(algId: string): number | null {
-  const lastTimesStorage = localStorage.getItem(`LastTimes-${algId}`);
-  if (!lastTimesStorage) return null;
-  const lastTimes = lastTimesStorage.split(',').slice(-5).map(num => Number(num.trim()));
-  return lastTimes.length == 5 ? lastTimes.reduce((sum: number, time: number) => sum + time, 0) / 5 : null;
+export function averageOfFiveTimeNumber(algId: string): number | null {
+  const lastTimes = getLastTimes(algId);
+  if (lastTimes.length < 5) return null;
+  // remove best and worst time from last 5 times and calculate the mean of the remaining 3 times
+  const lastTimesTrimmed = lastTimes.slice(-5).sort((a, b) => a - b).slice(1, 4);
+  return lastTimesTrimmed.reduce((sum, time) => sum + time, 0) / 3;
 }
 
 export function averageTimeString(time: number | null): string {
@@ -473,6 +474,11 @@ function arraysEqual(arr1: number[], arr2: number[]): boolean {
     if (arr1[i] !== arr2[i]) return false;
   }
   return true;
+}
+
+export function getLastTimes(algId: string): number[] {
+  const lastTimesStorage = localStorage.getItem('LastTimes-' + algId);
+  return lastTimesStorage ? lastTimesStorage.split(',').map(num => Number(num.trim())) : [];
 }
 
 export function isSymmetricOLL(alg: string): boolean {

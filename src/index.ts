@@ -26,7 +26,7 @@ import {
 } from 'gan-web-bluetooth';
 
 import { faceletsToPattern, patternToFacelets } from './utils';
-import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageTimeNumber, learnedStatus, createTimeGraph, createStatsGraph, countMovesETM } from './functions';
+import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageOfFiveTimeNumber, learnedStatus, createTimeGraph, createStatsGraph, countMovesETM, getLastTimes } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -761,11 +761,6 @@ $('#connect-button').on('click', async () => {
 
 var timerState: "IDLE" | "READY" | "RUNNING" | "STOPPED" = "IDLE";
 
-function getLastTimes(algId: string): number[] {
-  const lastTimesStorage = localStorage.getItem('LastTimes-' + algId);
-  return lastTimesStorage ? lastTimesStorage.split(',').map(num => Number(num.trim())) : [];
-}
-
 function updateTimesDisplay() {
   const timesDisplay = $('#times-display');
   const algNameDisplay = $('#alg-name-display');
@@ -801,6 +796,7 @@ function updateTimesDisplay() {
 
 
   if (lastTimes.length === 0) {
+    timesDisplay.html('');
     $('#alg-stats').hide();
     $('#left-side-inner').hide();
     return;
@@ -816,10 +812,15 @@ function updateTimesDisplay() {
     return `<div class="text-right">Time ${number}:</div><div class="text-left">${minutesPart}${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}${emojiPB}</div>`;
   }).join('');
 
-  const avgTime = lastTimes.slice(-5).reduce((a: number, b: number) => a + b, 0) / Math.min(5, lastTimes.length);
-  const avg = makeTimeFromTimestamp(avgTime);
-  const avgMinutesPart = avg.minutes > 0 ? `${avg.minutes}:` : '';
-  const averageHtml = `<div id="average" class="font-bold text-right">Average:</div><div class="font-bold text-left">${avgMinutesPart}${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}</div>`;
+  const avgTime = averageOfFiveTimeNumber(algId) ?? 0;
+  let averageHtml = '';
+  if (avgTime > 0) {
+    const avg = makeTimeFromTimestamp(avgTime);
+    const avgMinutesPart = avg.minutes > 0 ? `${avg.minutes}:` : '';
+    averageHtml = `<div id="average" class="font-bold text-right">Ao5:</div><div class="font-bold text-left">${avgMinutesPart}${avg.seconds.toString(10).padStart(2, '0')}.${avg.milliseconds.toString(10).padStart(3, '0')}</div>`;
+  } else {
+    averageHtml = `<div id="average" class="font-bold text-right">Ao5:</div><div class="font-bold text-left">-</div>`;
+  }
 
   let bestTimeHtml = '';
   if (bestTime) {
@@ -897,7 +898,7 @@ function setTimerState(state: typeof timerState) {
           localStorage.setItem('Best-' + algId, String(finalTime));
           $('#best-time-' + algId).html(`Best: ${bestTimeString(finalTime)}`);
         }
-        $('#ao5-time-' + algId).html(`Ao5: ${averageTimeString(averageTimeNumber(algId))}`);
+        $('#ao5-time-' + algId).html(`Ao5: ${averageTimeString(averageOfFiveTimeNumber(algId))}`);
 
         //console.log("[setTimerState] Setting lastTimes to " + lastTimes + " for algId " + algId);
         //console.log("[setTimerState] Setting practiceCount to " + practiceCount + " for algId " + algId);
