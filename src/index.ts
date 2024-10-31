@@ -138,6 +138,7 @@ $('#train-alg').on('click', () => {
     hideMistakes();
     if (scrambleMode && !alwaysScrambleTo) {
       $('#alg-scramble').hide();
+      $('#alg-help-info').hide();
       scrambleMode = false;
     }
     hasFailedAlg = false;
@@ -234,6 +235,7 @@ function drawAlgInCube() {
 var showMistakesTimeout: NodeJS.Timeout;
 let hasShownFlashingIndicator = false;
 let hasFailedAlg = false;
+let previousFixHtmlLength = 0;
 
 function showMistakesWithDelay(fixHtml: string) {
   if (fixHtml.length > 0) {
@@ -241,6 +243,14 @@ function showMistakesWithDelay(fixHtml: string) {
     clearTimeout(showMistakesTimeout);
     showMistakesTimeout = setTimeout(function() {
       $('#alg-fix').show();
+      // Only show #alg-help-info if the current fixHtml length is greater than the previous length
+      let fixHtmlLength = countMovesETM(fixHtml);
+      if (fixHtmlLength > previousFixHtmlLength && fixHtmlLength > 1) {
+        $('#alg-help-info').removeClass('text-green-400 dark:text-green-500').addClass('text-red-400 dark:text-red-500').show();
+      } else {
+        $('#alg-help-info').hide();
+      }
+      previousFixHtmlLength = fixHtmlLength;
       // Show the red flashing indicator if enabled and not already shown
       if (!hasShownFlashingIndicator) {
         showFlashingIndicator('red', 300);
@@ -276,6 +286,7 @@ function showMistakesWithDelay(fixHtml: string) {
 function hideMistakes() {
   // Clear the timeout if hide is called before the div is shown
   clearTimeout(showMistakesTimeout);
+  $('#alg-help-info').hide();
   $('#alg-fix').hide();
   $('#alg-fix').html("");
   hasShownFlashingIndicator = false; // Reset the flag
@@ -436,10 +447,17 @@ async function handleMoveEvent(event: GanCubeEvent) {
           scramble = currentScrambleMoves.slice(1).join(' ');
       }
 
+      if (scrambleMoves.length > currentScrambleMoves.length) {
+        $('#alg-help-info').removeClass('text-red-400 dark:text-red-500').addClass('text-green-400 dark:text-green-500').show();
+      } else {
+        $('#alg-help-info').hide();
+      }
+
       $('#alg-scramble').text(scramble);
 
       if (scramble.length === 0) {
         $('#alg-scramble').hide();
+        $('#alg-help-info').hide();
         scrambleMode = false;
 
         // this is the initial state for the new algorithm
@@ -671,6 +689,7 @@ $('#input-alg').on('click', () => {
   hideMistakes();
   scrambleMode = false;
   $('#alg-scramble').hide();
+  $('#alg-help-info').hide();
   $('#alg-display-container').hide();
   $('#times-display').html('');
   $('#timer').hide();
@@ -713,6 +732,7 @@ $('#device-info').on('click', () => {
 $('#reset-state').on('click', async () => {
   await conn?.sendCubeCommand({ type: "REQUEST_RESET" });
   twistyPlayer.alg = '';
+  twistyTracker.alg = '';
   drawAlgInCube();
 });
 
@@ -1005,6 +1025,12 @@ $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
     if (algorithm === checkedAlgorithms[0].algorithm) {
       $('#train-alg').trigger('click');
     }
+    // if the checkbox has been unchecked trigger a click on the train button
+    if (!((this as HTMLInputElement).checked)) {
+      $('#train-alg').trigger('click');
+    }
+  } else {
+    resetDrill();
   }
   //console.log("checkedAlgorithms: " + JSON.stringify(checkedAlgorithms));
   //console.log("checkedAlgorithmsCopy: " + JSON.stringify(checkedAlgorithmsCopy));
@@ -1133,6 +1159,7 @@ $('#scramble-to').on('click', () => {
     } else {
       scrambleMode = false;
       $('#alg-scramble').hide();
+      $('#alg-help-info').hide();
     }
   })();
 });
@@ -1163,6 +1190,7 @@ $('#save-alg').on('click', () => {
   $('#left-side-inner').hide();
   $('#alg-stats').hide();
   $('#alg-scramble').hide();
+  $('#alg-help-info').hide();
   $('#alg-input').show();
   $('#alg-input').get(0)?.focus();
   $('#app-top').show();
@@ -1174,6 +1202,23 @@ $('#save-alg').on('click', () => {
   $('#help').hide();
   $('#info').hide();
 });
+
+function resetDrill() {
+  // reset the current practice drill
+  $('#timer').hide();
+  $('#timer').text('');
+  $('#times-display').html('');
+  $('#alg-display-container').hide();
+  $('#alg-display').html('');
+  $('#alg-scramble').hide();
+  $('#alg-help-info').hide();
+  $('#alg-scramble').text('');
+  inputMode = true;
+  $('#alg-input').val('');
+  $('#alg-input').show();
+  $('#alg-stats').hide();
+  $('#left-side-inner').hide();
+}
 
 // Event listener for Category select change
 $('#category-select').on('change', () => {
@@ -1188,18 +1233,7 @@ $('#category-select').on('change', () => {
   // reset cube alg
   twistyPlayer.alg = '';
   // selecting a new category should reset the current practice drill
-  $('#timer').hide();
-  $('#timer').text('');
-  $('#times-display').html('');
-  $('#alg-display-container').hide();
-  $('#alg-display').html('');
-  $('#alg-scramble').hide();
-  $('#alg-scramble').text('');
-  inputMode = true;
-  $('#alg-input').val('');
-  $('#alg-input').show();
-  $('#alg-stats').hide();
-  $('#left-side-inner').hide();
+  resetDrill();
 });
 
 // Add event listener for subset checkboxes
