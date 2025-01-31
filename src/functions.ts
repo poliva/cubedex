@@ -162,6 +162,20 @@ export function initializeDefaultAlgorithms() {
         savedAlgorithms[category] = defaultAlgs[category as keyof typeof defaultAlgs];
       }
     }
+
+    // Fix old json with wrong ZBLS subset
+    if (savedAlgorithms.ZBLS) {
+      const categoryAlgorithms = savedAlgorithms.ZBLS as Array<{ subset: string, algorithms: Array<{ name: string, algorithm: string }> }>;
+      // Check if ZBLS-1 and ZBLS-9 have exactly the same algorithm
+      const zbls1Algorithm = categoryAlgorithms.find(subset => subset.subset === 'Case 1')?.algorithms.find(algorithm => algorithm.name === 'ZBLS-1');
+      const zbls9Algorithm = categoryAlgorithms.find(subset => subset.subset === 'Case 2')?.algorithms.find(algorithm => algorithm.name === 'ZBLS-9');
+      if (zbls1Algorithm && zbls9Algorithm && zbls1Algorithm.algorithm === zbls9Algorithm.algorithm) {
+        console.log('ZBLS-1 and ZBLS-9 have the same algorithm. Reloading category with fixed data.');
+        // Replace the entire ZBLS category with the default
+        savedAlgorithms.ZBLS = defaultAlgs.ZBLS;
+      }
+    }
+
     localStorage.setItem('savedAlgorithms', JSON.stringify(savedAlgorithms));
   }
 
