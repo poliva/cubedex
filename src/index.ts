@@ -225,11 +225,9 @@ function drawAlgInCube() {
     }
   }
   if (randomizeColors && scrambleToAlg.length == 0) {
-    let rotations = [[], ["y"], ["y", "y"], ["y'"]]
+    let rotations = [[], ["y"], ["y2"], ["y'"]]
     let randomRot = rotations[Math.floor(Math.random() * rotations.length)];
-    //if (randomRot != "") { userAlg.concat(randomRot); }
     userAlg = userAlg.concat(randomRot);
-    //userAlg = [randomRot].concat(userAlg); } //userAlg.push(randomRot); }
   }
   if (randomizeAUF && scrambleToAlg.length > 0) {
     userAlg = [...scrambleToAlg];
