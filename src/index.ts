@@ -99,6 +99,10 @@ requestAnimationFrame(amimateCubeOrientation);
 
 var basis: THREE.Quaternion | null;
 
+function resetGyroBasis() {
+  basis = null;
+}
+
 async function handleGyroEvent(event: SmartCubeEvent) {
   if (event.type == "GYRO") {
     let { x: qx, y: qy, z: qz, w: qw } = event.quaternion;
@@ -623,6 +627,17 @@ async function handleFaceletsEvent(event: SmartCubeEvent) {
   }
 }
 
+function updateHeaderResetGyroState() {
+  const headerResetGyro = $('#header-reset-gyro');
+  if (conn && gyroscopeEnabled) {
+    headerResetGyro.removeClass('hidden');
+    headerResetGyro.prop('disabled', false);
+  } else {
+    headerResetGyro.addClass('hidden');
+    headerResetGyro.prop('disabled', true);
+  }
+}
+
 function handleCubeEvent(event: SmartCubeEvent) {
   //if (event.type != "GYRO") console.log("GanCubeEvent", event);
   if (event.type == "GYRO") {
@@ -752,7 +767,11 @@ $('#reset-state').on('click', async () => {
 });
 
 $('#reset-gyro').on('click', async () => {
-  basis = null;
+  resetGyroBasis();
+});
+
+$('#header-reset-gyro').on('click', async () => {
+  resetGyroBasis();
 });
 
 function deviceDisconnected() {
@@ -763,6 +782,7 @@ function deviceDisconnected() {
   $('#reset-gyro').prop('disabled', true);
   $('#reset-state').prop('disabled', true);
   $('#device-info').prop('disabled', true);
+  updateHeaderResetGyroState();
   $('.info input').val('- n/a -');
   $('#connect').html('Connect');
   $('#battery-indicator').hide();
@@ -797,6 +817,7 @@ $('#connect-button').on('click', async () => {
     $('#device-info').prop('disabled', false);
     $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
     requestWakeLock();
+    updateHeaderResetGyroState();
   }
 });
 
@@ -1397,6 +1418,8 @@ function loadConfiguration() {
     alwaysScrambleTo = false;
   }
   $('#always-scramble-to-toggle').prop('checked', alwaysScrambleTo);
+
+  updateHeaderResetGyroState();
 }
 
 // Add event listener for the gyroscope toggle
@@ -1406,6 +1429,7 @@ gyroscopeToggle.addEventListener('change', () => {
   gyroscopeEnabled = gyroscopeToggle.checked;
   localStorage.setItem('gyroscope', gyroscopeEnabled ? 'enabled' : 'disabled');
   requestAnimationFrame(amimateCubeOrientation);
+  updateHeaderResetGyroState();
 });
 
 // Add event listener for the control panel toggle

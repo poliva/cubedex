@@ -25,8 +25,8 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-  <script type="module" crossorigin src="/assets/index-X-5PbbkD.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-Axa35W2T.css">
+  <script type="module" crossorigin src="/assets/index-D-8tbuyU.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-D5l6grLy.css">
 <link rel="manifest" href="/manifest.json"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
 <body class="bg-gray-100 text-gray-900 font-sans leading-relaxed sm:p-4 p-1 dark:bg-gray-900 dark:text-white text-sm sm:text-base flex flex-col min-h-screen min-w-[360px]">
@@ -119,14 +119,26 @@
           </div>
           <div id="cube" class="col-span-1 flex items-center justify-center min-w-[10em] min-h-[10em] sm:min-w-[15em] sm:min-h-[15em] text-sm sm:text-base order-3 sm:order-2"></div>
           <div id="right-side" class="col-span-1 flex flex-col flex-grow items-center sm:items-end text-sm sm:text-base order-1 sm:order-3 h-full">
-            <button id="connect-button" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base align-middle flex items-center">
-              <div id="connect">Connect</div>
-              <div id="bluetooth-indicator" class="ml-2">
-                <svg fill="currentColor" class="h-8 w-8 inline-block fill-current" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M 16 2 C 12.886719 2 10.03125 2.742188 8.03125 4.96875 C 6.03125 7.195313 5 10.714844 5 16 C 5 21.285156 6.03125 24.804688 8.03125 27.03125 C 10.03125 29.257813 12.886719 30 16 30 C 19.113281 30 21.972656 29.257813 23.96875 27.03125 C 25.964844 24.804688 27 21.285156 27 16 C 27 10.714844 25.964844 7.195313 23.96875 4.96875 C 21.972656 2.742188 19.113281 2 16 2 Z M 16 4 C 18.808594 4 20.945313 4.617188 22.46875 6.3125 C 23.992188 8.007813 25 10.980469 25 16 C 25 21.019531 23.992188 23.992188 22.46875 25.6875 C 20.945313 27.382813 18.808594 28 16 28 C 13.191406 28 11.054688 27.382813 9.53125 25.6875 C 8.007813 23.992188 7 21.019531 7 16 C 7 10.980469 8.007813 8.007813 9.53125 6.3125 C 11.054688 4.617188 13.191406 4 16 4 Z M 15 7 L 15 13.5625 L 12.71875 11.28125 L 11.28125 12.71875 L 14.5625 16 L 11.28125 19.28125 L 12.71875 20.71875 L 15 18.4375 L 15 25 L 16.59375 23.8125 L 20.59375 20.8125 L 21.53125 20.09375 L 17.4375 16 L 21.53125 11.90625 L 20.59375 11.1875 L 16.59375 8.1875 Z M 17 11 L 18.46875 12.09375 L 17 13.5625 Z M 17 18.4375 L 18.46875 19.90625 L 17 21 Z"/></svg>
-              </div>
-              <div id="battery-indicator" class="hidden ml-2">
-              </div>
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                id="header-reset-gyro"
+                class="hidden bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base align-middle flex items-center whitespace-nowrap"
+                type="button"
+                title="Reset gyroscope orientation for the virtual cube"
+                aria-label="Reset gyroscope orientation for the virtual cube"
+                disabled
+              >
+                Reset Gyro
+              </button>
+              <button id="connect-button" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base align-middle flex items-center">
+                <div id="connect">Connect</div>
+                <div id="bluetooth-indicator" class="ml-2">
+                  <svg fill="currentColor" class="h-8 w-8 inline-block fill-current" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M 16 2 C 12.886719 2 10.03125 2.742188 8.03125 4.96875 C 6.03125 7.195313 5 10.714844 5 16 C 5 21.285156 6.03125 24.804688 8.03125 27.03125 C 10.03125 29.257813 12.886719 30 16 30 C 19.113281 30 21.972656 29.257813 23.96875 27.03125 C 25.964844 24.804688 27 21.285156 27 16 C 27 10.714844 25.964844 7.195313 23.96875 4.96875 C 21.972656 2.742188 19.113281 2 16 2 Z M 16 4 C 18.808594 4 20.945313 4.617188 22.46875 6.3125 C 23.992188 8.007813 25 10.980469 25 16 C 25 21.019531 23.992188 23.992188 22.46875 25.6875 C 20.945313 27.382813 18.808594 28 16 28 C 13.191406 28 11.054688 27.382813 9.53125 25.6875 C 8.007813 23.992188 7 21.019531 7 16 C 7 10.980469 8.007813 8.007813 9.53125 6.3125 C 11.054688 4.617188 13.191406 4 16 4 Z M 15 7 L 15 13.5625 L 12.71875 11.28125 L 11.28125 12.71875 L 14.5625 16 L 11.28125 19.28125 L 12.71875 20.71875 L 15 18.4375 L 15 25 L 16.59375 23.8125 L 20.59375 20.8125 L 21.53125 20.09375 L 17.4375 16 L 21.53125 11.90625 L 20.59375 11.1875 L 16.59375 8.1875 Z M 17 11 L 18.46875 12.09375 L 17 13.5625 Z M 17 18.4375 L 18.46875 19.90625 L 17 21 Z"/></svg>
+                </div>
+                <div id="battery-indicator" class="hidden ml-2">
+                </div>
+              </button>
+            </div>
             <div id="touch-timer" class="flex justify-center items-center h-full w-full">
               <div id="timer" class="hidden text-right font-mono p-2 border border-gray-400 rounded-lg dark:border-gray-700 dark:text-white text-sm sm:text-xl md:text-2xl lg:text-3xl mt-2 sm:ml-8"></div>
             </div>
