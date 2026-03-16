@@ -4,7 +4,7 @@ import { Alg } from "cubing/alg";
 import { experimentalCountMovesETM } from "cubing/notation";
 import { faceletsToPattern } from "./utils";
 import { fullStickeringEnabled } from "./index";
-import { makeTimeFromTimestamp } from 'gan-web-bluetooth';
+import { makeTimeFromTimestamp } from 'smartcube-web-bluetooth';
 import { Chart, registerables } from 'chart.js';
 
 // Register the components needed for Chart.js

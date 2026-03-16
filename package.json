@@ -22,8 +22,8 @@
     "@types/web-bluetooth": "^0.0.20",
     "chart.js": "^4.4.5",
     "cubing": "^0.51.0",
-    "gan-web-bluetooth": "^3.0.2",
     "jquery": "^3.7.1",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "smartcube-web-bluetooth": "github:poliva/smartcube-web-bluetooth"
   }
 }

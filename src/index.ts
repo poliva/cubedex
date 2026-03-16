@@ -15,15 +15,14 @@ import * as THREE from 'three';
 
 import {
   now,
-  connectGanCube,
-  GanCubeConnection,
-  GanCubeEvent,
-  GanCubeMove,
+  connectSmartCube,
+  SmartCubeConnection,
+  SmartCubeEvent,
   MacAddressProvider,
   makeTimeFromTimestamp,
   cubeTimestampCalcSkew,
   cubeTimestampLinearFit
-} from 'gan-web-bluetooth';
+} from 'smartcube-web-bluetooth';
 
 import { faceletsToPattern, patternToFacelets } from './utils';
 import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageOfFiveTimeNumber, learnedStatus, createTimeGraph, createStatsGraph, countMovesETM, getLastTimes } from './functions';
@@ -63,9 +62,18 @@ var twistyTracker = new TwistyPlayer({
 
 $('#cube').append(twistyPlayer);
 
-var conn: GanCubeConnection | null;
-var lastMoves: GanCubeMove[] = [];
-var solutionMoves: GanCubeMove[] = [];
+var conn: SmartCubeConnection | null;
+
+type SmartCubeMove = {
+  face: number;
+  direction: number;
+  move: string;
+  localTimestamp: number | null;
+  cubeTimestamp: number | null;
+};
+
+var lastMoves: SmartCubeMove[] = [];
+var solutionMoves: SmartCubeMove[] = [];
 
 var twistyScene: THREE.Scene;
 var twistyVantage: any;
@@ -91,7 +99,7 @@ requestAnimationFrame(amimateCubeOrientation);
 
 var basis: THREE.Quaternion | null;
 
-async function handleGyroEvent(event: GanCubeEvent) {
+async function handleGyroEvent(event: SmartCubeEvent) {
   if (event.type == "GYRO") {
     let { x: qx, y: qy, z: qz, w: qw } = event.quaternion;
     let quat = new THREE.Quaternion(qx, qz, -qy, qw).normalize();
@@ -417,7 +425,7 @@ let keepInitialState: boolean = false;
 let previousFacelets: string = '';
 let isBugged = false;
 
-async function handleMoveEvent(event: GanCubeEvent) {
+async function handleMoveEvent(event: SmartCubeEvent) {
   if (event.type === "MOVE") {
 
     twistyPlayer.experimentalAddMove(event.move, { cancel: false });
@@ -474,9 +482,16 @@ async function handleMoveEvent(event: GanCubeEvent) {
     if (timerState === "STOPPED") {
       setTimerState("RUNNING");
     }
-    lastMoves.push(event);
+    const moveData: SmartCubeMove = {
+      face: event.face,
+      direction: event.direction,
+      move: event.move,
+      localTimestamp: event.localTimestamp,
+      cubeTimestamp: event.cubeTimestamp
+    };
+    lastMoves.push(moveData);
     if (timerState === "RUNNING") {
-      solutionMoves.push(event);
+      solutionMoves.push(moveData);
     }
     if (lastMoves.length > 256) {
       lastMoves = lastMoves.slice(-256);
@@ -591,7 +606,7 @@ function switchToNextAlgorithm() {
 }
 
 var cubeStateInitialized = false;
-async function handleFaceletsEvent(event: GanCubeEvent) {
+async function handleFaceletsEvent(event: SmartCubeEvent) {
   if (event.type == "FACELETS" && !cubeStateInitialized) {
     if (event.facelets != SOLVED_STATE) {
       var kpattern = faceletsToPattern(event.facelets);
@@ -608,7 +623,7 @@ async function handleFaceletsEvent(event: GanCubeEvent) {
   }
 }
 
-function handleCubeEvent(event: GanCubeEvent) {
+function handleCubeEvent(event: SmartCubeEvent) {
   //if (event.type != "GYRO") console.log("GanCubeEvent", event);
   if (event.type == "GYRO") {
     handleGyroEvent(event);
@@ -730,7 +745,7 @@ $('#device-info').on('click', () => {
 });
 
 $('#reset-state').on('click', async () => {
-  await conn?.sendCubeCommand({ type: "REQUEST_RESET" });
+  await conn?.sendCommand({ type: "REQUEST_RESET" });
   twistyPlayer.alg = '';
   twistyTracker.alg = '';
   drawAlgInCube();
@@ -759,11 +774,17 @@ $('#connect-button').on('click', async () => {
     conn.disconnect();
     deviceDisconnected();
   } else {
-    conn = await connectGanCube(customMacAddressProvider);
+    conn = await connectSmartCube(customMacAddressProvider);
     conn.events$.subscribe(handleCubeEvent);
-    await conn.sendCubeCommand({ type: "REQUEST_HARDWARE" });
-    await conn.sendCubeCommand({ type: "REQUEST_FACELETS" });
-    await conn.sendCubeCommand({ type: "REQUEST_BATTERY" });
+    if (conn.capabilities.hardware) {
+      await conn.sendCommand({ type: "REQUEST_HARDWARE" });
+    }
+    if (conn.capabilities.facelets) {
+      await conn.sendCommand({ type: "REQUEST_FACELETS" });
+    }
+    if (conn.capabilities.battery) {
+      await conn.sendCommand({ type: "REQUEST_BATTERY" });
+    }
     // save conn.deviceMAC in localStorage
     localStorage.setItem('lastConnectedDeviceMAC', conn.deviceMAC);
     $('#deviceName').val(conn.deviceName);
