@@ -1370,6 +1370,20 @@ function loadConfiguration() {
     fullStickeringEnabled = false;
   }
 
+  const whiteOnBottom = localStorage.getItem('whiteOnBottom');
+  if (whiteOnBottom) {
+    whiteOnBottomEnabled = whiteOnBottom === 'true';
+  } else {
+    whiteOnBottomEnabled = false;
+  }
+  // Enforce dependency: white-on-bottom requires full stickering.
+  if (!fullStickeringEnabled && whiteOnBottomEnabled) {
+    whiteOnBottomEnabled = false;
+    localStorage.setItem('whiteOnBottom', 'false');
+  }
+  applyWhiteOnBottomState({ persist: false });
+  updateWhiteOnBottomAvailability();
+
   const backview = localStorage.getItem('backview');
   if (backview) {
     $('#backview-select').val(backview).trigger('change');
@@ -1458,6 +1472,48 @@ fullStickeringToggle.addEventListener('change', () => {
     let category = $('#category-select').val()?.toString().toLowerCase() || 'pll';
     setStickering(category);
   }
+  if (!fullStickeringEnabled) {
+    // Enforce dependency: if full stickering is disabled, white-on-bottom must be off.
+    setWhiteOnBottomEnabled(false, { persist: true });
+  }
+  updateWhiteOnBottomAvailability();
+});
+
+let whiteOnBottomEnabled: boolean = false;
+const whiteOnBottomToggle = document.getElementById('white-on-bottom-toggle') as HTMLInputElement;
+const whiteOnBottomHint = document.getElementById('white-on-bottom-hint') as HTMLElement | null;
+
+function applyWhiteOnBottomState(options?: { persist?: boolean }) {
+  const persist = options?.persist ?? false;
+  whiteOnBottomToggle.checked = whiteOnBottomEnabled;
+  if (persist) {
+    localStorage.setItem('whiteOnBottom', whiteOnBottomEnabled.toString());
+  }
+  twistyPlayer.experimentalSetupAlg = whiteOnBottomEnabled ? 'z2' : '';
+}
+
+function updateWhiteOnBottomAvailability() {
+  const available = fullStickeringEnabled;
+  whiteOnBottomToggle.disabled = !available;
+  if (whiteOnBottomHint) {
+    whiteOnBottomHint.classList.toggle('hidden', available);
+  }
+}
+
+function setWhiteOnBottomEnabled(enabled: boolean, options?: { persist?: boolean }) {
+  whiteOnBottomEnabled = enabled;
+  applyWhiteOnBottomState({ persist: options?.persist ?? false });
+}
+
+whiteOnBottomToggle.addEventListener('change', () => {
+  const enabled = whiteOnBottomToggle.checked;
+  if (enabled && !fullStickeringEnabled) {
+    // Should be unreachable when disabled, but enforce anyway.
+    fullStickeringToggle.checked = true;
+    fullStickeringToggle.dispatchEvent(new Event('change'));
+  }
+  setWhiteOnBottomEnabled(whiteOnBottomToggle.checked, { persist: true });
+  updateWhiteOnBottomAvailability();
 });
 
 var flashingIndicatorEnabled: boolean = true;

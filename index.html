@@ -463,6 +463,18 @@
           </label>
         </div>
 
+        <div class="flex flex-col mb-4 text-sm sm:text-base">
+          <label for="white-on-bottom-toggle" class="relative inline-flex items-center cursor-pointer ml-6">
+            <input type="checkbox" id="white-on-bottom-toggle" class="sr-only" />
+            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+            <span class="ml-2">Virtual Cube White on Bottom</span>
+          </label>
+          <span id="white-on-bottom-hint" class="ml-6 mt-1 text-xs text-gray-500 dark:text-gray-400 hidden">
+            Requires “Always Show Full Stickers”
+          </span>
+        </div>
+
         <div class="flex items-center mb-4 text-sm sm:text-base">
           <label for="flashing-indicator-toggle" class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" id="flashing-indicator-toggle" class="sr-only" />
