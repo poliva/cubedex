@@ -25,7 +25,7 @@
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-  <script type="module" crossorigin src="/assets/index-T3QftZEK.js"></script>
+  <script type="module" crossorigin src="/assets/index-mAQ_Jp7i.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-DMwc-pkD.css">
 <link rel="manifest" href="/manifest.json"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
@@ -470,7 +470,7 @@
             <input type="checkbox" id="white-on-bottom-toggle" class="sr-only" />
             <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
             <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            <span class="ml-2">Virtual cube white on bottom</span>
+            <span class="ml-2">Virtual Cube White on Bottom</span>
           </label>
           <span id="white-on-bottom-hint" class="ml-6 mt-1 text-xs text-gray-500 dark:text-gray-400 hidden">
             Requires “Always Show Full Stickers”
@@ -519,6 +519,16 @@
             <option value="side-by-side">Side-by-side</option>
             <option value="top-right">Top Right</option>
           </select>
+        </div>
+
+        <div id="large-cube-container">
+          <div>
+            <label for="cube-size" class="text-base text-gray-900 block mb-1 dark:text-white">Virtual Cube Size (px):</label>
+            <div class="flex items-center gap-2" style="max-width: 300px;">
+              <input id="cube-size" type="range" min="240" max="1000" step="10" class="w-full" />
+              <input id="cube-size-number" type="number" min="240" max="1000" step="10" class="p-2 border border-gray-400 rounded-lg bg-white text-gray-900 dark:bg-gray-600 dark:text-white dark:border-gray-700" style="width: 6rem;" />
+            </div>
+          </div>
         </div>
       </div>
     </div>

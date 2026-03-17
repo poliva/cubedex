@@ -64,6 +64,49 @@ $('#cube').append(twistyPlayer);
 
 var conn: SmartCubeConnection | null;
 
+let cubeSizePx: number = 400;
+
+const containerEl = document.getElementById('container') as HTMLElement | null;
+const cubeCellEl = document.getElementById('cube') as HTMLElement | null;
+const rightSideEl = document.getElementById('right-side') as HTMLElement | null;
+
+function clampInt(value: unknown, min: number, max: number, fallback: number): number {
+  const n = typeof value === 'string' ? Number.parseInt(value, 10) : (typeof value === 'number' ? value : Number.NaN);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, Math.round(n)));
+}
+
+function applyCubeSizing() {
+  // Scope: only style the main twisty-player instance (not the algorithm previews).
+  const player = twistyPlayer as unknown as HTMLElement;
+
+  const sizePx = clampInt(cubeSizePx, 240, 1400, 400);
+
+  player.style.width = `${sizePx}px`;
+  player.style.height = `${sizePx}px`;
+  player.style.maxWidth = 'none';
+  player.style.maxHeight = 'none';
+
+  // Prevent clipping when the player gets large.
+  player.style.overflow = 'visible';
+  if (containerEl) containerEl.style.overflow = 'visible';
+  if (cubeCellEl) cubeCellEl.style.overflow = 'visible';
+
+  if (cubeCellEl) {
+    cubeCellEl.style.gridColumn = '1 / -1';
+    cubeCellEl.style.justifyContent = 'center';
+  }
+
+  // Keep Connect / Gyro controls anchored top-right when the cube spans the row.
+  if (rightSideEl) {
+    rightSideEl.style.position = 'absolute';
+    rightSideEl.style.top = '0';
+    rightSideEl.style.right = '0';
+    rightSideEl.style.zIndex = '50';
+    rightSideEl.style.width = 'auto';
+  }
+}
+
 type SmartCubeMove = {
   face: number;
   direction: number;
@@ -1433,6 +1476,17 @@ function loadConfiguration() {
   }
   $('#always-scramble-to-toggle').prop('checked', alwaysScrambleTo);
 
+  // Large cube size
+  const cubeSizeStored = localStorage.getItem('cubeSizePx');
+  cubeSizePx = clampInt(cubeSizeStored, 240, 1400, 400);
+
+  const cubeSizeEl = document.getElementById('cube-size') as HTMLInputElement | null;
+  const cubeSizeNumberEl = document.getElementById('cube-size-number') as HTMLInputElement | null;
+  if (cubeSizeEl) cubeSizeEl.value = String(cubeSizePx);
+  if (cubeSizeNumberEl) cubeSizeNumberEl.value = String(cubeSizePx);
+
+  applyCubeSizing();
+
   updateHeaderResetGyroState();
 }
 
@@ -1536,6 +1590,30 @@ $('#always-scramble-to-toggle').on('change', () => {
   alwaysScrambleTo = $('#always-scramble-to-toggle').is(':checked');
   localStorage.setItem('alwaysScrambleTo', alwaysScrambleTo.toString());
 });
+
+// Large cube size
+const cubeSizeEl = document.getElementById('cube-size') as HTMLInputElement | null;
+const cubeSizeNumberEl = document.getElementById('cube-size-number') as HTMLInputElement | null;
+
+function setCubeSize(next: number) {
+  cubeSizePx = clampInt(next, 240, 1400, 400);
+  localStorage.setItem('cubeSizePx', String(cubeSizePx));
+  if (cubeSizeEl) cubeSizeEl.value = String(cubeSizePx);
+  if (cubeSizeNumberEl) cubeSizeNumberEl.value = String(cubeSizePx);
+}
+
+if (cubeSizeEl) {
+  cubeSizeEl.addEventListener('input', () => {
+    setCubeSize(Number(cubeSizeEl.value));
+    applyCubeSizing();
+  });
+}
+if (cubeSizeNumberEl) {
+  cubeSizeNumberEl.addEventListener('input', () => {
+    setCubeSize(Number(cubeSizeNumberEl.value));
+    applyCubeSizing();
+  });
+}
 
 // Add event listeners for the selectors to update twistyPlayer settings
 var forceFix: boolean = false;
