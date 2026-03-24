@@ -1,4 +1,5 @@
 import './style.css'
+import './pwa-register'
 
 import $ from 'jquery';
 import { Subscription, interval } from 'rxjs';
@@ -1120,14 +1121,6 @@ function startLocalTimer() {
 function stopLocalTimer() {
   localTimer?.unsubscribe();
   localTimer = null;
-}
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (confirm('New version available. Refresh now?')) {
-      window.location.reload();
-    }
-  });
 }
 
 // Call the function to initialize default algorithms

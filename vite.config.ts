@@ -34,7 +34,7 @@ export default defineConfig({
   },
   plugins: [
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       manifestFilename: 'manifest.json',
       manifest: {
         "name": "Cubedex",
@@ -79,8 +79,6 @@ export default defineConfig({
       },
       workbox: {
         cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
         globPatterns: ['**/*.{js,css,html,png,svg}'],
         runtimeCaching: [
           {
