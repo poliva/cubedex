@@ -1,45 +1,4 @@
-var a=`<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN"
-       "http://www.w3.org/TR/2001/REC-SVG-20050904/DTD/svg11.dtd">
-    <svg width="288px" height="288px" viewBox="-16 -16 288 288" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-       <title>2x2x2 LL</title>
-  <defs>
-    <g id="sticker">
-        <rect x="0" y="0" width="1" height="1" stroke="black" stroke-width="0.04px" />
-    </g>
-  </defs>
-  <g id="2x2x2-LL" stroke="#000000" stroke-width="4" style="none" stroke-linejoin="round">
-    <rect    id="CORNERS-l0-o0" style="fill: white" x="128" y="128" width="76" height="76"></rect>
-    <polygon id="CORNERS-l0-o1" style="fill: red" points="204 128 252 128 252 252 204 204"></polygon>
-    <polygon id="CORNERS-l0-o2" style="fill: limegreen" transform="translate(206, 238) scale(1, -1) rotate(-90) translate(-206, -238) " points="172 160 220 160 220 284 172 236"></polygon>
-    <rect    id="CORNERS-l1-o0" style="fill: white" x="128" y="52" width="76" height="76"></rect>
-    <polygon id="CORNERS-l1-o1" style="fill: #26f" transform="translate(206, 18) rotate(-90) translate(-206, -18) " points="172 -60 220 -60 220 64 172 16"></polygon>
-    <polygon id="CORNERS-l1-o2" style="fill: red" transform="translate(238, 50) scale(1, -1) translate(-238, -50) " points="204 -28 252 -28 252 96 204 48"></polygon>
-    <rect    id="CORNERS-l2-o0" style="fill: white" x="52" y="52" width="76" height="76"></rect>
-    <polygon id="CORNERS-l2-o1" style="fill: orange" transform="translate(18, 50) scale(-1, -1) translate(-18, -50) " points="-16 -28 32 -28 32 96 -16 48"></polygon>
-    <polygon id="CORNERS-l2-o2" style="fill: #26f" transform="translate(50, 18) scale(1, -1) rotate(90) translate(-50, -18) " points="16 -60 64 -60 64 64 16 16"></polygon>
-    <rect    id="CORNERS-l3-o0" style="fill: white" x="52" y="128" width="76" height="76"></rect>
-    <polygon id="CORNERS-l3-o1" style="fill: limegreen" transform="translate(50, 238) rotate(90) translate(-50, -238) " points="16 160 64 160 64 284 16 236"></polygon>
-    <polygon id="CORNERS-l3-o2" style="fill: orange" transform="translate(18, 206) scale(-1, 1) translate(-18, -206) " points="-16 128 32 128 32 252 -16 204"></polygon>
-  </g>
-  <g style="opacity: 0">
-    <use id="CORNERS-l4-o0" href="#sticker" style="fill: yellow"/>
-    <use id="CORNERS-l4-o1" href="#sticker" style="fill: limegreen"/>
-    <use id="CORNERS-l4-o2" href="#sticker" style="fill: red"/>
-
-    <use id="CORNERS-l5-o0" href="#sticker" style="fill: yellow"/>
-    <use id="CORNERS-l5-o1" href="#sticker" style="fill: orange"/>
-    <use id="CORNERS-l5-o2" href="#sticker" style="fill: limegreen"/>
-
-    <use id="CORNERS-l6-o0" href="#sticker" style="fill: yellow"/>
-    <use id="CORNERS-l6-o1" href="#sticker" style="fill: #26f"/>
-    <use id="CORNERS-l6-o2" href="#sticker"  style="fill: orange"/>
-
-    <use id="CORNERS-l7-o0" href="#sticker" style="fill: yellow"/>
-    <use id="CORNERS-l7-o1" href="#sticker" style="fill: red"/>
-    <use id="CORNERS-l7-o2" href="#sticker" style="fill: #26f"/>
-  </g>
-</svg>`,n={name:"2x2x2",orbits:[{orbitName:"CORNERS",numPieces:8,numOrientations:3}],defaultPattern:{CORNERS:{pieces:[0,1,2,3,4,5,6,7],orientation:[0,0,0,0,0,0,0,0]}},moves:{U:{CORNERS:{permutation:[1,2,3,0,4,5,6,7],orientationDelta:[0,0,0,0,0,0,0,0]}},x:{CORNERS:{permutation:[4,0,3,5,7,6,2,1],orientationDelta:[2,1,2,1,1,2,1,2]}},y:{CORNERS:{permutation:[1,2,3,0,7,4,5,6],orientationDelta:[0,0,0,0,0,0,0,0]}}},derivedMoves:{z:"[x: y]",L:"[z: U]",F:"[x: U]",R:"[z': U]",B:"[x': U]",D:"[x2: U]",Uv:"y",Lv:"x'",Fv:"z",Rv:"x",Bv:"z'",Dv:"y'"}},f=`<?xml version="1.0" encoding="UTF-8"?>
+var a={name:"2x2x2",orbits:[{orbitName:"CORNERS",numPieces:8,numOrientations:3}],defaultPattern:{CORNERS:{pieces:[0,1,2,3,4,5,6,7],orientation:[0,0,0,0,0,0,0,0]}},moves:{U:{CORNERS:{permutation:[1,2,3,0,4,5,6,7],orientationDelta:[0,0,0,0,0,0,0,0]}},x:{CORNERS:{permutation:[4,0,3,5,7,6,2,1],orientationDelta:[2,1,2,1,1,2,1,2]}},y:{CORNERS:{permutation:[1,2,3,0,7,4,5,6],orientationDelta:[0,0,0,0,0,0,0,0]}}},derivedMoves:{z:"[x: y]",L:"[z: U]",F:"[x: U]",R:"[z': U]",B:"[x': U]",D:"[x2: U]",Uv:"y",Lv:"x'",Fv:"z",Rv:"x",Bv:"z'",Dv:"y'"}},n=`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN"
        "http://www.w3.org/TR/2001/REC-SVG-20050904/DTD/svg11.dtd">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 530 394" preserveAspectRatio="xMidYMid meet">
@@ -83,7 +42,48 @@ var a=`<?xml version="1.0" encoding="UTF-8"?>
     <use id="CORNERS-l7-o2" href="#sticker" transform="translate(6.6, 3.2)" style="fill: #26f"/>
   </g>
 
-</svg>`,e=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17],t=new Array(18).fill(0),o={permutation:e,orientationDelta:t},d={name:"clock",orbits:[{orbitName:"DIALS",numPieces:18,numOrientations:12},{orbitName:"FACES",numPieces:18,numOrientations:1},{orbitName:"FRAME",numPieces:1,numOrientations:2},{orbitName:"HOUR_MARKS",numPieces:18,numOrientations:4},{orbitName:"PEG_CAPS",numPieces:8,numOrientations:12}],defaultPattern:{DIALS:{pieces:e,orientation:t},FACES:{pieces:e,orientation:t},FRAME:{pieces:[0],orientation:[0]},HOUR_MARKS:{pieces:e,orientation:t},PEG_CAPS:{pieces:[0,1,2,3,4,5,6,7],orientation:[0,0,0,0,0,0,0,0]}},moves:{UL_PLUS_:{DIALS:{permutation:e,orientationDelta:[1,1,0,1,1,0,0,0,0,0,0,11,0,0,0,0,0,0]},FACES:o,FRAME:{permutation:[0],orientationDelta:[0]},HOUR_MARKS:o,PEG_CAPS:{permutation:[0,1,2,3,4,5,6,7],orientationDelta:[1,0,0,0,0,0,0,0]}},U_PLUS_:{DIALS:{permutation:e,orientationDelta:[1,1,1,1,1,1,0,0,0,11,0,11,0,0,0,0,0,0]},FACES:o,FRAME:{permutation:[0],orientationDelta:[0]},HOUR_MARKS:o,PEG_CAPS:{permutation:[0,1,2,3,4,5,6,7],orientationDelta:[1,1,0,0,0,0,0,0]}},ALL_PLUS_:{DIALS:{permutation:e,orientationDelta:[1,1,1,1,1,1,1,1,1,11,0,11,0,0,0,11,0,11]},FACES:o,FRAME:{permutation:[0],orientationDelta:[0]},HOUR_MARKS:o,PEG_CAPS:{permutation:[0,1,2,3,4,5,6,7],orientationDelta:[1,1,1,1,0,0,0,0]}},y2:{DIALS:{permutation:[9,10,11,12,13,14,15,16,17,0,1,2,3,4,5,6,7,8],orientationDelta:t},FACES:{permutation:[9,10,11,12,13,14,15,16,17,0,1,2,3,4,5,6,7,8],orientationDelta:t},FRAME:{permutation:[0],orientationDelta:[1]},HOUR_MARKS:{permutation:[9,10,11,12,13,14,15,16,17,0,1,2,3,4,5,6,7,8],orientationDelta:t},PEG_CAPS:{permutation:[4,5,6,7,0,1,2,3],orientationDelta:[0,0,0,0,0,0,0,0]}},z:{DIALS:{permutation:[6,3,0,7,4,1,8,5,2,11,14,17,10,13,16,9,12,15],orientationDelta:[3,3,3,3,3,3,3,3,3,-3,-3,-3,-3,-3,-3,-3,-3,-3]},FACES:{permutation:[6,3,0,7,4,1,8,5,2,11,14,17,10,13,16,9,12,15],orientationDelta:t},FRAME:{permutation:[0],orientationDelta:[0]},HOUR_MARKS:{permutation:[6,3,0,7,4,1,8,5,2,11,14,17,10,13,16,9,12,15],orientationDelta:[1,1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1]},PEG_CAPS:{permutation:[3,0,1,2,5,6,7,4],orientationDelta:[0,0,0,0,0,0,0,0]}}},derivedMoves:{UR_PLUS_:"[z': UL_PLUS_]",DR_PLUS_:"[z2: UL_PLUS_]",DL_PLUS_:"[z: UL_PLUS_]",R_PLUS_:"[z': U_PLUS_]",D_PLUS_:"[z2: U_PLUS_]",L_PLUS_:"[z: U_PLUS_]",F_PLUS_:"ALL_PLUS_",x2:"y2 z2",ULw_PLUS_:"U_PLUS_ L_PLUS_ UL_PLUS_'",URw_PLUS_:"U_PLUS_ R_PLUS_ UR_PLUS_'",DLw_PLUS_:"D_PLUS_ L_PLUS_ DL_PLUS_'",DRw_PLUS_:"D_PLUS_ R_PLUS_ DR_PLUS_'",BULw_PLUS_:"[y2: URw_PLUS_']",BURw_PLUS_:"[y2: ULw_PLUS_']",BDLw_PLUS_:"[y2: DRw_PLUS_']",BDRw_PLUS_:"[y2: DLw_PLUS_']",B_PLUS_:"[y2: ALL_PLUS_']",BU_PLUS_:"[y2: U_PLUS_']",BR_PLUS_:"[y2: L_PLUS_']",BD_PLUS_:"[y2: D_PLUS_']",BL_PLUS_:"[y2: R_PLUS_']",BUR_PLUS_:"[y2: UL_PLUS_']",BUL_PLUS_:"[y2: UR_PLUS_']",BDL_PLUS_:"[y2: DR_PLUS_']",BDR_PLUS_:"[y2: DL_PLUS_']",MUL_PLUS_:"UR_PLUS_' DL_PLUS_' U_PLUS_ R_PLUS_ D_PLUS_ L_PLUS_ ALL_PLUS_'",MUR_PLUS_:"UL_PLUS_' DR_PLUS_' U_PLUS_ L_PLUS_ D_PLUS_ R_PLUS_ ALL_PLUS_'",MDR_PLUS_:"MUL_PLUS_",MDL_PLUS_:"MUR_PLUS_",BMUL_PLUS_:"[y2: MUR_PLUS_']",BMUR_PLUS_:"[y2: MUL_PLUS_']",BMDR_PLUS_:"[y2: MDR_PLUS_']",BMDL_PLUS_:"[y2: MDL_PLUS_']",UL:".",UR:".",DL:".",DR:"."}},y=`<?xml version="1.0" encoding="UTF-8"?>
+</svg>`,f=`<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN"
+       "http://www.w3.org/TR/2001/REC-SVG-20050904/DTD/svg11.dtd">
+    <svg width="288px" height="288px" viewBox="-16 -16 288 288" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+       <title>2x2x2 LL</title>
+  <defs>
+    <g id="sticker">
+        <rect x="0" y="0" width="1" height="1" stroke="black" stroke-width="0.04px" />
+    </g>
+  </defs>
+  <g id="2x2x2-LL" stroke="#000000" stroke-width="4" style="none" stroke-linejoin="round">
+    <rect    id="CORNERS-l0-o0" style="fill: white" x="128" y="128" width="76" height="76"></rect>
+    <polygon id="CORNERS-l0-o1" style="fill: red" points="204 128 252 128 252 252 204 204"></polygon>
+    <polygon id="CORNERS-l0-o2" style="fill: limegreen" transform="translate(206, 238) scale(1, -1) rotate(-90) translate(-206, -238) " points="172 160 220 160 220 284 172 236"></polygon>
+    <rect    id="CORNERS-l1-o0" style="fill: white" x="128" y="52" width="76" height="76"></rect>
+    <polygon id="CORNERS-l1-o1" style="fill: #26f" transform="translate(206, 18) rotate(-90) translate(-206, -18) " points="172 -60 220 -60 220 64 172 16"></polygon>
+    <polygon id="CORNERS-l1-o2" style="fill: red" transform="translate(238, 50) scale(1, -1) translate(-238, -50) " points="204 -28 252 -28 252 96 204 48"></polygon>
+    <rect    id="CORNERS-l2-o0" style="fill: white" x="52" y="52" width="76" height="76"></rect>
+    <polygon id="CORNERS-l2-o1" style="fill: orange" transform="translate(18, 50) scale(-1, -1) translate(-18, -50) " points="-16 -28 32 -28 32 96 -16 48"></polygon>
+    <polygon id="CORNERS-l2-o2" style="fill: #26f" transform="translate(50, 18) scale(1, -1) rotate(90) translate(-50, -18) " points="16 -60 64 -60 64 64 16 16"></polygon>
+    <rect    id="CORNERS-l3-o0" style="fill: white" x="52" y="128" width="76" height="76"></rect>
+    <polygon id="CORNERS-l3-o1" style="fill: limegreen" transform="translate(50, 238) rotate(90) translate(-50, -238) " points="16 160 64 160 64 284 16 236"></polygon>
+    <polygon id="CORNERS-l3-o2" style="fill: orange" transform="translate(18, 206) scale(-1, 1) translate(-18, -206) " points="-16 128 32 128 32 252 -16 204"></polygon>
+  </g>
+  <g style="opacity: 0">
+    <use id="CORNERS-l4-o0" href="#sticker" style="fill: yellow"/>
+    <use id="CORNERS-l4-o1" href="#sticker" style="fill: limegreen"/>
+    <use id="CORNERS-l4-o2" href="#sticker" style="fill: red"/>
+
+    <use id="CORNERS-l5-o0" href="#sticker" style="fill: yellow"/>
+    <use id="CORNERS-l5-o1" href="#sticker" style="fill: orange"/>
+    <use id="CORNERS-l5-o2" href="#sticker" style="fill: limegreen"/>
+
+    <use id="CORNERS-l6-o0" href="#sticker" style="fill: yellow"/>
+    <use id="CORNERS-l6-o1" href="#sticker" style="fill: #26f"/>
+    <use id="CORNERS-l6-o2" href="#sticker"  style="fill: orange"/>
+
+    <use id="CORNERS-l7-o0" href="#sticker" style="fill: yellow"/>
+    <use id="CORNERS-l7-o1" href="#sticker" style="fill: red"/>
+    <use id="CORNERS-l7-o2" href="#sticker" style="fill: #26f"/>
+  </g>
+</svg>`,e=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17],t=new Array(18).fill(0),o={permutation:e,orientationDelta:t},d={name:"clock",orbits:[{orbitName:"DIALS",numPieces:18,numOrientations:12},{orbitName:"FACES",numPieces:18,numOrientations:1},{orbitName:"FRAME",numPieces:1,numOrientations:2},{orbitName:"HOUR_MARKS",numPieces:18,numOrientations:4}],defaultPattern:{DIALS:{pieces:e,orientation:t},FACES:{pieces:e,orientation:t},FRAME:{pieces:[0],orientation:[0]},HOUR_MARKS:{pieces:e,orientation:t}},moves:{UL_PLUS_:{DIALS:{permutation:e,orientationDelta:[1,1,0,1,1,0,0,0,0,0,0,11,0,0,0,0,0,0]},FACES:o,FRAME:{permutation:[0],orientationDelta:[0]},HOUR_MARKS:o},U_PLUS_:{DIALS:{permutation:e,orientationDelta:[1,1,1,1,1,1,0,0,0,11,0,11,0,0,0,0,0,0]},FACES:o,FRAME:{permutation:[0],orientationDelta:[0]},HOUR_MARKS:o},ALL_PLUS_:{DIALS:{permutation:e,orientationDelta:[1,1,1,1,1,1,1,1,1,11,0,11,0,0,0,11,0,11]},FACES:o,FRAME:{permutation:[0],orientationDelta:[0]},HOUR_MARKS:o},y2:{DIALS:{permutation:[9,10,11,12,13,14,15,16,17,0,1,2,3,4,5,6,7,8],orientationDelta:t},FACES:{permutation:[9,10,11,12,13,14,15,16,17,0,1,2,3,4,5,6,7,8],orientationDelta:t},FRAME:{permutation:[0],orientationDelta:[1]},HOUR_MARKS:{permutation:[9,10,11,12,13,14,15,16,17,0,1,2,3,4,5,6,7,8],orientationDelta:t}},z:{DIALS:{permutation:[6,3,0,7,4,1,8,5,2,11,14,17,10,13,16,9,12,15],orientationDelta:[3,3,3,3,3,3,3,3,3,9,9,9,9,9,9,9,9,9]},FACES:{permutation:[6,3,0,7,4,1,8,5,2,11,14,17,10,13,16,9,12,15],orientationDelta:t},FRAME:{permutation:[0],orientationDelta:[0]},HOUR_MARKS:{permutation:[6,3,0,7,4,1,8,5,2,11,14,17,10,13,16,9,12,15],orientationDelta:[1,1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1,-1]}}},derivedMoves:{UR_PLUS_:"[z': UL_PLUS_]",DR_PLUS_:"[z2: UL_PLUS_]",DL_PLUS_:"[z: UL_PLUS_]",R_PLUS_:"[z': U_PLUS_]",D_PLUS_:"[z2: U_PLUS_]",L_PLUS_:"[z: U_PLUS_]",F_PLUS_:"ALL_PLUS_",x2:"y2 z2",ULw_PLUS_:"U_PLUS_ L_PLUS_ UL_PLUS_'",URw_PLUS_:"U_PLUS_ R_PLUS_ UR_PLUS_'",DLw_PLUS_:"D_PLUS_ L_PLUS_ DL_PLUS_'",DRw_PLUS_:"D_PLUS_ R_PLUS_ DR_PLUS_'",BULw_PLUS_:"[y2: URw_PLUS_']",BURw_PLUS_:"[y2: ULw_PLUS_']",BDLw_PLUS_:"[y2: DRw_PLUS_']",BDRw_PLUS_:"[y2: DLw_PLUS_']",B_PLUS_:"[y2: ALL_PLUS_']",BU_PLUS_:"[y2: U_PLUS_']",BR_PLUS_:"[y2: L_PLUS_']",BD_PLUS_:"[y2: D_PLUS_']",BL_PLUS_:"[y2: R_PLUS_']",BUR_PLUS_:"[y2: UL_PLUS_']",BUL_PLUS_:"[y2: UR_PLUS_']",BDL_PLUS_:"[y2: DR_PLUS_']",BDR_PLUS_:"[y2: DL_PLUS_']",MUL_PLUS_:"UR_PLUS_' DL_PLUS_' U_PLUS_ R_PLUS_ D_PLUS_ L_PLUS_ ALL_PLUS_'",MUR_PLUS_:"UL_PLUS_' DR_PLUS_' U_PLUS_ L_PLUS_ D_PLUS_ R_PLUS_ ALL_PLUS_'",MDR_PLUS_:"MUL_PLUS_",MDL_PLUS_:"MUR_PLUS_",BMUL_PLUS_:"[y2: MUR_PLUS_']",BMUR_PLUS_:"[y2: MUL_PLUS_']",BMDR_PLUS_:"[y2: MDL_PLUS_']",BMDL_PLUS_:"[y2: MDR_PLUS_']",UL:".",UR:".",DL:".",DR:"."}},y=`<?xml version="1.0" encoding="UTF-8"?>
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 480 240" preserveAspectRatio="xMidYMid meet">
   <title>clock</title>
   <defs>
@@ -120,57 +120,10 @@ var a=`<?xml version="1.0" encoding="UTF-8"?>
   <g>
     <g transform="translate(24, 24)">
       <use href="#frame" id="FRAME-l0-o0" style="fill: #113366"/>
-      <use id="PEG_CAPS-l0-o0" href="#peg" transform="translate(66, 66)" style="fill: #446699"/>
-      <use id="PEG_CAPS-l0-o1" href="#peg" transform="translate(66, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l0-o2" href="#peg" transform="translate(66, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l0-o3" href="#peg" transform="translate(66, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l0-o4" href="#peg" transform="translate(66, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l0-o5" href="#peg" transform="translate(66, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l0-o6" href="#peg" transform="translate(66, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l0-o7" href="#peg" transform="translate(66, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l0-o8" href="#peg" transform="translate(66, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l0-o9" href="#peg" transform="translate(66, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l0-o10" href="#peg" transform="translate(66, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l0-o11" href="#peg" transform="translate(66, 66)" style="fill: #44669900"/>
-      
-      <use id="PEG_CAPS-l1-o0" href="#peg" transform="translate(126, 66)" style="fill: #446699"/>
-      <use id="PEG_CAPS-l1-o1" href="#peg" transform="translate(126, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l1-o2" href="#peg" transform="translate(126, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l1-o3" href="#peg" transform="translate(126, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l1-o4" href="#peg" transform="translate(126, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l1-o5" href="#peg" transform="translate(126, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l1-o6" href="#peg" transform="translate(126, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l1-o7" href="#peg" transform="translate(126, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l1-o8" href="#peg" transform="translate(126, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l1-o9" href="#peg" transform="translate(126, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l1-o10" href="#peg" transform="translate(126, 66)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l1-o11" href="#peg" transform="translate(126, 66)" style="fill: #44669900"/>
-      
-      <use id="PEG_CAPS-l2-o0" href="#peg" transform="translate(126, 126)" style="fill: #446699"/>
-      <use id="PEG_CAPS-l2-o1" href="#peg" transform="translate(126, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l2-o2" href="#peg" transform="translate(126, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l2-o3" href="#peg" transform="translate(126, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l2-o4" href="#peg" transform="translate(126, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l2-o5" href="#peg" transform="translate(126, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l2-o6" href="#peg" transform="translate(126, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l2-o7" href="#peg" transform="translate(126, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l2-o8" href="#peg" transform="translate(126, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l2-o9" href="#peg" transform="translate(126, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l2-o10" href="#peg" transform="translate(126, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l2-o11" href="#peg" transform="translate(126, 126)" style="fill: #44669900"/>
-      
-      <use id="PEG_CAPS-l3-o0" href="#peg" transform="translate(66, 126)" style="fill: #446699"/>
-      <use id="PEG_CAPS-l3-o1" href="#peg" transform="translate(66, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l3-o2" href="#peg" transform="translate(66, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l3-o3" href="#peg" transform="translate(66, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l3-o4" href="#peg" transform="translate(66, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l3-o5" href="#peg" transform="translate(66, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l3-o6" href="#peg" transform="translate(66, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l3-o7" href="#peg" transform="translate(66, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l3-o8" href="#peg" transform="translate(66, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l3-o9" href="#peg" transform="translate(66, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l3-o10" href="#peg" transform="translate(66, 126)" style="fill: #44669900"/>
-      <use id="PEG_CAPS-l3-o11" href="#peg" transform="translate(66, 126)" style="fill: #44669900"/>
+      <use href="#peg" transform="translate(66, 66)" style="fill: #446699"/>
+      <use href="#peg" transform="translate(126, 66)" style="fill: #446699"/>
+      <use href="#peg" transform="translate(126, 126)" style="fill: #446699"/>
+      <use href="#peg" transform="translate(66, 126)" style="fill: #446699"/>
 
       <g transform="translate(36, 36)">
         <circle id="FACES-l0-o0" stroke="#000000" style="fill: #CCDDEE" r="20"></circle>
@@ -396,57 +349,10 @@ var a=`<?xml version="1.0" encoding="UTF-8"?>
       </g>
       <use href="#frame" id="FRAME-l0-o1" style="fill: #CCDDEE"/>
 
-      <use id="PEG_CAPS-l4-o0" href="#peg" transform="translate(66, 66)" style="fill: #88AACC"/>
-      <use id="PEG_CAPS-l4-o1" href="#peg" transform="translate(66, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l4-o2" href="#peg" transform="translate(66, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l4-o3" href="#peg" transform="translate(66, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l4-o4" href="#peg" transform="translate(66, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l4-o5" href="#peg" transform="translate(66, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l4-o6" href="#peg" transform="translate(66, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l4-o7" href="#peg" transform="translate(66, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l4-o8" href="#peg" transform="translate(66, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l4-o9" href="#peg" transform="translate(66, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l4-o10" href="#peg" transform="translate(66, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l4-o11" href="#peg" transform="translate(66, 66)" style="fill: #88AACC00"/>
-      
-      <use id="PEG_CAPS-l5-o0" href="#peg" transform="translate(126, 66)" style="fill: #88AACC"/>
-      <use id="PEG_CAPS-l5-o1" href="#peg" transform="translate(126, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l5-o2" href="#peg" transform="translate(126, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l5-o3" href="#peg" transform="translate(126, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l5-o4" href="#peg" transform="translate(126, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l5-o5" href="#peg" transform="translate(126, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l5-o6" href="#peg" transform="translate(126, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l5-o7" href="#peg" transform="translate(126, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l5-o8" href="#peg" transform="translate(126, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l5-o9" href="#peg" transform="translate(126, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l5-o10" href="#peg" transform="translate(126, 66)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l5-o11" href="#peg" transform="translate(126, 66)" style="fill: #88AACC00"/>
-      
-      <use id="PEG_CAPS-l6-o0" href="#peg" transform="translate(126, 126)" style="fill: #88AACC"/>
-      <use id="PEG_CAPS-l6-o1" href="#peg" transform="translate(126, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l6-o2" href="#peg" transform="translate(126, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l6-o3" href="#peg" transform="translate(126, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l6-o4" href="#peg" transform="translate(126, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l6-o5" href="#peg" transform="translate(126, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l6-o6" href="#peg" transform="translate(126, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l6-o7" href="#peg" transform="translate(126, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l6-o8" href="#peg" transform="translate(126, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l6-o9" href="#peg" transform="translate(126, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l6-o10" href="#peg" transform="translate(126, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l6-o11" href="#peg" transform="translate(126, 126)" style="fill: #88AACC00"/>
-      
-      <use id="PEG_CAPS-l7-o0" href="#peg" transform="translate(66, 126)" style="fill: #88AACC"/>
-      <use id="PEG_CAPS-l7-o1" href="#peg" transform="translate(66, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l7-o2" href="#peg" transform="translate(66, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l7-o3" href="#peg" transform="translate(66, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l7-o4" href="#peg" transform="translate(66, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l7-o5" href="#peg" transform="translate(66, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l7-o6" href="#peg" transform="translate(66, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l7-o7" href="#peg" transform="translate(66, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l7-o8" href="#peg" transform="translate(66, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l7-o9" href="#peg" transform="translate(66, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l7-o10" href="#peg" transform="translate(66, 126)" style="fill: #88AACC00"/>
-      <use id="PEG_CAPS-l7-o11" href="#peg" transform="translate(66, 126)" style="fill: #88AACC00"/>
+      <use href="#peg" transform="translate(66, 66)" style="fill: #88AACC"/>
+      <use href="#peg" transform="translate(126, 66)" style="fill: #88AACC"/>
+      <use href="#peg" transform="translate(126, 126)" style="fill: #88AACC"/>
+      <use href="#peg" transform="translate(66, 126)" style="fill: #88AACC"/>
 
       <g transform="translate(36, 36)">
         <circle id="FACES-l9-o0" stroke="#000000" style="fill: #113366" r="20"></circle>
@@ -666,7 +572,166 @@ var a=`<?xml version="1.0" encoding="UTF-8"?>
       </g>
     </g>
   </g>
-</svg>`,h=`<?xml version="1.0" encoding="UTF-8"?>
+</svg>`,l=new Array(64).fill(0),i=l.map((s,r)=>r),h={name:"Melinda's 2x2x2x2",orbits:[{orbitName:"CORNERS",numPieces:64,numOrientations:1}],defaultPattern:{CORNERS:{pieces:i,orientation:l}},moves:{Rx:{CORNERS:{permutation:[16,19,17,18,20,22,23,21,4,7,5,6,0,2,3,1,28,30,31,29,24,27,25,26,8,10,11,9,12,15,13,14,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63],orientationDelta:l}},Ry:{CORNERS:{permutation:[12,13,14,15,0,1,2,3,4,5,6,7,8,9,10,11,28,29,30,31,16,17,18,19,20,21,22,23,24,25,26,27,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63],orientationDelta:l}},Rz:{CORNERS:{permutation:[4,6,7,5,20,23,21,22,24,26,27,25,8,11,9,10,0,3,1,2,16,18,19,17,28,31,29,30,12,14,15,13,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63],orientationDelta:l}},Lx:{CORNERS:{permutation:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,48,51,49,50,52,54,55,53,36,39,37,38,32,34,35,33,60,62,63,61,56,59,57,58,40,42,43,41,44,47,45,46],orientationDelta:l}},Ly:{CORNERS:{permutation:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,44,45,46,47,32,33,34,35,36,37,38,39,40,41,42,43,60,61,62,63,48,49,50,51,52,53,54,55,56,57,58,59],orientationDelta:l}},Lz:{CORNERS:{permutation:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,36,38,39,37,52,55,53,54,56,58,59,57,40,43,41,42,32,35,33,34,48,50,51,49,60,63,61,62,44,46,47,45],orientationDelta:l}},Mx:{CORNERS:{permutation:[0,1,2,3,20,22,23,21,4,7,5,6,12,13,14,15,16,17,18,19,24,27,25,26,8,10,11,9,28,29,30,31,48,51,49,50,36,37,38,39,40,41,42,43,32,34,35,33,60,62,63,61,52,53,54,55,56,57,58,59,44,47,45,46],orientationDelta:l}},My:{CORNERS:{permutation:[0,1,2,3,9,8,11,10,45,44,47,46,12,13,14,15,16,17,18,19,25,24,27,26,61,60,63,62,28,29,30,31,5,4,7,6,36,37,38,39,40,41,42,43,33,32,35,34,21,20,23,22,52,53,54,55,56,57,58,59,49,48,51,50],orientationDelta:l}},Mz:{CORNERS:{permutation:[0,1,2,3,34,33,35,32,47,45,44,46,12,13,14,15,16,17,18,19,7,5,4,6,10,9,11,8,28,29,30,31,51,49,48,50,36,37,38,39,40,41,42,43,62,61,63,60,22,21,23,20,52,53,54,55,56,57,58,59,27,25,24,26],orientationDelta:l}},Ox:{CORNERS:{permutation:[16,19,17,18,4,5,6,7,8,9,10,11,0,2,3,1,28,30,31,29,20,21,22,23,24,25,26,27,12,15,13,14,32,33,34,35,52,54,55,53,36,39,37,38,44,45,46,47,48,49,50,51,56,59,57,58,40,42,43,41,60,61,62,63],orientationDelta:l}},Oy:{CORNERS:{permutation:[37,36,39,38,4,5,6,7,8,9,10,11,1,0,3,2,53,52,55,54,20,21,22,23,24,25,26,27,17,16,19,18,32,33,34,35,41,40,43,42,13,12,15,14,44,45,46,47,48,49,50,51,57,56,59,58,29,28,31,30,60,61,62,63],orientationDelta:l}},Oz:{CORNERS:{permutation:[19,17,16,18,4,5,6,7,8,9,10,11,30,29,31,28,54,53,55,52,20,21,22,23,24,25,26,27,59,57,56,58,32,33,34,35,2,1,3,0,15,13,12,14,44,45,46,47,48,49,50,51,39,37,36,38,42,41,43,40,60,61,62,63],orientationDelta:l}},U2:{CORNERS:{permutation:[40,41,42,43,44,45,46,47,32,33,34,35,36,37,38,39,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,8,9,10,11,12,13,14,15,0,1,2,3,4,5,6,7,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63],orientationDelta:l}},D2:{CORNERS:{permutation:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,56,57,58,59,60,61,62,63,48,49,50,51,52,53,54,55,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,24,25,26,27,28,29,30,31,16,17,18,19,20,21,22,23],orientationDelta:l}},F2:{CORNERS:{permutation:[52,53,54,55,48,49,50,51,8,9,10,11,12,13,14,15,36,37,38,39,32,33,34,35,24,25,26,27,28,29,30,31,20,21,22,23,16,17,18,19,40,41,42,43,44,45,46,47,4,5,6,7,0,1,2,3,56,57,58,59,60,61,62,63],orientationDelta:l}},B2:{CORNERS:{permutation:[0,1,2,3,4,5,6,7,60,61,62,63,56,57,58,59,16,17,18,19,20,21,22,23,44,45,46,47,40,41,42,43,32,33,34,35,36,37,38,39,28,29,30,31,24,25,26,27,48,49,50,51,52,53,54,55,12,13,14,15,8,9,10,11],orientationDelta:l}}},derivedMoves:{x:"Lx Rx",y2:"U2 D2",z2:"F2 B2"}},p=`<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 180 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>melindas2x2x2x2</title>
+<defs>
+  <g id="sticker-UL">
+    <path d="m 0,0 10,0 -10,10 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
+  </g>
+  <g id="sticker-UR">
+    <path d="m 0,0 10,0 0,10 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
+  </g>
+  <g id="sticker-DR">
+    <path d="m 10,0 0,10 -10,0 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
+  </g>
+  <g id="sticker-DL">
+    <path d="m 00,0 10,10 -10,0 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
+  </g>
+  <g id="squished-sticker-UL">
+    <path d="m 0,0 5,0 -5,10 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
+  </g>
+  <g id="squished-sticker-UR">
+    <path d="m 0,0 5,0 0,10 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
+  </g>
+  <g id="squished-sticker-DR">
+    <path d="m 5,0 0,10 -5,0 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
+  </g>
+  <g id="squished-sticker-DL">
+    <path d="m 00,0 5,10 -5,0 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
+  </g>
+</defs>
+<g>
+<g id="UL" transform="translate(45, 10)">
+  <use id="CORNERS-l40-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: orange"/>
+  <use id="CORNERS-l41-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: white"/>
+  <use id="CORNERS-l45-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: white"/>
+  <use id="CORNERS-l44-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: orange"/>
+  <use id="CORNERS-l36-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: orange"/>
+  <use id="CORNERS-l37-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: white"/>
+  <use id="CORNERS-l33-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: white"/>
+  <use id="CORNERS-l32-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: orange"/>
+</g>
+<g id="UR" transform="translate(65, 10)">
+  <use id="CORNERS-l8-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: red"/>
+  <use id="CORNERS-l9-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: white"/>
+  <use id="CORNERS-l13-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: white"/>
+  <use id="CORNERS-l12-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: red"/>
+  <use id="CORNERS-l4-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: red"/>
+  <use id="CORNERS-l5-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: white"/>
+  <use id="CORNERS-l1-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: white"/>
+  <use id="CORNERS-l0-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: red"/>
+</g>
+
+<g id="L" transform="translate(10, 35)">
+  <use data-copy-id="CORNERS-l40-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: orange"/>
+  <use id="CORNERS-l43-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: pink"/>
+  <use id="CORNERS-l38-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: pink"/>
+  <use data-copy-id="CORNERS-l36-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: orange"/>
+  <use id="CORNERS-l56-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: orange"/>
+  <use id="CORNERS-l58-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: pink"/>
+  <use id="CORNERS-l55-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: pink"/>
+  <use id="CORNERS-l52-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: orange"/>
+</g>
+
+<g id="FL" transform="translate(35, 35)">
+  <use data-copy-id="CORNERS-l36-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: orange"/>
+  <use id="CORNERS-l39-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: limegreen"/>
+  <use id="CORNERS-l34-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: limegreen"/>
+  <use data-copy-id="CORNERS-l32-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: orange"/>
+  <use data-copy-id="CORNERS-l52-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: orange"/>
+  <use id="CORNERS-l54-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: limegreen"/>
+  <use id="CORNERS-l51-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: limegreen"/>
+  <use id="CORNERS-l48-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: orange"/>
+</g>
+<g id="FR" transform="translate(75, 35)">
+  <use data-copy-id="CORNERS-l4-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: red"/>
+  <use id="CORNERS-l7-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: limegreen"/>
+  <use id="CORNERS-l2-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: limegreen"/>
+  <use data-copy-id="CORNERS-l0-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: red"/>
+  <use id="CORNERS-l20-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: red"/>
+  <use id="CORNERS-l22-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: limegreen"/>
+  <use id="CORNERS-l19-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: limegreen"/>
+  <use id="CORNERS-l16-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: red"/>
+</g>
+
+<g id="R" transform="translate(100, 35)">
+  <use data-copy-id="CORNERS-l0-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: red"/>
+  <use id="CORNERS-l3-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: pink"/>
+  <use id="CORNERS-l14-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: pink"/>
+  <use data-copy-id="CORNERS-l12-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: red"/>
+  <use data-copy-id="CORNERS-l16-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: red"/>
+  <use id="CORNERS-l18-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: pink"/>
+  <use id="CORNERS-l31-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: pink"/>
+  <use id="CORNERS-l28-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: red"/>
+</g>
+
+<g id="BR" transform="translate(125, 35)">
+  <use data-copy-id="CORNERS-l12-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: red"/>
+  <use id="CORNERS-l15-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: #26f"/>
+  <use id="CORNERS-l10-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: #26f"/>
+  <use data-copy-id="CORNERS-l8-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: red"/>
+  <use data-copy-id="CORNERS-l28-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: red"/>
+  <use id="CORNERS-l30-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: #26f"/>
+  <use id="CORNERS-l27-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: #26f"/>
+  <use id="CORNERS-l24-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: red"/>
+</g>
+<g id="BL" transform="translate(145, 35)">
+  <use data-copy-id="CORNERS-l44-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: orange"/>
+  <use id="CORNERS-l47-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: #26f"/>
+  <use id="CORNERS-l42-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: #26f"/>
+  <use data-copy-id="CORNERS-l40-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: orange"/>
+  <use id="CORNERS-l60-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: orange"/>
+  <use id="CORNERS-l62-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: #26f"/>
+  <use id="CORNERS-l59-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: #26f"/>
+  <use data-copy-id="CORNERS-l56-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: orange"/>
+</g>
+
+<g id="DL" transform="translate(45, 60)">
+  <use data-copy-id="CORNERS-l52-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: orange"/>
+  <use id="CORNERS-l53-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: yellow"/>
+  <use id="CORNERS-l49-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: yellow"/>
+  <use data-copy-id="CORNERS-l48-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: orange"/>
+  <use data-copy-id="CORNERS-l56-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: orange"/>
+  <use id="CORNERS-l57-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: yellow"/>
+  <use id="CORNERS-l61-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: yellow"/>
+  <use data-copy-id="CORNERS-l60-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: orange"/>
+</g>
+<g id="DR" transform="translate(65, 60)">
+  <use data-copy-id="CORNERS-l20-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: red"/>
+  <use id="CORNERS-l21-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: yellow"/>
+  <use id="CORNERS-l17-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: yellow"/>
+  <use data-copy-id="CORNERS-l16-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: red"/>
+  <use data-copy-id="CORNERS-l24-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: red"/>
+  <use id="CORNERS-l25-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: yellow"/>
+  <use id="CORNERS-l29-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: yellow"/>
+  <use data-copy-id="CORNERS-l28-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: red"/>
+</g>
+
+<g style="opacity: 0.3;">
+<g id="IL" transform="translate(55, 35)">
+  <use data-copy-id="CORNERS-l32-o0" href="#squished-sticker-UL" transform="translate( 0,  0)" style="fill: orange"/>
+  <use id="CORNERS-l35-o0" href="#squished-sticker-DR" transform="translate( 0,  0)" style="fill: purple"/>
+  <use id="CORNERS-l46-o0" href="#squished-sticker-DL" transform="translate(5,  0)" style="fill: purple"/>
+  <use data-copy-id="CORNERS-l44-o0" href="#squished-sticker-UR" transform="translate(5,  0)" style="fill: orange"/>
+  <use data-copy-id="CORNERS-l48-o0" href="#squished-sticker-DL" transform="translate( 0, 10)" style="fill: orange"/>
+  <use id="CORNERS-l50-o0" href="#squished-sticker-UR" transform="translate( 0, 10)" style="fill: purple"/>
+  <use id="CORNERS-l63-o0" href="#squished-sticker-UL" transform="translate(5, 10)" style="fill: purple"/>
+  <use data-copy-id="CORNERS-l60-o0" href="#squished-sticker-DR" transform="translate(5, 10)" style="fill: orange"/>
+</g>
+<g id="IR" transform="translate(65, 35)">
+  <use data-copy-id="CORNERS-l8-o0" href="#squished-sticker-UL" transform="translate( 0,  0)" style="fill: red"/>
+  <use id="CORNERS-l11-o0" href="#squished-sticker-DR" transform="translate( 0,  0)" style="fill: purple"/>
+  <use id="CORNERS-l6-o0" href="#squished-sticker-DL" transform="translate(5,  0)" style="fill: purple"/>
+  <use data-copy-id="CORNERS-l4-o0" href="#squished-sticker-UR" transform="translate(5,  0)" style="fill: red"/>
+  <use data-copy-id="CORNERS-l24-o0" href="#squished-sticker-DL" transform="translate( 0, 10)" style="fill: red"/>
+  <use id="CORNERS-l26-o0" href="#squished-sticker-UR" transform="translate( 0, 10)" style="fill: purple"/>
+  <use id="CORNERS-l23-o0" href="#squished-sticker-UL" transform="translate(5, 10)" style="fill: purple"/>
+  <use data-copy-id="CORNERS-l20-o0" href="#squished-sticker-DR" transform="translate(5, 10)" style="fill: red"/>
+</g>
+</g>
+</g>
+</svg>`,S=`<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN"
        "http://www.w3.org/TR/2001/REC-SVG-20050904/DTD/svg11.dtd">
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-20 -20 546 480" preserveAspectRatio="xMidYMid meet">
@@ -753,7 +818,7 @@ var a=`<?xml version="1.0" encoding="UTF-8"?>
     <use id="EDGES-l4-o1" href="#stickerV" transform="translate(1, 1)" style="fill: red"/>
   </g>
 
-</svg>`,p={name:"Square-1",orbits:[{orbitName:"WEDGES",numPieces:24,numOrientations:9},{orbitName:"EQUATOR",numPieces:2,numOrientations:6}],defaultPattern:{WEDGES:{pieces:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],orientation:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},EQUATOR:{pieces:[0,1],orientation:[0,0]}},moves:{U_SQ_:{WEDGES:{permutation:[11,0,1,2,3,4,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23],orientationDelta:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},EQUATOR:{permutation:[0,1],orientationDelta:[0,0]}},D_SQ_:{WEDGES:{permutation:[0,1,2,3,4,5,6,7,8,9,10,11,23,12,13,14,15,16,17,18,19,20,21,22],orientationDelta:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},EQUATOR:{permutation:[0,1],orientationDelta:[0,0]}},_SLASH_:{WEDGES:{permutation:[0,1,2,3,4,5,12,13,14,15,16,17,6,7,8,9,10,11,18,19,20,21,22,23],orientationDelta:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},EQUATOR:{permutation:[0,1],orientationDelta:[0,3]}}}},S=`<?xml version="1.0" encoding="UTF-8"?>
+</svg>`,E={name:"Square-1",orbits:[{orbitName:"WEDGES",numPieces:24,numOrientations:9},{orbitName:"EQUATOR",numPieces:2,numOrientations:6}],defaultPattern:{WEDGES:{pieces:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],orientation:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},EQUATOR:{pieces:[0,1],orientation:[0,0]}},moves:{U_SQ_:{WEDGES:{permutation:[11,0,1,2,3,4,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23],orientationDelta:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},EQUATOR:{permutation:[0,1],orientationDelta:[0,0]}},D_SQ_:{WEDGES:{permutation:[0,1,2,3,4,5,6,7,8,9,10,11,23,12,13,14,15,16,17,18,19,20,21,22],orientationDelta:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},EQUATOR:{permutation:[0,1],orientationDelta:[0,0]}},_SLASH_:{WEDGES:{permutation:[0,1,2,3,4,5,12,13,14,15,16,17,6,7,8,9,10,11,18,19,20,21,22,23],orientationDelta:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},EQUATOR:{permutation:[0,1],orientationDelta:[0,3]}}}},g=`<?xml version="1.0" encoding="UTF-8"?>
 <svg width="360px" height="552px" viewBox="0 0 360 552" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 59.1 (86144) - https://sketch.com -->
     <title>sq1-fancy</title>
@@ -1047,166 +1112,7 @@ var a=`<?xml version="1.0" encoding="UTF-8"?>
             <line x1="0.15767665" y1="262.276878" x2="70.4345542" y2="2.27488928e-16" id="TOP"></line>
         </g>
     </g>
-</svg>`,l=new Array(64).fill(0),s=l.map((i,r)=>r),E={name:"Melinda's 2x2x2x2",orbits:[{orbitName:"CORNERS",numPieces:64,numOrientations:1}],defaultPattern:{CORNERS:{pieces:s,orientation:l}},moves:{Rx:{CORNERS:{permutation:[16,19,17,18,20,22,23,21,4,7,5,6,0,2,3,1,28,30,31,29,24,27,25,26,8,10,11,9,12,15,13,14,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63],orientationDelta:l}},Ry:{CORNERS:{permutation:[12,13,14,15,0,1,2,3,4,5,6,7,8,9,10,11,28,29,30,31,16,17,18,19,20,21,22,23,24,25,26,27,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63],orientationDelta:l}},Rz:{CORNERS:{permutation:[4,6,7,5,20,23,21,22,24,26,27,25,8,11,9,10,0,3,1,2,16,18,19,17,28,31,29,30,12,14,15,13,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63],orientationDelta:l}},Lx:{CORNERS:{permutation:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,48,51,49,50,52,54,55,53,36,39,37,38,32,34,35,33,60,62,63,61,56,59,57,58,40,42,43,41,44,47,45,46],orientationDelta:l}},Ly:{CORNERS:{permutation:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,44,45,46,47,32,33,34,35,36,37,38,39,40,41,42,43,60,61,62,63,48,49,50,51,52,53,54,55,56,57,58,59],orientationDelta:l}},Lz:{CORNERS:{permutation:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,36,38,39,37,52,55,53,54,56,58,59,57,40,43,41,42,32,35,33,34,48,50,51,49,60,63,61,62,44,46,47,45],orientationDelta:l}},Mx:{CORNERS:{permutation:[0,1,2,3,20,22,23,21,4,7,5,6,12,13,14,15,16,17,18,19,24,27,25,26,8,10,11,9,28,29,30,31,48,51,49,50,36,37,38,39,40,41,42,43,32,34,35,33,60,62,63,61,52,53,54,55,56,57,58,59,44,47,45,46],orientationDelta:l}},My:{CORNERS:{permutation:[0,1,2,3,9,8,11,10,45,44,47,46,12,13,14,15,16,17,18,19,25,24,27,26,61,60,63,62,28,29,30,31,5,4,7,6,36,37,38,39,40,41,42,43,33,32,35,34,21,20,23,22,52,53,54,55,56,57,58,59,49,48,51,50],orientationDelta:l}},Mz:{CORNERS:{permutation:[0,1,2,3,34,33,35,32,47,45,44,46,12,13,14,15,16,17,18,19,7,5,4,6,10,9,11,8,28,29,30,31,51,49,48,50,36,37,38,39,40,41,42,43,62,61,63,60,22,21,23,20,52,53,54,55,56,57,58,59,27,25,24,26],orientationDelta:l}},Ox:{CORNERS:{permutation:[16,19,17,18,4,5,6,7,8,9,10,11,0,2,3,1,28,30,31,29,20,21,22,23,24,25,26,27,12,15,13,14,32,33,34,35,52,54,55,53,36,39,37,38,44,45,46,47,48,49,50,51,56,59,57,58,40,42,43,41,60,61,62,63],orientationDelta:l}},Oy:{CORNERS:{permutation:[37,36,39,38,4,5,6,7,8,9,10,11,1,0,3,2,53,52,55,54,20,21,22,23,24,25,26,27,17,16,19,18,32,33,34,35,41,40,43,42,13,12,15,14,44,45,46,47,48,49,50,51,57,56,59,58,29,28,31,30,60,61,62,63],orientationDelta:l}},Oz:{CORNERS:{permutation:[19,17,16,18,4,5,6,7,8,9,10,11,30,29,31,28,54,53,55,52,20,21,22,23,24,25,26,27,59,57,56,58,32,33,34,35,2,1,3,0,15,13,12,14,44,45,46,47,48,49,50,51,39,37,36,38,42,41,43,40,60,61,62,63],orientationDelta:l}},U2:{CORNERS:{permutation:[40,41,42,43,44,45,46,47,32,33,34,35,36,37,38,39,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,8,9,10,11,12,13,14,15,0,1,2,3,4,5,6,7,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63],orientationDelta:l}},D2:{CORNERS:{permutation:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,56,57,58,59,60,61,62,63,48,49,50,51,52,53,54,55,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,24,25,26,27,28,29,30,31,16,17,18,19,20,21,22,23],orientationDelta:l}},F2:{CORNERS:{permutation:[52,53,54,55,48,49,50,51,8,9,10,11,12,13,14,15,36,37,38,39,32,33,34,35,24,25,26,27,28,29,30,31,20,21,22,23,16,17,18,19,40,41,42,43,44,45,46,47,4,5,6,7,0,1,2,3,56,57,58,59,60,61,62,63],orientationDelta:l}},B2:{CORNERS:{permutation:[0,1,2,3,4,5,6,7,60,61,62,63,56,57,58,59,16,17,18,19,20,21,22,23,44,45,46,47,40,41,42,43,32,33,34,35,36,37,38,39,28,29,30,31,24,25,26,27,48,49,50,51,52,53,54,55,12,13,14,15,8,9,10,11],orientationDelta:l}}},derivedMoves:{x:"Lx Rx",y2:"U2 D2",z2:"F2 B2"}},g=`<?xml version="1.0" encoding="UTF-8"?>
-<svg viewBox="0 0 180 80" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<title>melindas2x2x2x2</title>
-<defs>
-  <g id="sticker-UL">
-    <path d="m 0,0 10,0 -10,10 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
-  </g>
-  <g id="sticker-UR">
-    <path d="m 0,0 10,0 0,10 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
-  </g>
-  <g id="sticker-DR">
-    <path d="m 10,0 0,10 -10,0 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
-  </g>
-  <g id="sticker-DL">
-    <path d="m 00,0 10,10 -10,0 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
-  </g>
-  <g id="squished-sticker-UL">
-    <path d="m 0,0 5,0 -5,10 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
-  </g>
-  <g id="squished-sticker-UR">
-    <path d="m 0,0 5,0 0,10 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
-  </g>
-  <g id="squished-sticker-DR">
-    <path d="m 5,0 0,10 -5,0 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
-  </g>
-  <g id="squished-sticker-DL">
-    <path d="m 00,0 5,10 -5,0 z" stroke-width="0.75px" stroke="black" stroke-linecap="butt" stroke-linejoin="round" />
-  </g>
-</defs>
-<g>
-<g id="UL" transform="translate(45, 10)">
-  <use id="CORNERS-l40-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: orange"/>
-  <use id="CORNERS-l41-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: white"/>
-  <use id="CORNERS-l45-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: white"/>
-  <use id="CORNERS-l44-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: orange"/>
-  <use id="CORNERS-l36-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: orange"/>
-  <use id="CORNERS-l37-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: white"/>
-  <use id="CORNERS-l33-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: white"/>
-  <use id="CORNERS-l32-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: orange"/>
-</g>
-<g id="UR" transform="translate(65, 10)">
-  <use id="CORNERS-l8-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: red"/>
-  <use id="CORNERS-l9-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: white"/>
-  <use id="CORNERS-l13-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: white"/>
-  <use id="CORNERS-l12-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: red"/>
-  <use id="CORNERS-l4-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: red"/>
-  <use id="CORNERS-l5-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: white"/>
-  <use id="CORNERS-l1-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: white"/>
-  <use id="CORNERS-l0-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: red"/>
-</g>
-
-<g id="L" transform="translate(10, 35)">
-  <use data-copy-id="CORNERS-l40-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: orange"/>
-  <use id="CORNERS-l43-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: pink"/>
-  <use id="CORNERS-l38-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: pink"/>
-  <use data-copy-id="CORNERS-l36-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: orange"/>
-  <use id="CORNERS-l56-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: orange"/>
-  <use id="CORNERS-l58-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: pink"/>
-  <use id="CORNERS-l55-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: pink"/>
-  <use id="CORNERS-l52-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: orange"/>
-</g>
-
-<g id="FL" transform="translate(35, 35)">
-  <use data-copy-id="CORNERS-l36-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: orange"/>
-  <use id="CORNERS-l39-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: limegreen"/>
-  <use id="CORNERS-l34-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: limegreen"/>
-  <use data-copy-id="CORNERS-l32-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: orange"/>
-  <use data-copy-id="CORNERS-l52-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: orange"/>
-  <use id="CORNERS-l54-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: limegreen"/>
-  <use id="CORNERS-l51-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: limegreen"/>
-  <use id="CORNERS-l48-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: orange"/>
-</g>
-<g id="FR" transform="translate(75, 35)">
-  <use data-copy-id="CORNERS-l4-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: red"/>
-  <use id="CORNERS-l7-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: limegreen"/>
-  <use id="CORNERS-l2-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: limegreen"/>
-  <use data-copy-id="CORNERS-l0-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: red"/>
-  <use id="CORNERS-l20-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: red"/>
-  <use id="CORNERS-l22-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: limegreen"/>
-  <use id="CORNERS-l19-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: limegreen"/>
-  <use id="CORNERS-l16-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: red"/>
-</g>
-
-<g id="R" transform="translate(100, 35)">
-  <use data-copy-id="CORNERS-l0-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: red"/>
-  <use id="CORNERS-l3-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: pink"/>
-  <use id="CORNERS-l14-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: pink"/>
-  <use data-copy-id="CORNERS-l12-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: red"/>
-  <use data-copy-id="CORNERS-l16-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: red"/>
-  <use id="CORNERS-l18-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: pink"/>
-  <use id="CORNERS-l31-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: pink"/>
-  <use id="CORNERS-l28-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: red"/>
-</g>
-
-<g id="BR" transform="translate(125, 35)">
-  <use data-copy-id="CORNERS-l12-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: red"/>
-  <use id="CORNERS-l15-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: #26f"/>
-  <use id="CORNERS-l10-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: #26f"/>
-  <use data-copy-id="CORNERS-l8-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: red"/>
-  <use data-copy-id="CORNERS-l28-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: red"/>
-  <use id="CORNERS-l30-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: #26f"/>
-  <use id="CORNERS-l27-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: #26f"/>
-  <use id="CORNERS-l24-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: red"/>
-</g>
-<g id="BL" transform="translate(145, 35)">
-  <use data-copy-id="CORNERS-l44-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: orange"/>
-  <use id="CORNERS-l47-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: #26f"/>
-  <use id="CORNERS-l42-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: #26f"/>
-  <use data-copy-id="CORNERS-l40-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: orange"/>
-  <use id="CORNERS-l60-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: orange"/>
-  <use id="CORNERS-l62-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: #26f"/>
-  <use id="CORNERS-l59-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: #26f"/>
-  <use data-copy-id="CORNERS-l56-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: orange"/>
-</g>
-
-<g id="DL" transform="translate(45, 60)">
-  <use data-copy-id="CORNERS-l52-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: orange"/>
-  <use id="CORNERS-l53-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: yellow"/>
-  <use id="CORNERS-l49-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: yellow"/>
-  <use data-copy-id="CORNERS-l48-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: orange"/>
-  <use data-copy-id="CORNERS-l56-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: orange"/>
-  <use id="CORNERS-l57-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: yellow"/>
-  <use id="CORNERS-l61-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: yellow"/>
-  <use data-copy-id="CORNERS-l60-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: orange"/>
-</g>
-<g id="DR" transform="translate(65, 60)">
-  <use data-copy-id="CORNERS-l20-o0" href="#sticker-UL" transform="translate( 0,  0)" style="fill: red"/>
-  <use id="CORNERS-l21-o0" href="#sticker-DR" transform="translate( 0,  0)" style="fill: yellow"/>
-  <use id="CORNERS-l17-o0" href="#sticker-DL" transform="translate(10,  0)" style="fill: yellow"/>
-  <use data-copy-id="CORNERS-l16-o0" href="#sticker-UR" transform="translate(10,  0)" style="fill: red"/>
-  <use data-copy-id="CORNERS-l24-o0" href="#sticker-DL" transform="translate( 0, 10)" style="fill: red"/>
-  <use id="CORNERS-l25-o0" href="#sticker-UR" transform="translate( 0, 10)" style="fill: yellow"/>
-  <use id="CORNERS-l29-o0" href="#sticker-UL" transform="translate(10, 10)" style="fill: yellow"/>
-  <use data-copy-id="CORNERS-l28-o0" href="#sticker-DR" transform="translate(10, 10)" style="fill: red"/>
-</g>
-
-<g style="opacity: 0.3;">
-<g id="IL" transform="translate(55, 35)">
-  <use data-copy-id="CORNERS-l32-o0" href="#squished-sticker-UL" transform="translate( 0,  0)" style="fill: orange"/>
-  <use id="CORNERS-l35-o0" href="#squished-sticker-DR" transform="translate( 0,  0)" style="fill: purple"/>
-  <use id="CORNERS-l46-o0" href="#squished-sticker-DL" transform="translate(5,  0)" style="fill: purple"/>
-  <use data-copy-id="CORNERS-l44-o0" href="#squished-sticker-UR" transform="translate(5,  0)" style="fill: orange"/>
-  <use data-copy-id="CORNERS-l48-o0" href="#squished-sticker-DL" transform="translate( 0, 10)" style="fill: orange"/>
-  <use id="CORNERS-l50-o0" href="#squished-sticker-UR" transform="translate( 0, 10)" style="fill: purple"/>
-  <use id="CORNERS-l63-o0" href="#squished-sticker-UL" transform="translate(5, 10)" style="fill: purple"/>
-  <use data-copy-id="CORNERS-l60-o0" href="#squished-sticker-DR" transform="translate(5, 10)" style="fill: orange"/>
-</g>
-<g id="IR" transform="translate(65, 35)">
-  <use data-copy-id="CORNERS-l8-o0" href="#squished-sticker-UL" transform="translate( 0,  0)" style="fill: red"/>
-  <use id="CORNERS-l11-o0" href="#squished-sticker-DR" transform="translate( 0,  0)" style="fill: purple"/>
-  <use id="CORNERS-l6-o0" href="#squished-sticker-DL" transform="translate(5,  0)" style="fill: purple"/>
-  <use data-copy-id="CORNERS-l4-o0" href="#squished-sticker-UR" transform="translate(5,  0)" style="fill: red"/>
-  <use data-copy-id="CORNERS-l24-o0" href="#squished-sticker-DL" transform="translate( 0, 10)" style="fill: red"/>
-  <use id="CORNERS-l26-o0" href="#squished-sticker-UR" transform="translate( 0, 10)" style="fill: purple"/>
-  <use id="CORNERS-l23-o0" href="#squished-sticker-UL" transform="translate(5, 10)" style="fill: purple"/>
-  <use data-copy-id="CORNERS-l20-o0" href="#squished-sticker-DR" transform="translate(5, 10)" style="fill: red"/>
-</g>
-</g>
-</g>
-</svg>`,m={name:"tri_quad",orbits:[{orbitName:"CORNERS",numPieces:5,numOrientations:3},{orbitName:"CORNER_U",numPieces:1,numOrientations:4},{orbitName:"CORNER_R",numPieces:1,numOrientations:3},{orbitName:"EDGES",numPieces:8,numOrientations:2},{orbitName:"BIG_CENTERS",numPieces:6,numOrientations:1},{orbitName:"SMALL_CENTERS",numPieces:13,numOrientations:3}],defaultPattern:{CORNERS:{pieces:[0,1,2,3,4],orientation:[0,0,0,0,0]},CORNER_U:{pieces:[0],orientation:[0]},CORNER_R:{pieces:[0],orientation:[0]},EDGES:{pieces:[0,1,2,3,4,5,6,7],orientation:[0,0,0,0,0,0,0,0]},BIG_CENTERS:{pieces:[0,1,2,3,4,5],orientation:[0,0,0,0,0,0]},SMALL_CENTERS:{pieces:[0,1,2,3,4,5,6,7,8,9,10,11,12],orientation:[0,0,0,0,0,0,0,0,0,0,0,0,0]}},moves:{U:{CORNERS:{permutation:[1,2,3,0,4],orientationDelta:[0,0,0,0,0]},CORNER_U:{permutation:[0],orientationDelta:[3]},CORNER_R:{permutation:[0],orientationDelta:[0]},EDGES:{permutation:[1,2,3,0,4,5,6,7],orientationDelta:[0,0,0,0,0,0,0,0]},BIG_CENTERS:{permutation:[1,2,3,0,4,5],orientationDelta:[0,0,0,0,0,0]},SMALL_CENTERS:{permutation:[2,3,4,5,6,7,0,1,8,9,10,11,12],orientationDelta:[0,0,0,0,0,0,0,0,0,0,0,0,0]}},R:{CORNERS:{permutation:[4,0,2,3,1],orientationDelta:[2,2,0,0,2]},CORNER_U:{permutation:[0],orientationDelta:[0]},CORNER_R:{permutation:[0],orientationDelta:[2]},EDGES:{permutation:[5,4,2,3,6,7,1,0],orientationDelta:[0,0,0,0,0,0,0,0]},BIG_CENTERS:{permutation:[4,1,2,3,5,0],orientationDelta:[0,0,0,0,0,0]},SMALL_CENTERS:{permutation:[9,8,7,3,4,5,6,12,10,11,1,0,2],orientationDelta:[0,0,0,0,0,0,0,0,0,0,0,0,0]}}}},u=`<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+</svg>`,R={name:"tri_quad",orbits:[{orbitName:"CORNERS",numPieces:5,numOrientations:3},{orbitName:"CORNER_U",numPieces:1,numOrientations:4},{orbitName:"CORNER_R",numPieces:1,numOrientations:3},{orbitName:"EDGES",numPieces:8,numOrientations:2},{orbitName:"BIG_CENTERS",numPieces:6,numOrientations:1},{orbitName:"SMALL_CENTERS",numPieces:13,numOrientations:3}],defaultPattern:{CORNERS:{pieces:[0,1,2,3,4],orientation:[0,0,0,0,0]},CORNER_U:{pieces:[0],orientation:[0]},CORNER_R:{pieces:[0],orientation:[0]},EDGES:{pieces:[0,1,2,3,4,5,6,7],orientation:[0,0,0,0,0,0,0,0]},BIG_CENTERS:{pieces:[0,1,2,3,4,5],orientation:[0,0,0,0,0,0]},SMALL_CENTERS:{pieces:[0,1,2,3,4,5,6,7,8,9,10,11,12],orientation:[0,0,0,0,0,0,0,0,0,0,0,0,0]}},moves:{U:{CORNERS:{permutation:[1,2,3,0,4],orientationDelta:[0,0,0,0,0]},CORNER_U:{permutation:[0],orientationDelta:[3]},CORNER_R:{permutation:[0],orientationDelta:[0]},EDGES:{permutation:[1,2,3,0,4,5,6,7],orientationDelta:[0,0,0,0,0,0,0,0]},BIG_CENTERS:{permutation:[1,2,3,0,4,5],orientationDelta:[0,0,0,0,0,0]},SMALL_CENTERS:{permutation:[2,3,4,5,6,7,0,1,8,9,10,11,12],orientationDelta:[0,0,0,0,0,0,0,0,0,0,0,0,0]}},R:{CORNERS:{permutation:[4,0,2,3,1],orientationDelta:[2,2,0,0,2]},CORNER_U:{permutation:[0],orientationDelta:[0]},CORNER_R:{permutation:[0],orientationDelta:[2]},EDGES:{permutation:[5,4,2,3,6,7,1,0],orientationDelta:[0,0,0,0,0,0,0,0]},BIG_CENTERS:{permutation:[4,1,2,3,5,0],orientationDelta:[0,0,0,0,0,0]},SMALL_CENTERS:{permutation:[9,8,7,3,4,5,6,12,10,11,1,0,2],orientationDelta:[0,0,0,0,0,0,0,0,0,0,0,0,0]}}}},D=`<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
@@ -1647,4 +1553,4 @@ var a=`<?xml version="1.0" encoding="UTF-8"?>
        d="M 83.135494 38.833805 A 1.2100496 1.2568218 0 0 0 82.044604 40.083858 A 1.2100496 1.2568218 0 0 0 83.017155 41.315308 L 83.135494 38.833805 z " />
   </g>
 </svg>
-`;export{d as clockJSON,y as clockSVG,n as cube2x2x2JSON,a as cube2x2x2LLSVG,f as cube2x2x2SVG,E as melindas2x2x2x2OrbitJSON,g as melindas2x2x2x2OrbitSVG,h as pyraminxSVG,p as sq1HyperOrbitJSON,S as sq1HyperOrbitSVG,m as triQuadJSON,u as triQuadSVG};
+`;export{d as clockJSON,y as clockSVG,a as cube2x2x2JSON,f as cube2x2x2LLSVG,n as cube2x2x2SVG,h as melindas2x2x2x2OrbitJSON,p as melindas2x2x2x2OrbitSVG,S as pyraminxSVG,E as sq1HyperOrbitJSON,g as sq1HyperOrbitSVG,R as triQuadJSON,D as triQuadSVG};

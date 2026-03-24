@@ -64,6 +64,34 @@ $('#cube').append(twistyPlayer);
 
 var conn: SmartCubeConnection | null;
 
+const LAST_CONNECTED_DEVICE_NAME_KEY = 'lastConnectedDeviceName';
+const SMARTCUBE_DEVICE_SELECTION_KEY = 'smartcubeDeviceSelection';
+
+function storedSmartCubeDeviceSelection(): 'filtered' | 'any' {
+  return localStorage.getItem(SMARTCUBE_DEVICE_SELECTION_KEY) === 'any' ? 'any' : 'filtered';
+}
+
+let connectAbort: AbortController | null = null;
+let connectInFlight = false;
+
+window.addEventListener('pagehide', () => {
+  if (connectInFlight && !conn) {
+    connectAbort?.abort();
+  }
+});
+
+function storedDeviceNameForPicker(): string | undefined {
+  const raw = localStorage.getItem(LAST_CONNECTED_DEVICE_NAME_KEY);
+  if (!raw) {
+    return undefined;
+  }
+  const t = raw.trim();
+  if (!t || t === '- n/a -') {
+    return undefined;
+  }
+  return t;
+}
+
 let cubeSizePx: number = 400;
 
 const containerEl = document.getElementById('container') as HTMLElement | null;
@@ -714,11 +742,15 @@ function handleCubeEvent(event: SmartCubeEvent) {
 
 const customMacAddressProvider: MacAddressProvider = async (device, isFallbackCall): Promise<string | null> => {
   const lastConnectedMAC = localStorage.getItem('lastConnectedDeviceMAC') || '';
+  const storedName = localStorage.getItem(LAST_CONNECTED_DEVICE_NAME_KEY)?.trim() ?? '';
+  const currentName = device.name?.trim() ?? '';
+  const promptDefault =
+    storedName.length > 0 && currentName.length > 0 && storedName === currentName ? lastConnectedMAC : '';
   if (isFallbackCall) {
-    return prompt(`Unable to determine cube MAC address!\nPlease enter MAC address manually:`, lastConnectedMAC);
+    return prompt(`Unable to determine cube MAC address!\nPlease enter MAC address manually:`, promptDefault);
   } else {
     return typeof device.watchAdvertisements == 'function' ? null :
-      prompt(`Seems like your browser does not support Web Bluetooth watchAdvertisements() API. Enable following flag in Chrome:\n\nchrome://flags/#enable-experimental-web-platform-features\n\nor enter cube MAC address manually:`, lastConnectedMAC);
+      prompt(`Seems like your browser does not support Web Bluetooth watchAdvertisements() API. Enable following flag in Chrome:\n\nchrome://flags/#enable-experimental-web-platform-features\n\nor enter cube MAC address manually:`, promptDefault);
   }
 };
 
@@ -828,32 +860,70 @@ $('#connect-button').on('click', async () => {
   if (conn) {
     conn.disconnect();
     deviceDisconnected();
-  } else {
-    conn = await connectSmartCube(customMacAddressProvider);
-    conn.events$.subscribe(handleCubeEvent);
-    if (conn.capabilities.hardware) {
-      await conn.sendCommand({ type: "REQUEST_HARDWARE" });
-    }
-    if (conn.capabilities.facelets) {
-      await conn.sendCommand({ type: "REQUEST_FACELETS" });
-    }
-    if (conn.capabilities.battery) {
-      await conn.sendCommand({ type: "REQUEST_BATTERY" });
-    }
-    // save conn.deviceMAC in localStorage
-    localStorage.setItem('lastConnectedDeviceMAC', conn.deviceMAC);
-    $('#deviceName').val(conn.deviceName);
-    $('#deviceMAC').val(conn.deviceMAC);
-    $('#connect').html('Disconnect');
-    $('#bluetooth-indicator').hide();
-    $('#battery-indicator').show();
-    $('#reset-gyro').prop('disabled', false);
-    $('#reset-state').prop('disabled', false);
-    $('#device-info').prop('disabled', false);
-    $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
-    requestWakeLock();
-    updateHeaderResetGyroState();
+    return;
   }
+  if (connectInFlight) {
+    connectAbort?.abort();
+    return;
+  }
+
+  connectAbort = new AbortController();
+  connectInFlight = true;
+  const deviceNameOpt = storedDeviceNameForPicker();
+
+  let newConn: SmartCubeConnection | undefined;
+  try {
+    newConn = await connectSmartCube({
+      macAddressProvider: customMacAddressProvider,
+      enableAddressSearch: true,
+      deviceSelection: storedSmartCubeDeviceSelection(),
+      ...(deviceNameOpt ? { deviceName: deviceNameOpt } : {}),
+      signal: connectAbort.signal,
+      onStatus: (msg) => {
+        $('#connect').html(msg);
+      },
+    });
+  } catch (e) {
+    if (!connectAbort.signal.aborted) {
+      console.error(e);
+    }
+    $('#connect').html('Connect');
+  } finally {
+    connectInFlight = false;
+    connectAbort = null;
+  }
+
+  if (!newConn) {
+    return;
+  }
+
+  conn = newConn;
+  conn.events$.subscribe(handleCubeEvent);
+  if (conn.capabilities.hardware) {
+    await conn.sendCommand({ type: "REQUEST_HARDWARE" });
+  }
+  if (conn.capabilities.facelets) {
+    await conn.sendCommand({ type: "REQUEST_FACELETS" });
+  }
+  if (conn.capabilities.battery) {
+    await conn.sendCommand({ type: "REQUEST_BATTERY" });
+  }
+  localStorage.setItem('lastConnectedDeviceMAC', conn.deviceMAC);
+  const name = conn.deviceName.trim();
+  if (name) {
+    localStorage.setItem(LAST_CONNECTED_DEVICE_NAME_KEY, name);
+  }
+  $('#deviceName').val(conn.deviceName);
+  $('#deviceMAC').val(conn.deviceMAC);
+  $('#connect').html('Disconnect');
+  $('#bluetooth-indicator').hide();
+  $('#battery-indicator').show();
+  $('#reset-gyro').prop('disabled', false);
+  $('#reset-state').prop('disabled', false);
+  $('#device-info').prop('disabled', false);
+  $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
+  requestWakeLock();
+  updateHeaderResetGyroState();
 });
 
 var timerState: "IDLE" | "READY" | "RUNNING" | "STOPPED" = "IDLE";
@@ -1365,6 +1435,14 @@ $('#show-options').on('click', () => {
   $('#options-container').show();
 });
 
+const smartcubeShowAllBleToggle = document.getElementById('smartcube-show-all-ble-toggle') as HTMLInputElement;
+smartcubeShowAllBleToggle.addEventListener('change', () => {
+  localStorage.setItem(
+    SMARTCUBE_DEVICE_SELECTION_KEY,
+    smartcubeShowAllBleToggle.checked ? 'any' : 'filtered'
+  );
+});
+
 $(function() {
   renameOldKeys();
   loadConfiguration();
@@ -1441,6 +1519,8 @@ function loadConfiguration() {
     controlPanelToggle.checked = false;
     twistyPlayer.controlPanel = 'none';
   }
+
+  smartcubeShowAllBleToggle.checked = storedSmartCubeDeviceSelection() === 'any';
 
   const flashingIndicatorState = localStorage.getItem('flashingIndicatorEnabled');
   if (flashingIndicatorState) {

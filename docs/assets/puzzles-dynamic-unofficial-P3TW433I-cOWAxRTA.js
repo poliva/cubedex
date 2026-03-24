@@ -1,4 +1,60 @@
 var t=`<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1348px" height="556px" viewBox="210 210 1588 796" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>fto</title>
+    <g id="fto" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linejoin="round">
+      <g transform="translate(-360, 0)">
+        <g id="BL" transform="translate(2020, 608) scale(-1, -1) rotate(90) translate(-2040, -608) translate(1560, 368)" stroke="#000000" stroke-width="12">
+            <polygon id="C4RNER-l4-o3" style="fill: #ff8000;" points="480 0 640 160 320 160"></polygon>
+            <polygon id="C4RNER-l5-o2" style="fill: #ff8000;" points="640 160 800 320 480 320"></polygon>
+            <polygon id="CENTERS-l2-o0" style="fill: #ff8000;" transform="translate(480, 240) scale(1, -1) translate(-480, -240) " points="480 160 640 320 320 320"></polygon>
+            <polygon id="C4RNER-l3-o1" style="fill: #ff8000;" points="320 160 480 320 160 320"></polygon>
+        </g>
+        <g id="D" transform="translate(1280, 628)" stroke="#000000" stroke-width="12">
+            <polygon id="C4RNER-l4-o0" style="fill: #f4f400;" points="480 0 640 160 320 160"></polygon>
+            <polygon id="C4RNER-l3-o0" style="fill: #f4f400;" points="640 160 800 320 480 320"></polygon>
+            <polygon id="CENTERS-l4-o0" style="fill: #f4f400;" transform="translate(480, 240) scale(1, -1) translate(-480, -240) " points="480 160 640 320 320 320"></polygon>
+            <polygon id="C4RNER-l1-o0" style="fill: #f4f400;" points="320 160 480 320 160 320"></polygon>
+        </g>
+        <g id="BR" transform="translate(1500, 608) scale(1, -1) rotate(90) translate(-1480, -608) translate(1000, 368)" stroke="#000000" stroke-width="12">
+            <polygon id="C4RNER-l4-o1" style="fill: #aaaaaa;" points="480 0 640 160 320 160"></polygon>
+            <polygon id="C4RNER-l2-o2" style="fill: #aaaaaa;" points="640 160 800 320 480 320"></polygon>
+            <polygon id="CENTERS-l1-o0" style="fill: #aaaaaa;" transform="translate(480, 240) scale(1, -1) translate(-480, -240) " points="480 160 640 320 320 320"></polygon>
+            <polygon id="C4RNER-l1-o3" style="fill: #aaaaaa;" points="320 160 480 320 160 320"></polygon>
+        </g>
+        <g id="B" transform="translate(1760, 348) scale(1, -1) translate(-1760, -328) translate(1280, 88)" stroke="#000000" stroke-width="12">
+            <polygon id="C4RNER-l4-o2" style="fill: #2266ff;" points="480 0 640 160 320 160"></polygon>
+            <polygon id="C4RNER-l5-o3" style="fill: #2266ff;" points="640 160 800 320 480 320"></polygon>
+            <polygon id="CENTERS-l6-o0" style="fill: #2266ff;" transform="translate(480, 240) scale(1, -1) translate(-480, -240) " points="480 160 640 320 320 320"></polygon>
+            <polygon id="C4RNER-l2-o1" style="fill: #2266ff;" points="320 160 480 320 160 320"></polygon>
+        </g>
+      </g>
+      <g id="R" transform="translate(868, 608) scale(-1, -1) rotate(90) translate(-888, -608) translate(408, 368)" stroke="#000000" stroke-width="12">
+          <polygon id="C4RNER-l0-o1" style="fill: red;" points="480 0 640 160 320 160"></polygon>
+          <polygon id="C4RNER-l2-o3" style="fill: red;" points="640 160 800 320 480 320"></polygon>
+          <polygon id="CENTERS-l3-o0" style="fill: red;" transform="translate(480, 240) scale(1, -1) translate(-480, -240) " points="480 160 640 320 320 320"></polygon>
+          <polygon id="C4RNER-l1-o2" style="fill: red;" points="320 160 480 320 160 320"></polygon>
+      </g>
+      <g id="F" transform="translate(128, 628)" stroke="#000000" stroke-width="12">
+          <polygon id="C4RNER-l0-o2" style="fill: #44ee00;" points="480 0 640 160 320 160"></polygon>
+          <polygon id="C4RNER-l1-o1" style="fill: #44ee00;" points="640 160 800 320 480 320"></polygon>
+          <polygon id="CENTERS-l0-o0" style="fill: #44ee00;" transform="translate(480, 240) scale(1, -1) translate(-480, -240) " points="480 160 640 320 320 320"></polygon>
+          <polygon id="C4RNER-l3-o3" style="fill: #44ee00;" points="320 160 480 320 160 320"></polygon>
+      </g>
+      <g id="L" transform="translate(348, 608) scale(1, -1) rotate(90) translate(-328, -608) translate(-152, 368)" stroke="#000000" stroke-width="12">
+          <polygon id="C4RNER-l0-o3" style="fill: #8800dd;" points="480 0 640 160 320 160"></polygon>
+          <polygon id="C4RNER-l5-o1" style="fill: #8800dd;" points="640 160 800 320 480 320"></polygon>
+          <polygon id="CENTERS-l5-o0" style="fill: #8800dd;" transform="translate(480, 240) scale(1, -1) translate(-480, -240) " points="480 160 640 320 320 320"></polygon>
+          <polygon id="C4RNER-l3-o2" style="fill: #8800dd;" points="320 160 480 320 160 320"></polygon>
+      </g>
+      <g id="U" transform="translate(608, 348) scale(1, -1) translate(-608, -328) translate(128, 88)" stroke="#000000" stroke-width="12">
+          <polygon id="C4RNER-l0-o0" style="fill: #ffffff;" points="480 0 640 160 320 160"></polygon>
+          <polygon id="C4RNER-l2-o0" style="fill: #ffffff;" points="640 160 800 320 480 320"></polygon>
+          <polygon id="CENTERS-l7-o0" style="fill: #ffffff;" transform="translate(480, 240) scale(1, -1) translate(-480, -240) " points="480 160 640 320 320 320"></polygon>
+          <polygon id="C4RNER-l5-o0" style="fill: #ffffff;" points="320 160 480 320 160 320"></polygon>
+      </g>
+    </g>
+</svg>
+`,o=`<?xml version="1.0" encoding="UTF-8"?>
 <svg width="2368px" height="1216px" viewBox="0 0 2368 1216" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <title>fto</title>
     <g id="fto" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linejoin="round">
@@ -92,7 +148,7 @@ var t=`<?xml version="1.0" encoding="UTF-8"?>
         </g>
     </g>
 </svg>
-`,o=`<svg id="svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 800 500">
+`,s=`<svg id="svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 800 500">
 <style type="text/css"><![CDATA[.sticker { stroke: #000000; stroke-width: 1px; }]]></style>
 <g><title>U</title>
 <polygon id="CORNERS-l7-o0" class="sticker" style="fill: #ffffff" points="247.941 89.861 283.500 115.696 269.918 157.499 212.382 138.805"/>
@@ -167,7 +223,46 @@ var t=`<?xml version="1.0" encoding="UTF-8"?>
 <polygon id="CORNERS-l17-o0" class="sticker" style="fill: #999999" points="623.177 410.138 587.618 435.974 552.058 410.138 587.618 361.195"/>
 <polygon id="CORNERS-l9-o0" class="sticker" style="fill: #999999" points="645.154 342.500 658.736 384.303 623.177 410.138 587.618 361.195"/>
 </g></svg>
-`,s={name:"redi_cube",orbits:[{orbitName:"EDGES",numPieces:12,numOrientations:2},{orbitName:"CORNERS",numPieces:8,numOrientations:3}],defaultPattern:{EDGES:{pieces:[0,1,2,3,4,5,6,7,8,9,10,11],orientation:[0,0,0,0,0,0,0,0,0,0,0,0]},CORNERS:{pieces:[0,1,2,3,4,5,6,7],orientation:[0,0,0,0,0,0,0,0]}},moves:{F:{EDGES:{permutation:[8,0,2,3,4,5,6,7,1,9,10,11],orientationDelta:[0,1,0,0,0,0,0,0,1,0,0,0]},CORNERS:{permutation:[0,1,2,3,4,5,6,7],orientationDelta:[1,0,0,0,0,0,0,0]}},x:{EDGES:{permutation:[4,8,0,9,6,10,2,11,5,7,1,3],orientationDelta:[1,0,1,0,1,0,1,0,0,0,0,0]},CORNERS:{permutation:[4,0,3,5,7,6,2,1],orientationDelta:[2,1,2,1,1,2,1,2]}},y:{EDGES:{permutation:[1,2,3,0,5,6,7,4,10,8,11,9],orientationDelta:[0,0,0,0,0,0,0,0,1,1,1,1]},CORNERS:{permutation:[1,2,3,0,7,4,5,6],orientationDelta:[0,0,0,0,0,0,0,0]}}},derivedMoves:{z:"[x: y]",UR:"[y: F]",U:"[y2: F]",UL:"[y': F]",D:"[x: F]",L:"[z2: F]",R:"[x2: F]",B:"[y2 x: F]"}},i=`<?xml version="1.0" encoding="UTF-8"?>
+`,l=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],i={name:"2x2x2",orbits:[{orbitName:"SQUARES",numPieces:25,numOrientations:3}],defaultPattern:{SQUARES:{pieces:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24],orientation:l}},moves:{U:{SQUARES:{permutation:[1,2,3,4,0,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24],orientationDelta:l}},"2U":{SQUARES:{permutation:[0,1,2,3,4,6,7,8,9,5,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24],orientationDelta:l}},"3U":{SQUARES:{permutation:[0,1,2,3,4,5,6,7,8,9,11,12,13,14,10,15,16,17,18,19,20,21,22,23,24],orientationDelta:l}},"4U":{SQUARES:{permutation:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,16,17,18,19,15,20,21,22,23,24],orientationDelta:l}},"5U":{SQUARES:{permutation:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,21,22,23,24,20],orientationDelta:l}},R:{SQUARES:{permutation:[0,1,2,3,9,5,6,7,8,14,10,11,12,13,19,15,16,17,18,24,20,21,22,23,4],orientationDelta:l}},"2R":{SQUARES:{permutation:[0,1,2,8,4,5,6,7,13,9,10,11,12,18,14,15,16,17,23,19,20,21,22,3,24],orientationDelta:l}},"3R":{SQUARES:{permutation:[0,1,7,3,4,5,6,12,8,9,10,11,17,13,14,15,16,22,18,19,20,21,2,23,24],orientationDelta:l}},"4R":{SQUARES:{permutation:[0,6,2,3,4,5,11,7,8,9,10,16,12,13,14,15,21,17,18,19,20,1,22,23,24],orientationDelta:l}},"5R":{SQUARES:{permutation:[5,1,2,3,4,10,6,7,8,9,15,11,12,13,14,20,16,17,18,19,0,21,22,23,24],orientationDelta:l}}},derivedMoves:{L:"5R'","2L":"4R'","3L":"3R'","4L":"2R'","5L":"R'",D:"5U'","2D":"4U'","3D":"3U'","4D":"2U'","5D":"U'",E:"3D",M:"3L"}},e=`<?xml version="1.0" encoding="UTF-8"?>
+<svg width="600px" height="600px" viewBox="-50 -50 600 600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>3x3x3 LL</title>
+  <defs>
+    <g id="sticker">
+        <rect x="0" y="0" width="100" height="100" stroke="black" stroke-width="0.5px" />
+    </g>
+  </defs>
+  <g id="3x3x3-LL" stroke="none" stroke-width="4" style="none" stroke-linejoin="round">
+    <use id="SQUARES-l0-o0" href="#sticker" transform="translate( 00, 00)" style="fill: #E23424"/>
+    <use id="SQUARES-l1-o0" href="#sticker" transform="translate(100, 00)" style="fill: #AC2A3C"/>
+    <use id="SQUARES-l2-o0" href="#sticker" transform="translate(200, 00)" style="fill: #762668"/>
+    <use id="SQUARES-l3-o0" href="#sticker" transform="translate(300, 00)" style="fill: #412798"/>
+    <use id="SQUARES-l4-o0" href="#sticker" transform="translate(400, 00)" style="fill: #152DC9"/>
+
+    <use id="SQUARES-l5-o0" href="#sticker" transform="translate( 00,100)" style="fill: #E34F27"/>
+    <use id="SQUARES-l6-o0" href="#sticker" transform="translate(100,100)" style="fill: #AD4D3E"/>
+    <use id="SQUARES-l7-o0" href="#sticker" transform="translate(200,100)" style="fill: #794E6A"/>
+    <use id="SQUARES-l8-o0" href="#sticker" transform="translate(300,100)" style="fill: #485399"/>
+    <use id="SQUARES-l9-o0" href="#sticker" transform="translate(400,100)" style="fill: #2758CA"/>
+
+    <use id="SQUARES-l10-o0" href="#sticker" transform="translate( 00,200)" style="fill: #E67A30"/>
+    <use id="SQUARES-l11-o0" href="#sticker" transform="translate(100,200)" style="fill: #B17A44"/>
+    <use id="SQUARES-l12-o0" href="#sticker" transform="translate(200,200)" style="fill: #7F7B6D"/>
+    <use id="SQUARES-l13-o0" href="#sticker" transform="translate(300,200)" style="fill: #547F9B"/>
+    <use id="SQUARES-l14-o0" href="#sticker" transform="translate(400,200)" style="fill: #3B83CB"/>
+
+    <use id="SQUARES-l15-o0" href="#sticker" transform="translate( 00,300)" style="fill: #EAA93C"/>
+    <use id="SQUARES-l16-o0" href="#sticker" transform="translate(100,300)" style="fill: #B8A94C"/>
+    <use id="SQUARES-l17-o0" href="#sticker" transform="translate(200,300)" style="fill: #89AA72"/>
+    <use id="SQUARES-l18-o0" href="#sticker" transform="translate(300,300)" style="fill: #63AB9E"/>
+    <use id="SQUARES-l19-o0" href="#sticker" transform="translate(400,300)" style="fill: #50ADCD"/>
+
+    <use id="SQUARES-l20-o0" href="#sticker" transform="translate( 00,400)" style="fill: #F1DA49"/>
+    <use id="SQUARES-l21-o0" href="#sticker" transform="translate(100,400)" style="fill: #C1D957"/>
+    <use id="SQUARES-l22-o0" href="#sticker" transform="translate(200,400)" style="fill: #95D878"/>
+    <use id="SQUARES-l23-o0" href="#sticker" transform="translate(300,400)" style="fill: #74D7A2"/>
+    <use id="SQUARES-l24-o0" href="#sticker" transform="translate(400,400)" style="fill: #64D8D0"/>
+  </g>
+</svg>`,n={name:"redi_cube",orbits:[{orbitName:"EDGES",numPieces:12,numOrientations:2},{orbitName:"CORNERS",numPieces:8,numOrientations:3}],defaultPattern:{EDGES:{pieces:[0,1,2,3,4,5,6,7,8,9,10,11],orientation:[0,0,0,0,0,0,0,0,0,0,0,0]},CORNERS:{pieces:[0,1,2,3,4,5,6,7],orientation:[0,0,0,0,0,0,0,0]}},moves:{F:{EDGES:{permutation:[8,0,2,3,4,5,6,7,1,9,10,11],orientationDelta:[0,1,0,0,0,0,0,0,1,0,0,0]},CORNERS:{permutation:[0,1,2,3,4,5,6,7],orientationDelta:[1,0,0,0,0,0,0,0]}},x:{EDGES:{permutation:[4,8,0,9,6,10,2,11,5,7,1,3],orientationDelta:[1,0,1,0,1,0,1,0,0,0,0,0]},CORNERS:{permutation:[4,0,3,5,7,6,2,1],orientationDelta:[2,1,2,1,1,2,1,2]}},y:{EDGES:{permutation:[1,2,3,0,5,6,7,4,10,8,11,9],orientationDelta:[0,0,0,0,0,0,0,0,1,1,1,1]},CORNERS:{permutation:[1,2,3,0,7,4,5,6],orientationDelta:[0,0,0,0,0,0,0,0]}}},derivedMoves:{z:"[x: y]",UR:"[y: F]",U:"[y2: F]",UL:"[y': F]",D:"[x: F]",L:"[z2: F]",R:"[x2: F]",B:"[y2 x: F]"}},a=`<?xml version="1.0" encoding="UTF-8"?>
 <svg width="546px" height="418px" viewBox="-20 -20 546 418" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <title>redi-cube</title>
 <g istroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -319,43 +414,4 @@ var t=`<?xml version="1.0" encoding="UTF-8"?>
   </g>
 </g>
 </svg>
-`,l=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],e={name:"2x2x2",orbits:[{orbitName:"SQUARES",numPieces:25,numOrientations:3}],defaultPattern:{SQUARES:{pieces:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24],orientation:l}},moves:{U:{SQUARES:{permutation:[1,2,3,4,0,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24],orientationDelta:l}},"2U":{SQUARES:{permutation:[0,1,2,3,4,6,7,8,9,5,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24],orientationDelta:l}},"3U":{SQUARES:{permutation:[0,1,2,3,4,5,6,7,8,9,11,12,13,14,10,15,16,17,18,19,20,21,22,23,24],orientationDelta:l}},"4U":{SQUARES:{permutation:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,16,17,18,19,15,20,21,22,23,24],orientationDelta:l}},"5U":{SQUARES:{permutation:[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,21,22,23,24,20],orientationDelta:l}},R:{SQUARES:{permutation:[0,1,2,3,9,5,6,7,8,14,10,11,12,13,19,15,16,17,18,24,20,21,22,23,4],orientationDelta:l}},"2R":{SQUARES:{permutation:[0,1,2,8,4,5,6,7,13,9,10,11,12,18,14,15,16,17,23,19,20,21,22,3,24],orientationDelta:l}},"3R":{SQUARES:{permutation:[0,1,7,3,4,5,6,12,8,9,10,11,17,13,14,15,16,22,18,19,20,21,2,23,24],orientationDelta:l}},"4R":{SQUARES:{permutation:[0,6,2,3,4,5,11,7,8,9,10,16,12,13,14,15,21,17,18,19,20,1,22,23,24],orientationDelta:l}},"5R":{SQUARES:{permutation:[5,1,2,3,4,10,6,7,8,9,15,11,12,13,14,20,16,17,18,19,0,21,22,23,24],orientationDelta:l}}},derivedMoves:{L:"5R'","2L":"4R'","3L":"3R'","4L":"2R'","5L":"R'",D:"5U'","2D":"4U'","3D":"3U'","4D":"2U'","5D":"U'",E:"3D",M:"3L"}},n=`<?xml version="1.0" encoding="UTF-8"?>
-<svg width="600px" height="600px" viewBox="-50 -50 600 600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-  <title>3x3x3 LL</title>
-  <defs>
-    <g id="sticker">
-        <rect x="0" y="0" width="100" height="100" stroke="black" stroke-width="0.5px" />
-    </g>
-  </defs>
-  <g id="3x3x3-LL" stroke="none" stroke-width="4" style="none" stroke-linejoin="round">
-    <use id="SQUARES-l0-o0" href="#sticker" transform="translate( 00, 00)" style="fill: #E23424"/>
-    <use id="SQUARES-l1-o0" href="#sticker" transform="translate(100, 00)" style="fill: #AC2A3C"/>
-    <use id="SQUARES-l2-o0" href="#sticker" transform="translate(200, 00)" style="fill: #762668"/>
-    <use id="SQUARES-l3-o0" href="#sticker" transform="translate(300, 00)" style="fill: #412798"/>
-    <use id="SQUARES-l4-o0" href="#sticker" transform="translate(400, 00)" style="fill: #152DC9"/>
-
-    <use id="SQUARES-l5-o0" href="#sticker" transform="translate( 00,100)" style="fill: #E34F27"/>
-    <use id="SQUARES-l6-o0" href="#sticker" transform="translate(100,100)" style="fill: #AD4D3E"/>
-    <use id="SQUARES-l7-o0" href="#sticker" transform="translate(200,100)" style="fill: #794E6A"/>
-    <use id="SQUARES-l8-o0" href="#sticker" transform="translate(300,100)" style="fill: #485399"/>
-    <use id="SQUARES-l9-o0" href="#sticker" transform="translate(400,100)" style="fill: #2758CA"/>
-
-    <use id="SQUARES-l10-o0" href="#sticker" transform="translate( 00,200)" style="fill: #E67A30"/>
-    <use id="SQUARES-l11-o0" href="#sticker" transform="translate(100,200)" style="fill: #B17A44"/>
-    <use id="SQUARES-l12-o0" href="#sticker" transform="translate(200,200)" style="fill: #7F7B6D"/>
-    <use id="SQUARES-l13-o0" href="#sticker" transform="translate(300,200)" style="fill: #547F9B"/>
-    <use id="SQUARES-l14-o0" href="#sticker" transform="translate(400,200)" style="fill: #3B83CB"/>
-
-    <use id="SQUARES-l15-o0" href="#sticker" transform="translate( 00,300)" style="fill: #EAA93C"/>
-    <use id="SQUARES-l16-o0" href="#sticker" transform="translate(100,300)" style="fill: #B8A94C"/>
-    <use id="SQUARES-l17-o0" href="#sticker" transform="translate(200,300)" style="fill: #89AA72"/>
-    <use id="SQUARES-l18-o0" href="#sticker" transform="translate(300,300)" style="fill: #63AB9E"/>
-    <use id="SQUARES-l19-o0" href="#sticker" transform="translate(400,300)" style="fill: #50ADCD"/>
-
-    <use id="SQUARES-l20-o0" href="#sticker" transform="translate( 00,400)" style="fill: #F1DA49"/>
-    <use id="SQUARES-l21-o0" href="#sticker" transform="translate(100,400)" style="fill: #C1D957"/>
-    <use id="SQUARES-l22-o0" href="#sticker" transform="translate(200,400)" style="fill: #95D878"/>
-    <use id="SQUARES-l23-o0" href="#sticker" transform="translate(300,400)" style="fill: #74D7A2"/>
-    <use id="SQUARES-l24-o0" href="#sticker" transform="translate(400,400)" style="fill: #64D8D0"/>
-  </g>
-</svg>`;export{t as ftoSVG,o as kilominxSVG,e as loopoverJSON,n as loopoverSVG,s as rediCubeJSON,i as rediCubeSVG};
+`;export{t as babyFTOSVG,o as ftoSVG,s as kilominxSVG,i as loopoverJSON,e as loopoverSVG,n as rediCubeJSON,a as rediCubeSVG};

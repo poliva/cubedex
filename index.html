@@ -416,8 +416,15 @@
             <button id="reset-gyro" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Reset Gyro</button>
             <button id="device-info" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Device Info</button>
           </div>
+          <div class="flex flex-col gap-1 mt-3 text-sm sm:text-base">
+            <label for="smartcube-show-all-ble-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="smartcube-show-all-ble-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2">Show all Bluetooth devices when connecting</span>
+            </label>
+          </div>
         </div>
-
         <div class="flex items-center mb-4 text-sm sm:text-base">
             <label for="dark-mode-toggle" class="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" id="dark-mode-toggle" class="sr-only" />
