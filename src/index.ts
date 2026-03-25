@@ -26,7 +26,7 @@ import {
 } from 'smartcube-web-bluetooth';
 
 import { faceletsToPattern, patternToFacelets } from './utils';
-import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageOfFiveTimeNumber, learnedStatus, createTimeGraph, createStatsGraph, countMovesETM, getLastTimes } from './functions';
+import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageOfFiveTimeNumber, learnedStatus, createTimeGraph, createStatsGraph, countMovesETM, getLastTimes, trailingWholeCubeRotationMoveCount } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -575,44 +575,67 @@ async function handleMoveEvent(event: SmartCubeEvent) {
       myKpattern = await twistyTracker.experimentalModel.currentPattern.get();
       isBugged = true;
     }
-    previousFacelets = patternToFacelets(myKpattern);
 
     if (inputMode) {
+      previousFacelets = patternToFacelets(myKpattern);
       $('#alg-input').val(function(_, currentValue) {
         return Alg.fromString(currentValue + " " + lastMoves[lastMoves.length - 1].move).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString();
       });
       return;
     };
 
-    // Check if the current move matches the user's alg
+    // experimentalAddMove already updated the tracker; use it as the only post-move state (avoids
+    // double-apply when addFreshListener and myKpattern disagree on timing).
+    const trackerPattern = await twistyTracker.experimentalModel.currentPattern.get();
+    const patternAfterMove = trackerPattern;
+    const nextExpectedIdx = currentMoveIndex + 1;
+    myKpattern = trackerPattern;
+    previousFacelets = patternToFacelets(myKpattern);
+
+    // Check if the current move matches the user's alg (prefer the next sequential index so earlier
+    // patternStates that are identical do not steal the match after slice / sync quirks).
     var found: boolean = false;
-    patternStates.forEach((pattern, index) => {
-      if (myKpattern.applyMove(event.move).isIdentical(pattern) || (isBugged && myKpattern.isIdentical(pattern))) {
-        isBugged = false;
-        currentMoveIndex=index;
-        found = true;
-        badAlg = [];
-        if (currentMoveIndex === userAlg.length - 1){
-          setTimerState("STOPPED");
-          resetAlg();
-          fetchNextPatterns();
-          currentMoveIndex = userAlg.length - 1;
-
-          // Switch to next algorithm
-          switchToNextAlgorithm();
-
-          // this is the initial state for the new algorithm
-          initialstate = pattern;
-          keepInitialState = true;
-          if (checkedAlgorithms.length > 0) {
-            $('#alg-input').val(checkedAlgorithms[0].algorithm);
-          }
-          $('#train-alg').trigger('click');
-          return;
+    let matchedIndex: number | null = null;
+    if (nextExpectedIdx >= 0 && nextExpectedIdx < userAlg.length && patternAfterMove.isIdentical(patternStates[nextExpectedIdx])) {
+      matchedIndex = nextExpectedIdx;
+    } else {
+      patternStates.forEach((pattern, index) => {
+        if (matchedIndex !== null) return;
+        if (patternAfterMove.isIdentical(pattern)) {
+          matchedIndex = index;
         }
-        return;
+      });
+    }
+    if (matchedIndex !== null) {
+      const pattern = patternStates[matchedIndex];
+      isBugged = false;
+      currentMoveIndex = matchedIndex;
+      found = true;
+      badAlg = [];
+      const tailRotations = trailingWholeCubeRotationMoveCount(userAlg);
+      const lastLayerMoveIndex = userAlg.length - 1 - tailRotations;
+      const finishedIncludingIgnoredRotations =
+        tailRotations > 0 &&
+        lastLayerMoveIndex >= 0 &&
+        matchedIndex === lastLayerMoveIndex;
+      if (currentMoveIndex === userAlg.length - 1 || finishedIncludingIgnoredRotations) {
+        setTimerState("STOPPED");
+        resetAlg();
+        fetchNextPatterns();
+        currentMoveIndex = userAlg.length - 1;
+
+        // Switch to next algorithm
+        switchToNextAlgorithm();
+
+        // this is the initial state for the new algorithm
+        initialstate = pattern;
+        keepInitialState = true;
+        if (checkedAlgorithms.length > 0) {
+          $('#alg-input').val(checkedAlgorithms[0].algorithm);
+        }
+        $('#train-alg').trigger('click');
       }
-    });
+    }
     if (!found) {
       badAlg.push(event.move);
       //console.log("Pushing 1 incorrect move. badAlg: " + badAlg)

@@ -64,6 +64,18 @@ export function fixOrientation(pattern: KPattern) {
   return pattern;
 }
 
+/** Count of whole-cube rotations (x/y/z) at the end of the move list. Smart cubes never emit these as MOVE events. */
+export function trailingWholeCubeRotationMoveCount(moves: string[]): number {
+  let c = 0;
+  for (let i = moves.length - 1; i >= 0; i--) {
+    const raw = moves[i].replace(/[()]/g, '').trim();
+    if (!raw) continue;
+    if (/^[xyz](?:2'|2|')?$/i.test(raw)) c++;
+    else break;
+  }
+  return c;
+}
+
 export function getInverseMove(move: string): string {
   const inverseMoves: { [key: string]: string } = {
       'U': 'U\'', 'U\'': 'U',
