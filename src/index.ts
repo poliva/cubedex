@@ -1077,14 +1077,23 @@ function setTimerState(state: typeof timerState) {
       $('#train-alg').html('<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 32 32"><path d="M8 8h16v16H8z"/></svg>');
       break;
     case 'STOPPED':
-      let finalTime = currentTimerValue;
+      const localElapsed = currentTimerValue;
       stopLocalTimer();
+      let finalTime = localElapsed;
       let stoppedcolor = darkModeToggle.checked ? '#ccc' : '#333';
       $('#timer').css('color', stoppedcolor);
       if (conn) {
         var fittedMoves = cubeTimestampLinearFit(solutionMoves);
         var lastMove = fittedMoves.slice(-1).pop();
-        finalTime = lastMove ? lastMove.cubeTimestamp! : 0;
+        const fitted =
+          lastMove != null &&
+          lastMove.cubeTimestamp != null &&
+          Number.isFinite(lastMove.cubeTimestamp)
+            ? lastMove.cubeTimestamp
+            : 0;
+        if (fitted > 0) {
+          finalTime = fitted;
+        }
       }
       setTimerValue(finalTime);
       $('#train-alg').html('<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>');
