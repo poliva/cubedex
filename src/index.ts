@@ -7,7 +7,6 @@ import { TwistyPlayer } from 'cubing/twisty';
 import { Alg } from "cubing/alg";
 import { cube3x3x3 } from "cubing/puzzles";
 import { KPattern } from 'cubing/kpuzzle';
-import { experimentalSolve3x3x3IgnoringCenters } from 'cubing/search';
 import min2phase from './lib/min2phase';
 
 min2phase.initFull();
@@ -697,18 +696,33 @@ function switchToNextAlgorithm() {
 }
 
 var cubeStateInitialized = false;
-async function handleFaceletsEvent(event: SmartCubeEvent) {
+
+/** Solution alg from current 3×3 pattern to solved (min2phase + fixOrientation). */
+function solutionAlgFrom333Pattern(pattern: KPattern): Alg | null {
+  const oriented = fixOrientation(pattern);
+  const faceCube = patternToFacelets(oriented);
+  const solvedStr = min2phase.solve(faceCube);
+  if (solvedStr.startsWith('Error')) {
+    console.warn('min2phase solve failed:', solvedStr);
+    return null;
+  }
+  return Alg.fromString(expandNotation(solvedStr.trim()).replace(/[()]/g, ''));
+}
+
+function handleFaceletsEvent(event: SmartCubeEvent) {
   if (event.type == "FACELETS" && !cubeStateInitialized) {
     if (event.facelets != SOLVED_STATE) {
-      var kpattern = faceletsToPattern(event.facelets);
-      var solution = await experimentalSolve3x3x3IgnoringCenters(kpattern);
-      var scramble = solution.invert();
-      twistyTracker.alg = scramble;
-      twistyPlayer.alg = scramble;
+      const kpattern = faceletsToPattern(event.facelets);
+      const solution = solutionAlgFrom333Pattern(kpattern);
+      if (solution) {
+        twistyTracker.alg = solution.invert();
+      } else {
+        twistyTracker.alg = '';
+      }
     } else {
       twistyTracker.alg = '';
-      twistyPlayer.alg = '';
     }
+    applyWhiteOnBottomState({ persist: false });
     cubeStateInitialized = true;
     console.log("Initial cube state is applied successfully", event.facelets);
   }
@@ -1321,10 +1335,9 @@ $('#scramble-to').on('click', () => {
       resetAlg();
       $('#alg-scramble').show();
       $('#alg-scramble').text(scramble);
-      // draw real cube state
+      // draw real cube state (mirror tracker; applyWhiteOnBottomState applies z2 + alg together)
       if (conn) {
-        var solution = await experimentalSolve3x3x3IgnoringCenters(cubePattern);
-        twistyPlayer.alg = solution.invert();
+        applyWhiteOnBottomState({ persist: false });
       }
     } else {
       scrambleMode = false;
@@ -1639,6 +1652,11 @@ function applyWhiteOnBottomState(options?: { persist?: boolean }) {
     localStorage.setItem('whiteOnBottom', whiteOnBottomEnabled.toString());
   }
   twistyPlayer.experimentalSetupAlg = whiteOnBottomEnabled ? 'z2' : '';
+  if (conn) {
+    void twistyTracker.experimentalGet.alg().then((alg) => {
+      twistyPlayer.alg = alg.toString();
+    }).catch((err) => console.warn('twisty alg sync failed', err));
+  }
 }
 
 function updateWhiteOnBottomAvailability() {
