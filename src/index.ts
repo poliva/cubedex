@@ -867,6 +867,7 @@ $('#header-reset-gyro').on('click', async () => {
 
 function deviceDisconnected() {
   conn = null;
+  cubeStateInitialized = false;
   twistyPlayer.alg = '';
   twistyTracker.alg = '';
   releaseWakeLock();
@@ -888,6 +889,9 @@ $('#connect-button').on('click', async () => {
   }
   if (connectInFlight) {
     connectAbort?.abort();
+    $('#connect').html('Connect');
+    connectInFlight = false;
+    connectAbort = null;
     return;
   }
 
@@ -908,8 +912,11 @@ $('#connect-button').on('click', async () => {
       },
     });
   } catch (e) {
-    if (!connectAbort.signal.aborted) {
+    const aborted = e instanceof DOMException && e.name === 'AbortError';
+    if (!aborted) {
       console.error(e);
+      const msg = e instanceof Error ? e.message : String(e);
+      window.alert(msg);
     }
     $('#connect').html('Connect');
   } finally {
