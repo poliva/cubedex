@@ -10,6 +10,13 @@ import { Chart, registerables } from 'chart.js';
 // Register the components needed for Chart.js
 Chart.register(...registerables);
 
+/** Main cube uses full stickering until the user changes category or selects an algorithm (then category stickering applies when full-stickering is off). */
+let categoryStickeringDeferred = true;
+
+export function setCategoryStickeringDeferred(deferred: boolean) {
+  categoryStickeringDeferred = deferred;
+}
+
 export function expandNotation(input: string): string {
   // Replace characters
   let output = input.replace(/["´`‘]/g, "'")  // Replace " ´ ` ‘ with '
@@ -336,9 +343,11 @@ export function setStickering(category: string): string {
       }
     }
 
-    // Set experimentalStickering if a match was found
+    // Main cube: full until user changes category or picks an alg; list previews still use category stickering.
     if (twistyPlayer) {
-      if (matchedStickering) {
+      if (categoryStickeringDeferred) {
+        twistyPlayer.experimentalStickering = 'full';
+      } else if (matchedStickering) {
         twistyPlayer.experimentalStickering = matchedStickering;
       } else {
         matchedStickering = 'full';

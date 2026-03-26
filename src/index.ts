@@ -25,7 +25,7 @@ import {
 } from 'smartcube-web-bluetooth';
 
 import { faceletsToPattern, patternToFacelets } from './utils';
-import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageOfFiveTimeNumber, learnedStatus, createTimeGraph, createStatsGraph, countMovesETM, getLastTimes, trailingWholeCubeRotationMoveCount } from './functions';
+import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, setCategoryStickeringDeferred, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageOfFiveTimeNumber, learnedStatus, createTimeGraph, createStatsGraph, countMovesETM, getLastTimes, trailingWholeCubeRotationMoveCount } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -1186,6 +1186,8 @@ $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
   const name = $(this).data('name');
   const bestTime = $(this).data('best');
   if ((this as HTMLInputElement).checked) {
+    setCategoryStickeringDeferred(false);
+    setStickering($('#category-select').val()?.toString() || '');
     const currentAlg: Algorithm = { algorithm, name, bestTime };
     if (prioritizeSlowAlgs) {
       const index = (!bestTime)
@@ -1406,6 +1408,7 @@ function resetDrill() {
 // Event listener for Category select change
 $('#category-select').on('change', () => {
   const category = $('#category-select').val()?.toString();
+  setCategoryStickeringDeferred(false);
   if (category) {
     loadSubsets(category);
   }
