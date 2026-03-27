@@ -121,13 +121,14 @@ var solutionMoves: SmartCubeMove[] = [];
 var twistyPuzzleObject: THREE.Object3D | null = null;
 var twistyVantage: any;
 
-const HOME_ORIENTATION = new THREE.Quaternion().setFromEuler(new THREE.Euler(15 * Math.PI / 180, -20 * Math.PI / 180, 0));
-var cubeQuaternion: THREE.Quaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(30 * Math.PI / 180, -30 * Math.PI / 180, 0));
+const HOME_ORIENTATION = new THREE.Quaternion().setFromEuler(new THREE.Euler(15 * Math.PI / 180, -5 * Math.PI / 180, 0));
+var cubeQuaternion: THREE.Quaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(15 * Math.PI / 180, -20 * Math.PI / 180, 0));
+
+const DR_LOCK_ORIENTATION = new THREE.Quaternion().setFromEuler(
+  new THREE.Euler(15 * Math.PI / 180, -20 * Math.PI / 180, 0)
+);
 
 async function amimateCubeOrientation() {
-  if (!gyroscopeEnabled) {
-    return;
-  }
   if (!twistyPuzzleObject || !twistyVantage || forceFix) {
     const vantageList = await twistyPlayer.experimentalCurrentVantages();
     twistyVantage = [...vantageList][0];
@@ -140,7 +141,11 @@ async function amimateCubeOrientation() {
   }
 
   // If no 3D object is available (e.g. 2D visualization), avoid crashing.
-  twistyPuzzleObject?.quaternion.slerp(cubeQuaternion, 0.25);
+  if (gyroscopeEnabled) {
+    twistyPuzzleObject?.quaternion.slerp(cubeQuaternion, 0.25);
+  } else {
+    twistyPuzzleObject?.quaternion.slerp(DR_LOCK_ORIENTATION, 0.25);
+  }
 
   // Trigger a render if the vantage supports it.
   twistyVantage?.render?.();
@@ -156,6 +161,9 @@ function resetGyroBasis() {
 
 async function handleGyroEvent(event: SmartCubeEvent) {
   if (event.type == "GYRO") {
+    if (conn?.capabilities.gyroscope && gyroscopeToggle.disabled) {
+      setGyroscopeUiFromSupported(true);
+    }
     let { x: qx, y: qy, z: qz, w: qw } = event.quaternion;
     let quat = new THREE.Quaternion(qx, qz, -qy, qw).normalize();
     if (!basis) {
@@ -184,6 +192,7 @@ var scrambleMode: boolean = false;
 function resetAlg() {
   currentMoveIndex = -1; // Reset the move index
   badAlg = [];
+  sliceOrientation = { ...IDENTITY };
   hideMistakes();
 }
 
@@ -480,10 +489,128 @@ let keepInitialState: boolean = false;
 let previousFacelets: string = '';
 let isBugged = false;
 
+const SLICE_PAIR_MAP: Record<string, string> = {
+  "R' L": "M'", "L R'": "M'",
+  "R L'": "M", "L' R": "M",
+  "R2 L2": "M2", "L2 R2": "M2",
+  "F' B": "S", "B F'": "S",
+  "F B'": "S'", "B' F": "S'",
+  "F2 B2": "S2", "B2 F2": "S2",
+  "D' U": "E", "U D'": "E",
+  "D U'": "E'", "U' D": "E'",
+  "D2 U2": "E2", "U2 D2": "E2",
+};
+
+function isSliceCandidate(move: string): boolean {
+  return 'RLFBUD'.includes(move.charAt(0));
+}
+
+function getSliceForPair(move1: string, move2: string): string | null {
+  return SLICE_PAIR_MAP[move1 + ' ' + move2] || null;
+}
+
+let sliceBuffer: { event: SmartCubeEvent; timer: ReturnType<typeof setTimeout> } | null = null;
+
+type Face = 'U' | 'D' | 'F' | 'B' | 'R' | 'L';
+type FacePerm = Record<Face, Face>;
+const FACES: Face[] = ['U', 'D', 'F', 'B', 'R', 'L'];
+const IDENTITY: FacePerm = { U:'U', D:'D', F:'F', B:'B', R:'R', L:'L' };
+
+function composePerm(a: FacePerm, b: FacePerm): FacePerm {
+  const r = {} as FacePerm;
+  for (const f of FACES) r[f] = b[a[f]];
+  return r;
+}
+function invertPerm(p: FacePerm): FacePerm {
+  const r = {} as FacePerm;
+  for (const f of FACES) r[p[f]] = f;
+  return r;
+}
+
+const ROT_X: FacePerm  = { U:'F', F:'D', D:'B', B:'U', R:'R', L:'L' };
+const ROT_X2: FacePerm = composePerm(ROT_X, ROT_X);
+const ROT_XI: FacePerm = invertPerm(ROT_X);
+const ROT_Y: FacePerm  = { F:'R', R:'B', B:'L', L:'F', U:'U', D:'D' };
+const ROT_Y2: FacePerm = composePerm(ROT_Y, ROT_Y);
+const ROT_YI: FacePerm = invertPerm(ROT_Y);
+const ROT_Z: FacePerm  = { U:'R', R:'D', D:'L', L:'U', F:'F', B:'B' };
+const ROT_Z2: FacePerm = composePerm(ROT_Z, ROT_Z);
+const ROT_ZI: FacePerm = invertPerm(ROT_Z);
+
+const SLICE_ROTATION: Record<string, FacePerm> = {
+  "M'": ROT_X, "M": ROT_XI, "M2": ROT_X2,
+  "S": ROT_ZI, "S'": ROT_Z,  "S2": ROT_Z2,
+  "E": ROT_YI, "E'": ROT_Y,  "E2": ROT_Y2,
+};
+
+let sliceOrientation: FacePerm = { ...IDENTITY };
+
+function updateSliceOrientation(sliceMove: string) {
+  const rot = SLICE_ROTATION[sliceMove];
+  if (rot) sliceOrientation = composePerm(sliceOrientation, rot);
+}
+
+function remapMoveForPlayer(move: string): string {
+  const face = move.charAt(0) as Face;
+  if (!FACES.includes(face)) return move;
+  const inv = invertPerm(sliceOrientation);
+  const mapped = inv[face];
+  return mapped === face ? move : mapped + move.slice(1);
+}
+
 async function handleMoveEvent(event: SmartCubeEvent) {
+  if (event.type !== "MOVE") return;
+
+  if (!gyroscopeEnabled) {
+    const moveStr = event.move;
+    if (isSliceCandidate(moveStr)) {
+      if (sliceBuffer) {
+        clearTimeout(sliceBuffer.timer);
+        const bufferedEvent = sliceBuffer.event;
+        sliceBuffer = null;
+        const bufferedMove = bufferedEvent.type === "MOVE" ? bufferedEvent.move : '';
+        const sliceMove = getSliceForPair(bufferedMove, moveStr);
+        if (sliceMove) {
+          twistyTracker.experimentalAddMove(bufferedMove, { cancel: false });
+          return processMoveEvent(event, sliceMove, bufferedEvent);
+        } else {
+          await processMoveEvent(bufferedEvent);
+          return processMoveEvent(event);
+        }
+      } else {
+        sliceBuffer = {
+          event,
+          timer: setTimeout(() => {
+            if (sliceBuffer) {
+              const ev = sliceBuffer.event;
+              sliceBuffer = null;
+              processMoveEvent(ev);
+            }
+          }, 100),
+        };
+        return;
+      }
+    }
+    if (sliceBuffer) {
+      clearTimeout(sliceBuffer.timer);
+      const bufferedEvent = sliceBuffer.event;
+      sliceBuffer = null;
+      await processMoveEvent(bufferedEvent);
+    }
+  }
+
+  return processMoveEvent(event);
+}
+
+async function processMoveEvent(event: SmartCubeEvent, visualMove?: string, slicePairedFirst?: SmartCubeEvent) {
   if (event.type === "MOVE") {
 
-    twistyPlayer.experimentalAddMove(event.move, { cancel: false });
+    if (visualMove) {
+      updateSliceOrientation(visualMove);
+      twistyPlayer.experimentalAddMove(visualMove, { cancel: false });
+    } else {
+      twistyPlayer.experimentalAddMove(remapMoveForPlayer(event.move), { cancel: false });
+    }
     twistyTracker.experimentalAddMove(event.move, { cancel: false });
 
     if (scrambleMode) {
@@ -537,6 +664,19 @@ async function handleMoveEvent(event: SmartCubeEvent) {
     if (timerState === "STOPPED") {
       setTimerState("RUNNING");
     }
+    if (slicePairedFirst?.type === "MOVE") {
+      const firstData: SmartCubeMove = {
+        face: slicePairedFirst.face,
+        direction: slicePairedFirst.direction,
+        move: slicePairedFirst.move,
+        localTimestamp: slicePairedFirst.localTimestamp,
+        cubeTimestamp: slicePairedFirst.cubeTimestamp,
+      };
+      lastMoves.push(firstData);
+      if (timerState === "RUNNING") {
+        solutionMoves.push(firstData);
+      }
+    }
     const moveData: SmartCubeMove = {
       face: event.face,
       direction: event.direction,
@@ -565,8 +705,12 @@ async function handleMoveEvent(event: SmartCubeEvent) {
 
     if (inputMode) {
       previousFacelets = patternToFacelets(myKpattern);
+      const appended =
+        slicePairedFirst?.type === "MOVE"
+          ? slicePairedFirst.move + " " + event.move
+          : lastMoves[lastMoves.length - 1].move;
       $('#alg-input').val(function(_, currentValue) {
-        return Alg.fromString(currentValue + " " + lastMoves[lastMoves.length - 1].move).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString();
+        return Alg.fromString(currentValue + " " + appended).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString();
       });
       return;
     };
@@ -624,6 +768,9 @@ async function handleMoveEvent(event: SmartCubeEvent) {
       }
     }
     if (!found) {
+      if (slicePairedFirst?.type === "MOVE") {
+        badAlg.push(slicePairedFirst.move);
+      }
       badAlg.push(event.move);
       //console.log("Pushing 1 incorrect move. badAlg: " + badAlg)
 
@@ -699,6 +846,7 @@ function solutionAlgFrom333Pattern(pattern: KPattern): Alg | null {
 
 function handleFaceletsEvent(event: SmartCubeEvent) {
   if (event.type == "FACELETS" && !cubeStateInitialized) {
+    sliceOrientation = { ...IDENTITY };
     if (event.facelets != SOLVED_STATE) {
       const kpattern = faceletsToPattern(event.facelets);
       const solution = solutionAlgFrom333Pattern(kpattern);
@@ -740,7 +888,7 @@ function handleCubeEvent(event: SmartCubeEvent) {
     $('#hardwareVersion').val(event.hardwareVersion || '- n/a -');
     $('#softwareVersion').val(event.softwareVersion || '- n/a -');
     $('#productDate').val(event.productDate || '- n/a -');
-    $('#gyroSupported').val(event.gyroSupported ? "YES" : "NO");
+    setGyroscopeUiFromSupported(event.gyroSupported === true);
   } else if (event.type == "BATTERY") {
     $('#batteryLevel').val(event.batteryLevel + '%');
     $('#bluetooth-indicator').hide();
@@ -874,6 +1022,7 @@ function deviceDisconnected() {
   $('#device-info').prop('disabled', true);
   updateHeaderResetGyroState();
   $('.info input').val('- n/a -');
+  setGyroscopeToggleDisabled(false);
   $('#connect').html('Connect');
   $('#battery-indicator').hide();
   $('#bluetooth-indicator').show();
@@ -937,6 +1086,9 @@ $('#connect-button').on('click', async () => {
   }
   $('#deviceName').val(conn.deviceName);
   $('#deviceMAC').val(conn.deviceMAC);
+  if (!conn.capabilities.hardware) {
+    setGyroscopeUiFromSupported(conn.capabilities.gyroscope);
+  }
   $('#connect').html('Disconnect');
   $('#bluetooth-indicator').hide();
   $('#battery-indicator').show();
@@ -1590,11 +1742,29 @@ function loadConfiguration() {
 // Add event listener for the gyroscope toggle
 var gyroscopeEnabled: boolean = true;
 const gyroscopeToggle = document.getElementById('gyroscope-toggle') as HTMLInputElement;
-gyroscopeToggle.addEventListener('change', () => {
-  gyroscopeEnabled = gyroscopeToggle.checked;
-  localStorage.setItem('gyroscope', gyroscopeEnabled ? 'enabled' : 'disabled');
+
+function applyGyroscopeEnabled(enabled: boolean) {
+  gyroscopeEnabled = enabled;
+  gyroscopeToggle.checked = enabled;
+  sliceOrientation = { ...IDENTITY };
+  localStorage.setItem('gyroscope', enabled ? 'enabled' : 'disabled');
   requestAnimationFrame(amimateCubeOrientation);
   updateHeaderResetGyroState();
+}
+
+function setGyroscopeToggleDisabled(disabled: boolean) {
+  gyroscopeToggle.disabled = disabled;
+}
+
+/** Sync device info field, animation toggle, and whether the toggle can be edited (off + disabled when no gyro). */
+function setGyroscopeUiFromSupported(supported: boolean) {
+  $('#gyroSupported').val(supported ? 'YES' : 'NO');
+  applyGyroscopeEnabled(supported);
+  setGyroscopeToggleDisabled(!supported);
+}
+
+gyroscopeToggle.addEventListener('change', () => {
+  applyGyroscopeEnabled(gyroscopeToggle.checked);
 });
 
 // Add event listener for the control panel toggle
