@@ -56,14 +56,28 @@ export function expandNotation(input: string): string {
 }
 
 export function fixOrientation(pattern: KPattern) {
-  if (JSON.stringify(pattern.patternData["CENTERS"].pieces) === JSON.stringify([0, 1, 2, 3, 4, 5])) {
+  const SOLVED_CENTERS = JSON.stringify([0, 1, 2, 3, 4, 5]);
+  if (JSON.stringify(pattern.patternData["CENTERS"].pieces) === SOLVED_CENTERS) {
     return pattern;
   }
-  for (const letter of ['x', 'y', 'z']) {
-    let result = pattern;
-    for (let i = 0; i < 4; i++) {
-      result = result.applyAlg(letter);
-      if (JSON.stringify(result.patternData["CENTERS"].pieces) === JSON.stringify([0, 1, 2, 3, 4, 5])) {
+  // Try all 24 orientations: for each of the 6 faces that can point up (4 x-rotations
+  // including identity), try 4 y-rotations.
+  for (let xi = 0; xi < 4; xi++) {
+    for (let yi = 0; yi < 4; yi++) {
+      if (xi === 0 && yi === 0) continue;
+      const alg = 'x '.repeat(xi).trim() + (xi && yi ? ' ' : '') + 'y '.repeat(yi).trim();
+      const result = pattern.applyAlg(alg);
+      if (JSON.stringify(result.patternData["CENTERS"].pieces) === SOLVED_CENTERS) {
+        return result;
+      }
+    }
+  }
+  // Also try z-based orientations for faces not reachable by x+y alone
+  for (const zAlg of ['z', 'z z', 'z z z']) {
+    for (let yi = 0; yi < 4; yi++) {
+      const alg = zAlg + (yi ? ' ' + 'y '.repeat(yi).trim() : '');
+      const result = pattern.applyAlg(alg);
+      if (JSON.stringify(result.patternData["CENTERS"].pieces) === SOLVED_CENTERS) {
         return result;
       }
     }
