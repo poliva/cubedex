@@ -16,6 +16,7 @@ import * as THREE from 'three';
 import {
   now,
   connectSmartCube,
+  getCachedMacForDevice,
   SmartCubeConnection,
   SmartCubeEvent,
   MacAddressProvider,
@@ -64,7 +65,6 @@ $('#cube').append(twistyPlayer);
 
 var conn: SmartCubeConnection | null;
 
-const LAST_CONNECTED_DEVICE_NAME_KEY = 'lastConnectedDeviceName';
 const SMARTCUBE_DEVICE_SELECTION_KEY = 'smartcubeDeviceSelection';
 
 function storedSmartCubeDeviceSelection(): 'filtered' | 'any' {
@@ -79,18 +79,6 @@ window.addEventListener('pagehide', () => {
     connectAbort?.abort();
   }
 });
-
-function storedDeviceNameForPicker(): string | undefined {
-  const raw = localStorage.getItem(LAST_CONNECTED_DEVICE_NAME_KEY);
-  if (!raw) {
-    return undefined;
-  }
-  const t = raw.trim();
-  if (!t || t === '- n/a -') {
-    return undefined;
-  }
-  return t;
-}
 
 let cubeSizePx: number = 400;
 
@@ -779,11 +767,7 @@ function handleCubeEvent(event: SmartCubeEvent) {
 }
 
 const customMacAddressProvider: MacAddressProvider = async (device, isFallbackCall): Promise<string | null> => {
-  const lastConnectedMAC = localStorage.getItem('lastConnectedDeviceMAC') || '';
-  const storedName = localStorage.getItem(LAST_CONNECTED_DEVICE_NAME_KEY)?.trim() ?? '';
-  const currentName = device.name?.trim() ?? '';
-  const promptDefault =
-    storedName.length > 0 && currentName.length > 0 && storedName === currentName ? lastConnectedMAC : '';
+  const promptDefault = getCachedMacForDevice(device) ?? '';
   if (isFallbackCall) {
     return prompt(`Unable to determine cube MAC address!\nPlease enter MAC address manually:`, promptDefault);
   } else {
@@ -911,7 +895,6 @@ $('#connect-button').on('click', async () => {
 
   connectAbort = new AbortController();
   connectInFlight = true;
-  const deviceNameOpt = storedDeviceNameForPicker();
 
   let newConn: SmartCubeConnection | undefined;
   try {
@@ -919,7 +902,6 @@ $('#connect-button').on('click', async () => {
       macAddressProvider: customMacAddressProvider,
       enableAddressSearch: true,
       deviceSelection: storedSmartCubeDeviceSelection(),
-      ...(deviceNameOpt ? { deviceName: deviceNameOpt } : {}),
       signal: connectAbort.signal,
       onStatus: (msg) => {
         $('#connect').html(msg);
@@ -952,11 +934,6 @@ $('#connect-button').on('click', async () => {
   }
   if (conn.capabilities.battery) {
     await conn.sendCommand({ type: "REQUEST_BATTERY" });
-  }
-  localStorage.setItem('lastConnectedDeviceMAC', conn.deviceMAC);
-  const name = conn.deviceName.trim();
-  if (name) {
-    localStorage.setItem(LAST_CONNECTED_DEVICE_NAME_KEY, name);
   }
   $('#deviceName').val(conn.deviceName);
   $('#deviceMAC').val(conn.deviceMAC);
