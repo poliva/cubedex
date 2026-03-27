@@ -1478,11 +1478,11 @@ $('#confirm-save').on('click', () => {
 });
 
 function getScrambleToSolution(alg: string, state: KPattern) {
-  let faceCube = patternToFacelets(state);
+  let faceCube = patternToFacelets(fixOrientation(state));
   var solvedcube = min2phase.solve(faceCube);
   let inverseAlg = Alg.fromString(expandNotation(alg).replace(/[()]/g, '')).invert();
   let finalState = Alg.fromString(solvedcube + ' ' + inverseAlg.toString()).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 });
-  let scramble = Alg.fromString(min2phase.solve(patternToFacelets(faceletsToPattern(SOLVED_STATE).applyAlg(finalState)))).invert();
+  let scramble = Alg.fromString(min2phase.solve(patternToFacelets(fixOrientation(faceletsToPattern(SOLVED_STATE).applyAlg(finalState))))).invert();
   let result = scramble.experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString().trim();
   return result;
 }
