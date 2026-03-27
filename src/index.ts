@@ -418,12 +418,25 @@ function updateAlgDisplay() {
         const isSingleBadAlg = simplifiedBadAlg.length === 1;
         const isDoubleBadAlg = simplifiedBadAlg.length === 2;
         const isTripleBadAlg = simplifiedBadAlg.length === 3;
-        // when we have a U2 on an alg that contains slices or wide moves, the U turn is not really a U, but a different move depending on the orientation of the cube
-        // TODO: this is could be done better by checking the center state, but it works for now
-        const isSliceOrWideMove = /[MESudlrbfxyz]/.test(userAlg.slice(0, currentMoveIndex + 1).join(' '));
+        const rawExpected = cleanMove[0];
+        const expectedFace = rawExpected.toUpperCase();
+        const isWideMove = rawExpected >= 'a' && rawExpected <= 'z';
+        const OPPOSITE_FACE: Record<string,string> = {R:'L',L:'R',U:'D',D:'U',F:'B',B:'F'};
+        let localOrientation: FacePerm = { ...IDENTITY };
+        for (let i = 0; i <= currentMoveIndex; i++) {
+          const m = userAlg[i].replace(/[()]/g, '').trim();
+          const rot = SLICE_ROTATION[m];
+          if (rot) localOrientation = composePerm(localOrientation, rot);
+        }
+        const inv = invertPerm(localOrientation);
+        const remappedBadFace = FACES.includes(simplifiedBadAlg[0]?.[0] as Face)
+          ? inv[simplifiedBadAlg[0][0] as Face]
+          : simplifiedBadAlg[0]?.[0];
+        const badFace = simplifiedBadAlg[0]?.[0];
+        const faceMatch = badFace === expectedFace || remappedBadFace === expectedFace
+          || (isWideMove && (badFace === OPPOSITE_FACE[expectedFace] || remappedBadFace === OPPOSITE_FACE[expectedFace]));
 
-        if ((isSingleBadAlg && simplifiedBadAlg[0][0] === cleanMove[0]) ||
-            (isSingleBadAlg && isSliceOrWideMove) ||
+        if ((isSingleBadAlg && faceMatch) ||
             (isDoubleBadAlg && 'MES'.includes(cleanMove[0])) ||
             (isTripleBadAlg && 'MES'.includes(cleanMove[0]))) {
             color = 'blue';
@@ -541,6 +554,15 @@ const SLICE_ROTATION: Record<string, FacePerm> = {
   "M'": ROT_X, "M": ROT_XI, "M2": ROT_X2,
   "S": ROT_ZI, "S'": ROT_Z,  "S2": ROT_Z2,
   "E": ROT_YI, "E'": ROT_Y,  "E2": ROT_Y2,
+  "r": ROT_X,  "r'": ROT_XI, "r2": ROT_X2,
+  "l": ROT_XI, "l'": ROT_X,  "l2": ROT_X2,
+  "u": ROT_Y,  "u'": ROT_YI, "u2": ROT_Y2,
+  "d": ROT_YI, "d'": ROT_Y,  "d2": ROT_Y2,
+  "f": ROT_ZI, "f'": ROT_Z,  "f2": ROT_Z2,
+  "b": ROT_Z,  "b'": ROT_ZI, "b2": ROT_Z2,
+  "x": ROT_X,  "x'": ROT_XI, "x2": ROT_X2,
+  "y": ROT_Y,  "y'": ROT_YI, "y2": ROT_Y2,
+  "z": ROT_ZI, "z'": ROT_Z,  "z2": ROT_Z2,
 };
 
 let sliceOrientation: FacePerm = { ...IDENTITY };
