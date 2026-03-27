@@ -9,21 +9,21 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@types/node": "^22.7.4",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.45",
-    "tailwindcss": "^3.4.10",
-    "typescript": "^5.5.4",
-    "vite": "^7.0.0",
+    "@types/node": "^22.19.15",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
     "vite-plugin-pwa": "^1.2.0"
   },
   "dependencies": {
-    "@types/jquery": "^3.5.30",
+    "@types/jquery": "^3.5.34",
     "@types/web-bluetooth": "^0.0.20",
-    "chart.js": "^4.4.5",
+    "chart.js": "^4.5.1",
     "cubing": "^0.63.3",
     "jquery": "^3.7.1",
-    "rxjs": "^7.8.1",
+    "rxjs": "^7.8.2",
     "smartcube-web-bluetooth": "github:poliva/smartcube-web-bluetooth"
   },
   "overrides": {
