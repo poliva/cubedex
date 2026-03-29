@@ -938,12 +938,20 @@ function handleCubeEvent(event: SmartCubeEvent) {
 
 const customMacAddressProvider: MacAddressProvider = async (device, isFallbackCall): Promise<string | null> => {
   const promptDefault = getCachedMacForDevice(device) ?? '';
-  if (isFallbackCall) {
-    return prompt(`Unable to determine cube MAC address!\nPlease enter MAC address manually:`, promptDefault);
-  } else {
-    return typeof device.watchAdvertisements == 'function' ? null :
-      prompt(`Seems like your browser does not support Web Bluetooth watchAdvertisements() API. Enable following flag in Chrome:\n\nchrome://flags/#enable-experimental-web-platform-features\n\nor enter cube MAC address manually:`, promptDefault);
+  if (!isFallbackCall) {
+    // Let the library try cache, request-device advertisement data, waitForAdvertisements,
+    // and MoYu32/QiYi MAC candidate probing (enableAddressSearch) first. Prompting here when
+    // watchAdvertisements is missing was redundant: those paths often succeed without it.
+    return null;
   }
+  const flagHint =
+    typeof device.watchAdvertisements !== 'function'
+      ? `\n\nOn Chrome, automatic discovery may work if you enable\nchrome://flags/#enable-experimental-web-platform-features`
+      : '';
+  return prompt(
+    `Unable to determine cube MAC address!\nPlease enter MAC address manually:${flagHint}`,
+    promptDefault
+  );
 };
 
 $('#alg-display').on('click', () => {
