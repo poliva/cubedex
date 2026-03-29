@@ -1,0 +1,101 @@
+[
+  {
+    "subset": "Adjacent Corners",
+    "algorithms": [
+      {
+        "name": "T Perm",
+        "algorithm": "(R U R' U') (R' F R2) (U' R' U') (R U R' F')"
+      },
+      {
+        "name": "Aa Perm",
+        "algorithm": "x (R' U R') D2 (R U' R') D2 R2 x'"
+      },
+      {
+        "name": "Ab Perm",
+        "algorithm": "x R2 D2 (R U R') D2 (R U' R) x'"
+      },
+      {
+        "name": "Ja Perm",
+        "algorithm": "(R' U L' U2) (R U' R' U2) R L"
+      },
+      {
+        "name": "Jb Perm",
+        "algorithm": "(R U R' F') (R U R' U') R' F R2 U' R'"
+      },
+      {
+        "name": "F Perm",
+        "algorithm": "(R' U' F') (R U R' U') (R' F R2) (U' R' U') (R U R') U R"
+      },
+      {
+        "name": "Ra Perm",
+        "algorithm": "(R U' R' U') (R U R) D (R' U' R) D' (R' U2 R')"
+      },
+      {
+        "name": "Rb Perm",
+        "algorithm": "R2' F R (U R U' R') F' (R U2' R') U2 R"
+      },
+      {
+        "name": "Ga Perm",
+        "algorithm": "R2 U (R' U R' U') (R U' R2) D+U' (R' U R D')"
+      },
+      {
+        "name": "Gb Perm",
+        "algorithm": "(R' U' R) U+D' (R2 U R' U) (R U' R U') R2' D"
+      },
+      {
+        "name": "Gc Perm",
+        "algorithm": "(R2' U' R U') (R U R' U) (R2 U+D') (R U' R' D)"
+      },
+      {
+        "name": "Gd Perm",
+        "algorithm": "(R U R') U'+D (R2 U' R U') (R' U R' U) R2 D'"
+      }
+    ]
+  },
+  {
+    "subset": "Diagonal Corners",
+    "algorithms": [
+      {
+        "name": "Y Perm",
+        "algorithm": "(F R U' R' U' R U R' F') (R U R' U') (R' F R F')"
+      },
+      {
+        "name": "E Perm",
+        "algorithm": "x' (R U' R' D) (R U R' D') (R U R' D) (R U' R' D') x"
+      },
+      {
+        "name": "Na Perm",
+        "algorithm": "F' (R U R' U') (R' F R2 F) (U' R' U' R U) F' R'"
+      },
+      {
+        "name": "Nb Perm",
+        "algorithm": "(r' D' F r U' r' F') D r2 (U r' U' r' F r F')"
+      },
+      {
+        "name": "V Perm",
+        "algorithm": "(R' U R U' R') f' U' (R U2) (R' U' R U' R') f R"
+      }
+    ]
+  },
+  {
+    "subset": "Edge Perm",
+    "algorithms": [
+      {
+        "name": "Ua Perm",
+        "algorithm": "(R U R' U R') U' R2 U' (R' U R' U R)"
+      },
+      {
+        "name": "Ub Perm",
+        "algorithm": "(R' U) (R' U') (R' U') (R' U) R U R2"
+      },
+      {
+        "name": "H Perm",
+        "algorithm": "M2 (U') M2 (U2') M2 (U') M2"
+      },
+      {
+        "name": "Z Perm",
+        "algorithm": "M' U' (M2' U') (M2' U') M' U2' M2'"
+      }
+    ]
+  }
+]

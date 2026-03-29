@@ -1,0 +1,140 @@
+[
+  {
+    "subset": "Connected Pairs",
+    "algorithms": [
+      {
+        "name": "VHLS 1",
+        "algorithm": "U (R U' R')"
+      },
+      {
+        "name": "VHLS 2",
+        "algorithm": "U (F' U F) (R U' R')"
+      },
+      {
+        "name": "VHLS 3",
+        "algorithm": "U (F' U2 F) (R U' R')"
+      },
+      {
+        "name": "VHLS 4",
+        "algorithm": "U2 F R' F' R2 U2 R'"
+      },
+      {
+        "name": "VHLS 5",
+        "algorithm": "R' F R F'"
+      },
+      {
+        "name": "VHLS 6",
+        "algorithm": "U2 (R U' R') U' (R' F R F')"
+      },
+      {
+        "name": "VHLS 7",
+        "algorithm": "U (R U R') U2 (R' F R F')"
+      },
+      {
+        "name": "VHLS 8",
+        "algorithm": "d (R' U2 R) d (L U' L' U') (L' B L B')"
+      },
+      {
+        "name": "VHLS 9",
+        "algorithm": "d' (L' U L)"
+      },
+      {
+        "name": "VHLS 10",
+        "algorithm": "U' (R U' R') (F' U F)"
+      },
+      {
+        "name": "VHLS 11",
+        "algorithm": "U' (R U2 R') (F' U F)"
+      },
+      {
+        "name": "VHLS 12",
+        "algorithm": "d' U' (L' U L) (F U' F') (L' U L)"
+      },
+      {
+        "name": "VHLS 13",
+        "algorithm": "F R' F' R"
+      },
+      {
+        "name": "VHLS 14",
+        "algorithm": "d U (R' U R U) (R B' R' B)"
+      },
+      {
+        "name": "VHLS 15",
+        "algorithm": "d' (L' U' L U2) (L F' L' F)"
+      },
+      {
+        "name": "VHLS 16",
+        "algorithm": "U (R U R') (F' U F) d (R B' R' B)"
+      }
+    ]
+  },
+  {
+    "subset": "Split Pairs",
+    "algorithms": [
+      {
+        "name": "VHLS 17",
+        "algorithm": "R U R'"
+      },
+      {
+        "name": "VHLS 18",
+        "algorithm": "U' F' U2 F U R U' R'"
+      },
+      {
+        "name": "VHLS 19",
+        "algorithm": "(R U' R') U2 (R' F R F')"
+      },
+      {
+        "name": "VHLS 20",
+        "algorithm": "S' R U R' S"
+      },
+      {
+        "name": "VHLS 21",
+        "algorithm": "R U' R2' F R F' R U2 R'"
+      },
+      {
+        "name": "VHLS 22",
+        "algorithm": "R U2 B U' B' R'"
+      },
+      {
+        "name": "VHLS 23",
+        "algorithm": "S R U R' U' S'"
+      },
+      {
+        "name": "VHLS 24",
+        "algorithm": "R U' R2' F R F' U2 R' F R F'"
+      },
+      {
+        "name": "VHLS 25",
+        "algorithm": "y' R' U' R"
+      },
+      {
+        "name": "VHLS 26",
+        "algorithm": "U R U2 R' U' y' R' U R"
+      },
+      {
+        "name": "VHLS 27",
+        "algorithm": "y' U2 r' U r U r' U' r"
+      },
+      {
+        "name": "VHLS 28",
+        "algorithm": "U R U2 R' F R' F' R"
+      },
+      {
+        "name": "VHLS 29",
+        "algorithm": "F' U' L' U' L U F"
+      },
+      {
+        "name": "VHLS 30",
+        "algorithm": "F' U2 L' U L F"
+      },
+      {
+        "name": "VHLS 31",
+        "algorithm": "U2 F' U' L' U L U F"
+      },
+      {
+        "name": "VHLS 32",
+        "algorithm": "y' R D r' U' r D' R2 U' R"
+      }
+    ]
+  }
+]

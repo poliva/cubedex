@@ -1,0 +1,53 @@
+[
+  {
+    "subset": "Edges",
+    "algorithms": [
+      {
+        "name": "Dot",
+        "algorithm": "F (R U R' U') F'  f (R U R' U') f'"
+      },
+      {
+        "name": "Line",
+        "algorithm": "F (R U R' U') F'"
+      },
+      {
+        "name": "Hook",
+        "algorithm": "f (R U R' U') f'"
+      }
+    ]
+  },
+  {
+    "subset": "Corners",
+    "masking": "OLL",
+    "algorithms": [
+      {
+        "name": "OLL-27 Sune",
+        "algorithm": "(R U R' U) (R U2' R')"
+      },
+      {
+        "name": "OLL-26 Anti Sune",
+        "algorithm": "(L' U' L U') (L' U2 L)"
+      },
+      {
+        "name": "OLL-21 H / Cross",
+        "algorithm": "F (R U R' U') (R U R' U') (R U R' U') F'"
+      },
+      {
+        "name": "OLL-22 Pi / Bruno",
+        "algorithm": "R U'2 (R'2 U' R2 U' R'2) U'2 R"
+      },
+      {
+        "name": "OLL-23 U / Headlights",
+        "algorithm": "R2 D (R' U2 R) D' (R' U2 R')"
+      },
+      {
+        "name": "OLL-24 T / Chameleon",
+        "algorithm": "(r U R' U') (r' F R) F'"
+      },
+      {
+        "name": "OLL-25 L / Bowtie",
+        "algorithm": "F' (r U R' U') (r' F R)"
+      }
+    ]
+  }
+]

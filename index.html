@@ -29,6 +29,30 @@
 
 <body class="bg-gray-100 text-gray-900 font-sans leading-relaxed sm:p-4 p-1 dark:bg-gray-900 dark:text-white text-sm sm:text-base flex flex-col min-h-screen min-w-[360px]">
 
+  <!-- SVG symbol library — define once, reference via <use href="#id"> throughout -->
+  <svg class="hidden" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <!-- Bookmark: no status (X mark) -->
+    <symbol id="icon-bookmark-unknown" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9.5 7.5L14.5 12.5M14.5 7.5L9.5 12.5M19 21V7.8C19 6.11984 19 5.27976 18.673 4.63803C18.3854 4.07354 17.9265 3.6146 17.362 3.32698C16.7202 3 15.8802 3 14.2 3H9.8C8.11984 3 7.27976 3 6.63803 3.32698C6.07354 3.6146 5.6146 4.07354 5.32698 4.63803C5 5.27976 5 6.11984 5 7.8V21L12 17L19 21Z"/>
+    </symbol>
+    <!-- Bookmark: learning (+ mark, orange) -->
+    <symbol id="icon-bookmark-learning" viewBox="0 0 24 24">
+      <path fill="orange" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 13V7M9 10H15M19 21V7.8C19 6.11984 19 5.27976 18.673 4.63803C18.3854 4.07354 17.9265 3.6146 17.362 3.32698C16.7202 3 15.8802 3 14.2 3H9.8C8.11984 3 7.27976 3 6.63803 3.32698C6.07354 3.6146 5.6146 4.07354 5.32698 4.63803C5 5.27976 5 6.11984 5 7.8V21L12 17L19 21Z"/>
+    </symbol>
+    <!-- Bookmark: learned (checkmark, green) -->
+    <symbol id="icon-bookmark-learned" viewBox="0 0 24 24">
+      <path fill="green" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 10.5L11 12.5L15.5 8M19 21V7.8C19 6.11984 19 5.27976 18.673 4.63803C18.3854 4.07354 17.9265 3.6146 17.362 3.32698C16.7202 3 15.8802 3 14.2 3H9.8C8.11984 3 7.27976 3 6.63803 3.32698C6.07354 3.6146 5.6146 4.07354 5.32698 4.63803C5 5.27976 5 6.11984 5 7.8V21L12 17L19 21Z"/>
+    </symbol>
+    <!-- Mask alg button icon (eye/visibility toggle) -->
+    <symbol id="icon-mask" viewBox="-5.5 0 32 32">
+      <path fill="currentColor" d="M20.44 15.48c-0.12-0.16-2.28-2.92-5.48-4.56l0.92-3c0.12-0.44-0.12-0.92-0.56-1.040s-0.92 0.12-1.040 0.56l-0.88 2.8c-0.96-0.32-2-0.56-3.080-0.56-5.6 0-9.92 5.56-10.12 5.8-0.24 0.32-0.24 0.72 0 1.040 0.16 0.24 4.2 5.36 9.48 5.76l-0.56 1.8c-0.12 0.44 0.12 0.92 0.56 1.040 0.080 0.040 0.16 0.040 0.24 0.040 0.36 0 0.68-0.24 0.8-0.6l0.72-2.36c5-0.68 8.8-5.48 9-5.72 0.24-0.28 0.24-0.68 0-1zM1.96 16c1.16-1.32 4.52-4.64 8.36-4.64 0.88 0 1.76 0.2 2.6 0.48l-0.28 0.88c-0.68-0.48-1.48-0.72-2.32-0.72-2.2 0-4 1.8-4 4s1.8 4 4 4c0.040 0 0.040 0 0.080 0l-0.2 0.64c-3.8-0.080-7.080-3.36-8.24-4.64zM10.88 18.24c-0.2 0.040-0.4 0.080-0.6 0.080-1.28 0-2.32-1.040-2.32-2.32s1.040-2.32 2.32-2.32c0.68 0 1.32 0.32 1.76 0.8l-1.16 3.76zM12 20.44l2.4-7.88c1.96 1.080 3.52 2.64 4.24 3.44-0.96 1.12-3.52 3.68-6.64 4.44z"/>
+    </symbol>
+    <!-- Reset button icon (circular refresh arrow) -->
+    <symbol id="icon-reset" viewBox="0 0 24 24">
+      <path fill="currentColor" d="M17.65 6.35A7.958 7.958 0 0 0 12 4C7.58 4 4.01 7.58 4.01 12S7.58 20 12 20c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+    </symbol>
+  </svg>
+
   <div class="flex flex-row flex-grow">
     <div id="menu-container" class="z-50 relative justify-center flex-shrink-0 md:flex-shrink-0 md:w-44">
       <div id="menu-toggle-container" class="fixed top-4 left-4">
@@ -83,7 +107,7 @@
                 v-9.18h-9.18H513.217z M413.1,284.58c0,70.867-57.653,128.52-128.52,128.52c-70.867,0-128.52-57.652-128.52-128.52
                 c0-70.867,57.653-128.52,128.52-128.52C355.446,156.06,413.1,213.713,413.1,284.58z"/>
             </svg>
-            Options</button>
+            Settings</button>
           <button id="show-help" class="block w-full text-left px-4 py-2 hover:bg-blue-100 dark:hover:bg-gray-700 rounded-b-lg">
             <svg viewBox="0 0 24 24" fill="none" class="h-6 w-6 inline-block mr-2 fill-current" xmlns="http://www.w3.org/2000/svg">
               <path d="M23 12C23 18.0751 18.0751 23 12 23C5.92487 23 1 18.0751 1 12C1 5.92487 5.92487 1 12 1C18.0751 1 23 5.92487 23 12ZM3.00683 12C3.00683 16.9668 7.03321 20.9932 12 20.9932C16.9668 20.9932 20.9932 16.9668 20.9932 12C20.9932 7.03321 16.9668 3.00683 12 3.00683C7.03321 3.00683 3.00683 7.03321 3.00683 12Z" fill="currentColor"/>
@@ -95,28 +119,51 @@
       </div>
     </div>
 
-    <div id="app" class="p-2 flex-grow ml-0">
+    <div id="app" class="p-2 flex-grow ml-0 mt-4">
       <div id="app-top">
-        <div id="container" class="relative grid grid-cols-1 sm:grid-cols-3 items-center justify-center mb-3 gap-1 sm:gap-2 text-sm sm:text-base h-full">
+        <div id="container" class="relative grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] items-start justify-center mb-3 gap-1 sm:gap-2 text-sm sm:text-base h-full">
           <div id="flashing-indicator" class="hidden absolute inset-0 opacity-75 z-50 rounded-lg"></div>
-          <div id="left-side" class="col-span-1 flex flex-col flex-grow items-center justify-items-center order-2 sm:order-1 h-full min-w-[240px]">
-            <div id="left-side-inner" class="hidden">
-              <div id="alg-name-display-container" class="flex items-center justify-center text-center font-mono text-gray-900 dark:text-white text-xs sm:text-base w-full">
-                  <button id="toggle-display" class="cursor-pointer hidden items-center justify-center dark:text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24">
-                      <path d="M11.75 6C7.89 6 4.75 9.14 4.75 13C4.75 16.86 7.89 20 11.75 20C15.61 20 18.75 16.86 18.75 13C18.75 9.14 15.61 6 11.75 6ZM11.75 18.5C8.72 18.5 6.25 16.03 6.25 13C6.25 9.97 8.72 7.5 11.75 7.5C14.78 7.5 17.25 9.97 17.25 13C17.25 16.03 14.78 18.5 11.75 18.5ZM8.5 4.75C8.5 4.34 8.84 4 9.25 4H14.25C14.66 4 15 4.34 15 4.75C15 5.16 14.66 5.5 14.25 5.5H9.25C8.84 5.5 8.5 5.16 8.5 4.75ZM12.5 10V13C12.5 13.41 12.16 13.75 11.75 13.75C11.34 13.75 11 13.41 11 13V10C11 9.59 11.34 9.25 11.75 9.25C12.16 9.25 12.5 9.59 12.5 10ZM19.04 8.27C18.89 8.42 18.7 8.49 18.51 8.49C18.32 8.49 18.13 8.42 17.98 8.27L16.48 6.77C16.19 6.48 16.19 6 16.48 5.71C16.77 5.42 17.25 5.42 17.54 5.71L19.04 7.21C19.33 7.5 19.33 7.98 19.04 8.27Z" fill="currentColor"/>
-                    </svg>
-                  </button>
-                  <p id="alg-name-display" class="cursor-pointer"></p>
+          <div id="left-side" class="col-span-1 flex flex-col items-center justify-center order-2 sm:order-1 h-full">
+            <div id="alg-name-display-container" class="hidden flex items-center justify-center text-center font-mono text-gray-900 dark:text-white text-xs sm:text-base w-full">
+                <p id="alg-name-display" class="cursor-pointer"></p>
+            </div>
+            <div id="left-side-inner" class="hidden flex flex-col items-center justify-center">
+              <div class="flex items-center gap-1">
+                <div id="times-display" class="hidden col-span-1 text-center font-mono text-gray-900 dark:text-white text-xs sm:text-base h-full"></div>
               </div>
-              <div id="times-display" class="hidden col-span-1 text-center font-mono text-gray-900 dark:text-white text-xs sm:text-base h-full"></div>
-              <div id="graph-display" class="flex items-center justify-items-center justify-center col-span-1 w-[200px] max-w-[200px] max-h-[200px]">
+              <div id="graph-display" class="flex items-center justify-items-center justify-center col-span-1 w-[280px] max-w-[280px] max-h-[200px]">
                 <canvas id="timeGraph"></canvas>
               </div>
             </div>
+            <div id="timer-container" class="hiddenflex flex-col justify-center items-center w-full mt-8">
+              <div id="touch-timer-container" class="flex items-center gap-1 my-2 w-full">
+                <div id="touch-timer" class="flex-1">
+                  <div id="timer" class="text-center font-mono p-2 border border-gray-400 rounded-lg dark:border-gray-700 dark:text-white text-sm sm:text-xl md:text-2xl lg:text-3xl"></div>
+                </div>
+                <div id="timer-btn-container" class="flex flex-col gap-0.5">
+                  <button id="skip-case-btn" class="p-1 text-gray-400 hover:text-blue-500 dark:text-gray-500 dark:hover:text-blue-400 cursor-pointer" data-tooltip="Skip this case (no statistics recorded)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+                  </button>
+                  <button id="restart-case-btn" class="p-1 text-gray-400 hover:text-orange-500 dark:text-gray-500 dark:hover:text-orange-400 cursor-pointer" data-tooltip="Restart this case (reset timer)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- Keep-rotation indicator: shows accumulated cube orientation -->
+            <div id="rotation-indicator" class="hidden mt-4 w-[120px] px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm flex flex-col items-center gap-1">
+              <span class="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wide">cube orientation</span>
+              <span class="text-gray-600 dark:text-gray-300 flex items-center gap-2">Top: <span id="rotation-top-color" class="inline-block w-4 h-4 rounded border border-gray-400"></span></span>
+              <span class="text-gray-600 dark:text-gray-300 flex items-center gap-2">Front: <span id="rotation-front-color" class="inline-block w-4 h-4 rounded border border-gray-400"></span></span>
+              <button id="rotation-reset-btn" class="mt-1 px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white text-xs rounded cursor-pointer">Reset</button>
+            </div>
           </div>
-          <div id="cube" class="col-span-1 flex items-center justify-center min-w-[10em] min-h-[10em] sm:min-w-[15em] sm:min-h-[15em] text-sm sm:text-base order-3 sm:order-2"></div>
-          <div id="right-side" class="col-span-1 flex flex-col flex-grow items-center sm:items-end text-sm sm:text-base order-1 sm:order-3 h-full">
+          <div id="cube" class="relative col-span-1 flex items-center justify-center min-w-[10em] min-h-[10em] sm:min-w-[15em] sm:min-h-[15em] text-sm sm:text-base order-3 sm:order-2">
+            <div id="countdown-overlay" class="hidden absolute inset-0 z-40 flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 rounded-lg">
+              <div id="countdown-number" class="font-bold text-blue-500 dark:text-blue-400" style="font-size: min(24vw, 200px); line-height: 1"></div>
+            </div>
+          </div>
+          <div id="right-side" class="col-span-1 flex flex-col items-center text-sm sm:text-base order-1 sm:order-3 h-full min-w-[220px]">
             <div class="flex items-center gap-2">
               <button
                 id="header-reset-gyro"
@@ -129,45 +176,93 @@
                 Reset Gyro
               </button>
               <button id="connect-button" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base align-middle flex items-center">
-                <div id="connect">Connect</div>
-                <div id="bluetooth-indicator" class="ml-2">
-                  <svg fill="currentColor" class="h-8 w-8 inline-block fill-current" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M 16 2 C 12.886719 2 10.03125 2.742188 8.03125 4.96875 C 6.03125 7.195313 5 10.714844 5 16 C 5 21.285156 6.03125 24.804688 8.03125 27.03125 C 10.03125 29.257813 12.886719 30 16 30 C 19.113281 30 21.972656 29.257813 23.96875 27.03125 C 25.964844 24.804688 27 21.285156 27 16 C 27 10.714844 25.964844 7.195313 23.96875 4.96875 C 21.972656 2.742188 19.113281 2 16 2 Z M 16 4 C 18.808594 4 20.945313 4.617188 22.46875 6.3125 C 23.992188 8.007813 25 10.980469 25 16 C 25 21.019531 23.992188 23.992188 22.46875 25.6875 C 20.945313 27.382813 18.808594 28 16 28 C 13.191406 28 11.054688 27.382813 9.53125 25.6875 C 8.007813 23.992188 7 21.019531 7 16 C 7 10.980469 8.007813 8.007813 9.53125 6.3125 C 11.054688 4.617188 13.191406 4 16 4 Z M 15 7 L 15 13.5625 L 12.71875 11.28125 L 11.28125 12.71875 L 14.5625 16 L 11.28125 19.28125 L 12.71875 20.71875 L 15 18.4375 L 15 25 L 16.59375 23.8125 L 20.59375 20.8125 L 21.53125 20.09375 L 17.4375 16 L 21.53125 11.90625 L 20.59375 11.1875 L 16.59375 8.1875 Z M 17 11 L 18.46875 12.09375 L 17 13.5625 Z M 17 18.4375 L 18.46875 19.90625 L 17 21 Z"/></svg>
-                </div>
-                <div id="battery-indicator" class="hidden ml-2">
-                </div>
-              </button>
+              <div id="connect">Connect</div>
+              <div id="bluetooth-indicator" class="ml-2">
+                <svg fill="currentColor" class="h-8 w-8 inline-block fill-current" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M 16 2 C 12.886719 2 10.03125 2.742188 8.03125 4.96875 C 6.03125 7.195313 5 10.714844 5 16 C 5 21.285156 6.03125 24.804688 8.03125 27.03125 C 10.03125 29.257813 12.886719 30 16 30 C 19.113281 30 21.972656 29.257813 23.96875 27.03125 C 25.964844 24.804688 27 21.285156 27 16 C 27 10.714844 25.964844 7.195313 23.96875 4.96875 C 21.972656 2.742188 19.113281 2 16 2 Z M 16 4 C 18.808594 4 20.945313 4.617188 22.46875 6.3125 C 23.992188 8.007813 25 10.980469 25 16 C 25 21.019531 23.992188 23.992188 22.46875 25.6875 C 20.945313 27.382813 18.808594 28 16 28 C 13.191406 28 11.054688 27.382813 9.53125 25.6875 C 8.007813 23.992188 7 21.019531 7 16 C 7 10.980469 8.007813 8.007813 9.53125 6.3125 C 11.054688 4.617188 13.191406 4 16 4 Z M 15 7 L 15 13.5625 L 12.71875 11.28125 L 11.28125 12.71875 L 14.5625 16 L 11.28125 19.28125 L 12.71875 20.71875 L 15 18.4375 L 15 25 L 16.59375 23.8125 L 20.59375 20.8125 L 21.53125 20.09375 L 17.4375 16 L 21.53125 11.90625 L 20.59375 11.1875 L 16.59375 8.1875 Z M 17 11 L 18.46875 12.09375 L 17 13.5625 Z M 17 18.4375 L 18.46875 19.90625 L 17 21 Z"/></svg>
+              </div>
+              <div id="battery-indicator" class="hidden ml-2">
+              </div>
+            </button>
             </div>
-            <div id="touch-timer" class="flex justify-center items-center h-full w-full">
-              <div id="timer" class="hidden text-right font-mono p-2 border border-gray-400 rounded-lg dark:border-gray-700 dark:text-white text-sm sm:text-xl md:text-2xl lg:text-3xl mt-2 sm:ml-8"></div>
+            <div class="flex-1 flex flex-col items-center justify-center">
+              <div id="last-time-display" class="hidden text-center font-mono text-gray-500 dark:text-gray-400 sm:text-sm"></div>
+              <div id="last-case-tile" class="hidden w-[200px]"></div>
             </div>
           </div>
         </div>
 
-        <div id="alg-bar" class="flex flex-row mx-auto max-w-[1125px]">
+        <div id="alg-bar" class="flex flex-col mx-auto max-w-[1125px]">
 
-          <button id="train-alg" title="Train" class="mt-2 mr-4 cursor-pointer inline-flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">
+          <div id="edit-controls" class="hidden flex flex-col items-center justify-center gap-4 mb-2 mx-14">
+            <label for="apply-at-cursor-checkbox" class="flex items-center gap-2 cursor-pointer text-base text-gray-700 dark:text-gray-300" data-tooltip="When editing an algorithm, show the cube state after applying moves up to the cursor position. Helps visualize intermediate steps.">
+              <input type="checkbox" id="apply-at-cursor-checkbox" class="w-5 h-5 accent-blue-500" />
+              Preview cube state at cursor
+            </label>
+            <div class="flex gap-4">
+              <button id="edit-setup-btn" class="border border-gray-400 bg-gray-100 font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Remember setup</button>
+              <button id="edit-reset-btn" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Restore setup</button>
+             </div>
+            <div class="text-xs text-gray-500 dark:text-gray-400 leading-tight">
+              <p><strong>Remember setup:</strong> Saves the current cube state as the starting position for this case.</p>
+              <p><strong>Restore setup:</strong> Reverts the cube back to the saved starting position.</p>
+            </div>
+          </div>
+
+          <div id="orientation-hint" class="hidden mb-2 px-3 py-2 bg-orange-400 border border-orange-500 text-white rounded-lg text-lg font-semibold text-center dark:bg-orange-600 dark:border-orange-700">
+            ⚠ Rotate your cube back: <span id="orientation-hint-moves" class="font-mono font-bold"></span>
+            <button id="orientation-reset-btn" class="hidden ml-3 px-2 py-0.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded cursor-pointer">Reset</button>
+          </div>
+
+          <!-- Keep-rotation indicator moved to #right-side -->
+
+          <div class="flex flex-row items-start">
+
+          <button id="train-alg" data-tooltip="Train" class="mt-2 mr-4 cursor-pointer inline-flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
           </button>
 
           <input id="alg-input" type="text" placeholder="Enter alg e.g., (R U R' U) (R U2' R')" class="w-full p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md mb-4 placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
 
-          <div id="alg-display-container" class="hidden justify-end relative w-full">
-            <div class="flex justify-end">
-              <a href="#" id="toggle-move-mask" class="text-white bg-blue-500 hover:bg-blue-700 py-0 px-2 rounded-lg text-sm absolute top-0 right-0"><svg fill="currentColor" class="h-6 w-6 inline-block" viewBox="-5.5 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M20.44 15.48c-0.12-0.16-2.28-2.92-5.48-4.56l0.92-3c0.12-0.44-0.12-0.92-0.56-1.040s-0.92 0.12-1.040 0.56l-0.88 2.8c-0.96-0.32-2-0.56-3.080-0.56-5.6 0-9.92 5.56-10.12 5.8-0.24 0.32-0.24 0.72 0 1.040 0.16 0.24 4.2 5.36 9.48 5.76l-0.56 1.8c-0.12 0.44 0.12 0.92 0.56 1.040 0.080 0.040 0.16 0.040 0.24 0.040 0.36 0 0.68-0.24 0.8-0.6l0.72-2.36c5-0.68 8.8-5.48 9-5.72 0.24-0.28 0.24-0.68 0-1zM1.96 16c1.16-1.32 4.52-4.64 8.36-4.64 0.88 0 1.76 0.2 2.6 0.48l-0.28 0.88c-0.68-0.48-1.48-0.72-2.32-0.72-2.2 0-4 1.8-4 4s1.8 4 4 4c0.040 0 0.040 0 0.080 0l-0.2 0.64c-3.8-0.080-7.080-3.36-8.24-4.64zM10.88 18.24c-0.2 0.040-0.4 0.080-0.6 0.080-1.28 0-2.32-1.040-2.32-2.32s1.040-2.32 2.32-2.32c0.68 0 1.32 0.32 1.76 0.8l-1.16 3.76zM12 20.44l2.4-7.88c1.96 1.080 3.52 2.64 4.24 3.44-0.96 1.12-3.52 3.68-6.64 4.44z"></path></svg> Mask alg</a>
-            </div>
-            <div id="alg-display" class="font-bold tracking-wide text-gray-900 p-4 bg-white border border-gray-400 rounded-lg mb-4 dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-xl"></div>
+          <div id="alg-display-container" class="hidden relative w-full mb-4">
+            <div id="alg-display" class="font-bold tracking-wide text-gray-900 p-4 pr-28 bg-white border border-gray-400 rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-xl min-h-[62px]" style="min-height: 62px;"></div>
+            <a href="#" id="toggle-move-mask" data-tooltip="Hotkey: Numpad-1" class="tooltip-instant text-white bg-blue-500 hover:bg-blue-700 rounded text-sm absolute top-1px right-1px w-32 h-6 inline-flex items-center justify-center"><svg class="h-4 w-4 mr-1 flex-shrink-0"><use href="#icon-mask"/></svg> Mask alg</a>
+            <a href="#" id="reset-practice-btn" data-tooltip="Hotkey: Numpad-0" class="tooltip-instant hidden text-white bg-orange-500 hover:bg-orange-700 rounded text-sm absolute bottom-1px right-1px w-32 h-6 inline-flex items-center justify-center"><svg class="h-4 w-4 mr-1 flex-shrink-0"><use href="#icon-reset"/></svg> Reset</a>
           </div>
 
-          <button id="scramble-to" title="Scramble To..." class="mt-2 ml-4 cursor-pointer inline-flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">
+          <button id="scramble-to" data-tooltip="Scramble To..." class="mt-2 ml-4 cursor-pointer inline-flex items-center justify-center w-10 h-10 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed">
             <svg viewBox="0 0 24 24" fill="none" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg">
               <path d="M15 4V2M15 16V14M8 9H10M20 9H22M17.8 11.8L19 13M17.8 6.2L19 5M3 21L12 12M12.2 6.2L11 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
 
+          </div>
         </div>
 
-        <div id="alg-help-info" class="hidden mx-auto max-w-[1032px] pl-4 pr-4 text-xs"><div class="flex flex-row gap-2"><svg viewBox="0 0 24 24" fill="none" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg"><defs><style>.cls-1{fill:none;stroke:currentColor;stroke-miterlimit:10;stroke-width:1.91px;}</style></defs><path class="cls-1" d="M18.68,1.48H5.32A3.82,3.82,0,0,0,1.5,5.3v9.54a3.82,3.82,0,0,0,3.82,3.82H9.14L12,21.52l2.86-2.86h3.82a3.82,3.82,0,0,0,3.82-3.82V5.3A3.82,3.82,0,0,0,18.68,1.48Z"/><line class="cls-1" x1="10.09" y1="13.89" x2="13.91" y2="13.89"/><polyline class="cls-1" points="10.09 8.16 12 8.16 12 13.89"/><line class="cls-1" x1="11.05" y1="5.3" x2="12.95" y2="5.3"/></svg><p class="pt-1">Ensure the cube is oriented with WHITE center on top and GREEN center on front.</p></div></div>
-        <div id="alg-fix" class="hidden mx-auto max-w-[1032px] text-red-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-red-500 dark:border-red-400 text-sm sm:text-base"></div>
+        <div id="alg-help-info" class="hidden mx-auto max-w-[1032px] pl-4 pr-4 text-xs">
+          <div id="alg-fix" class="hidden mx-auto max-w-[1032px] text-red-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-red-500 dark:border-red-400 text-sm sm:text-base"></div>
+          <div class="flex flex-row gap-2">
+            <svg viewBox="0 0 24 24" fill="none" class="h-6 w-6" xmlns="http://www.w3.org/2000/svg">
+              <defs><style>.cls-1{fill:none;stroke:currentColor;stroke-miterlimit:10;stroke-width:1.91px;}</style></defs>
+              <path class="cls-1" d="M18.68,1.48H5.32A3.82,3.82,0,0,0,1.5,5.3v9.54a3.82,3.82,0,0,0,3.82,3.82H9.14L12,21.52l2.86-2.86h3.82a3.82,3.82,0,0,0,3.82-3.82V5.3A3.82,3.82,0,0,0,18.68,1.48Z"/>
+              <line class="cls-1" x1="10.09" y1="13.89" x2="13.91" y2="13.89"/>
+              <polyline class="cls-1" points="10.09 8.16 12 8.16 12 13.89"/>
+              <line class="cls-1" x1="11.05" y1="5.3" x2="12.95" y2="5.3"/>
+            </svg>
+            <p class="pt-1">Ensure the cube is oriented with WHITE center on top and GREEN center on front.</p></div></div>
+        <div id="alg-override-container" class="hidden mx-auto max-w-[1032px] p-4 bg-green-50 border border-green-400 rounded-lg mb-4 dark:bg-gray-700 dark:text-green-400 dark:border-green-400 text-sm sm:text-base">
+          <p class="font-bold mb-2">Correct end state reached with a different algorithm!</p>
+          <div class="grid grid-cols-[auto_1fr] gap-1 mb-3">
+            <span class="font-semibold">Original:</span><span id="alg-override-original" class="font-mono"></span>
+            <span class="font-semibold">Yours:</span><span id="alg-override-new" class="font-mono"></span>
+          </div>
+          <button id="alg-override-btn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors duration-300 ease-in-out text-sm sm:text-base">Override Algorithm</button>
+          <button id="alg-override-keep" class="bg-gray-400 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-500 transition-colors duration-300 ease-in-out text-sm sm:text-base ml-2">Keep Original</button>
+          <button id="alg-override-tryagain" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-300 ease-in-out text-sm sm:text-base ml-2">Try Again</button>
+          <button id="alg-override-edit" class="bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors duration-300 ease-in-out text-sm sm:text-base ml-2">Edit</button>
+          <button id="alg-override-disable" class="bg-red-400 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors duration-300 ease-in-out text-sm sm:text-base ml-2">Don't Show Again</button>
+        </div>
+        <div id="reset-practice-container" class="hidden mx-auto max-w-[1032px] mb-4">
+        </div>
         <div id="alg-scramble" class="hidden mx-auto max-w-[1032px] text-green-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-green-500 dark:border-green-400 text-sm sm:text-base"></div>
 
       </div>
@@ -251,15 +346,28 @@
       <!-- Hidden elements for saving and loading algorithms -->
       <div id="save-container" class="hidden flex-col gap-4 text-sm sm:text-base">
         <div id="save-wrapper" class="grid grid-cols-[auto_1fr] items-center gap-4 mb-4">
-          <label for="category-input" class="text-right my-auto pr-2">Category:</label>
+          <label for="category-input" class="text-right my-auto pr-2" data-tooltip="Top-level grouping for your algorithms (e.g. PLL, OLL, ZBLL). Cases with the same category appear together in the sidebar.">Category:</label>
           <input id="category-input" type="text" placeholder="Category name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
-          <label for="subset-input" class="text-right my-auto pr-2">Subset:</label>
+          <label for="subset-input" class="text-right my-auto pr-2" data-tooltip="Sub-grouping within the category (e.g. Edges Only, Diagonal). Helps organize large algorithm sets into smaller chunks.">Subset:</label>
           <input id="subset-input" type="text" placeholder="Subset name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
-          <label for="alg-name-input" class="text-right my-auto pr-2">Name:</label>
+          <label for="alg-name-input" class="text-right my-auto pr-2" data-tooltip="A descriptive name for this case (e.g. 'T-perm', 'Sune'). Shown on tiles and in the case name display during practice.">Name:</label>
           <input id="alg-name-input" type="text" placeholder="Case name" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
+          <label for="override-locked-checkbox" class="text-right my-auto pr-2" data-tooltip="Prevent the Override Algorithm dialog from appearing for this case. Useful when you intentionally use a different fingertrick that triggers override detection.">Locked:</label>
+          <div class="flex items-center gap-2">
+            <input id="override-locked-checkbox" type="checkbox" class="w-4 h-4 accent-blue-500" />
+            <span class="text-sm text-gray-500 dark:text-gray-400">Don't show Override dialog for this case</span>
+          </div>
+          <label for="ignore-input" class="text-right my-auto pr-2" data-tooltip="Gray out specific pieces so they appear unsolved on the virtual cube. Use face names separated by semicolons (e.g. FR;FRD). Adds to the category's default ignore list.">Ignore:</label>
+          <input id="ignore-input" type="text" placeholder="e.g. BR;BRD" class="w-full p-3 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out placeholder-gray-500 placeholder-italic focus:border-blue-500 focus:shadow-outline-blue outline-none dark:bg-gray-700 dark:text-white dark:border-gray-700 text-base sm:text-lg">
+          <div></div>
+          <div class="text-xs text-gray-500 dark:text-gray-400 leading-tight">
+            <p>"Ignore" masks pieces to gray them out in addition to the category defaults. Use face names separated by semicolons, e.g. <strong>FR;FRD</strong> hides the Front-Right edge and the Front-Right-Down corner.</p>
+          </div>
         </div>
-        <button id="confirm-save" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Save</button>
-        <button id="cancel-save" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Cancel</button>
+        <div class="flex justify-center gap-4">
+          <button id="confirm-save" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Save</button>
+          <button id="cancel-save" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Cancel</button>
+        </div>
         <div id="save-error" class="hidden mt-4 text-red-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-red-500 dark:border-red-400 text-sm sm:text-base"></div>
         <div id="save-success" class="hidden mt-4 text-green-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-green-500 dark:border-green-400 text-sm sm:text-base"></div>
       </div>
@@ -270,107 +378,213 @@
             <canvas id="statsGraph" class="w-full h-full"></canvas>
           </div>
         </div>
-        <div id="metrics-container" class="min-w-[250px] lg:min-w-[290px] lg:max-w-[290px]">
-          <div id="alg-name-display2" class="text-center text-base md:text-lg lg:text-2xl font-bold pt-2 lg:pt-4 pl-4 pr-4 pb-1 lg:max-w-[280px]"></div>
-          <div id="stats-grid" class="flex flex-col sm:flex-row lg:flex-col w-full justify-normal sm:justify-center lg:justify-normal">
-            <div id="average-time-box" class="flex items-center justify-center text-center border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-base md:text-lg lg:text-2xl font-bold p-1 m-1 sm:p-4 lg:p-8 sm:m-4 lg:m-8 min-w-[154px]">Average Time<br />-</div>
-            <div id="average-tps-box" class="flex items-center justify-center text-center border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-base md:text-lg lg:text-2xl font-bold p-1 m-1 sm:p-4 lg:p-8 sm:m-4 lg:m-8 min-w-[154px]">Average TPS<br />-</div>
-            <div id="single-pb-box" class="flex items-center justify-center text-center border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-base md:text-lg lg:text-2xl font-bold p-1 m-1 sm:p-4 lg:p-8 sm:m-4 lg:m-8 min-w-[154px]">Single PB<br />-</div>
+        <div id="metrics-container" class="min-w-[250px] lg:min-w-[300px] lg:max-w-[300px]">
+          <div class="flex items-center justify-center gap-2 pt-2 lg:pt-4 pl-4 pr-4 pb-1">
+            <div id="alg-name-display2" class="text-center text-base md:text-lg lg:text-2xl font-bold lg:max-w-[290px]"></div>
+            <button id="stats-bookmark-btn" class="flex-shrink-0" title="Learning status"></button>
+          </div>
+          <div id="stats-mode-label" class="text-center text-sm text-gray-500 dark:text-gray-400 pb-1"></div>
+          <div class="flex items-center justify-center gap-2 pb-1">
+            <div id="stats-success-fail" class="text-sm text-gray-600 dark:text-gray-300"></div>
+          </div>
+          
+          <div id="stats-grid" class="flex flex-col sm:flex-row lg:flex-col justify-normal sm:justify-center lg:justify-normal lg:mx-2 lg:mb-4">
+            <div id="average-time-box" class="flex items-center justify-center text-center border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-base md:text-lg lg:text-2xl font-bold p-1 m-1 sm:p-4 lg:p-1 sm:m-4 lg:m-1 min-w-[154px]">Average Time<br />-</div>
+            <div id="ao12-box" class="flex items-center justify-center text-center border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-base md:text-lg lg:text-2xl font-bold p-1 m-1 sm:p-4 lg:p-1 sm:m-4 lg:m-1 min-w-[154px]">Ao12<br />-</div>
+            <div id="average-tps-box" class="flex items-center justify-center text-center border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-base md:text-lg lg:text-2xl font-bold p-1 m-1 sm:p-4 lg:p-1 sm:m-4 lg:m-1 min-w-[154px]">Average TPS<br />-</div>
+            <div id="tpso12-box" class="flex items-center justify-center text-center border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-base md:text-lg lg:text-2xl font-bold p-1 m-1 sm:p-4 lg:p-1 sm:m-4 lg:m-1 min-w-[154px]">TPSo12<br />-</div>
+            <div id="single-pb-box" class="flex items-center justify-center text-center border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-base md:text-lg lg:text-2xl font-bold p-1 m-1 sm:p-4 lg:p-1 sm:m-4 lg:m-1 min-w-[154px]">Single PB<br />-</div>
           </div>
         </div>
       </div>
 
-      <div id="load-container" class="flex-col gap-4 mt-4 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
+      <div id="load-container" class="flex flex-col items-center gap-4 mt-2 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base max-w-[1500px] mx-auto">
         <div id="default-alg-id" class="hidden bg-red-400"><!-- wildcard to add classes used in js --></div>
 
-        <div class="block gap-2 sm:flex sm:flex-row">
-          <div id="category-selector" class="max-w-[200px]">
-            <label for="category-select" class="text-sm sm:text-base text-gray-900 block mb-2 dark:text-white">Category:</label>
-            <select id="category-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400 text-sm sm:text-base">
-              <option value="">Filter by Category</option>
-            </select>
-          </div>
-          <div id="options-selector" class="w-full">
-
-            <p class="text-sm sm:text-base mb-2">Options:</p>
-            <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-2 lg:max-w-[500px] xl:max-w-[750px] p-4 pb-0 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-
-              <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
-                <label for="select-all-toggle" class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" id="select-all-toggle" checked class="sr-only" />
-                  <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-                  <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-                  <span class="ml-2 text-gray-900 dark:text-white">Select All</span>
-                </label>
-              </div>
-
-              <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
-                <label for="select-learning-toggle" class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" id="select-learning-toggle" class="sr-only" />
-                  <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-                  <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-                  <span class="ml-2 text-gray-900 dark:text-white">Select Learning</span>
-                </label>
-              </div>
-
-              <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
-                <label for="random-auf-toggle" class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" id="random-auf-toggle" class="sr-only" />
-                  <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-                  <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-                  <span class="ml-2 text-gray-900 dark:text-white">Random AUF</span>
-                </label>
-              </div>
-
-              <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
-                <label for="random-order-toggle" class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" id="random-order-toggle" class="sr-only" />
-                  <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-                  <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-                  <span class="ml-2 text-gray-900 dark:text-white">Random Order</span>
-                </label>
-              </div>
-
-              <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
-                <label for="prioritize-slow-toggle" class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" id="prioritize-slow-toggle" class="sr-only" />
-                  <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-                  <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-                  <span class="ml-2 text-gray-900 dark:text-white">Slow Cases First</span>
-                </label>
-              </div>
-
-              <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
-                <label for="prioritize-failed-toggle" class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" id="prioritize-failed-toggle" class="sr-only" />
-                  <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-                  <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-                  <span class="ml-2 text-gray-900 dark:text-white">Prioritize Failed Cases</span>
-                </label>
-              </div>
-
+        <div class="flex flex-col gap-2 sm:flex-row items-center justify-center">
+          <div id="main-btn-container" class="flex flex-col justify-center items-center">
+            <div id="selected-cases-count" class="text-sm text-gray-600 dark:text-gray-300 mb-1 hidden mx-auto">Selected cases: 0</div>
+            <button id="start-practice" class="bg-green-600 hover:bg-green-700 text-white font-bold px-5 px-4 py-2 px-6 text-base rounded-lg transition-colors mb-2">
+              Start Practice
+            </button>
+            <div id="category-selector" class="justify-center items-center w-full mx-auto">
+              <label for="category-select" class="text-sm sm:text-base text-gray-900 block text-center mb-1 dark:text-white">Category:</label>
+              <select id="category-select" class="p-2 border w-[180px] border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700 focus:border-gray-400 text-sm sm:text-base">
+                <option value="">Filter by Category</option>
+              </select>
             </div>
+          </div>
+          <div id="options-selector">
 
+            <div class="flex flex-wrap gap-4 p-4 pb-0 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-sm sm:text-base max-w-[900px]">
+              <!-- Practice options + Presentation options (same column) -->
+              <div class="flex flex-col min-w-[180px]">
+                <!-- Practice options  -->
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-2">Practice options</p>
+                <div class="flex items-center mb-3">
+                  <label for="select-all-toggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="select-all-toggle" class="sr-only" />
+                    <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+                    <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                    <span class="ml-2 text-gray-900 dark:text-white" data-tooltip="When on, all cases are included regardless of their individual checkbox. When off, only individually checked cases are practiced.">Practice all</span>
+                  </label>
+                </div>
+                <div class="flex items-center mb-3">
+                  <label for="select-learning-toggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="select-learning-toggle" class="sr-only" />
+                    <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+                    <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                    <span class="ml-2 text-gray-900 dark:text-white" data-tooltip-key="practice-learning">Practice only Learning</span>
+                  </label>
+                </div>
+                <div class="flex items-center mb-3">
+                  <label for="select-learned-toggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="select-learned-toggle" class="sr-only" />
+                    <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+                    <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                    <span class="ml-2 text-gray-900 dark:text-white" data-tooltip-key="practice-learned">Practice only Learned</span>
+                  </label>
+                </div>
+
+                <!-- Presentation options  -->
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide mt-2 mb-2">Presentation options</p>
+                <div class="flex items-center mb-3">
+                  <label for="countdown-mode-toggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="countdown-mode-toggle" class="sr-only" />
+                    <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+                    <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                    <span class="ml-2 text-gray-900 dark:text-white" data-tooltip="Show the case on the virtual cube for a countdown period, then hide the algorithm text. Tests both recognition and execution. Configure the countdown duration in settings.">Countdown Mode</span>
+                  </label>
+                </div>
+                <div class="flex items-center mb-3">
+                  <label for="phantom-mode-toggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="phantom-mode-toggle" class="sr-only" />
+                    <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+                    <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                    <span class="ml-2 text-gray-900 dark:text-white" data-tooltip="Gray out all stickers after the first move. Forces you to solve without looking at the cube. Only active when 'Stare at Cube' is enabled.">Phantom Mode</span>
+                  </label>
+                </div>
+              </div>
+              
+              <!-- Ordering options -->
+              <div class="flex flex-col min-w-[200px]">
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-2">Ordering options</p>
+                <div class="flex items-center mb-3">
+                  <label for="random-order-toggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="random-order-toggle" class="sr-only" />
+                    <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+                    <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                    <span class="ml-2 text-gray-900 dark:text-white" data-tooltip="Shuffle cases randomly. Can be combined with other sorting modes (e.g. Slow/Difficult/Smart First) to shuffle within the prioritized subset.">Random Order</span>
+                  </label>
+                </div>
+                <div class="flex items-center mb-3">
+                  <label for="prioritize-slow-toggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="prioritize-slow-toggle" class="sr-only" />
+                    <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+                    <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                    <span class="ml-2 text-gray-900 dark:text-white" data-tooltip="Fills the Queue Size (see settings) with the slowest cases by TPS. After each batch, TPS is recomputed. Mutually exclusive with 'Random Order'.">Slow Cases First</span>
+                  </label>
+                </div>
+                <div class="flex items-center mb-3">
+                  <label for="prioritize-difficult-toggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="prioritize-difficult-toggle" class="sr-only" />
+                    <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+                    <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                    <span class="ml-2 text-gray-900 dark:text-white" data-tooltip="Fills the Queue Size (see settings) with the most-failed cases by fail rate. Mutually exclusive with other sorting modes.">Difficult Cases First</span>
+                  </label>
+                </div>
+                <div class="flex items-center mb-3">
+                  <label for="smart-case-toggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="smart-case-toggle" class="sr-only" />
+                    <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+                    <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                    <span class="ml-2 text-gray-900 dark:text-white" data-tooltip="Fills the Queue Size (see settings) with a smart mix of slow and difficult cases (scored by fail rate and TPS). Mutually exclusive with other sorting modes.">Smart Case Selection</span>
+                  </label>
+                </div>
+                <div class="flex items-center mb-3">
+                  <label for="prioritize-failed-toggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="prioritize-failed-toggle" class="sr-only" />
+                    <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+                    <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                    <span class="ml-2 text-gray-900 dark:text-white" data-tooltip="When you make a mistake, the failed case is re-inserted at the front of the queue. Failed cases appear up to twice per cycle.">Prioritize Failed Cases</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Practice options -->
+              <div class="flex flex-col min-w-[200px]">
+                <p class="text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wide mb-2">Orientation randomization</p>
+                <div class="flex items-center mb-3">
+                  <label for="random-auf-toggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="random-auf-toggle" class="sr-only" />
+                    <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+                    <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                    <span class="ml-2 text-gray-900 dark:text-white" data-tooltip="Add a random U/U'/U2 setup move before each case. For PLL/ZBLL, also adds a random post-AUF. Simulates real solving conditions where the top layer isn't pre-aligned.">Random AUF</span>
+                  </label>
+                </div>
+                <div class="flex items-center mb-3">
+                  <label for="rotate-colors-vertical" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="rotate-colors-vertical" class="sr-only" />
+                    <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+                    <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                    <span class="ml-2 text-gray-900 dark:text-white" data-tooltip="Randomly rotate the cube by y, y2 or y' before each case. Trains recognition from any vertical orientation.">vertically (y*)</span>
+                  </label>
+                </div>
+                <div class="flex items-center mb-3">
+                  <label for="rotate-colors-upside" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="rotate-colors-upside" class="sr-only" />
+                    <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+                    <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                    <span class="ml-2 text-gray-900 dark:text-white" data-tooltip="Allow yellow-on-top orientation (z2) in addition to white-on-top. Mutually exclusive with 'any orientation'.">upside down (z2)</span>
+                  </label>
+                </div>
+                <div class="flex items-center mb-3">
+                  <label for="rotate-colors-any" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="rotate-colors-any" class="sr-only" />
+                    <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+                    <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+                    <span class="ml-2 text-gray-900 dark:text-white" data-tooltip="Choose randomly from all 24 orientations. Exclusive: disables vertically and upside down options.">any orientation</span>
+                  </label>
+                </div> 
+              </div>
+            </div>
           </div>
         </div>
 
-        <p class="text-sm sm:text-base mb-2 mt-2 flex items-center"><label for="select-all-subsets-toggle" class="cursor-pointer">Subset: </label><input type="checkbox" id="select-all-subsets-toggle" class="form-checkbox h-5 w-5 text-blue-600 ml-2 cursor-pointer" /></p>
-        <div id="subset-checkboxes" class="flex flex-col space-y-2 p-4 mb-2 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-sm sm:text-base">
-          <div id="subset-checkboxes-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2"></div>
+        <div id="subset-checkboxes" class="flex flex-col space-y-2 p-4 mb-2 mt-2 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-600 dark:text-white dark:border-gray-700 text-sm sm:text-base w-[900px] max-w-full">
+          <div id="filter-controls" class="flex gap-3 justify-between border-gray-300 dark:border-gray-500">
+            <p class="text-sm sm:text-base my-2 ml-2 flex items-center">
+              <label for="select-all-subsets-toggle" class="cursor-pointer">All Subsets: </label><input type="checkbox" id="select-all-subsets-toggle" class="form-checkbox h-5 w-5 text-blue-600 ml-2 cursor-pointer" />
+            </p>
+            <div id="subset-filters-btn-container" class="hidden">
+              <button id="activate-all-filters-btn" class="bg-blue-500 text-white font-bold px-4 py-2 rounded-lg text-sm sm:text-base hover:bg-blue-700 transition-colors duration-300 ease-in-out shadow">Select All Filters</button>
+              &nbsp;&nbsp;&nbsp;
+              <button id="deactivate-all-filters-btn" class="bg-white-500 font-bold px-4 py-2 rounded-lg text-sm sm:text-base hover:bg-gray-700 transition-colors duration-300 ease-in-out shadow">Deselect All Filters</button>
+              </div>
+            </div>
+            <div id="subset-checkboxes-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 hidden">
+          </div>
+        </div>
+
+        <div id="selection-controls" class="self-end w-full mb-1 mt-2 hidden">
+          <div class="flex gap-3 items-center justify-between px-2 sm:px-4">
+            <div class="relative" style="width:330px;min-width:0">
+              <input id="case-search" type="text" placeholder="Search cases…" class="w-full h-10 pl-3 pr-8 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-900 dark:text-white outline-none focus:border-blue-500 transition-colors" />
+              <button id="case-search-clear" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hidden" title="Clear search">&times;</button>
+            </div>
+            <div class="flex gap-3">
+              <button id="activate-all-btn" class="bg-blue-500 text-white font-bold  px-4 py-2 px-5 rounded-lg text-sm sm:text-base hover:bg-blue-700 transition-colors duration-300 ease-in-out shadow">Activate All Cases</button>
+              <button id="deactivate-all-btn" class="bg-white-500 font-bold py-2 px-4 px-5 rounded-lg text-sm sm:text-base hover:bg-gray-700 transition-colors duration-300 ease-in-out shadow">Deactivate All Cases</button>
+            </div>
+          </div>
         </div>
         <div id="alg-cases" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 p-2 sm:p-4 gap-2 sm:gap-4">
         </div>
-        <div class="delete-mode-container flex items-center gap-2 text-sm sm:text-base">
-          <label for="delete-mode-toggle" class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="delete-mode-toggle" class="sr-only" />
-            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-          </label>
-          <span class="ml-2 text-gray-900 dark:text-white">Delete Mode</span>
-          <button id="delete-alg" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Delete Algorithm</button>
-          <button id="delete-times" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Delete Times</button>
-        </div>
-        <div id="delete-success" class="hidden mt-4 text-green-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-green-500 dark:border-green-400 text-sm sm:text-base"></div>
+        <div id="category-loading-spinner" class="hidden flex items-center justify-center p-8">
+          <svg class="animate-spin h-8 w-8 text-blue-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-dasharray="50 13" stroke-linecap="round" opacity="0.75" />
+          </svg>
+        </div>        
       </div>
 
       <!-- Hidden file input for importing algorithms -->
@@ -403,14 +617,14 @@
 
       <div id="options-container" class="flex-col hidden gap-2 md:mt-0 sm:mt-5 mt-8 p-4 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-700 dark:text-white dark:border-gray-700 text-sm sm:text-base">
         <div id="alg-options-container" class="mb-4">
-          <p>Algorithms Options:</p>
+          <p>Algorithms Settings:</p>
           <div class="flex flex-wrap gap-2">
             <button id="export-algs" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Export Algs</button>
             <button id="import-algs" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">Import Algs</button>
           </div>
         </div>
         <div id="device-options-container" class="mb-4">
-          <p>Smartcube Options:</p>
+          <p>Smartcube Settings:</p>
           <div class="flex flex-wrap gap-2">
             <button id="reset-state" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Reset State</button>
             <button id="reset-gyro" disabled class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 disabled:bg-gray-400 disabled:text-gray-300 disabled:cursor-not-allowed text-sm sm:text-base">Reset Gyro</button>
@@ -425,124 +639,380 @@
             </label>
           </div>
         </div>
-        <div class="flex items-center mb-4 text-sm sm:text-base">
+
+        <!-- Learning Panel -->
+        <div class="mb-4 p-3 border border-gray-300 dark:border-gray-600 rounded-lg">
+          <p class="font-semibold mb-2 text-gray-700 dark:text-gray-300">Learning</p>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
+            <label for="auto-promote-learning-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="auto-promote-learning-toggle" checked class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip-key="auto-promote-learning">Auto Promote to Learning</span>
+            </label>
+          </div>
+          <div id="limit-learning-container" class="flex items-center mb-3 text-sm sm:text-base ml-6 gap-1">
+            <label for="limit-learning-toggle" class="relative inline-flex items-center cursor-pointer mr-1">
+              <input type="checkbox" id="limit-learning-toggle" checked class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+            </label>
+            <label for="max-learning-input" id="limit-learning-label" class="text-gray-900 dark:text-white mr-1" data-tooltip-key="limit-learning">Limit concurrent Learning cases to</label>
+            <input type="number" id="max-learning-input" min="1" max="10" value="4" class="w-14 p-1 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md dark:bg-gray-600 dark:text-white dark:border-gray-700" />
+          </div>
+          <div class="flex items-center mb-3 text-sm sm:text-base flex-wrap gap-y-1">
+            <label for="auto-promote-learned-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="auto-promote-learned-toggle" checked class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip-key="auto-promote-learned">Auto Promote to Learned</span>
+            </label>
+            <span id="promotion-threshold-container" class="inline-flex items-center ml-3 gap-1">
+              <label for="promotion-threshold-input" class="text-gray-900 dark:text-white mr-1">after</label>
+              <input type="number" id="promotion-threshold-input" min="1" max="100" value="10" class="w-14 p-1 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md dark:bg-gray-600 dark:text-white dark:border-gray-700" />
+              <span class="text-gray-900 dark:text-white">successes</span>
+            </span>
+          </div>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
+            <label for="retry-failed-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="retry-failed-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="When you fail a case (wrong moves or too slow), immediately re-queue it as the very next case instead of waiting for the next cycle.">Present Failed Cases Again Immediately</span>
+            </label>
+          </div>
+          <div id="countdown-seconds-container" class="flex items-center gap-2 text-sm sm:text-base">
+            <label for="countdown-seconds-select" class="text-gray-900 dark:text-white" data-tooltip="How many seconds the algorithm text is shown before hiding in Countdown Mode. Shorter values test faster recognition.">Countdown duration</label>
+            <select id="countdown-seconds-select" class="p-1 border border-gray-400 rounded bg-white text-gray-900 dark:bg-gray-600 dark:text-white dark:border-gray-700">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3" selected>3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+            <span class="text-gray-900 dark:text-white">seconds</span>
+          </div>
+          <div class="flex items-center gap-2 mb-3 mt-3 text-sm sm:text-base flex-wrap">
+            <label for="tps-fail-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="tps-fail-toggle" checked class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="Mark a solve as failed if your turns-per-second is below the threshold, even if the moves were correct. In Countdown Mode, an extra time penalty is added. Helps ensure you're not just accurate but also fast.">Consider case as failed when TPS is below</span>
+            </label>
+            <select id="tps-fail-threshold" class="p-1 border border-gray-400 rounded bg-white text-gray-900 dark:bg-gray-600 dark:text-white dark:border-gray-700">
+              <option value="0.25">0.25</option>
+              <option value="0.5">0.5</option>
+              <option value="1" selected>1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
+            <span class="text-gray-900 dark:text-white">TPS</span>
+            <span class="text-gray-900 dark:text-gray-400">plus</span>
+            <select id="countdown-fail-threshold" class="p-1 border border-gray-400 rounded bg-white text-gray-900 dark:bg-gray-600 dark:text-white dark:border-gray-700">
+              <option value="0.25">0.25s</option>
+              <option value="0.5">0.5s</option>
+              <option value="1">1s</option>
+              <option value="2">2s</option>
+              <option value="3" selected>3s</option>
+              <option value="4">4s</option>
+              <option value="5">5s</option>
+            </select>
+            <span class="text-gray-900 dark:text-white">in countdown mode</span>
+          </div>
+          <div class="flex items-center gap-2 mt-3 text-sm sm:text-base">
+            <label for="queue-size-select" class="text-gray-900 dark:text-white" data-tooltip="Maximum number of cases in the practice queue per cycle. 'Auto' uses the default formula per strategy. Fixed values override the formula.">Queue Size:</label>
+            <select id="queue-size-select" class="p-1 border border-gray-400 rounded bg-white text-gray-900 dark:bg-gray-600 dark:text-white dark:border-gray-700">
+              <option value="0">Auto</option>
+              <option value="5">5</option>
+              <option value="8">8</option>
+              <option value="10">10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+              <option value="25">25</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2 mt-3 text-sm sm:text-base">
+            <label for="color-rotation-freq-select" class="text-gray-900 dark:text-white" data-tooltip="How often the color rotation changes. 'On Queue Rotation' picks a new rotation each time the full queue cycles. A number picks a new rotation every N cases.">Color Rotation Frequency:</label>
+            <select id="color-rotation-freq-select" class="p-1 border border-gray-400 rounded bg-white text-gray-900 dark:bg-gray-600 dark:text-white dark:border-gray-700">
+              <option value="0">On Queue Rotation</option>
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="15">15</option>
+              <option value="20">20</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Visual Panel -->
+        <div id="visualization-container" class="mb-4 p-3 border border-gray-300 dark:border-gray-600 rounded-lg">
+          <p class="font-semibold mb-2 text-gray-700 dark:text-gray-300">Visual</p>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
             <label for="dark-mode-toggle" class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="dark-mode-toggle" class="sr-only" />
-            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            <span class="ml-2">Dark Mode</span>
-          </label>
-        </div>
-
-        <div class="flex items-center mb-4 text-sm sm:text-base">
-          <label for="gyroscope-toggle" class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="gyroscope-toggle" class="sr-only" />
-            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            <span class="ml-2">Animate Virtual Cube Using Gyroscope</span>
-          </label>
-        </div>
-
-        <div class="flex items-center mb-4 text-sm sm:text-base">
-          <label for="control-panel-toggle" class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="control-panel-toggle" class="sr-only" />
-            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            <span class="ml-2">Virtual Cube Control Panel</span>
-          </label>
-        </div>
-
-        <div class="flex items-center mb-4 text-sm sm:text-base">
-          <label for="hintFacelets-toggle" class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="hintFacelets-toggle" class="sr-only" />
-            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            <span class="ml-2">Floating Mirror Stickers</span>
-          </label>
-        </div>
-
-        <div class="flex items-center mb-4 text-sm sm:text-base">
-          <label for="full-stickering-toggle" class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="full-stickering-toggle" class="sr-only" />
-            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            <span class="ml-2">Always Show Full Stickers</span>
-          </label>
-        </div>
-
-        <div class="flex flex-col mb-4 text-sm sm:text-base">
-          <label for="white-on-bottom-toggle" class="relative inline-flex items-center cursor-pointer ml-6">
-            <input type="checkbox" id="white-on-bottom-toggle" class="sr-only" />
-            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            <span class="ml-2">Virtual Cube White on Bottom</span>
-          </label>
-          <span id="white-on-bottom-hint" class="ml-6 mt-1 text-xs text-gray-500 dark:text-gray-400 hidden">
-            Requires “Always Show Full Stickers”
-          </span>
-        </div>
-
-        <div class="flex items-center mb-4 text-sm sm:text-base">
-          <label for="flashing-indicator-toggle" class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="flashing-indicator-toggle" class="sr-only" />
-            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            <span class="ml-2">Flashing Indicator</span>
-          </label>
-        </div>
-
-        <div class="flex items-center mb-4 text-sm sm:text-base">
-          <label for="show-alg-name-toggle" class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="show-alg-name-toggle" class="sr-only" />
-            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            <span class="ml-2">Show Case Name</span>
-          </label>
-        </div>
-
-        <div class="flex items-center mb-4 text-sm sm:text-base">
-          <label for="always-scramble-to-toggle" class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="always-scramble-to-toggle" class="sr-only" />
-            <div class="w-11 h-6 bg-gray-200 rounded-full shadow-inner"></div>
-            <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
-            <span class="ml-2">Always Keep "Scramble To" Enabled</span>
-          </label>
-        </div>
-
-        <div id="visualization-container">
-          <label for="visualization-select" class="text-base text-gray-900 block mb-2 dark:text-white">Cube Visualization Mode:</label>
-          <select id="visualization-select" class="p-2 w-[180px] border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700">
+              <input type="checkbox" id="dark-mode-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="Switch between light and dark color themes for the entire app.">Dark Mode</span>
+            </label>
+          </div>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
+            <label for="gyroscope-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="gyroscope-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="Mirror the physical cube's real-time gyroscope orientation on the virtual cube. Requires a smart cube with gyroscope support (e.g. GAN).">Animate Virtual Cube Using Gyroscope</span>
+            </label>
+          </div>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
+            <label for="control-panel-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="control-panel-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="Show the scrubber and playback controls below the virtual cube. Useful for stepping through algorithms move by move.">Virtual Cube Control Panel</span>
+            </label>
+          </div>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
+            <label for="show-alg-name-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="show-alg-name-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="Display the algorithm name (e.g. 'T-perm', 'Sune') above the virtual cube during practice.">Show Case Name</span>
+            </label>
+          </div>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
+            <label for="hintFacelets-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="hintFacelets-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="Show faded guide stickers on hidden faces of the virtual cube. Helps see what colors are on the back and bottom.">Hint Facelets</span>
+            </label>
+          </div>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
+            <label for="full-stickering-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="full-stickering-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="Disable OLL/PLL stickering masks and always show all six face colors. Useful if you prefer full-cube visualization over case-specific highlighting.">Always Show Full Stickers</span>
+            </label>
+          </div>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
+            <label for="flashing-indicator-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="flashing-indicator-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="Flash a colored border around the screen when a solve completes: green for success, red for failure. Provides quick visual feedback.">Flashing Indicator</span>
+            </label>
+          </div>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
+            <label for="stare-delay-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="stare-delay-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="After each solve, pause before moving to the next case. Gives you time to review the result, see the algorithm, and mentally process what happened.">Stare at result for</span>
+            </label>
+            <select id="stare-delay-seconds" class="ml-2 p-1 border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md dark:bg-gray-600 dark:text-white dark:border-gray-700 text-sm">
+              <option value="0.25">0.25s</option>
+              <option value="0.5">0.5s</option>
+              <option value="1">1s</option>
+              <option value="2">2s</option>
+              <option value="3" selected>3s</option>
+              <option value="4">4s</option>
+              <option value="5">5s</option>
+            </select>
+          </div>
+          <label for="visualization-select" class="text-base text-gray-900 block mb-2 dark:text-white" data-tooltip="Choose how the virtual cube is rendered.
+PG3D: high-quality 3D
+2D: flat net
+3D: basic 3D
+2D-LL: top-layer only
+2D-LL-face: top-face only">Cube Visualization Mode:</label>
+          <select id="visualization-select" class="p-2 w-[180px] border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-3 dark:bg-gray-600 dark:text-white dark:border-gray-700">
             <option value="PG3D">PG3D</option>
             <option value="2D">2D</option>
             <option value="3D">3D</option>
             <option value="experimental-2D-LL">2D-LL</option>
             <option value="experimental-2D-LL-face">2D-LL-face</option>
           </select>
-          <label for="backview-select" class="text-base text-gray-900 block mb-2 dark:text-white">Cube Back View:</label>
-          <select id="backview-select" class="p-2 w-[180px] border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-4 dark:bg-gray-600 dark:text-white dark:border-gray-700">
+          <label for="backview-select" class="text-base text-gray-900 block mb-2 dark:text-white" data-tooltip="Show the back of the cube alongside the front.
+Disabled: no back view
+Side-by-side: front and back next to each other
+Top Right: small back view in the corner
+Mirror View: like looking in a mirror behind the cube">Cube Back View:</label>
+          <select id="backview-select" class="p-2 w-[180px] border border-gray-400 rounded-lg bg-white text-gray-900 shadow-md transition-colors duration-300 ease-in-out mb-3 dark:bg-gray-600 dark:text-white dark:border-gray-700">
             <option value="none">Disabled</option>
             <option value="side-by-side">Side-by-side</option>
             <option value="top-right">Top Right</option>
+            <option value="mirror-view">Mirror View</option>
           </select>
+          <div class="flex items-center gap-3 mb-1">
+            <label for="cube-zoom-slider" class="text-base text-gray-900 dark:text-white whitespace-nowrap" data-tooltip="Scale the virtual cube display from 60% to 200%. Larger sizes are easier to see; smaller sizes save screen space.">Cube Size:</label>
+            <input type="range" id="cube-zoom-slider" min="60" max="200" step="20" value="100" class="w-32 accent-blue-500" />
+            <span id="cube-zoom-value" class="text-sm text-gray-700 dark:text-gray-300 w-10">100%</span>
+          </div>
         </div>
 
-        <div id="large-cube-container">
-          <div>
-            <label for="cube-size" class="text-base text-gray-900 block mb-1 dark:text-white">Cube Size:</label>
-            <div class="flex items-center gap-2" style="max-width: 300px;">
-              <input id="cube-size" type="range" min="240" max="600" step="10" class="w-full" />
-              <input id="cube-size-number" type="number" min="600" max="1000" step="10" class="p-2 border border-gray-400 rounded-lg bg-white text-gray-900 dark:bg-gray-600 dark:text-white dark:border-gray-700" style="width: 6rem;" />
-            </div>
+        <!-- Statistics Panel -->
+        <div class="mb-4 p-3 border border-gray-300 dark:border-gray-600 rounded-lg">
+          <p class="font-semibold mb-2 text-gray-700 dark:text-gray-300">Statistics</p>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
+            <label for="show-compact-graph-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="show-compact-graph-toggle" checked class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="Replace the full times list with a compact sparkline-style graph of recent solve times. Saves vertical space.">Show Compact Graph</span>
+            </label>
           </div>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
+            <label for="show-last-case-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="show-last-case-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="Show a tile for the most recently completed case below the virtual cube. Includes stats, algorithm, and quick-action buttons.">Show Last Case Tile</span>
+            </label>
+          </div>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
+            <label for="show-last-time-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="show-last-time-toggle" class="sr-only" checked />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="Show the previous solve time (with success/fail icon) above the last case tile.">Show Last Time</span>
+            </label>
+          </div>
+          <div class="flex items-center mb-1 text-sm sm:text-base">
+            <label for="show-prev-stats-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="show-prev-stats-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="Show statistics from the previous case solve instead of the current one. In countdown mode, shows the stats from the case that was just solved.">Show Stats of Previous Case</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Features Panel -->
+        <div class="mb-4 p-3 border border-gray-300 dark:border-gray-600 rounded-lg">
+          <p class="font-semibold mb-2 text-gray-700 dark:text-gray-300">Features</p>
+          
+          <div class="flex items-center mb-4 text-sm sm:text-base max-w-[250px]">
+            <label for="keep-rotation-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="keep-rotation-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2 text-gray-900 dark:text-white" data-tooltip="Don't require rotating the cube back after algorithms with orientation changes. Instead, incoming moves are automatically compensated for the accumulated rotation.">Keep Cube Rotation</span>
+            </label>
+          </div>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
+            <label for="always-scramble-to-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="always-scramble-to-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="When opening a case tile, automatically enable 'Scramble To' so the smart cube guides you to the case state before each solve. Otherwise you have to flip it on manually each time.">Always Keep "Scramble To" Enabled</span>
+            </label>
+          </div>
+          <div class="flex items-center mb-3 text-sm sm:text-base">
+            <label for="override-alg-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="override-alg-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="When you execute a different algorithm that still solves the case correctly, prompt to save it as an alternative. Detects non-matching move sequences that reach the same end state.">Override Algorithm</span>
+            </label>
+          </div>
+          <div class="flex items-center mb-1 text-sm sm:text-base">
+            <label for="reset-practice-toggle" class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="reset-practice-toggle" class="sr-only" />
+              <div class="w-11 h-6 bg-gray-400 rounded-full shadow-inner"></div>
+              <div class="dot absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"></div>
+              <span class="ml-2" data-tooltip="Show a ↩️ Reset button in the top bar during practice. Resets the current case queue and restarts the practice cycle from scratch.">Show Reset Button</span>
+            </label>
+          </div>
+        </div>
+        <div class="mt-3">
+          <button id="clear-local-storage" class="bg-red-500 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-300 ease-in-out hover:bg-blue-700 text-sm sm:text-base">
+            ☢️ Delete all progress data, algorithms and settings
+          </button>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Stats Modal -->
+  <div id="stats-modal-overlay" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center cursor-pointer">
+    
+     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 w-full mx-4 max-w-[800px] max-h-[90vh] overflow-y-auto cursor-default"
+      style="border: 2px solid black;">
+      
+      <!-- <div class="flex items-center gap-2 text-xs mt-1 mb-3 justify-space-between"> -->
+        <!-- <div class="flex items-center gap-2 text-xs mt-1 mb-3"> -->
+          <div class="flex items-center gap-2 mb-3">
+            <h3 id="stats-modal-title" class="font-bold text-lg text-gray-900 dark:text-white flex-1"></h3>
+            <button id="stats-modal-bookmark" class="flex-shrink-0 ml-auto" title="Learning status"></button>
+          </div>
+          <h4 id="stats-modal-alg" class="text-lg mb-3 text-gray-900 dark:text-white" ></h4>
+        <!-- </div> -->
+
+        <div class="flex items-center gap-2 text-xs mt-1 mb-3">
+          <div id="stats-modal-failed" class="text-red-600 font-bold"></div>
+          <div id="stats-modal-success" class="text-green-600 font-bold"></div>
+        </div>
+      <!-- </div> -->
+
+      <!-- No data message (shown when both exec and recexec have no data) -->
+      <div id="stats-modal-no-data" class="hidden text-center text-gray-500 dark:text-gray-400 font-bold text-lg" style="padding-top: 60px; padding-bottom: 60px;">No data available yet</div>
+
+      <!-- Execution stats -->
+      <div id="stats-modal-exec" class="mb-4">
+        <div class="flex flex-col sm:flex-row border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
+          <div class="p-2 flex-grow min-h-[200px] max-h-[300px]">
+            <div class="relative w-full h-full">
+              <canvas id="stats-modal-exec-graph" class="w-full h-full"></canvas>
+            </div>
+          </div>
+          <div class="min-w-[180px] p-2">
+            <!-- <div id="stats-modal-exec-name" class="text-center text-sm font-bold pb-1 text-gray-900 dark:text-white"></div> -->
+            <div class="text-center text-gray-500 dark:text-gray-400 pb-1 font-bold">execution</div>
+            <div id="stats-modal-exec-avg" class="flex items-center justify-center text-center border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white text-sm font-bold p-2 m-1">Average Time<br />-</div>
+            <div id="stats-modal-exec-ao12" class="flex items-center justify-center text-center border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white text-sm font-bold p-2 m-1">Ao12<br />-</div>
+            <div id="stats-modal-exec-tps" class="flex items-center justify-center text-center border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white text-sm font-bold p-2 m-1">Average TPS<br />-</div>
+            <div id="stats-modal-exec-tpso12" class="flex items-center justify-center text-center border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white text-sm font-bold p-2 m-1">TPSo12<br />-</div>
+            <div id="stats-modal-exec-pb" class="flex items-center justify-center text-center border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white text-sm font-bold p-2 m-1">Single PB<br />-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recognition + Execution stats -->
+      <div id="stats-modal-recexec" class="mb-4">
+        <div class="flex flex-col sm:flex-row border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
+          <div class="p-2 flex-grow min-h-[200px] max-h-[300px]">
+            <div class="relative w-full h-full">
+              <canvas id="stats-modal-recexec-graph" class="w-full h-full"></canvas>
+            </div>
+          </div>
+          <div class="min-w-[180px] p-2">
+            <!-- <div id="stats-modal-recexec-name" class="text-center text-sm font-bold pb-1 text-gray-900 dark:text-white"></div> -->
+            <div class="text-center text-gray-500 dark:text-gray-400 pb-1 font-bold">recognition <br />+ execution</div>
+            <div id="stats-modal-recexec-avg" class="flex items-center justify-center text-center border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white text-sm font-bold p-2 m-1">Average Time<br />-</div>
+            <div id="stats-modal-recexec-tps" class="flex items-center justify-center text-center border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white text-sm font-bold p-2 m-1">Average TPS<br />-</div>
+            <div id="stats-modal-recexec-pb" class="flex items-center justify-center text-center border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white text-sm font-bold p-2 m-1">Single PB<br />-</div>
+            <div id="stats-modal-recexec-ao12" class="flex items-center justify-center text-center border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white text-sm font-bold p-2 m-1">Ao12<br />-</div>
+            <div id="stats-modal-recexec-tpso12" class="flex items-center justify-center text-center border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-600 text-gray-900 dark:text-white text-sm font-bold p-2 m-1">TPSo12<br />-</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-center gap-3">
+        <button id="stats-modal-reset" class="bg-red-100 text-red-700 font-semibold px-3 py-2 rounded-lg text-xs sm:text-sm hover:bg-red-200 transition-colors duration-300 ease-in-out shadow">
+          Reset stats for this case
+        </button>
+        <button id="stats-modal-close" class="bg-blue-500 text-white font-bold  px-4 py-2 px-5 rounded-lg text-sm sm:text-base hover:bg-blue-700 transition-colors duration-300 ease-in-out shadow" style="width: 300px">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="footer" class="footer min-w-[360px] text-xs block p-2 text-center leading-tight text-gray-600 dark:text-gray-400">
-    <p>Cubedex has been created with ♥ by <a href="https://twitter.com/pof" target="_blank" class="text-blue-500 hover:underline">Pau Oliva Fora</a> using <a href="https://github.com/poliva/smartcube-web-bluetooth" target="_blank" class="text-blue-500 hover:underline">smartcube-web-bluetooth</a> and <a href="https://github.com/cubing/cubing.js" target="_blank" class="text-blue-500 hover:underline">cubing.js</a>.</p>
+    <p>Cubedex has been created with ♥ by <a href="https://twitter.com/pof" target="_blank" class="text-blue-500 hover:underline">Pau Oliva Fora</a> using <a href="https://github.com/afedotov/gan-web-bluetooth" target="_blank" class="text-blue-500 hover:underline">gan-web-bluetooth</a> and <a href="https://github.com/cubing/cubing.js" target="_blank" class="text-blue-500 hover:underline">cubing.js</a>.</p>
     <p>The <a href="https://github.com/poliva/cubedex" target="_blank" class="text-blue-500 hover:underline">source code</a> is available on GitHub, feel free to contribute by sending a PR or <a href="https://ko-fi.com/cubedex" target="_blank" class="text-blue-500 hover:underline">buy me a coffee</a>.</p>
   </div>
+  <div id="rich-tooltip"></div>
   <script type="module" src="/src/index.ts"></script>
 
 </body>

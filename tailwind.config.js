@@ -12,6 +12,9 @@ export default {
         '5xl': '64rem', // 1024px
         '6xl': '72rem', // 1152px
       },
+      gridTemplateColumns: {
+        'sidebar': 'auto 1fr auto', // left/right auto-width, cube gets rest
+      },
     },
   },
   plugins: [],

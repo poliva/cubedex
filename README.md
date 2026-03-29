@@ -21,6 +21,49 @@ If you enjoy using Cubedex, please consider supporting the development on [Ko-fi
 $ npm install
 $ npm run build && npm run preview
 ```
+**Testing:**
+
+Every test has a unique ID in the format `[prefix-N]` (e.g. `[reg-3]`, `[vis-ext-42]`).
+
+```bash
+# Run all tests
+npx playwright test
+
+# Run a specific file
+npx playwright test tests/visualisation.spec.ts
+
+# Run regression tests only (quick validation of various things)
+npx playwright test tests/regression.spec.ts
+
+# Run a single test by ID
+npx playwright test -g "[reg-3]"
+
+# Run a multiple tests by ID
+npx playwright test -g "[reg-3]|[reg-6]"
+
+# Run all tests in a group by prefix
+npx playwright test -g "alg-comp"
+```
+| Prefix | Test file | Description |
+|--------|--------|--------|
+| `reg` | regression | Quick retesting of important behaviors |
+| `alg-comp` | alg-completion | Algorithm completion detection and flow |
+| `vis-basic` | vis-basic | Basic visualization: forward, undo, wrong, double moves |
+| `vis-wide` | vis-wide | Wide move (d', u, f, r, l) and rotation (y, x, z) visualization |
+| `vis-slice` | vis-slice | Slice move (S, M, E, M2) visualization |
+| `vis-crot` | vis-crot | Color rotation (Rotate Colors feature) visualization |
+| `vis-mrm` | vis-mrm | masterRepairFaceMap cross-algorithm orientation visualization |
+| `vis-complex` | vis-complex | Complex multi-step scenarios, encapsulated algs, bug repros |
+| `move` | move-handling | Move matching logic (pattern detection, undo, override) |
+| `mrf` | master-repair-facemap | masterRepairFaceMap state tracking (non-vis) |
+| `split` | split-alg-cursor | Split algorithm cursor positioning |
+| `stick-cd` | stickering-countdown | Stickering masks and countdown behavior |
+| `btn-lay` | button-layout | Button layout and visibility |
+| `ui` | ui-elements | UI element existence, visibility, defaults, search bar |
+| `opt` | options-persistence | Options/settings persistence across reloads |
+| `opt-settings` | options-settings | Every setting: toggle/input/select stores, persists, no clobber |
+| `smoke` | smoke | Basic page load and connectivity |
+
 **Publish gh-page:**
 ```
 $ rm -rf docs && mv dist docs

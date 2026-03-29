@@ -6,9 +6,12 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && npx tailwindcss -i ./src/tailwind.css -o ./src/style.css",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "npx playwright test",
+    "test:ui": "npx playwright test --ui"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@types/node": "^22.19.15",
     "autoprefixer": "^10.4.27",
     "postcss": "^8.5.8",

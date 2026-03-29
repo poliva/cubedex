@@ -1,0 +1,226 @@
+[
+  {
+    "subset": "0 / 2",
+    "algorithms": [
+      {
+        "name": "0 / 2 (UF UR)",
+        "algorithm": "M' U' M' U M'"
+      },
+      {
+        "name": "0 / 2 (UL UR)",
+        "algorithm": "M' U' M U' M U2 M' U' M"
+      },
+      {
+        "name": "0 / 2 (UF DF)",
+        "algorithm": "U M' U' M' U M U M"
+      },
+      {
+        "name": "0 / 2 (DF DB)",
+        "algorithm": "M' U' M' U M U' M'"
+      }
+    ]
+  },
+  {
+    "subset": "1 / 1",
+    "algorithms": [
+      {
+        "name": "1 / 1 (UF UR)",
+        "algorithm": "M' U M' U M U M"
+      },
+      {
+        "name": "1 / 1 (UF DF)",
+        "algorithm": "M U M' U M U M'"
+      },
+      {
+        "name": "1 / 1 (UF UB)",
+        "algorithm": "M U' M' U2 M' U2 M' U M"
+      },
+      {
+        "name": "1 / 1 (UR UB)",
+        "algorithm": "M U' M' U' M'"
+      },
+      {
+        "name": "1 / 1 (UR UL)",
+        "algorithm": "U' M' U M' U2 M U M'"
+      },
+      {
+        "name": "1 / 1 (UR DF)",
+        "algorithm": "M' U' M' U' M'"
+      },
+      {
+        "name": "1 / 1 (UR DB)",
+        "algorithm": "M U M' U M U M"
+      },
+      {
+        "name": "1 / 1 (UB DF)",
+        "algorithm": "U M' U2 M U M U M' U M'"
+      },
+      {
+        "name": "1 / 1 (UB DB)",
+        "algorithm": "U' M' U M' U2 M'"
+      },
+      {
+        "name": "1 / 1 (DF DB)",
+        "algorithm": "M' U' M' U2 M' U2 M' U M"
+      }
+    ]
+  },
+  {
+    "subset": "2 Adj / 0",
+    "algorithms": [
+      {
+        "name": "2 Adj / 0 (UF UL)",
+        "algorithm": "U M' U' M' U2 M"
+      },
+      {
+        "name": "2 Adj / 0 (UF UR)",
+        "algorithm": "M' U2 M' U' M' U' M U' M"
+      },
+      {
+        "name": "2 Adj / 0 (UF UB)",
+        "algorithm": "M' U M U M' U2 M U' M"
+      },
+      {
+        "name": "2 Adj / 0 (UL UB)",
+        "algorithm": "U M' U' M' U M U' M' U' M"
+      },
+      {
+        "name": "2 Adj / 0 (UF DF)",
+        "algorithm": "U2 M U M' U2 M U' M'"
+      },
+      {
+        "name": "2 Adj / 0 (UL DF)",
+        "algorithm": "M' U M' U2 M' U M"
+      },
+      {
+        "name": "2 Adj / 0 (DF DB)",
+        "algorithm": "M' U M' U2 M' U' M'"
+      }
+    ]
+  },
+  {
+    "subset": "2 Adj / 2",
+    "algorithms": [
+      {
+        "name": "2 Adj / 2 (UF UL)",
+        "algorithm": "U M' U2 M U M U M"
+      },
+      {
+        "name": "2 Adj / 2 (UF UR)",
+        "algorithm": "M' U' M U2 M U2 M' U M'"
+      },
+      {
+        "name": "2 Adj / 2 (UF UB)",
+        "algorithm": "U M' U' M' U' M' U' M"
+      },
+      {
+        "name": "2 Adj / 2 (UL UB)",
+        "algorithm": "U' M2 U M'"
+      },
+      {
+        "name": "2 Adj / 2 (UF DF)",
+        "algorithm": "U' M2 U M U M"
+      },
+      {
+        "name": "2 Adj / 2 (UL DF)",
+        "algorithm": "U2 M' U2 M' U M'"
+      },
+      {
+        "name": "2 Adj / 2 (DF DB)",
+        "algorithm": "U M' U' M' U' M' U' M'"
+      }
+    ]
+  },
+  {
+    "subset": "2 Opp / 0",
+    "algorithms": [
+      {
+        "name": "2 Opp / 0 (UF UR)",
+        "algorithm": "M' U' M U M' U M'"
+      },
+      {
+        "name": "2 Opp / 0 (UF UB)",
+        "algorithm": "M' U' M U M' U' M'"
+      },
+      {
+        "name": "2 Opp / 0 (UF DF)",
+        "algorithm": "M U M' U' M U' M'"
+      },
+      {
+        "name": "2 Opp / 0 (UR DF)",
+        "algorithm": "M' U M U' M"
+      },
+      {
+        "name": "2 Opp / 0 (UR UL)",
+        "algorithm": "M' U' M' U' M' U2 M U' M'"
+      },
+      {
+        "name": "2 Opp / 0 (DF DB)",
+        "algorithm": "R U R' U' M' U R U' r'"
+      }
+    ]
+  },
+  {
+    "subset": "2 Opp / 2",
+    "algorithms": [
+      {
+        "name": "2 Opp / 2 (UF UR)",
+        "algorithm": "M' U2 M' U2 M U M"
+      },
+      {
+        "name": "2 Opp / 2 (UR UL)",
+        "algorithm": "M2 U' M' U2 M' U2 M"
+      },
+      {
+        "name": "2 Opp / 2 (UF DF)",
+        "algorithm": "M2 U' M' U2 M' U2 M' U M'"
+      },
+      {
+        "name": "2 Opp / 2 (DF DB)",
+        "algorithm": "M' U2 M' U2 M'"
+      },
+      {
+        "name": "2 Opp / 2 (UR DF)",
+        "algorithm": "M' U2 M U M U2 M' U' M'"
+      },
+      {
+        "name": "2 Opp / 2 (UF UB)",
+        "algorithm": "M' U2 M' U2 M U' M U' M' U2 M"
+      }
+    ]
+  },
+  {
+    "subset": "All 6",
+    "algorithms": [
+      {
+        "name": "All 6 (UF DF)",
+        "algorithm": "U' M U M' U' M U' M' U2 M"
+      },
+      {
+        "name": "All 6 (DF DB)",
+        "algorithm": "M' U' M' U' M U' M' U2 M' U' M"
+      }
+    ]
+  },
+  {
+    "subset": "Arrow",
+    "algorithms": [
+      {
+        "name": "Arrow (UF DF)",
+        "algorithm": "M"
+      },
+      {
+        "name": "Arrow (UB UR)",
+        "algorithm": "M' U M"
+      },
+      {
+        "name": "Arrow (UF UR)",
+        "algorithm": "U M' U2 M U M"
+      },
+      {
+        "name": "Arrow (DF DB)",
+        "algorithm": "U' M U' M' U' M"
+      }
+    ]
+  }
+]

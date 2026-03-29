@@ -1,0 +1,300 @@
+[
+  {
+    "subset": "Dot",
+    "algorithms": [
+      {
+        "name": "OLL-2 Zamboni",
+        "algorithm": "F (R U R' U') S (R U R' U') f'"
+      },
+      {
+        "name": "OLL-3 Anti Nazi",
+        "algorithm": "f (R U R' U') f' U' F (R U R' U') F'"
+      },
+      {
+        "name": "OLL-4 Nazi",
+        "algorithm": "f (R U R' U') f' U F (R U R' U') F'"
+      },
+      {
+        "name": "OLL-17 Slash",
+        "algorithm": "(R U R' U) (R' F R F') U2' (R' F R F')"
+      },
+      {
+        "name": "OLL-1 Blank",
+        "algorithm": "(R U2') (R2' F R F') U2' (R' F R F')"
+      },
+      {
+        "name": "OLL-18 Crown",
+        "algorithm": "(R U2') (R2' F R F') U2' M' (U R U' r')"
+      },
+      {
+        "name": "OLL-19 Bunny",
+        "algorithm": "M U (R U R' U') M' (R' F R F')"
+      },
+      {
+        "name": "OLL-20 X",
+        "algorithm": "M U (R U R' U') M2' (U R U' r')"
+      }
+    ]
+  },
+  {
+    "subset": "T Shape",
+    "algorithms": [
+      {
+        "name": "OLL-45 T / Suit Up",
+        "algorithm": "F (R U R' U') F'"
+      },
+      {
+        "name": "OLL-33 Key / Shoelaces",
+        "algorithm": "(R U R' U') (R' F R F')"
+      }
+    ]
+  },
+  {
+    "subset": "Square",
+    "algorithms": [
+      {
+        "name": "OLL-6 Righty Square",
+        "algorithm": "r U2' (R' U' R U') r'"
+      },
+      {
+        "name": "OLL-5 Lefty Square",
+        "algorithm": "r' U2 (R U R' U) r"
+      }
+    ]
+  },
+  {
+    "subset": "Oriented Corners",
+    "algorithms": [
+      {
+        "name": "OLL-28 Arrow",
+        "algorithm": "(r U R' U') M (U R U' R')"
+      },
+      {
+        "name": "OLL-57 H",
+        "algorithm": "(R U R' U') M' (U R U' r')"
+      }
+    ]
+  },
+  {
+    "subset": "Oriented Edges",
+    "algorithms": [
+      {
+        "name": "OLL-27 Sune",
+        "algorithm": "(R U R' U) (R U2' R')"
+      },
+      {
+        "name": "OLL-26 Anti Sune",
+        "algorithm": "(R U2') (R' U' R U' R')"
+      },
+      {
+        "name": "OLL-21 H / Cross",
+        "algorithm": "(R U R' U) (R U' R' U) (R U2' R')"
+      },
+      {
+        "name": "OLL-22 Pi / Bruno",
+        "algorithm": "R U'2 (R'2 U' R2 U' R'2) U'2 R"
+      },
+      {
+        "name": "OLL-23 U / Headlights",
+        "algorithm": "R2 D (R' U2 R) D' (R' U2 R')"
+      },
+      {
+        "name": "OLL-24 T / Chameleon",
+        "algorithm": "(r U R' U') (r' F R) F'"
+      },
+      {
+        "name": "OLL-25 L / Bowtie",
+        "algorithm": "F' (r U R' U') (r' F R)"
+      }
+    ]
+  },
+  {
+    "subset": "Lightning Bolts",
+    "algorithms": [
+      {
+        "name": "OLL-7 Lightning",
+        "algorithm": "r (U R' U R) U2' r'"
+      },
+      {
+        "name": "OLL-8 Reverse Lightning",
+        "algorithm": "r' (U' R U' R') U2' r"
+      },
+      {
+        "name": "OLL-11 Downstairs",
+        "algorithm": "S (R U R' U R U2' R') U2' S'"
+      },
+      {
+        "name": "OLL-12 Upstairs",
+        "algorithm": "S (R' U' R U' R' U2' R) U2' S'"
+      },
+      {
+        "name": "OLL-40 Big Lightning / Anti Fung",
+        "algorithm": "R' F (R U R' U') F' U R"
+      },
+      {
+        "name": "OLL-39 Lefty Big Lightning / Fung",
+        "algorithm": "L F' (L' U' L U) F U' L'"
+      }
+    ]
+  },
+  {
+    "subset": "P Shape",
+    "algorithms": [
+      {
+        "name": "OLL-44 P",
+        "algorithm": "f (R U R' U') f'"
+      },
+      {
+        "name": "OLL-43 Anti P",
+        "algorithm": "f' (L' U' L U) f"
+      },
+      {
+        "name": "OLL-31 Couch",
+        "algorithm": "R' U' F (U R U' R') F' R"
+      },
+      {
+        "name": "OLL-32 Anti Couch",
+        "algorithm": "S (R U R' U') (R' F R f')"
+      }
+    ]
+  },
+  {
+    "subset": "C Shape",
+    "algorithms": [
+      {
+        "name": "OLL-46 Seein' Headlights",
+        "algorithm": "R' U' (R' F R F') U R"
+      },
+      {
+        "name": "OLL-34 City",
+        "algorithm": "(R U R' U') B' (R' F R F') B"
+      }
+    ]
+  },
+  {
+    "subset": "W Shape",
+    "algorithms": [
+      {
+        "name": "OLL-38 Mario",
+        "algorithm": "(R U R' U) (R U' R' U') (R' F R F')"
+      },
+      {
+        "name": "OLL-36 Warrio",
+        "algorithm": "(L' U' L U') (L' U L U) (L F' L' F)"
+      }
+    ]
+  },
+  {
+    "subset": "Line",
+    "algorithms": [
+      {
+        "name": "OLL-51 Ant / Bottlecap",
+        "algorithm": "F (U R U' R') (U R U' R') F'"
+      },
+      {
+        "name": "OLL-52 Rice Cooker",
+        "algorithm": "R' (F' U' F U') (R U R' U) R"
+      },
+      {
+        "name": "OLL-56 Street Lights",
+        "algorithm": "F (R U R' U') F' (r U R' U') (r' F R) F'"
+      },
+      {
+        "name": "OLL-55 Highway",
+        "algorithm": "(R' F U R U') R2 F' R2' (U R' U' R)"
+      }
+    ]
+  },
+  {
+    "subset": "Fish",
+    "algorithms": [
+      {
+        "name": "OLL-37 Mounted Fish",
+        "algorithm": "F (R U' R') (U' R U R') F'"
+      },
+      {
+        "name": "OLL-35 Fish Salad",
+        "algorithm": "(R U2' R') (R' F R F') (R U2' R')"
+      },
+      {
+        "name": "OLL-10 Anti Kite",
+        "algorithm": "(R U R' U) (R' F R F') (R U2' R')"
+      },
+      {
+        "name": "OLL-9 Kite",
+        "algorithm": "(R U R' U') (R' F R2) (U R' U' F')"
+      }
+    ]
+  },
+  {
+    "subset": "L Shape",
+    "algorithms": [
+      {
+        "name": "OLL-48 Breakneck",
+        "algorithm": "f (U R U' R') (U R U' R') f'"
+      },
+      {
+        "name": "OLL-47 Anti Breakneck",
+        "algorithm": "F' (L' U' L U) (L' U' L U) F"
+      },
+      {
+        "name": "OLL-53 Frying Pan",
+        "algorithm": "(r' U' R U') (R' U R U') R' U2 r"
+      },
+      {
+        "name": "OLL-54 Anti Frying Pan",
+        "algorithm": "(r U R' U) (R U' R' U) R U2' r'"
+      },
+      {
+        "name": "OLL-50 Front Squeezy",
+        "algorithm": "r' U (r2 U') (r2' U') (r2) U r'"
+      },
+      {
+        "name": "OLL-49 Back Squeezy",
+        "algorithm": "r U' (r2' U) (r2 U) (r2') U' r"
+      }
+    ]
+  },
+  {
+    "subset": "Knight Move",
+    "algorithms": [
+      {
+        "name": "OLL-15 Squeegee",
+        "algorithm": "(R' F' R) (L' U' L) U (R' F R)"
+      },
+      {
+        "name": "OLL-16 Anti Squeegee",
+        "algorithm": "(r U r') (R U R' U') (r U' r')"
+      },
+      {
+        "name": "OLL-13 Gun",
+        "algorithm": "F U (R U2' R') U' (R U R' F')"
+      },
+      {
+        "name": "OLL-14 Anti Gun",
+        "algorithm": "(R' F R U R') F' R (F U' F')"
+      }
+    ]
+  },
+  {
+    "subset": "Awkward",
+    "algorithms": [
+      {
+        "name": "OLL-41 Poodle",
+        "algorithm": "(R U R' U) (R U2' R') F (R U R' U') F'"
+      },
+      {
+        "name": "OLL-42 Anti Poodle",
+        "algorithm": "F S' (R U R' U') F' U S"
+      },
+      {
+        "name": "OLL-29 WTF",
+        "algorithm": "S' (R U R' U') (R' F R F') U S"
+      },
+      {
+        "name": "OLL-30 Anti WTF",
+        "algorithm": "F U (R U2' R') U' (R U2' R') U' F'"
+      }
+    ]
+  }
+]
