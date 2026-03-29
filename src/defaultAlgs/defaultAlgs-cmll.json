@@ -1,0 +1,210 @@
+[
+  {
+    "subset": "Antisune",
+    "algorithms": [
+      {
+        "name": "Antisune Right Bar",
+        "algorithm": "U R' U' R U' R' U2 R"
+      },
+      {
+        "name": "Antisune Columns",
+        "algorithm": "U' R2 D R' U R D' R' U R' U' R U' R'"
+      },
+      {
+        "name": "Antisune Backslash",
+        "algorithm": "U' F' r U r' U2 r' F2 r"
+      },
+      {
+        "name": "Antisune X",
+        "algorithm": "U' R U2 R' U2 R' F R F'"
+      },
+      {
+        "name": "Antisune Forward Slash",
+        "algorithm": "U' R' F R F' r U r'"
+      },
+      {
+        "name": "Antisune Left Bar",
+        "algorithm": "U R U2 R' F R' F' R U' R U' R'"
+      }
+    ]
+  },
+  {
+    "subset": "H",
+    "algorithms": [
+      {
+        "name": "H Columns",
+        "algorithm": "U R U R' U R U' R' U R U2 R'"
+      },
+      {
+        "name": "H Rows",
+        "algorithm": "F U R U' R' U R U' R' U R U' R' F'"
+      },
+      {
+        "name": "H Column",
+        "algorithm": "U R U2 R2 F R F' U2 R' F R F'"
+      },
+      {
+        "name": "H Row",
+        "algorithm": "U2 r U' r2 D' r U' r' D r2 U r'"
+      }
+    ]
+  },
+  {
+    "subset": "L",
+    "algorithms": [
+      {
+        "name": "L Best",
+        "algorithm": "U' F' r U r' U' r' F r"
+      },
+      {
+        "name": "L Good",
+        "algorithm": "U2 F R' F' R U R U' R'"
+      },
+      {
+        "name": "L Pure",
+        "algorithm": "R U R' U R U' R' U R U' R' U R U2 R'"
+      },
+      {
+        "name": "L Front Commutator",
+        "algorithm": "U2 R U2 R D R' U2 R D' R2"
+      },
+      {
+        "name": "L Diagonal",
+        "algorithm": "U2 R U2 R2 F R F' R U2 R'"
+      },
+      {
+        "name": "L Back Commutator",
+        "algorithm": "U R' U2 R' D' R U2 R' D R2"
+      }
+    ]
+  },
+  {
+    "subset": "O",
+    "algorithms": [
+      {
+        "name": "O Adjacent",
+        "algorithm": "R U R' F' R U R' U' R' F R2 U' R'"
+      },
+      {
+        "name": "O Diagonal",
+        "algorithm": "F R U' R' U' R U R' F' R U R' U' R' F R F'"
+      }
+    ]
+  },
+  {
+    "subset": "Pi",
+    "algorithms": [
+      {
+        "name": "Pi Right Bar",
+        "algorithm": "F R U R' U' R U R' U' F'"
+      },
+      {
+        "name": "Pi Backslash",
+        "algorithm": "U F R' F' R U2 R U' R' U R U2 R'"
+      },
+      {
+        "name": "Pi X",
+        "algorithm": "U' R' F R U F U' R U R' U' F'"
+      },
+      {
+        "name": "Pi Forward Slash",
+        "algorithm": "R U2 R' U' R U R' U2 R' F R F'"
+      },
+      {
+        "name": "Pi Columns",
+        "algorithm": "U' r U' r2 D' r U r' D r2 U r'"
+      },
+      {
+        "name": "Pi Left Bar",
+        "algorithm": "U' R' U' R' F R F' R U' R' U2 R"
+      }
+    ]
+  },
+  {
+    "subset": "Sune",
+    "algorithms": [
+      {
+        "name": "Sune Left Bar",
+        "algorithm": "U R U R' U R U2 R'"
+      },
+      {
+        "name": "Sune X",
+        "algorithm": "U L' U2 L U2 L F' L' F"
+      },
+      {
+        "name": "Sune Forward Slash",
+        "algorithm": "U F R' F' R U2 R U2 R'"
+      },
+      {
+        "name": "Sune Columns",
+        "algorithm": "R U R' U R U' R D R' U' R D' R2"
+      },
+      {
+        "name": "Sune Right Bar",
+        "algorithm": "U' R U R' U R' F R F' R U2 R'"
+      },
+      {
+        "name": "Sune Backslash",
+        "algorithm": "U r U' r' F R' F' R"
+      }
+    ]
+  },
+  {
+    "subset": "T",
+    "algorithms": [
+      {
+        "name": "T Left Bar",
+        "algorithm": "U' R U R' U' R' F R F'"
+      },
+      {
+        "name": "T Right Bar",
+        "algorithm": "U L' U' L U L F' L' F"
+      },
+      {
+        "name": "T Rows",
+        "algorithm": "F R' F R2 U' R' U' R U R' F2"
+      },
+      {
+        "name": "T Front Row",
+        "algorithm": "r' U r U2 R2 F R F' R"
+      },
+      {
+        "name": "T Back Row",
+        "algorithm": "r' D' r U r' D r U' r U r'"
+      },
+      {
+        "name": "T Columns",
+        "algorithm": "U2 r U' r2 D' r U2 r' D r2 U r'"
+      }
+    ]
+  },
+  {
+    "subset": "U",
+    "algorithms": [
+      {
+        "name": "U Forward Slash",
+        "algorithm": "U2 R2 D R' U2 R D' R' U2 R'"
+      },
+      {
+        "name": "U Backslash",
+        "algorithm": "R2 D' R U2 R' D R U2 R"
+      },
+      {
+        "name": "U Front Row",
+        "algorithm": "R' U' R U' R' U2 R2 U R' U R U2 R'"
+      },
+      {
+        "name": "U Rows",
+        "algorithm": "U' F R2 D R' U R D' R2 U' F'"
+      },
+      {
+        "name": "U X",
+        "algorithm": "U2 r U' r' U r' D' r U' r' D r"
+      },
+      {
+        "name": "U Back Row",
+        "algorithm": "U' F R U R' U' F'"
+      }
+    ]
+  }
+]

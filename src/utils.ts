@@ -1,6 +1,8 @@
 
 import { cube3x3x3 } from 'cubing/puzzles';
 import { KPattern, KPatternData, KPuzzle } from 'cubing/kpuzzle';
+import { Alg } from 'cubing/alg';
+import { fixOrientation, partialStateEquals } from './faceMasking';
 
 var KPUZZLE_333: KPuzzle;
 cube3x3x3.kpuzzle().then(v => KPUZZLE_333 = v);
@@ -9,6 +11,15 @@ const REID_EDGE_ORDER = "UF UR UB UL DF DR DB DL FR FL BR BL".split(" ");
 const REID_CORNER_ORDER = "UFR URB UBL ULF DRF DFL DLB DBR".split(" ");
 const REID_CENTER_ORDER = "U L F R B D".split(" ");
 
+/**
+ * Maps each of the 54 facelets (in Reid order: U0-U8, R0-R8, F0-F8, D0-D8, L0-L8, B0-B8)
+ * to its piece in KPattern's orbit data.
+ * Each entry is [orbitType, pieceIndex, orientationIndex] where:
+ *   orbitType: 0 = EDGES, 1 = CORNERS, 2 = CENTERS
+ *   pieceIndex: slot index within the orbit (e.g. 0-11 for edges)
+ *   orientationIndex: which sticker of that piece (0 = primary, 1/2 = secondary)
+ * Used by patternToFacelets() to convert a KPattern into a 54-char facelet string.
+ */
 const REID_TO_FACELETS_MAP: [number, number, number][] = [
   [1, 2, 0],
   [0, 2, 0],
@@ -203,5 +214,38 @@ function faceletsToPattern(facelets: string): KPattern {
 
 export {
   patternToFacelets,
-  faceletsToPattern
+  faceletsToPattern,
+  isCaseSymmetric,
+  isCaseSemiSymmetric,
+}
+
+// ── Symmetry detection ─────────────────────────────────────────────────
+
+const SOLVED_FACELETS = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
+
+/**
+ * Checks if a case is fully symmetric (4-fold rotational symmetry around U axis).
+ * ALL of U, U', U2 pre-AUFs must produce the same solved result -> no AUF needed.
+ */
+function isCaseSymmetric(alg: string, category: string, ignore: string): boolean {
+  const solved = faceletsToPattern(SOLVED_FACELETS);
+  const scrambled = solved.applyAlg(Alg.fromString(alg).invert());
+  for (const auf of ["U", "U'", "U2"]) {
+    const result = fixOrientation(scrambled.applyAlg(Alg.fromString(auf + " " + alg)));
+    const target = fixOrientation(solved);
+    if (!partialStateEquals(result, target, category, ignore)) return false;
+  }
+  return true;
+}
+
+/**
+ * Checks if a case is semi-symmetric (2-fold rotational symmetry around U axis).
+ * U2 pre-AUF produces the same solved result. For AUF, only add "" or "U" (not U' or U2).
+ */
+function isCaseSemiSymmetric(alg: string, category: string, ignore: string): boolean {
+  const solved = faceletsToPattern(SOLVED_FACELETS);
+  const scrambled = solved.applyAlg(Alg.fromString(alg).invert());
+  const result = fixOrientation(scrambled.applyAlg(Alg.fromString("U2 " + alg)));
+  const target = fixOrientation(solved);
+  return partialStateEquals(result, target, category, ignore);
 }

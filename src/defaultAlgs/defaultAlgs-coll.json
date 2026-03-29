@@ -1,0 +1,197 @@
+[
+  {
+    "subset": "Antisune",
+    "algorithms": [
+      {
+        "name": "AS 1",
+        "algorithm": "R' U' R U' R' U2 R"
+      },
+      {
+        "name": "AS 2",
+        "algorithm": "U R' U' R U' R' U R' D' R U R' D R2"
+      },
+      {
+        "name": "AS 3",
+        "algorithm": "U2 R2 D R' U2 R D' R2 U' R U' R'"
+      },
+      {
+        "name": "AS 4",
+        "algorithm": "U2 R' U' R U' R2 D' R U2 R' D R2"
+      },
+      {
+        "name": "AS 5",
+        "algorithm": "U2 r' F R F' r U R'"
+      },
+      {
+        "name": "AS 6",
+        "algorithm": "R U R' F' R U2 R' U' R U' R' F R U' R'"
+      }
+    ]
+  },
+  {
+    "subset": "H",
+    "algorithms": [
+      {
+        "name": "H 1",
+        "algorithm": "R U R' U R U' R' U R U2 R'"
+      },
+      {
+        "name": "H 2",
+        "algorithm": "F R U' R' U R U2 R' U' R U R' U' F'"
+      },
+      {
+        "name": "H 3",
+        "algorithm": "R U R' U R U L' U R' U' L"
+      },
+      {
+        "name": "H 4",
+        "algorithm": "U F R U R' U' R U R' U' R U R' U' F'"
+      }
+    ]
+  },
+  {
+    "subset": "L",
+    "algorithms": [
+      {
+        "name": "L 1",
+        "algorithm": "U' R U R' U R U' R' U R U' R' U R U2 R'"
+      },
+      {
+        "name": "L 2",
+        "algorithm": "R' U2 R' D' R U2 R' D R2"
+      },
+      {
+        "name": "L 3",
+        "algorithm": "U R U2 R D R' U2 R D' R2"
+      },
+      {
+        "name": "L 4",
+        "algorithm": "U F R' F' r U R U' r'"
+      },
+      {
+        "name": "L 5",
+        "algorithm": "U2 F' r U R' U' r' F R"
+      },
+      {
+        "name": "L 6",
+        "algorithm": "U r U2 R2 F R F' R U2 r'"
+      }
+    ]
+  },
+  {
+    "subset": "Pi",
+    "algorithms": [
+      {
+        "name": "Pi 1",
+        "algorithm": "R' U2 R2 U R2 U R2 U2 R'"
+      },
+      {
+        "name": "Pi 2",
+        "algorithm": "U F U R U' R' U R U' R2 F' R U R U' R'"
+      },
+      {
+        "name": "Pi 3",
+        "algorithm": "R' U' F' R U R' U' R' F R2 U2 R' U2 R"
+      },
+      {
+        "name": "Pi 4",
+        "algorithm": "R U R' U' R' F R2 U R' U' R U R' U' F'"
+      },
+      {
+        "name": "Pi 5",
+        "algorithm": "U' R U R' U F' R U2 R' U2 R' F R"
+      },
+      {
+        "name": "Pi 6",
+        "algorithm": "U' r U R' U R' F R F' R U' R' U R U2 r'"
+      }
+    ]
+  },
+  {
+    "subset": "Sune",
+    "algorithms": [
+      {
+        "name": "S 1",
+        "algorithm": "R U R' U R U2 R'"
+      },
+      {
+        "name": "S 2",
+        "algorithm": "U2 R U R' U R2 D R' U2 R D' R2"
+      },
+      {
+        "name": "S 3",
+        "algorithm": "L' R U R' U' L U2 R U2 R'"
+      },
+      {
+        "name": "S 4",
+        "algorithm": "U' R U R' U R U' R D R' U' R D' R2"
+      },
+      {
+        "name": "S 5",
+        "algorithm": "R U' L' U R' U' L"
+      },
+      {
+        "name": "S 6",
+        "algorithm": "U2 R U R' F' R U R' U R U2 R' F R U' R'"
+      }
+    ]
+  },
+  {
+    "subset": "T",
+    "algorithms": [
+      {
+        "name": "T 1",
+        "algorithm": "R U2 R' U' R U' R2 U2 R U R' U R"
+      },
+      {
+        "name": "T 2",
+        "algorithm": "R' U R U2 R' L' U R U' L"
+      },
+      {
+        "name": "T 3",
+        "algorithm": "U R' F' r U R U' r' F"
+      },
+      {
+        "name": "T 4",
+        "algorithm": "U2 F R U R' U' R U' R' U' R U R' F'"
+      },
+      {
+        "name": "T 5",
+        "algorithm": "U' r U R' U' r' F R F'"
+      },
+      {
+        "name": "T 6",
+        "algorithm": "R' U R2 D r' U2 r D' R2 U' R"
+      }
+    ]
+  },
+  {
+    "subset": "U",
+    "algorithms": [
+      {
+        "name": "U 1",
+        "algorithm": "R' U' R U' R' U2 R2 U R' U R U2 R'"
+      },
+      {
+        "name": "U 2",
+        "algorithm": "R' F R U' R' U' R U R' F' R U R' U' R' F R F' R"
+      },
+      {
+        "name": "U 3",
+        "algorithm": "U2 R2 D R' U2 R D' R' U2 R'"
+      },
+      {
+        "name": "U 4",
+        "algorithm": "F R U' R' U R U R' U R U' R' F'"
+      },
+      {
+        "name": "U 5",
+        "algorithm": "R2 D' R U2 R' D R U2 R"
+      },
+      {
+        "name": "U 6",
+        "algorithm": "R2 D' R U R' D R U R U' R' U' R"
+      }
+    ]
+  }
+]

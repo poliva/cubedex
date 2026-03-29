@@ -1,0 +1,2090 @@
+[
+  {
+    "subset": "AS1",
+    "algorithms": [
+      {
+        "name": "ZBLL 401",
+        "algorithm": "R2' D' R U2 R' D R U R' F R U R U' R' F' R"
+      },
+      {
+        "name": "ZBLL 402",
+        "algorithm": "R U2 R2 U' R' U R U' R' U' R2 U R"
+      },
+      {
+        "name": "ZBLL 403",
+        "algorithm": "R' U' R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 404",
+        "algorithm": "R U2 R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 405",
+        "algorithm": "R' U' R2 U R2 U R2 U2 R2 U2 R"
+      },
+      {
+        "name": "ZBLL 406",
+        "algorithm": "R U R' U R' U' R2 U' R2 U2 R"
+      },
+      {
+        "name": "ZBLL 407",
+        "algorithm": "R' U' R U R U2 R' U' R' U R U' R U' R'"
+      },
+      {
+        "name": "ZBLL 408",
+        "algorithm": "R U R' U' R' U' R U R U' R' U' R' U R"
+      },
+      {
+        "name": "ZBLL 409",
+        "algorithm": "R U R' U R' U' R U R' U' R2 U' R2 U R U' R' U R"
+      },
+      {
+        "name": "ZBLL 410",
+        "algorithm": "R' U' R U' R' U' R' U' R' U' R' U R U R2"
+      },
+      {
+        "name": "ZBLL 411",
+        "algorithm": "R U R' U' R U R2 U' R2 U' R' U R U' R' U R' U R"
+      },
+      {
+        "name": "ZBLL 412",
+        "algorithm": "R U R' U R' U' R' U R U' R' U' R' U' R' U2 R"
+      }
+    ]
+  },
+  {
+    "subset": "AS2",
+    "algorithms": [
+      {
+        "name": "ZBLL 413",
+        "algorithm": "R U2 R2 U' R2 U' R' F U' R' U' R U F'"
+      },
+      {
+        "name": "ZBLL 414",
+        "algorithm": "R D R' U R D' R' U2 R' U' R U2 R' U' R"
+      },
+      {
+        "name": "ZBLL 415",
+        "algorithm": "R U2 R' U' R U R' L' U R U' L U2 R'"
+      },
+      {
+        "name": "ZBLL 416",
+        "algorithm": "R U' R' U2 R U' R' U2 R' D' R U R' D R"
+      },
+      {
+        "name": "ZBLL 417",
+        "algorithm": "F U' R' U R U F' R' U R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 418",
+        "algorithm": "R U R' U L' U2 R U2 R' U2 R L U2 R'"
+      },
+      {
+        "name": "ZBLL 419",
+        "algorithm": "R U R' F' R U2 R' U' R U' R' F R U' R'"
+      },
+      {
+        "name": "ZBLL 420",
+        "algorithm": "R U R' U' R' U' F U R2 U' R' U R U' R' F'"
+      },
+      {
+        "name": "ZBLL 421",
+        "algorithm": "R' U R2 U2 D R' U' R U' D' R2 U' R"
+      },
+      {
+        "name": "ZBLL 422",
+        "algorithm": "R' U R U R' U r U' R' U R U r' R' F R F' U R"
+      },
+      {
+        "name": "ZBLL 423",
+        "algorithm": "z D' R' D R U R' D' R U' R U R' D R U' z'"
+      },
+      {
+        "name": "ZBLL 424",
+        "algorithm": "R U2 R' U' R U r' F r U2 R' U' r' F2 r"
+      }
+    ]
+  },
+  {
+    "subset": "AS3",
+    "algorithms": [
+      {
+        "name": "ZBLL 425",
+        "algorithm": "R' U L U' R U L'"
+      },
+      {
+        "name": "ZBLL 426",
+        "algorithm": "R U2 R' U' R U R D R' U2 R D' R2"
+      },
+      {
+        "name": "ZBLL 427",
+        "algorithm": "R D' U R U' R' U2 D R2 U' R U R"
+      },
+      {
+        "name": "ZBLL 428",
+        "algorithm": "R U R U' R2 D U2 R' U' R U D' R"
+      },
+      {
+        "name": "ZBLL 429",
+        "algorithm": "R2 D' R U2 R' D R U R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 430",
+        "algorithm": "D R' U' R U' R' U R U D' R2 U R' U R U' R U' R2"
+      },
+      {
+        "name": "ZBLL 431",
+        "algorithm": "R' U' R U' R' U' R U R' U' R' D' R U R' D R U2 R"
+      },
+      {
+        "name": "ZBLL 432",
+        "algorithm": "R U2 R' U' R U R D R' U R D' R' U' R' U R U R'"
+      },
+      {
+        "name": "ZBLL 433",
+        "algorithm": "F U R U' R' U R U' R2 F' R U2 R U2 R'"
+      },
+      {
+        "name": "ZBLL 434",
+        "algorithm": "F R U' R' U R U R2 F' R U R U R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 435",
+        "algorithm": "R' U2 R' F' R U R U' R' F U2 R"
+      },
+      {
+        "name": "ZBLL 436",
+        "algorithm": "L' U R U' L R U R U R U' R' U' R2"
+      }
+    ]
+  },
+  {
+    "subset": "AS4",
+    "algorithms": [
+      {
+        "name": "ZBLL 437",
+        "algorithm": "R D' R2 D R2 U' R2 D' R2 D R2 U R"
+      },
+      {
+        "name": "ZBLL 438",
+        "algorithm": "R' U' R U' R' U R' D' R U R' D R2"
+      },
+      {
+        "name": "ZBLL 439",
+        "algorithm": "l U' R' D R2 U l' U R' U' R U R' U' F'"
+      },
+      {
+        "name": "ZBLL 440",
+        "algorithm": "R' D' R U2 R' D R2 U' R' U2 R U R' U R U R'"
+      },
+      {
+        "name": "ZBLL 441",
+        "algorithm": "R2 D R' U R D' R' U R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 442",
+        "algorithm": "R U2 R' L' U2 R U' R' U2 L R U2 R'"
+      },
+      {
+        "name": "ZBLL 443",
+        "algorithm": "R U R' U' R' U' R U R U' R' U' R2 D' R U' R' D R U2 R"
+      },
+      {
+        "name": "ZBLL 444",
+        "algorithm": "R U2 R' U' R2 D R' U2 R D' R' U' R' U R U R'"
+      },
+      {
+        "name": "ZBLL 445",
+        "algorithm": "R U2 R' U R' D' R U' R' D R U' R U' R'"
+      },
+      {
+        "name": "ZBLL 446",
+        "algorithm": "R2 D R' U2 R D' R' U' R' U R U' R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 447",
+        "algorithm": "R' U' R U' R D R' U' R D' R' U R' U2 R"
+      },
+      {
+        "name": "ZBLL 448",
+        "algorithm": "R' U2 F' R U R' U' R' F R2 U R' U R"
+      }
+    ]
+  },
+  {
+    "subset": "AS5",
+    "algorithms": [
+      {
+        "name": "ZBLL 449",
+        "algorithm": "R U2 R2 D' R U2 R' D R2 U' R' U R U' R'"
+      },
+      {
+        "name": "ZBLL 450",
+        "algorithm": "R D R' U' R D' R2 U' R U2 R' U' R"
+      },
+      {
+        "name": "ZBLL 451",
+        "algorithm": "R D' R U' R' D U' R' U R U R2 U' R' U R"
+      },
+      {
+        "name": "ZBLL 452",
+        "algorithm": "R U R' F' R U R' U' R' F R2 U R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 453",
+        "algorithm": "R2 D r' U2 r D' R2 U' R U' R'"
+      },
+      {
+        "name": "ZBLL 454",
+        "algorithm": "R U2 R' U' R U' R D R' U2 R D' R' U2 R'"
+      },
+      {
+        "name": "ZBLL 455",
+        "algorithm": "L R' U' R U L' U2 R' U2 R"
+      },
+      {
+        "name": "ZBLL 456",
+        "algorithm": "R2 D R' U2 R D' R2 U' R U' R'"
+      },
+      {
+        "name": "ZBLL 457",
+        "algorithm": "R U R' F' R U2 R' U2 R' F R2 U' R'"
+      },
+      {
+        "name": "ZBLL 458",
+        "algorithm": "R U2' R' U' R' D' R U' R' D R2 U' R' U R U' R'"
+      },
+      {
+        "name": "ZBLL 459",
+        "algorithm": "R U R' U2 R U R' U' F' R U2 R' U' R U' R' F"
+      },
+      {
+        "name": "ZBLL 460",
+        "algorithm": "R2 D' R U' R' D F R U R U' R' F' R"
+      }
+    ]
+  },
+  {
+    "subset": "AS6",
+    "algorithms": [
+      {
+        "name": "ZBLL 461",
+        "algorithm": "R U2 R' U' F' R U R' U' R' F R2 U' R'"
+      },
+      {
+        "name": "ZBLL 462",
+        "algorithm": "R' U2 R' D' R U R' D R2 U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 463",
+        "algorithm": "R' U' R U' R2 D' r U2 r' D R2"
+      },
+      {
+        "name": "ZBLL 464",
+        "algorithm": "R U' R' U2 R U' R2 D' R U' R' D R"
+      },
+      {
+        "name": "ZBLL 465",
+        "algorithm": "R U R' U' R2 U R U R' U' D R' U' R D' R"
+      },
+      {
+        "name": "ZBLL 466",
+        "algorithm": "R' U' R U' R2 D' R U2 R' D R2"
+      },
+      {
+        "name": "ZBLL 467",
+        "algorithm": "R U2 R' U2 L' U R U' R' L"
+      },
+      {
+        "name": "ZBLL 468",
+        "algorithm": "R' U2 R' D' R U2 R' D R U' R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 469",
+        "algorithm": "R' U' R U R' F R U R' U' R' F' R2"
+      },
+      {
+        "name": "ZBLL 470",
+        "algorithm": "R U2 R D' R U' R' D R U R U' R U' R'"
+      },
+      {
+        "name": "ZBLL 471",
+        "algorithm": "R U R' U R' F U' R2 U' R2 U F' U R"
+      },
+      {
+        "name": "ZBLL 472",
+        "algorithm": "R U R' U R' U' R2 U' R D' R U R' D R U R"
+      }
+    ]
+  },
+  {
+    "subset": "H1",
+    "algorithms": [
+      {
+        "name": "ZBLL 289",
+        "algorithm": "R U2 R' U' R U' R' U' R' U' R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 290",
+        "algorithm": "R' U2 R U R' U R U R U R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 291",
+        "algorithm": "R' U' R U' R' U R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 292",
+        "algorithm": "R U R' U R U' R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 293",
+        "algorithm": "R' U2 R U R' U' R U R' U R"
+      },
+      {
+        "name": "ZBLL 294",
+        "algorithm": "R U2 R' U' R U R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 295",
+        "algorithm": "R U R' U R U' R' U R U' R' U R' U' R2 U' R' U R' U R"
+      },
+      {
+        "name": "ZBLL 296",
+        "algorithm": "R U R' U R U2 R' U' R' U2 R U R' U R"
+      },
+      {
+        "name": "ZBLL 297",
+        "algorithm": "R U2 R D R' U' R D' R2 U' R' F R U R U' R' F'"
+      },
+      {
+        "name": "ZBLL 298",
+        "algorithm": "F U R U' R' U R U' R' U R U' R' F'"
+      },
+      {
+        "name": "ZBLL 299",
+        "algorithm": "R U R' y' U R' U R U' R2 F R F' R"
+      },
+      {
+        "name": "ZBLL 300",
+        "algorithm": "R' U' R y U' R U' R' U R l U' R' U l'"
+      }
+    ]
+  },
+  {
+    "subset": "H2",
+    "algorithms": [
+      {
+        "name": "ZBLL 301",
+        "algorithm": "F R U R' U' R U R' U' F' U R' F' U' F U R"
+      },
+      {
+        "name": "ZBLL 302",
+        "algorithm": "R' U' R U' R' U2 R U R' U' R U R' F' R U R' U' R' F R2"
+      },
+      {
+        "name": "ZBLL 303",
+        "algorithm": "L' U L U' L' U' L U R' U' R U L' U' L U2 R' U' R"
+      },
+      {
+        "name": "ZBLL 304",
+        "algorithm": "R U' R' U R U R' U' L U L' U' R U R' U2 L U L'"
+      },
+      {
+        "name": "ZBLL 305",
+        "algorithm": "R U R' U R U2 R' F R U' R' U' R U2 R' U' F'"
+      },
+      {
+        "name": "ZBLL 306",
+        "algorithm": "R U R2 F R F' r U' r' U r U r' U2"
+      },
+      {
+        "name": "ZBLL 307",
+        "algorithm": "R' F R' F' R2 U' r' U r U' r' U' r"
+      },
+      {
+        "name": "ZBLL 308",
+        "algorithm": "R' U' R U' R' U' L U' R U L'"
+      },
+      {
+        "name": "ZBLL 309",
+        "algorithm": "R U R' U R U L' U R' U' L"
+      },
+      {
+        "name": "ZBLL 310",
+        "algorithm": "R' U' R U' R' U F' R U R' U' R' F R2 U' R' U R"
+      },
+      {
+        "name": "ZBLL 311",
+        "algorithm": "R U R' U R' U' R2 U' R2 U' L U' R U L'"
+      },
+      {
+        "name": "ZBLL 312",
+        "algorithm": "R' U2' R U R2' D' R U' R' D R2 U R' U R"
+      }
+    ]
+  },
+  {
+    "subset": "H3",
+    "algorithms": [
+      {
+        "name": "ZBLL 313",
+        "algorithm": "R U2 R' U' R2 D R' U R D' R2' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 314",
+        "algorithm": "F R U' R' U' R U2 R' U' F' U R U R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 315",
+        "algorithm": "R2 D' R U' R' D R2 U' R2 D' R U2 R' D R2"
+      },
+      {
+        "name": "ZBLL 316",
+        "algorithm": "R2 D R' U R D' R2' U R2 D R' U2 R D' R2'"
+      },
+      {
+        "name": "ZBLL 317",
+        "algorithm": "F R' F' r U R U' r2 F2 r U r' F r"
+      },
+      {
+        "name": "ZBLL 318",
+        "algorithm": "R U R' U' R' F R U R U' R' F' R U R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 319",
+        "algorithm": "R' U2 R U' L U2 R' U2 R U2 L' R' U R"
+      },
+      {
+        "name": "ZBLL 320",
+        "algorithm": "R U2 R' U L' U2 R U2 R' U2 L R U' R'"
+      },
+      {
+        "name": "ZBLL 321",
+        "algorithm": "F U' R U2 R' U2 R U' R' U' R U R' U F'"
+      },
+      {
+        "name": "ZBLL 322",
+        "algorithm": "R' F R U R' U' F' R U' R' U R' F R F' U R"
+      },
+      {
+        "name": "ZBLL 323",
+        "algorithm": "R U2 R' U' R U' R D' R U' R' D R U R"
+      },
+      {
+        "name": "ZBLL 324",
+        "algorithm": "R U2 R2 F U' R2 U' R2 U F' U R"
+      }
+    ]
+  },
+  {
+    "subset": "H4",
+    "algorithms": [
+      {
+        "name": "ZBLL 325",
+        "algorithm": "R' U2 R U2' R2 F' R U R U' R' F U R"
+      },
+      {
+        "name": "ZBLL 326",
+        "algorithm": "F B' R2 B R2 U' R2 U' R2 U R2 F'"
+      },
+      {
+        "name": "ZBLL 327",
+        "algorithm": "R' U' R U' R' U R U R' F R U R' U' R' F' R2"
+      },
+      {
+        "name": "ZBLL 328",
+        "algorithm": "F R U' R' U R U2 R' U' R U R' U' F'"
+      }
+    ]
+  },
+  {
+    "subset": "L1",
+    "algorithms": [
+      {
+        "name": "ZBLL 145",
+        "algorithm": "R U2 R' U2 R' U' R U R U' R' U2 R' U2 R"
+      },
+      {
+        "name": "ZBLL 146",
+        "algorithm": "R U R' U R U' R' U R U' R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 147",
+        "algorithm": "R U2 R' U' R U' R' U2 R U R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 148",
+        "algorithm": "R U R' U R U2 R' U2 R U2 R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 149",
+        "algorithm": "R2 U R' U R' U' R U' R' U' R U R U' R2"
+      },
+      {
+        "name": "ZBLL 150",
+        "algorithm": "R2 U' R U' R U R' U R U R' U' R' U R2"
+      },
+      {
+        "name": "ZBLL 151",
+        "algorithm": "R' U2 R U R' U R U' R U2 R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 152",
+        "algorithm": "R U2 R' U' R U' R' U R' U2 R U R' U R"
+      },
+      {
+        "name": "ZBLL 153",
+        "algorithm": "R2 U R' U' R' U R U R' U R U' R U' R2"
+      },
+      {
+        "name": "ZBLL 154",
+        "algorithm": "r U r' U R U' R' U R U' R' M' U R U2' r'"
+      },
+      {
+        "name": "ZBLL 155",
+        "algorithm": "R U R' U R U2 R' U R' U' R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 156",
+        "algorithm": "R' U' R U' R' U2 R U' R U R' U R U2 R'"
+      }
+    ]
+  },
+  {
+    "subset": "L2",
+    "algorithms": [
+      {
+        "name": "ZBLL 157",
+        "algorithm": "F R U' R' U' R U R D R' U' R D' R' U2 R' U' F'"
+      },
+      {
+        "name": "ZBLL 158",
+        "algorithm": "F R U R2' F R F' R U' R' F'"
+      },
+      {
+        "name": "ZBLL 159",
+        "algorithm": "L' U2 R U' R' U2 L R U' R'"
+      },
+      {
+        "name": "ZBLL 160",
+        "algorithm": "R' U' R U R' F' R U R' U' R' F R2"
+      },
+      {
+        "name": "ZBLL 161",
+        "algorithm": "R' U F' R U R' U' R' F R2 U' R' U' R U R' U' R"
+      },
+      {
+        "name": "ZBLL 162",
+        "algorithm": "R U' R' U R U R' U R U' R2' D' R U R' D R"
+      },
+      {
+        "name": "ZBLL 163",
+        "algorithm": "r U2 R r2 F R' F' r2 U2 r'"
+      },
+      {
+        "name": "ZBLL 164",
+        "algorithm": "r U2 r2 F R F' r2 R' U2 r'"
+      },
+      {
+        "name": "ZBLL 165",
+        "algorithm": "F R U R' U' F' r U r' U R U' R' r U' r'"
+      },
+      {
+        "name": "ZBLL 166",
+        "algorithm": "r U r' R U R' U' r U' r' F U R U' R' F'"
+      },
+      {
+        "name": "ZBLL 167",
+        "algorithm": "R U R' U R U' R' F2 R U2 R' U2 R' F2 R2 U' R'"
+      },
+      {
+        "name": "ZBLL 168",
+        "algorithm": "R U R2 F2 R U2 R U2 R' F2 R U R' U' R U' R'"
+      }
+    ]
+  },
+  {
+    "subset": "L3",
+    "algorithms": [
+      {
+        "name": "ZBLL 169",
+        "algorithm": "F' r U R' U' r' F R"
+      },
+      {
+        "name": "ZBLL 170",
+        "algorithm": "R' U' R U R' F2 R U2 R' U2 R' F2 R2"
+      },
+      {
+        "name": "ZBLL 171",
+        "algorithm": "F' R U2 R' U2 R' F R U R U' R'"
+      },
+      {
+        "name": "ZBLL 172",
+        "algorithm": "R' U R U' R' U R U R' U' R2 D R' U R D' R'"
+      },
+      {
+        "name": "ZBLL 173",
+        "algorithm": "F R U' R' U' R U2 R' U' F'"
+      },
+      {
+        "name": "ZBLL 174",
+        "algorithm": "R' U' R U2 R' F' R U R' U' R' F R2 U R' U2 R"
+      },
+      {
+        "name": "ZBLL 175",
+        "algorithm": "R' F R U R U' R' F' U R U R' U R U' R'"
+      },
+      {
+        "name": "ZBLL 176",
+        "algorithm": "R2 D' R U' R' D R U R' U' R' U' R U R U R U' R"
+      },
+      {
+        "name": "ZBLL 177",
+        "algorithm": "F R' F' R U R U' R' F U R U' R' U R U' R' F'"
+      },
+      {
+        "name": "ZBLL 178",
+        "algorithm": "F' R U2 R' U2 R' F U2 R U R U' R2 U2 R"
+      },
+      {
+        "name": "ZBLL 179",
+        "algorithm": "R U R' U R' D' R U2 R' D R2 U' R' U R U' R'"
+      },
+      {
+        "name": "ZBLL 180",
+        "algorithm": "R' U' R' D' R U2 R' D R U R U' R' U' R"
+      }
+    ]
+  },
+  {
+    "subset": "L4",
+    "algorithms": [
+      {
+        "name": "ZBLL 181",
+        "algorithm": "F R' F' r U R U' r'"
+      },
+      {
+        "name": "ZBLL 182",
+        "algorithm": "R U R' U' R B2 R' U2 R U2 R B2 R2"
+      },
+      {
+        "name": "ZBLL 183",
+        "algorithm": "F R U R' U' R' F' R U2 R U2 R'"
+      },
+      {
+        "name": "ZBLL 184",
+        "algorithm": "R U' R' U R U' R' U' R U R2 D' R U' R' D R"
+      },
+      {
+        "name": "ZBLL 185",
+        "algorithm": "R' F' R U R' U' R' F R U' R U R' U R"
+      },
+      {
+        "name": "ZBLL 186",
+        "algorithm": "R U R' U R U R' U' R U R D R' U2 R D' R' U' R'"
+      },
+      {
+        "name": "ZBLL 187",
+        "algorithm": "L R U' R' U R L' U R' U R U' R'"
+      },
+      {
+        "name": "ZBLL 188",
+        "algorithm": "L U' R U R' L' U2 R U' R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 189",
+        "algorithm": "R' U2 R U R' U' F' R U R' U' R' F R2 U R' U R"
+      },
+      {
+        "name": "ZBLL 190",
+        "algorithm": "R' U2 R2 U R' U' R' U2 F R U R U' R' F'"
+      },
+      {
+        "name": "ZBLL 191",
+        "algorithm": "R U R' U R U' R' U' L' U R U' M' x'"
+      },
+      {
+        "name": "ZBLL 192",
+        "algorithm": "R U R D R' U2 R D' R' U' R' U R U R'"
+      }
+    ]
+  },
+  {
+    "subset": "L5",
+    "algorithms": [
+      {
+        "name": "ZBLL 193",
+        "algorithm": "R' U2 R' D' R U2 R' D R2"
+      },
+      {
+        "name": "ZBLL 194",
+        "algorithm": "R' U2 R' D' r U2 r' D R2"
+      },
+      {
+        "name": "ZBLL 195",
+        "algorithm": "R D R' U2 R D' R' U' R' U2 R U' R' U' R"
+      },
+      {
+        "name": "ZBLL 196",
+        "algorithm": "R U2 R U R U' R2 D R' U R D' R U R'"
+      },
+      {
+        "name": "ZBLL 197",
+        "algorithm": "R U R' U2 R U R' U2 y' R' U2 R U' R' U' R"
+      },
+      {
+        "name": "ZBLL 198",
+        "algorithm": "R' U2 R U R2 D' R U R' D R2"
+      },
+      {
+        "name": "ZBLL 199",
+        "algorithm": "R U R' U' R U' R' U L' U R U' L U' R'"
+      },
+      {
+        "name": "ZBLL 200",
+        "algorithm": "R U' R' U2 R U R' U2 R U R' U R2 D R' U' R D' R2"
+      },
+      {
+        "name": "ZBLL 201",
+        "algorithm": "R' U2 R U2 R' U' R2 D R' U2 R D' R2 U2 R"
+      },
+      {
+        "name": "ZBLL 202",
+        "algorithm": "F' R U R' U' R' F R2 U' R' U' R U' R' U R U R'"
+      },
+      {
+        "name": "ZBLL 203",
+        "algorithm": "R U' R2 F2 R U2 R U2 R' F2 U2 R U' R'"
+      },
+      {
+        "name": "ZBLL 204",
+        "algorithm": "R' U R2 D R' U R D' R' U2 R' U R U R' U' R"
+      }
+    ]
+  },
+  {
+    "subset": "L6",
+    "algorithms": [
+      {
+        "name": "ZBLL 205",
+        "algorithm": "R U2 R D R' U2 R D' R2"
+      },
+      {
+        "name": "ZBLL 206",
+        "algorithm": "R' F' R U R' U' R' F R2 U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 207",
+        "algorithm": "L' U R U' L U R2 U2 R U R' U R"
+      },
+      {
+        "name": "ZBLL 208",
+        "algorithm": "F R U R' U' R' F' U' R U R U' R' U' R' U R"
+      },
+      {
+        "name": "ZBLL 209",
+        "algorithm": "R' U' R U2 R' U' R y U2 R U2 R' U R U R'"
+      },
+      {
+        "name": "ZBLL 210",
+        "algorithm": "R U2 R' U' R2 D R' U' R D' R2"
+      },
+      {
+        "name": "ZBLL 211",
+        "algorithm": "R' U' R U R' U R U' L U' R' U L' U R"
+      },
+      {
+        "name": "ZBLL 212",
+        "algorithm": "R' U R' D' R U R' U2 R U R' D U R U' R"
+      },
+      {
+        "name": "ZBLL 213",
+        "algorithm": "R U2 R' U2 R U R2 D' R U2 R' D R2 U2 R'"
+      },
+      {
+        "name": "ZBLL 214",
+        "algorithm": "R U R' U R U2 R D R' U2 R D' R' U2 R'"
+      },
+      {
+        "name": "ZBLL 215",
+        "algorithm": "R' U R2 B2 R' U2 R' U2 R B2 U2 R' U R"
+      },
+      {
+        "name": "ZBLL 216",
+        "algorithm": "R U' R2 D' R U' R' D R U2 R U' R' U' R U R'"
+      }
+    ]
+  },
+  {
+    "subset": "Pi1",
+    "algorithms": [
+      {
+        "name": "ZBLL 217",
+        "algorithm": "R' U' R U R U2 R' U' R U' R2 U2 R"
+      },
+      {
+        "name": "ZBLL 218",
+        "algorithm": "R U R' U' R' U2 R U R' U R2 U2 R'"
+      },
+      {
+        "name": "ZBLL 219",
+        "algorithm": "R' U2 R U R' U R2 U R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 220",
+        "algorithm": "R U2 R' U' R U' R2 U' R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 221",
+        "algorithm": "R U2 R' U2 R U' R' U2 R U' R' U2 R U R'"
+      },
+      {
+        "name": "ZBLL 222",
+        "algorithm": "R' U2 R U2 R' U R U2 R' U R U2 R' U' R"
+      },
+      {
+        "name": "ZBLL 223",
+        "algorithm": "R U' R' U2 R U R' U2 R U R' U2 R U2 R'"
+      },
+      {
+        "name": "ZBLL 224",
+        "algorithm": "R' U R U2 R' U' R U2 R' U' R U2 R' U2 R"
+      },
+      {
+        "name": "ZBLL 225",
+        "algorithm": "R' U2 R2 U R2 U R2 U2 R'"
+      },
+      {
+        "name": "ZBLL 226",
+        "algorithm": "R U2 R2 U' R2 U' R2 U2 R"
+      },
+      {
+        "name": "ZBLL 227",
+        "algorithm": "R U R' U' R' U' R U R U R' U' R' U R U' R U' R'"
+      },
+      {
+        "name": "ZBLL 228",
+        "algorithm": "R U2 R' U' R U' R' U' R U2 R' U' R U' R'"
+      }
+    ]
+  },
+  {
+    "subset": "Pi2",
+    "algorithms": [
+      {
+        "name": "ZBLL 229",
+        "algorithm": "R2 U R' U2 R' U' R U R D R' U R D' R' U R U' R2'"
+      },
+      {
+        "name": "ZBLL 230",
+        "algorithm": "F R2 U' R U2 R U R' U R' U R2 F'"
+      },
+      {
+        "name": "ZBLL 231",
+        "algorithm": "F U R' U' R2 U' R2 U2 R U2 R U R' F'"
+      },
+      {
+        "name": "ZBLL 232",
+        "algorithm": "r' U' R U' R' U R U' R' U R' F R F' U r"
+      },
+      {
+        "name": "ZBLL 233",
+        "algorithm": "R U2 R' U' F' R U2 R' U' R U' R' F R U' R'"
+      },
+      {
+        "name": "ZBLL 234",
+        "algorithm": "R U R' U r' F R F' r U' R' U R U2' R'"
+      },
+      {
+        "name": "ZBLL 235",
+        "algorithm": "r U R' U R' F R F' R U' R' U R U2' r'"
+      },
+      {
+        "name": "ZBLL 236",
+        "algorithm": "R U R' U' R U R2 D' R U' R' D R U' R U2 R'"
+      },
+      {
+        "name": "ZBLL 237",
+        "algorithm": "R U2 R' U R' D' R U R' D R2 U' R' U R U' R'"
+      },
+      {
+        "name": "ZBLL 238",
+        "algorithm": "R' U2 R U' R D R' U' R D' R2 U R U' R' U R"
+      },
+      {
+        "name": "ZBLL 239",
+        "algorithm": "R2 D R' U' R D' R' U' R' U R U' R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 240",
+        "algorithm": "R2 D' R U R' D R U R U' R' U R U R' U R"
+      }
+    ]
+  },
+  {
+    "subset": "Pi3",
+    "algorithms": [
+      {
+        "name": "ZBLL 241",
+        "algorithm": "F U R U2 R' U R U R' F' R U2 R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 242",
+        "algorithm": "r U' r' U' r U r' U' l R U' R' U l'"
+      },
+      {
+        "name": "ZBLL 243",
+        "algorithm": "r' U r U r' U' r U R2 F R F' R"
+      },
+      {
+        "name": "ZBLL 244",
+        "algorithm": "r' U' R U' R' U2 r U' R U2 R' U2 R' F R F'"
+      },
+      {
+        "name": "ZBLL 245",
+        "algorithm": "R' U' R U R2 F' R U R U' R' F U' R U R' U R"
+      },
+      {
+        "name": "ZBLL 246",
+        "algorithm": "R U2 R D' R U' R' D R' U' R2 U2 R"
+      },
+      {
+        "name": "ZBLL 247",
+        "algorithm": "R' U' R U' R2 D' R U R' D R2 U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 248",
+        "algorithm": "L' U R U' L U' R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 249",
+        "algorithm": "R U' L' U R' U L U L' U L"
+      },
+      {
+        "name": "ZBLL 250",
+        "algorithm": "R2 D' R U2 R' D R2 U R2 D' R U R' D R2"
+      },
+      {
+        "name": "ZBLL 251",
+        "algorithm": "R2 D R' U2 R D' R2 U' R2 D R' U' R D' R2"
+      },
+      {
+        "name": "ZBLL 252",
+        "algorithm": "R U2 R2 F R U R U2 R' U' R U2 R' U' F' R U R'"
+      }
+    ]
+  },
+  {
+    "subset": "Pi4",
+    "algorithms": [
+      {
+        "name": "ZBLL 253",
+        "algorithm": "R U2 R2 U' R U' R' U2 F R U R U' R' F'"
+      },
+      {
+        "name": "ZBLL 254",
+        "algorithm": "R U R' U R U2 R2 F' r U R U' r' F"
+      },
+      {
+        "name": "ZBLL 255",
+        "algorithm": "r' F' r U' r' F2 r2 U R' U' r' F R F'"
+      },
+      {
+        "name": "ZBLL 256",
+        "algorithm": "F R U R' U' R' F' R U2 R' U' R2 U' R2 U2 R"
+      },
+      {
+        "name": "ZBLL 257",
+        "algorithm": "R' U' R L U2 R' U2 R U2 L' U R' U2 R"
+      },
+      {
+        "name": "ZBLL 258",
+        "algorithm": "F U' R U' R' U R U R' U2 R U2 R' U F'"
+      },
+      {
+        "name": "ZBLL 259",
+        "algorithm": "R2 D' R U' R' D R U R' D' R U R' D R U R U' R' U' R"
+      },
+      {
+        "name": "ZBLL 260",
+        "algorithm": "R' U' F' R U R' U' R' F R2 U2' R' U2 R"
+      },
+      {
+        "name": "ZBLL 261",
+        "algorithm": "R U R' U R U' R' U' R' F' R U2 R U2' R' F"
+      },
+      {
+        "name": "ZBLL 262",
+        "algorithm": "R' U' R' D' R U R' D R' U R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 263",
+        "algorithm": "R U R D R' U' R D' R U' R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 264",
+        "algorithm": "F U R U' R' U R U2 R' U' R U R' F'"
+      }
+    ]
+  },
+  {
+    "subset": "Pi5",
+    "algorithms": [
+      {
+        "name": "ZBLL 265",
+        "algorithm": "r' F' r U r U2 r' F2 U' R U R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 266",
+        "algorithm": "R U2 R' U2 R' F R2 U' R' U2 R U2 R' U' F'"
+      },
+      {
+        "name": "ZBLL 267",
+        "algorithm": "R' F R U R' U' R' F' R2 U' R' U R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 268",
+        "algorithm": "R' L U2 R2 U R2 U R U L' U' R U2 R'"
+      },
+      {
+        "name": "ZBLL 269",
+        "algorithm": "l U2 l' U2 R' U2 R B2 U R' U R"
+      },
+      {
+        "name": "ZBLL 270",
+        "algorithm": "R U R' U F2 R U2 R' U2 R' F2 R"
+      },
+      {
+        "name": "ZBLL 271",
+        "algorithm": "R' U2 R U R' U R2 U' L' U R' U' L"
+      },
+      {
+        "name": "ZBLL 272",
+        "algorithm": "R U R' U R U' R' U R U' R D R' U' R D' R2"
+      },
+      {
+        "name": "ZBLL 273",
+        "algorithm": "R U R' U' R' F R2 U R' U' R U R' U' F'"
+      },
+      {
+        "name": "ZBLL 274",
+        "algorithm": "R2 D R' U2' R D' R2' U' R U' R' U R U2' R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 275",
+        "algorithm": "R U2 R' U' R U R' U2 L' U R U' M' x'"
+      },
+      {
+        "name": "ZBLL 276",
+        "algorithm": "L R' U' R U L' U2 R' U R U' R' U2 R"
+      }
+    ]
+  },
+  {
+    "subset": "Pi6",
+    "algorithms": [
+      {
+        "name": "ZBLL 277",
+        "algorithm": "R U R' U R U' R2' F R F' R U' R' F' U F"
+      },
+      {
+        "name": "ZBLL 278",
+        "algorithm": "F U R U2 R' U2 R U R2 F' R U2 R U2 R'"
+      },
+      {
+        "name": "ZBLL 279",
+        "algorithm": "R U' R' U' R U' R' U R U R' U R' F' R U R U' R' F"
+      },
+      {
+        "name": "ZBLL 280",
+        "algorithm": "R' U2 R U R' U' R U R2 F R U R U' R' F' R"
+      },
+      {
+        "name": "ZBLL 281",
+        "algorithm": "R' F2 R U2 R U2 R' F2 U' R U' R'"
+      },
+      {
+        "name": "ZBLL 282",
+        "algorithm": "R' U' R U' B2 R' U2 R U2 l U2 l'"
+      },
+      {
+        "name": "ZBLL 283",
+        "algorithm": "R U2 R' U' R U' R2 U L U' R U L'"
+      },
+      {
+        "name": "ZBLL 284",
+        "algorithm": "R' U' R U' R' U R U' R' U R' D' R U R' D R2"
+      },
+      {
+        "name": "ZBLL 285",
+        "algorithm": "F U R U' R' U R U' R2 F' R U R U' R'"
+      },
+      {
+        "name": "ZBLL 286",
+        "algorithm": "R U R' U R U2' R' U' R U R' U R2 D R' U2 R D' R2'"
+      },
+      {
+        "name": "ZBLL 287",
+        "algorithm": "R' U2 R U R' U' R U2 L U' R' U R L'"
+      },
+      {
+        "name": "ZBLL 288",
+        "algorithm": "R L' U R' U' L U2 R U' R' U R U2 R'"
+      }
+    ]
+  },
+  {
+    "subset": "S1",
+    "algorithms": [
+      {
+        "name": "ZBLL 329",
+        "algorithm": "R' U R2 U R' U R U2 R U2 R U R' U R2"
+      },
+      {
+        "name": "ZBLL 330",
+        "algorithm": "R' U2 R2 U R U' R' U R U R2 U' R'"
+      },
+      {
+        "name": "ZBLL 331",
+        "algorithm": "R U R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 332",
+        "algorithm": "R' U2 R U R' U R"
+      },
+      {
+        "name": "ZBLL 333",
+        "algorithm": "R U R2 U' R2 U' R2 U2 R2 U2 R'"
+      },
+      {
+        "name": "ZBLL 334",
+        "algorithm": "R' U' R U' R U R2 U R2 U2 R'"
+      },
+      {
+        "name": "ZBLL 335",
+        "algorithm": "R U R' U' R' U2 R U R U' R' U R' U R"
+      },
+      {
+        "name": "ZBLL 336",
+        "algorithm": "R' U' R U R U R' U' R' U R U R U' R'"
+      },
+      {
+        "name": "ZBLL 337",
+        "algorithm": "R U R' U R U' R' U R' U' R2 U' R' U R' U R"
+      },
+      {
+        "name": "ZBLL 338",
+        "algorithm": "R U R' U R U R U R U R U' R' U' R2"
+      },
+      {
+        "name": "ZBLL 339",
+        "algorithm": "R U R' U R' U' R2 U' R' U R' U' R U R' U R"
+      },
+      {
+        "name": "ZBLL 340",
+        "algorithm": "R U R' U R U' R' U R' U' R' U R U' R' U' R2 U R"
+      }
+    ]
+  },
+  {
+    "subset": "S2",
+    "algorithms": [
+      {
+        "name": "ZBLL 341",
+        "algorithm": "F U' R' U R U F' R U R2 U R2 U2 R'"
+      },
+      {
+        "name": "ZBLL 342",
+        "algorithm": "R' D' R U' R' D R U2 R U R' U2 R U R'"
+      },
+      {
+        "name": "ZBLL 343",
+        "algorithm": "R' U2 R U R' U' R F U' R' U' R U F'"
+      },
+      {
+        "name": "ZBLL 344",
+        "algorithm": "R' U R U2 R' U R U2 R D R' U' R D' R'"
+      },
+      {
+        "name": "ZBLL 345",
+        "algorithm": "L' U2 R U' R' U2 L U R U' R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 346",
+        "algorithm": "F R U R' U' R U R2 U' F' U R U R U' R'"
+      },
+      {
+        "name": "ZBLL 347",
+        "algorithm": "R U R' F' R U R' U R U2 R' F R U' R'"
+      },
+      {
+        "name": "ZBLL 348",
+        "algorithm": "R U2 L' R' U2 R U2 R' U2 L U' R U' R'"
+      },
+      {
+        "name": "ZBLL 349",
+        "algorithm": "R U' R2 U2 D' R U R' U D R2 U R'"
+      },
+      {
+        "name": "ZBLL 350",
+        "algorithm": "F U R' F R F' R U' R' U R U' R' F'"
+      },
+      {
+        "name": "ZBLL 351",
+        "algorithm": "R U R' U' L' U R U' L U' L' U R' U' L"
+      },
+      {
+        "name": "ZBLL 352",
+        "algorithm": "F R U' R U2 R' U2 R' U' R U2 R' U' R2 U' R2 F'"
+      }
+    ]
+  },
+  {
+    "subset": "S3",
+    "algorithms": [
+      {
+        "name": "ZBLL 353",
+        "algorithm": "R U' L' U R' U' L"
+      },
+      {
+        "name": "ZBLL 354",
+        "algorithm": "R' U2 R U R' U' R' D' R U2 R' D R2"
+      },
+      {
+        "name": "ZBLL 355",
+        "algorithm": "R' D U' R' U R U2 D' R2 U R' U' R'"
+      },
+      {
+        "name": "ZBLL 356",
+        "algorithm": "R' U' R' U R2 D' U2 R U R' U' D R'"
+      },
+      {
+        "name": "ZBLL 357",
+        "algorithm": "R2 D R' U2 R D' R' U' R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 358",
+        "algorithm": "D' R U R' U R U' R' U' D R2 U' R U' R' U R' U R2"
+      },
+      {
+        "name": "ZBLL 359",
+        "algorithm": "R U R' U R U R' U' R U R D R' U' R D' R' U2 R'"
+      },
+      {
+        "name": "ZBLL 360",
+        "algorithm": "R' U2 R U R' U' R' D' R U' R' D R U R U' R' U' R"
+      },
+      {
+        "name": "ZBLL 361",
+        "algorithm": "R' U2 F' R U R' U' R' F R U2 R"
+      },
+      {
+        "name": "ZBLL 362",
+        "algorithm": "R2 U R U R' U' R' U' R' L' U R' U' L"
+      },
+      {
+        "name": "ZBLL 363",
+        "algorithm": "R U2 R' U2 R' F R2 U R' U' R U R' U' F'"
+      },
+      {
+        "name": "ZBLL 364",
+        "algorithm": "R U R' U R U' R' U' R' F R2 U' R' U' R U R' F'"
+      }
+    ]
+  },
+  {
+    "subset": "S4",
+    "algorithms": [
+      {
+        "name": "ZBLL 365",
+        "algorithm": "R2 U R' U R D R' U2 R D' R' U R U' R2'"
+      },
+      {
+        "name": "ZBLL 366",
+        "algorithm": "R U R' U R U' R D R' U' R D' R2"
+      },
+      {
+        "name": "ZBLL 367",
+        "algorithm": "R U' R' U' R U' R' U2 R U R2 D' R U2 R' D R"
+      },
+      {
+        "name": "ZBLL 368",
+        "algorithm": "F U R U' R' U R U' l U' R2 D' R U R' x"
+      },
+      {
+        "name": "ZBLL 369",
+        "algorithm": "R2 D' R U' R' D R U' R U R' U R"
+      },
+      {
+        "name": "ZBLL 370",
+        "algorithm": "R U2 R' L' U2 R U R' U2 L R U2 R'"
+      },
+      {
+        "name": "ZBLL 371",
+        "algorithm": "R' D' R U R' D R2 U' R' U R U R' U' R U2 R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 372",
+        "algorithm": "R U' R' U' R U R D R' U2 R D' R2 U R U2 R'"
+      },
+      {
+        "name": "ZBLL 373",
+        "algorithm": "R' U2 R' D' R U R' D R U' R U R' U R"
+      },
+      {
+        "name": "ZBLL 374",
+        "algorithm": "R' U' R U' R2 F' R U R U' R' F U2 R"
+      },
+      {
+        "name": "ZBLL 375",
+        "algorithm": "R U R' U R' D' R U R' D R U' R U2 R'"
+      },
+      {
+        "name": "ZBLL 376",
+        "algorithm": "R U2 R' U' R U R' U' R U R D R' U2 R D' R2"
+      }
+    ]
+  },
+  {
+    "subset": "S5",
+    "algorithms": [
+      {
+        "name": "ZBLL 377",
+        "algorithm": "f R' F' R U2 R U2 R' U2 S'"
+      },
+      {
+        "name": "ZBLL 378",
+        "algorithm": "R' D' R U R' D R2 U R' U2 R U R'"
+      },
+      {
+        "name": "ZBLL 379",
+        "algorithm": "R' D R' U R D' U R U' R' U' R2 U R U' R'"
+      },
+      {
+        "name": "ZBLL 380",
+        "algorithm": "R' U2 R U R2 D' R U' R' D R U2 R"
+      },
+      {
+        "name": "ZBLL 381",
+        "algorithm": "R2 D' r U2 r' D R2 U R' U R"
+      },
+      {
+        "name": "ZBLL 382",
+        "algorithm": "R' U2 R U R' U R' D' R U2 R' D R U2 R"
+      },
+      {
+        "name": "ZBLL 383",
+        "algorithm": "R L' U R' U' L U2 R U2 R'"
+      },
+      {
+        "name": "ZBLL 384",
+        "algorithm": "R2 D' R U2 R' D R2 U R' U R"
+      },
+      {
+        "name": "ZBLL 385",
+        "algorithm": "R2 F R U R U' R' F' R U' R' U R"
+      },
+      {
+        "name": "ZBLL 386",
+        "algorithm": "R U R' U R' U' R' D' R U R' D R' U2 R'"
+      },
+      {
+        "name": "ZBLL 387",
+        "algorithm": "R' U' F U' R2 U R2 U F' R U' R U' R'"
+      },
+      {
+        "name": "ZBLL 388",
+        "algorithm": "R2 D' R U2 R D2 R' U' R D2 R' U R' D R U2 R"
+      }
+    ]
+  },
+  {
+    "subset": "S6",
+    "algorithms": [
+      {
+        "name": "ZBLL 389",
+        "algorithm": "R U R' U' R U R2 D' R U2 R' D R2 U2 R'"
+      },
+      {
+        "name": "ZBLL 390",
+        "algorithm": "R U R' U R U' R2 F' R U R U' R' F R U' R'"
+      },
+      {
+        "name": "ZBLL 391",
+        "algorithm": "R U R' U R2 D r' U2 r D' R2"
+      },
+      {
+        "name": "ZBLL 392",
+        "algorithm": "R' U R U2 R' U R2 D R' U R D' R'"
+      },
+      {
+        "name": "ZBLL 393",
+        "algorithm": "R' U' R U R2 U' R' U' R U D' R U R' D R'"
+      },
+      {
+        "name": "ZBLL 394",
+        "algorithm": "R U R' U R2 D R' U2 R D' R2"
+      },
+      {
+        "name": "ZBLL 395",
+        "algorithm": "R' U2 R U2 L U' R' U L' R"
+      },
+      {
+        "name": "ZBLL 396",
+        "algorithm": "R U2 R D R' U2 R D' R' U R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 397",
+        "algorithm": "R U R2 F' R U2 R U2 R' F R U' R'"
+      },
+      {
+        "name": "ZBLL 398",
+        "algorithm": "R U R' U' R U R2 D' R U R' D R U R U2 R'"
+      },
+      {
+        "name": "ZBLL 399",
+        "algorithm": "F' R U R' U R U2 R' F U R U' R' U2 R U' R'"
+      },
+      {
+        "name": "ZBLL 400",
+        "algorithm": "R' F R U R' U' R' F' D' R U R' D R2"
+      }
+    ]
+  },
+  {
+    "subset": "T1",
+    "algorithms": [
+      {
+        "name": "ZBLL 1",
+        "algorithm": "R' D R D' R' D R U R' D' R D R' D' R"
+      },
+      {
+        "name": "ZBLL 2",
+        "algorithm": "R' U R U2 R' U' R U' R U R' U' R' U' R U R U' R'"
+      },
+      {
+        "name": "ZBLL 3",
+        "algorithm": "R' U2 R U R' U R2 U2 R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 4",
+        "algorithm": "R U2 R' U' R U' R2 U2 R U R' U R"
+      },
+      {
+        "name": "ZBLL 5",
+        "algorithm": "R' U R U2 R' U' R U2 R' U' R U' R' U R"
+      },
+      {
+        "name": "ZBLL 6",
+        "algorithm": "R U' R' U2 R U R' U2 R U R' U R U' R'"
+      },
+      {
+        "name": "ZBLL 7",
+        "algorithm": "R' U R2 U R' U R' U' R U' R' U' R U R U' R'"
+      },
+      {
+        "name": "ZBLL 8",
+        "algorithm": "R U R' U R U' R' U R' U' R2 U' R2 U2 R"
+      },
+      {
+        "name": "ZBLL 9",
+        "algorithm": "R' U2 R U R' U R U' R' U' R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 10",
+        "algorithm": "R U2 R' U' R U' R' U R U R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 11",
+        "algorithm": "R' U' R2 U R2 U R2 U2 R' U R' U R"
+      },
+      {
+        "name": "ZBLL 12",
+        "algorithm": "R U R2 U' R2 U' R2 U2 R U' R U' R'"
+      }
+    ]
+  },
+  {
+    "subset": "T2",
+    "algorithms": [
+      {
+        "name": "ZBLL 13",
+        "algorithm": "R U R' F' R U R' U' R' F R U' R' F R U R U' R' F'"
+      },
+      {
+        "name": "ZBLL 14",
+        "algorithm": "R' U' R U' R' U' R2 D r' U2 r D' R2 U' R"
+      },
+      {
+        "name": "ZBLL 15",
+        "algorithm": "R U' R2 D' r U2 r' D R2 U R'"
+      },
+      {
+        "name": "ZBLL 16",
+        "algorithm": "R' U R2 D r' U2 r D' R2 U' R"
+      },
+      {
+        "name": "ZBLL 17",
+        "algorithm": "R' U2 R U2 R2 D' R U2 R' D R2 U' R' U R"
+      },
+      {
+        "name": "ZBLL 18",
+        "algorithm": "R U R' U2 R' D' R U R' D R2 U' R' U R U' R'"
+      },
+      {
+        "name": "ZBLL 19",
+        "algorithm": "R' U' R U R2 D' R U2 R' D R2 U2 R' U2 R"
+      },
+      {
+        "name": "ZBLL 20",
+        "algorithm": "R U R' U' R U R2 D' R U' R' D R U2 R U' R'"
+      },
+      {
+        "name": "ZBLL 21",
+        "algorithm": "R' D' R U' R' D R U' R U' R' U R U' R' U' R U R'"
+      },
+      {
+        "name": "ZBLL 22",
+        "algorithm": "R U' R' U R U R' U' R U R' U R' D' R U R' D R"
+      },
+      {
+        "name": "ZBLL 23",
+        "algorithm": "R U R D R' U R D' R' U L' U R' U' L"
+      },
+      {
+        "name": "ZBLL 24",
+        "algorithm": "r U r' R U R' U' R U R' U' r U' r' F R U R' U' F'"
+      }
+    ]
+  },
+  {
+    "subset": "T3",
+    "algorithms": [
+      {
+        "name": "ZBLL 25",
+        "algorithm": "R' U R U2 R' L' U R U' L"
+      },
+      {
+        "name": "ZBLL 26",
+        "algorithm": "R U' R' U2 R L U' R' U L'"
+      },
+      {
+        "name": "ZBLL 27",
+        "algorithm": "R' U' R2 U R' F' R U R' U' R' F R2 U' R' U' R' U R"
+      },
+      {
+        "name": "ZBLL 28",
+        "algorithm": "r U' r U2 R' F R U2 r2 F"
+      },
+      {
+        "name": "ZBLL 29",
+        "algorithm": "R' U' R' D' R U R' D R U2 R U R' U R"
+      },
+      {
+        "name": "ZBLL 30",
+        "algorithm": "R U R D R' U' R D' R' U2 R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 31",
+        "algorithm": "R D R' U' R D' R' U' R' U R U' R' U R U R' U' R"
+      },
+      {
+        "name": "ZBLL 32",
+        "algorithm": "R' D' R U R' D R U R U' R' U R U' R' U' R U R'"
+      },
+      {
+        "name": "ZBLL 33",
+        "algorithm": "R' U' R U' R' U R F U' R' U2 R U F'"
+      },
+      {
+        "name": "ZBLL 34",
+        "algorithm": "R U R' U R U' R' U' L' U2 R U2 R' U2 L"
+      },
+      {
+        "name": "ZBLL 35",
+        "algorithm": "R' U2 R U R' U R F U R U2 R' U R U R' F'"
+      },
+      {
+        "name": "ZBLL 36",
+        "algorithm": "r' U' R' F2 R F' R' F2 R2 U' R' U2 r"
+      }
+    ]
+  },
+  {
+    "subset": "T4",
+    "algorithms": [
+      {
+        "name": "ZBLL 37",
+        "algorithm": "R' F2 R' B2 R F2 R' B2 R2"
+      },
+      {
+        "name": "ZBLL 38",
+        "algorithm": "R' U2 R U' R' F R U R' U' R' F' R U' R"
+      },
+      {
+        "name": "ZBLL 39",
+        "algorithm": "R' U2 R' D' R U2 R' D R' U R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 40",
+        "algorithm": "R U2 R D R' U2 R D' R U' R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 41",
+        "algorithm": "R U R D R' U' R D' R' U R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 42",
+        "algorithm": "R' U' R' D' R U R' D R U' R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 43",
+        "algorithm": "R' U R2 D R' U R D' R' U R' U' R U' R' U' R"
+      },
+      {
+        "name": "ZBLL 44",
+        "algorithm": "R U' R2 D' R U' R' D R U' R U R' U R U R'"
+      },
+      {
+        "name": "ZBLL 45",
+        "algorithm": "R' U' R U' F U' R' U R U F' R' U R"
+      },
+      {
+        "name": "ZBLL 46",
+        "algorithm": "R' D' R U R' D R2 U R' U2 R U' R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 47",
+        "algorithm": "F R U R' U' R U' R' U' R U R' F'"
+      },
+      {
+        "name": "ZBLL 48",
+        "algorithm": "R U R' U2 R U' R' U2 R U' R2 F' R U R U' R' F"
+      }
+    ]
+  },
+  {
+    "subset": "T5",
+    "algorithms": [
+      {
+        "name": "ZBLL 49",
+        "algorithm": "R U R D R' U' R D' R2"
+      },
+      {
+        "name": "ZBLL 50",
+        "algorithm": "R U2 R' U2 R' F R U R U' R' F'"
+      },
+      {
+        "name": "ZBLL 51",
+        "algorithm": "R2 B2 R' U2 R' U2 R B2 R' U R U' R'"
+      },
+      {
+        "name": "ZBLL 52",
+        "algorithm": "R' D' R U R' D R2 U' R' U R U R' U' R U R'"
+      },
+      {
+        "name": "ZBLL 53",
+        "algorithm": "F' U' r' F2 r U' r' F' r F"
+      },
+      {
+        "name": "ZBLL 54",
+        "algorithm": "R U R' U' R U' R' L U' R U R' L'"
+      },
+      {
+        "name": "ZBLL 55",
+        "algorithm": "R U R' U R U R' U2 L R U' R' U L'"
+      },
+      {
+        "name": "ZBLL 56",
+        "algorithm": "R' U' R U' R2' F' R U R U' R' F U R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 57",
+        "algorithm": "R' U' R U R' U' R2 D R' U2 R D' R' U R' U R"
+      },
+      {
+        "name": "ZBLL 58",
+        "algorithm": "R U R D R' U2 R D' R' U' R' U R U' R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 59",
+        "algorithm": "F R U R' U' R' F' U2 R U R U' R2 U2 R"
+      },
+      {
+        "name": "ZBLL 60",
+        "algorithm": "R U' R' U' R U R D R' U2 R D' R' U' R'"
+      }
+    ]
+  },
+  {
+    "subset": "T6",
+    "algorithms": [
+      {
+        "name": "ZBLL 61",
+        "algorithm": "x' U' R' D R U R' D' R x"
+      },
+      {
+        "name": "ZBLL 62",
+        "algorithm": "R U R' U' R' F' R U2 R U2 R' F"
+      },
+      {
+        "name": "ZBLL 63",
+        "algorithm": "R2 F2 R U2 R U2 R' F2 R U' R' U R"
+      },
+      {
+        "name": "ZBLL 64",
+        "algorithm": "R D R' U' R D' R2 U R U' R' U' R U R' U' R"
+      },
+      {
+        "name": "ZBLL 65",
+        "algorithm": "F U R U2 R' U R U R' F'"
+      },
+      {
+        "name": "ZBLL 66",
+        "algorithm": "R U R' U' R U' R' U' F R U R' U' R' F' R"
+      },
+      {
+        "name": "ZBLL 67",
+        "algorithm": "R' U' R U' R' U R' U' R U R' F' R U R' U' R' F R'"
+      },
+      {
+        "name": "ZBLL 68",
+        "algorithm": "F R U R' U' R U R' U' F' R U R' U' R' F R F'"
+      },
+      {
+        "name": "ZBLL 69",
+        "algorithm": "R U R' U' R U R2 D' R U2 R' D R U' R U' R'"
+      },
+      {
+        "name": "ZBLL 70",
+        "algorithm": "R' U2 R F U' R' U R U F' R' U R"
+      },
+      {
+        "name": "ZBLL 71",
+        "algorithm": "R' U2 R2 U R' U' R' U2 F' R U2 R U2 R' F"
+      },
+      {
+        "name": "ZBLL 72",
+        "algorithm": "R' U R U R' U' R' D' R U2 R' D R U R"
+      }
+    ]
+  },
+  {
+    "subset": "U1",
+    "algorithms": [
+      {
+        "name": "ZBLL 73",
+        "algorithm": "R U2 R' U' R U' R' U2 R' U2 R U R' U R"
+      },
+      {
+        "name": "ZBLL 74",
+        "algorithm": "R U R' U' R U' R U2 R2 U' R U R' U' R2 U' R2"
+      },
+      {
+        "name": "ZBLL 75",
+        "algorithm": "R' U' R U' R' U2 R2 U R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 76",
+        "algorithm": "R U R' U R U2 R2 U' R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 77",
+        "algorithm": "R U R' U' R U' R' U2 R U' R' U2 R U R'"
+      },
+      {
+        "name": "ZBLL 78",
+        "algorithm": "R' U' R U R' U R U2 R' U R U2 R' U' R"
+      },
+      {
+        "name": "ZBLL 79",
+        "algorithm": "R U2 R2 U' R2 U' R' U R' U' R U R' U R"
+      },
+      {
+        "name": "ZBLL 80",
+        "algorithm": "R' U2 R2 U R2 U R U' R U R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 81",
+        "algorithm": "R' U2 R U R' U R U R' U' R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 82",
+        "algorithm": "R U2 R' U' R U' R' U' R U R' U R U2 R'"
+      },
+      {
+        "name": "ZBLL 83",
+        "algorithm": "R' U' R U' R U2 R2 U' R2 U' R2 U R"
+      },
+      {
+        "name": "ZBLL 84",
+        "algorithm": "R U R' U R' U2 R2 U R2 U R2 U' R'"
+      }
+    ]
+  },
+  {
+    "subset": "U2",
+    "algorithms": [
+      {
+        "name": "ZBLL 85",
+        "algorithm": "R' U' R U' F U' R' U R U R' U R U' F'"
+      },
+      {
+        "name": "ZBLL 86",
+        "algorithm": "R U R' U L' U R U' M' x' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 87",
+        "algorithm": "R U2 R2 F R F' M' U' R U' R' U M"
+      },
+      {
+        "name": "ZBLL 88",
+        "algorithm": "R' U2 R F U' R' U R U R' U R U' F'"
+      },
+      {
+        "name": "ZBLL 89",
+        "algorithm": "R2 D R' U' R D' R' U' R' U R U R'"
+      },
+      {
+        "name": "ZBLL 90",
+        "algorithm": "R2 D' R U R' D R U R U' R' U' R"
+      },
+      {
+        "name": "ZBLL 91",
+        "algorithm": "R U' R' U' R U R D R' U R D' R2"
+      },
+      {
+        "name": "ZBLL 92",
+        "algorithm": "R' U R U R' U' R' D' R U' R' D R2"
+      },
+      {
+        "name": "ZBLL 93",
+        "algorithm": "M' U R' U' F' U F R2 U R' U R U2 r'"
+      },
+      {
+        "name": "ZBLL 94",
+        "algorithm": "F R U R' U' R U R' U' F' U' R' F' U' F U R"
+      },
+      {
+        "name": "ZBLL 95",
+        "algorithm": "F R U' R' U' R U2 R' U' R U' R' U' R U2 R' U' F'"
+      },
+      {
+        "name": "ZBLL 96",
+        "algorithm": "r' U' R' F R U r F R U' R' F'"
+      }
+    ]
+  },
+  {
+    "subset": "U3",
+    "algorithms": [
+      {
+        "name": "ZBLL 97",
+        "algorithm": "R' F R U' R' U' R U R' F' R U R' U' R' F R F' R"
+      },
+      {
+        "name": "ZBLL 98",
+        "algorithm": "F2 R U' R' U' R U R' F' R U R' U' R' F R F2"
+      },
+      {
+        "name": "ZBLL 99",
+        "algorithm": "R U' R' U R U' L U r' F U2 R U2 R2 x"
+      },
+      {
+        "name": "ZBLL 100",
+        "algorithm": "R' U R U R' F' R U R' U' R' F R2 U' R' U2 R U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 101",
+        "algorithm": "R U' L U L' U R' U' l U2 R U2 R2 x"
+      },
+      {
+        "name": "ZBLL 102",
+        "algorithm": "R' U L' U' L U' R U l' U2 R' U2 R2 x'"
+      },
+      {
+        "name": "ZBLL 103",
+        "algorithm": "F R U R U2 R' U' R U' R' U2 R' U2 R U' R' U' F'"
+      },
+      {
+        "name": "ZBLL 104",
+        "algorithm": "r U R' U' r' F R2 U' R' U' R U2 R' U' F'"
+      },
+      {
+        "name": "ZBLL 105",
+        "algorithm": "F U R U2 R' U R U R2 F' r U R U' r'"
+      },
+      {
+        "name": "ZBLL 106",
+        "algorithm": "R U2 R' U2 R' F R U R U2 R' U' R U2 R' U' F'"
+      },
+      {
+        "name": "ZBLL 107",
+        "algorithm": "R' U' R F R2 D' R U R' D R2 U' F'"
+      },
+      {
+        "name": "ZBLL 108",
+        "algorithm": "r U R' U' r' F R U R' U' R F' R' U R"
+      }
+    ]
+  },
+  {
+    "subset": "U4",
+    "algorithms": [
+      {
+        "name": "ZBLL 109",
+        "algorithm": "x R2 U2 R' D2 R U2 R' D2 R' x'"
+      },
+      {
+        "name": "ZBLL 110",
+        "algorithm": "x R2 D2 R U2 R' D2 R U2 l"
+      },
+      {
+        "name": "ZBLL 111",
+        "algorithm": "R U R' U R U' R' U2 R' D' R U2 R' D R2 U' R'"
+      },
+      {
+        "name": "ZBLL 112",
+        "algorithm": "R' U2 R U R' U R' D R' U2 R D' R' U2 R'"
+      },
+      {
+        "name": "ZBLL 113",
+        "algorithm": "R U' R' U' R U' R' U R' D' R U R' D R2 U R'"
+      },
+      {
+        "name": "ZBLL 114",
+        "algorithm": "R' U R U R' U R U' R D R' U' R D' R2 U' R"
+      },
+      {
+        "name": "ZBLL 115",
+        "algorithm": "R' U2 R U R' U R' D' R U' R' D R U R"
+      },
+      {
+        "name": "ZBLL 116",
+        "algorithm": "R U' R' U' R U2 R' U2 R' D' R U' R' D R"
+      },
+      {
+        "name": "ZBLL 117",
+        "algorithm": "R' U' R U2 R' F' R U R' U' R' F R2 U2 R' U R"
+      },
+      {
+        "name": "ZBLL 118",
+        "algorithm": "R U R' U R U R' U2 R U' R2 D' R U' R' D R"
+      },
+      {
+        "name": "ZBLL 119",
+        "algorithm": "F R U' R' U R U R' U R U' R' F'"
+      },
+      {
+        "name": "ZBLL 120",
+        "algorithm": "F' R U R' U' R' F R2 U R' U2 R U R' U2 R U' R'"
+      }
+    ]
+  },
+  {
+    "subset": "U5",
+    "algorithms": [
+      {
+        "name": "ZBLL 121",
+        "algorithm": "R2 D' r U2 r' D R U2 R"
+      },
+      {
+        "name": "ZBLL 122",
+        "algorithm": "R2 D' R U2 R' D R U2 R"
+      },
+      {
+        "name": "ZBLL 123",
+        "algorithm": "R U' R' D R' U' R D' R2 U R' U' R' U2 R'"
+      },
+      {
+        "name": "ZBLL 124",
+        "algorithm": "R U R' U R U2 R2 U z U R' D R U' z'"
+      },
+      {
+        "name": "ZBLL 125",
+        "algorithm": "R2 D' R U' R' D R2 U' R' U2 R"
+      },
+      {
+        "name": "ZBLL 126",
+        "algorithm": "R' U R U R' U2 R U2 y R U' R' U2 R U' R'"
+      },
+      {
+        "name": "ZBLL 127",
+        "algorithm": "R2 D R' U R D' R2 U' R U' R' U2 R U' R' U2 R U R'"
+      },
+      {
+        "name": "ZBLL 128",
+        "algorithm": "R2' F' R U2 R U2' R' F U' R U R' U' R"
+      },
+      {
+        "name": "ZBLL 129",
+        "algorithm": "R' U2 R2 D R' U2 R D' R2 U R U2 R' U2 R"
+      },
+      {
+        "name": "ZBLL 130",
+        "algorithm": "R U R' U2 F2 R U2 R' U2 R' F2 R2 U R'"
+      },
+      {
+        "name": "ZBLL 131",
+        "algorithm": "R' U2 R' D' R U2 R' D R U2 R U R' U R"
+      },
+      {
+        "name": "ZBLL 132",
+        "algorithm": "R' U R U' R' U' R U2 R D R' U' R D' R2 U' R"
+      }
+    ]
+  },
+  {
+    "subset": "U6",
+    "algorithms": [
+      {
+        "name": "ZBLL 133",
+        "algorithm": "R' U2 R U R2 F' R U R U' R' F R"
+      },
+      {
+        "name": "ZBLL 134",
+        "algorithm": "R2 D R' U2 R D' R' U2 R'"
+      },
+      {
+        "name": "ZBLL 135",
+        "algorithm": "R' U' R U R U R' U' R' U F R U R U' R' F'"
+      },
+      {
+        "name": "ZBLL 136",
+        "algorithm": "R U' R' U' R U2 R' U' R' D' R U2 R' D R"
+      },
+      {
+        "name": "ZBLL 137",
+        "algorithm": "R U R2 D' R U R' D R2 U2 R'"
+      },
+      {
+        "name": "ZBLL 138",
+        "algorithm": "R U' R' U' R U2 R' U2 y' R' U R U2 R' U R"
+      },
+      {
+        "name": "ZBLL 139",
+        "algorithm": "R' U R' U' D' R U' R' U2 R U' R' D R U' R"
+      },
+      {
+        "name": "ZBLL 140",
+        "algorithm": "R U R' U R U' R' U F' R U2 R' U2 R' F R"
+      },
+      {
+        "name": "ZBLL 141",
+        "algorithm": "R' U' R U R' U R U2 F R' U R U' F' R' U2 R"
+      },
+      {
+        "name": "ZBLL 142",
+        "algorithm": "R U R' U R U' R' U R U' R' U' L' U R U' R' L"
+      },
+      {
+        "name": "ZBLL 143",
+        "algorithm": "R U2 R D R' U2 R D' R' U2 R' U' R U' R'"
+      },
+      {
+        "name": "ZBLL 144",
+        "algorithm": "R U' R' U R U R' U2 R' D' R U R' D R2 U R'"
+      }
+    ]
+  }
+]

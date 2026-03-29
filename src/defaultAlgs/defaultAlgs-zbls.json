@@ -1,0 +1,1432 @@
+[
+  {
+    "subset": "Case 1",
+    "algorithms": [
+      {
+        "name": "ZBLS-1",
+        "algorithm": "yR'F'RU2LR'F'L'Ry'"
+      },
+      {
+        "name": "ZBLS-2",
+        "algorithm": "(U2)RU'BU'B'R'"
+      },
+      {
+        "name": "ZBLS-3",
+        "algorithm": "R'FR2UR'U'F'"
+      },
+      {
+        "name": "ZBLS-4",
+        "algorithm": "R'U'FUR2U'R'F'"
+      },
+      {
+        "name": "ZBLS-5",
+        "algorithm": "(U)RBU'B'R'"
+      },
+      {
+        "name": "ZBLS-6",
+        "algorithm": "R'FRF'"
+      },
+      {
+        "name": "ZBLS-7",
+        "algorithm": "(U)F'L'U'LF"
+      },
+      {
+        "name": "ZBLS-8",
+        "algorithm": "(U)RU'R'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 2",
+    "algorithms": [
+      {
+        "name": "ZBLS-9",
+        "algorithm": "LFL'U2R'LFRL'"
+      },
+      {
+        "name": "ZBLS-10",
+        "algorithm": "(U2)F'UL'ULF"
+      },
+      {
+        "name": "ZBLS-11",
+        "algorithm": "FR'F2U'FUR"
+      },
+      {
+        "name": "ZBLS-12",
+        "algorithm": "FUR'U'F2UFR"
+      },
+      {
+        "name": "ZBLS-13",
+        "algorithm": "(U')F'L'ULF"
+      },
+      {
+        "name": "ZBLS-14",
+        "algorithm": "FR'F'R"
+      },
+      {
+        "name": "ZBLS-15",
+        "algorithm": "(U')RBUB'R'"
+      },
+      {
+        "name": "ZBLS-16",
+        "algorithm": "(U')F'UF"
+      }
+    ]
+  },
+  {
+    "subset": "Case 3",
+    "algorithms": [
+      {
+        "name": "ZBLS-17",
+        "algorithm": "FDB'R'BD'F2U'F"
+      },
+      {
+        "name": "ZBLS-18",
+        "algorithm": "(U2)F'U'L'ULUF"
+      },
+      {
+        "name": "ZBLS-19",
+        "algorithm": "F'U2L'ULF"
+      },
+      {
+        "name": "ZBLS-20",
+        "algorithm": "F'U'L'U'LUF"
+      },
+      {
+        "name": "ZBLS-21",
+        "algorithm": "(U)RU2R'FR'F'R"
+      },
+      {
+        "name": "ZBLS-22",
+        "algorithm": "(U)RU2R'U'F'UF"
+      },
+      {
+        "name": "ZBLS-23",
+        "algorithm": "F'UFU2FR'F'R"
+      },
+      {
+        "name": "ZBLS-24",
+        "algorithm": "F'U'F"
+      }
+    ]
+  },
+  {
+    "subset": "Case 4",
+    "algorithms": [
+      {
+        "name": "ZBLS-25",
+        "algorithm": "R'D'LFL'DR2UR'"
+      },
+      {
+        "name": "ZBLS-26",
+        "algorithm": "(U2)RUBU'B'U'R'"
+      },
+      {
+        "name": "ZBLS-27",
+        "algorithm": "RU2BU'B'R'"
+      },
+      {
+        "name": "ZBLS-28",
+        "algorithm": "RUBUB'U'R'"
+      },
+      {
+        "name": "ZBLS-29",
+        "algorithm": "(U')F'U2FR'FRF'"
+      },
+      {
+        "name": "ZBLS-30",
+        "algorithm": "(U')F'U2FURU'R'"
+      },
+      {
+        "name": "ZBLS-31",
+        "algorithm": "RU'R'U2R'FRF'"
+      },
+      {
+        "name": "ZBLS-32",
+        "algorithm": "RUR'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 5",
+    "algorithms": [
+      {
+        "name": "ZBLS-33",
+        "algorithm": "(U')F'UFRBU2B'UR'"
+      },
+      {
+        "name": "ZBLS-34",
+        "algorithm": "(U')LFR'F'L'R2U2R'"
+      },
+      {
+        "name": "ZBLS-35",
+        "algorithm": "(U2)RBUB'U2R'"
+      },
+      {
+        "name": "ZBLS-36",
+        "algorithm": "(U')RUR'UR'FRF'"
+      },
+      {
+        "name": "ZBLS-37",
+        "algorithm": "(U2)R'FRF'U2F'U'F"
+      },
+      {
+        "name": "ZBLS-38",
+        "algorithm": "F'B'U'R'URBF"
+      },
+      {
+        "name": "ZBLS-39",
+        "algorithm": "BLF'U'FUL'B'"
+      },
+      {
+        "name": "ZBLS-40",
+        "algorithm": "(U')RUR'U'RU2R'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 6",
+    "algorithms": [
+      {
+        "name": "ZBLS-41",
+        "algorithm": "(U)RU'R'F'L'U2LU'F"
+      },
+      {
+        "name": "ZBLS-42",
+        "algorithm": "(U)B'R'FRBF2U2F"
+      },
+      {
+        "name": "ZBLS-43",
+        "algorithm": "(U2)F'L'U'LU2F"
+      },
+      {
+        "name": "ZBLS-44",
+        "algorithm": "(U)F'U'FU'FR'F'R"
+      },
+      {
+        "name": "ZBLS-45",
+        "algorithm": "(U2)FR'F'RU2RUR'"
+      },
+      {
+        "name": "ZBLS-46",
+        "algorithm": "RLUFU'F'L'R'"
+      },
+      {
+        "name": "ZBLS-47",
+        "algorithm": "L'B'RUR'U'BL"
+      },
+      {
+        "name": "ZBLS-48",
+        "algorithm": "(U)F'U'FU2F'UF"
+      }
+    ]
+  },
+  {
+    "subset": "Case 7",
+    "algorithms": [
+      {
+        "name": "ZBLS-49",
+        "algorithm": "LR'F'L'RU2LF'L'"
+      },
+      {
+        "name": "ZBLS-50",
+        "algorithm": "(U2)LUFU'F'L'RU'R'"
+      },
+      {
+        "name": "ZBLS-51",
+        "algorithm": "(U')RU2R'UR'FRF'"
+      },
+      {
+        "name": "ZBLS-52",
+        "algorithm": "(U2)RU2R2U2B'R'BU2R"
+      },
+      {
+        "name": "ZBLS-53",
+        "algorithm": "(U)RUBU2B'U2R'"
+      },
+      {
+        "name": "ZBLS-54",
+        "algorithm": "(U)R2URB'R'BU'R2"
+      },
+      {
+        "name": "ZBLS-55",
+        "algorithm": "RUBU2B'UR'"
+      },
+      {
+        "name": "ZBLS-56",
+        "algorithm": "(U')RU2R'U'RU2R'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 8",
+    "algorithms": [
+      {
+        "name": "ZBLS-57",
+        "algorithm": "RwURw'U'RU'M'URw'"
+      },
+      {
+        "name": "ZBLS-58",
+        "algorithm": "(U2)B'U'R'URBF'UF"
+      },
+      {
+        "name": "ZBLS-59",
+        "algorithm": "(U)F'U2FU'FR'F'R"
+      },
+      {
+        "name": "ZBLS-60",
+        "algorithm": "(U2)F'U2F2U2LFL'U2F'"
+      },
+      {
+        "name": "ZBLS-61",
+        "algorithm": "(U')F'U'L'U2LU2F"
+      },
+      {
+        "name": "ZBLS-62",
+        "algorithm": "URU'R'dR'URU'R'URy"
+      },
+      {
+        "name": "ZBLS-63",
+        "algorithm": "F'U'L'U2LU'F"
+      },
+      {
+        "name": "ZBLS-64",
+        "algorithm": "(U)F'U2FU2F'UF"
+      }
+    ]
+  },
+  {
+    "subset": "Case 9",
+    "algorithms": [
+      {
+        "name": "ZBLS-65",
+        "algorithm": "(U2)B'RBU2B'FR'F'R'B"
+      },
+      {
+        "name": "ZBLS-66",
+        "algorithm": "F'UL'U'LU2F"
+      },
+      {
+        "name": "ZBLS-67",
+        "algorithm": "F'R'F'U'FURU2F"
+      },
+      {
+        "name": "ZBLS-68",
+        "algorithm": "(U)LR'D'F'DL'R2U'R'"
+      },
+      {
+        "name": "ZBLS-69",
+        "algorithm": "(U')RU'R'UF'U'F"
+      },
+      {
+        "name": "ZBLS-70",
+        "algorithm": "(U)LFR'F'L'R2U'R'"
+      },
+      {
+        "name": "ZBLS-71",
+        "algorithm": "FRUR'U'F'RU'R'"
+      },
+      {
+        "name": "ZBLS-72",
+        "algorithm": "(U)F'U'FU'F'U'F"
+      }
+    ]
+  },
+  {
+    "subset": "Case 10",
+    "algorithms": [
+      {
+        "name": "ZBLS-73",
+        "algorithm": "(U2)LF'L'U2LR'FRFL'"
+      },
+      {
+        "name": "ZBLS-74",
+        "algorithm": "RU'BUB'U2R'"
+      },
+      {
+        "name": "ZBLS-75",
+        "algorithm": "RFRUR'U'F'U2R'"
+      },
+      {
+        "name": "ZBLS-76",
+        "algorithm": "(U')FB'DRD'BF2UF"
+      },
+      {
+        "name": "ZBLS-77",
+        "algorithm": "(U)F'UFU'RUR'"
+      },
+      {
+        "name": "ZBLS-78",
+        "algorithm": "(U')B'R'FRBF2UF"
+      },
+      {
+        "name": "ZBLS-79",
+        "algorithm": "R'F'U'FURF'UF"
+      },
+      {
+        "name": "ZBLS-80",
+        "algorithm": "(U')RUR'URUR'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 11",
+    "algorithms": [
+      {
+        "name": "ZBLS-81",
+        "algorithm": "(U2)RBU2B'UR'U'F'UF"
+      },
+      {
+        "name": "ZBLS-82",
+        "algorithm": "RU2R'U'F'L'U2LF"
+      },
+      {
+        "name": "ZBLS-83",
+        "algorithm": "F'UL'U2LU2F"
+      },
+      {
+        "name": "ZBLS-84",
+        "algorithm": "(U2)F'U2FU'RU'R'F'U'F"
+      },
+      {
+        "name": "ZBLS-85",
+        "algorithm": "(U')RU2R'UF'U'F"
+      },
+      {
+        "name": "ZBLS-86",
+        "algorithm": "F'U'F2U2LF2L'U2F'"
+      },
+      {
+        "name": "ZBLS-87",
+        "algorithm": "R'U'R2U'R2U2RF'UF"
+      },
+      {
+        "name": "ZBLS-88",
+        "algorithm": "FU2F2U'F2U'F'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 12",
+    "algorithms": [
+      {
+        "name": "ZBLS-89",
+        "algorithm": "(U2)F'L'U2LU'FURU'R'"
+      },
+      {
+        "name": "ZBLS-90",
+        "algorithm": "RU2FURU'R'F'R'"
+      },
+      {
+        "name": "ZBLS-91",
+        "algorithm": "RU'BU2B'U2R'"
+      },
+      {
+        "name": "ZBLS-92",
+        "algorithm": "(U2)RU2R'UF'UFRUR'"
+      },
+      {
+        "name": "ZBLS-93",
+        "algorithm": "(U)F'U2FU'RUR'"
+      },
+      {
+        "name": "ZBLS-94",
+        "algorithm": "RUR2U2B'R2BU2R"
+      },
+      {
+        "name": "ZBLS-95",
+        "algorithm": "FUF2UF2U2F'RU'R'"
+      },
+      {
+        "name": "ZBLS-96",
+        "algorithm": "R'U2R2UR2UR"
+      }
+    ]
+  },
+  {
+    "subset": "Case 13",
+    "algorithms": [
+      {
+        "name": "ZBLS-97",
+        "algorithm": "(U2)B'RBU'B'FR2F'R'B"
+      },
+      {
+        "name": "ZBLS-98",
+        "algorithm": "(U)B'U'R'URBF'U'F"
+      },
+      {
+        "name": "ZBLS-99",
+        "algorithm": "F'LUFU'F2L'F2"
+      },
+      {
+        "name": "ZBLS-100",
+        "algorithm": "(U)FURU'R'F2U'F"
+      },
+      {
+        "name": "ZBLS-101",
+        "algorithm": "(U2)B'F'R'FR'F'R2FB"
+      },
+      {
+        "name": "ZBLS-102",
+        "algorithm": "(U)F'UBL'F'L'FLFB'"
+      },
+      {
+        "name": "ZBLS-103",
+        "algorithm": "RU'R'UF'U2FRUR'"
+      },
+      {
+        "name": "ZBLS-104",
+        "algorithm": "(U)F'UFU'F'U'F"
+      }
+    ]
+  },
+  {
+    "subset": "Case 14",
+    "algorithms": [
+      {
+        "name": "ZBLS-105",
+        "algorithm": "(U2)LF'L'ULR'F2RFL'"
+      },
+      {
+        "name": "ZBLS-106",
+        "algorithm": "(U')LUFU'F'L'RUR'"
+      },
+      {
+        "name": "ZBLS-107",
+        "algorithm": "RB'U'R'UR2BR2"
+      },
+      {
+        "name": "ZBLS-108",
+        "algorithm": "(U')R'U'F'UFR2UR'"
+      },
+      {
+        "name": "ZBLS-109",
+        "algorithm": "(U2)LRFR'FRF2R'L'"
+      },
+      {
+        "name": "ZBLS-110",
+        "algorithm": "(U')RU'L'BRBR'B'R'L"
+      },
+      {
+        "name": "ZBLS-111",
+        "algorithm": "F'UFU'RU2R'F'U'F"
+      },
+      {
+        "name": "ZBLS-112",
+        "algorithm": "(U')RU'R'URUR'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 15",
+    "algorithms": [
+      {
+        "name": "ZBLS-113",
+        "algorithm": "(U')F'U2FRBU2B'R'"
+      },
+      {
+        "name": "ZBLS-114",
+        "algorithm": "RUB'RBR'U2R'"
+      },
+      {
+        "name": "ZBLS-115",
+        "algorithm": "RUR'U2RU'R2FRF'"
+      },
+      {
+        "name": "ZBLS-116",
+        "algorithm": "(U2)F'U'FRBU2B'R'"
+      },
+      {
+        "name": "ZBLS-117",
+        "algorithm": "LRFUF'U'R'L'"
+      },
+      {
+        "name": "ZBLS-118",
+        "algorithm": "F'UFU2RUR'"
+      },
+      {
+        "name": "ZBLS-119",
+        "algorithm": "RBLU'L'B'R'"
+      },
+      {
+        "name": "ZBLS-120",
+        "algorithm": "RFUR'U'RF'U'R'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 16",
+    "algorithms": [
+      {
+        "name": "ZBLS-121",
+        "algorithm": "(U)RU2R'F'L'U2LF"
+      },
+      {
+        "name": "ZBLS-122",
+        "algorithm": "F'U'LF'L'FU2F"
+      },
+      {
+        "name": "ZBLS-123",
+        "algorithm": "F'U'FU2F'UF2R'F'R"
+      },
+      {
+        "name": "ZBLS-124",
+        "algorithm": "(U2)RUR'F'L'U2LF"
+      },
+      {
+        "name": "ZBLS-125",
+        "algorithm": "F'B'R'U'RUBF"
+      },
+      {
+        "name": "ZBLS-126",
+        "algorithm": "RU'R'U2F'U'F"
+      },
+      {
+        "name": "ZBLS-127",
+        "algorithm": "F'L'B'UBLF"
+      },
+      {
+        "name": "ZBLS-128",
+        "algorithm": "F'R'U'FUF'RUF"
+      }
+    ]
+  },
+  {
+    "subset": "Case 17",
+    "algorithms": [
+      {
+        "name": "ZBLS-129",
+        "algorithm": "(U')RU'BU'LU'L'B'R'"
+      },
+      {
+        "name": "ZBLS-130",
+        "algorithm": "(U')RU2R'U'F'U'FRUR'"
+      },
+      {
+        "name": "ZBLS-131",
+        "algorithm": "(U)RURU2FRF'U2R2"
+      },
+      {
+        "name": "ZBLS-132",
+        "algorithm": "(U2)R2U2FRF'U2R2"
+      },
+      {
+        "name": "ZBLS-133",
+        "algorithm": "F'UFRUR'FR'F'R"
+      },
+      {
+        "name": "ZBLS-134",
+        "algorithm": "(U2)R2B2L'B'LB'R2"
+      },
+      {
+        "name": "ZBLS-135",
+        "algorithm": "F'U2LFUF'U'L'F"
+      },
+      {
+        "name": "ZBLS-136",
+        "algorithm": "RU2R'U'RUR'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 18",
+    "algorithms": [
+      {
+        "name": "ZBLS-137",
+        "algorithm": "(U)F'UL'UB'UBLF"
+      },
+      {
+        "name": "ZBLS-138",
+        "algorithm": "(U)F'U2FURUR'F'U'F"
+      },
+      {
+        "name": "ZBLS-139",
+        "algorithm": "(U')F'U'F'U2R'F'RU2F2"
+      },
+      {
+        "name": "ZBLS-140",
+        "algorithm": "(U2)F2U2R'F'RU2F2"
+      },
+      {
+        "name": "ZBLS-141",
+        "algorithm": "RU'R'F'U'FR'FRF'"
+      },
+      {
+        "name": "ZBLS-142",
+        "algorithm": "(U2)F2L2BLB'LF2"
+      },
+      {
+        "name": "ZBLS-143",
+        "algorithm": "RU2B'R'U'RUBR'"
+      },
+      {
+        "name": "ZBLS-144",
+        "algorithm": "F'U2FUF'U'F"
+      }
+    ]
+  },
+  {
+    "subset": "Case 19",
+    "algorithms": [
+      {
+        "name": "ZBLS-145",
+        "algorithm": "(U')R2B'R'B2U2B'R'"
+      },
+      {
+        "name": "ZBLS-146",
+        "algorithm": "(U)RU2R2FRF'"
+      },
+      {
+        "name": "ZBLS-147",
+        "algorithm": "(U)RUR'F'U'FRUR'"
+      },
+      {
+        "name": "ZBLS-148",
+        "algorithm": "(U)RU2R'URBU'B'R'"
+      },
+      {
+        "name": "ZBLS-149",
+        "algorithm": "(U)F'UF2R'F'RF'UF"
+      },
+      {
+        "name": "ZBLS-150",
+        "algorithm": "(U)RU'R'F'U2FRU2R'"
+      },
+      {
+        "name": "ZBLS-151",
+        "algorithm": "(U')R2B'R'B2U'B'U'R'"
+      },
+      {
+        "name": "ZBLS-152",
+        "algorithm": "(U)RU2R'URU'R'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 20",
+    "algorithms": [
+      {
+        "name": "ZBLS-153",
+        "algorithm": "(U)F2LFL2U2LF"
+      },
+      {
+        "name": "ZBLS-154",
+        "algorithm": "(U')F'U2F2R'F'R"
+      },
+      {
+        "name": "ZBLS-155",
+        "algorithm": "(U')F'U'FRUR'F'U'F"
+      },
+      {
+        "name": "ZBLS-156",
+        "algorithm": "(U')F'L'U2LFU'RUR'"
+      },
+      {
+        "name": "ZBLS-157",
+        "algorithm": "(U')RU'R2FRF'RU'R'"
+      },
+      {
+        "name": "ZBLS-158",
+        "algorithm": "(U')F'UFRU2R'F'U2F"
+      },
+      {
+        "name": "ZBLS-159",
+        "algorithm": "(U)F2LFL2ULUF"
+      },
+      {
+        "name": "ZBLS-160",
+        "algorithm": "(U')F'U2FU'F'UF"
+      }
+    ]
+  },
+  {
+    "subset": "Case 21",
+    "algorithms": [
+      {
+        "name": "ZBLS-161",
+        "algorithm": "(U2)F'L'U2L2F'L'F2"
+      },
+      {
+        "name": "ZBLS-162",
+        "algorithm": "(U)FRUR2U'F'UR"
+      },
+      {
+        "name": "ZBLS-163",
+        "algorithm": "(U)RBUB'UR'"
+      },
+      {
+        "name": "ZBLS-164",
+        "algorithm": "RBU2B'R'"
+      },
+      {
+        "name": "ZBLS-165",
+        "algorithm": "(U)R'FRF'UR'FRF'"
+      },
+      {
+        "name": "ZBLS-166",
+        "algorithm": "(U2)RUR2FRF'"
+      },
+      {
+        "name": "ZBLS-167",
+        "algorithm": "RBU'B'U'R'"
+      },
+      {
+        "name": "ZBLS-168",
+        "algorithm": "(U2)RUR'URU'R'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 22",
+    "algorithms": [
+      {
+        "name": "ZBLS-169",
+        "algorithm": "(U2)RBU2B2RBR2"
+      },
+      {
+        "name": "ZBLS-170",
+        "algorithm": "F'L'U'LU'FRU'R'"
+      },
+      {
+        "name": "ZBLS-171",
+        "algorithm": "(U')F'L'U'LU'F"
+      },
+      {
+        "name": "ZBLS-172",
+        "algorithm": "F'L'U2LF"
+      },
+      {
+        "name": "ZBLS-173",
+        "algorithm": "(U')FR'F'RU'FR'F'R"
+      },
+      {
+        "name": "ZBLS-174",
+        "algorithm": "(U2)F'U'F2R'F'R"
+      },
+      {
+        "name": "ZBLS-175",
+        "algorithm": "F'L'ULUF"
+      },
+      {
+        "name": "ZBLS-176",
+        "algorithm": "(U2)F'U'FU'F'UF"
+      }
+    ]
+  },
+  {
+    "subset": "Case 23",
+    "algorithms": [
+      {
+        "name": "ZBLS-177",
+        "algorithm": "(U')F'L'B'U'BU'LU'F"
+      },
+      {
+        "name": "ZBLS-178",
+        "algorithm": "(U')RU'BU'B'R'F'U'F"
+      },
+      {
+        "name": "ZBLS-179",
+        "algorithm": "RURB'R'BU2R'"
+      },
+      {
+        "name": "ZBLS-180",
+        "algorithm": "RUR'F'UFRUR'"
+      },
+      {
+        "name": "ZBLS-181",
+        "algorithm": "(U')RBU'B'R'F'U'F"
+      },
+      {
+        "name": "ZBLS-182",
+        "algorithm": "(U')F'U2F'U'L'ULF2"
+      },
+      {
+        "name": "ZBLS-183",
+        "algorithm": "(U')LFUF'U'L'F'U'F"
+      },
+      {
+        "name": "ZBLS-184",
+        "algorithm": "(U2)R2U2R'U'RU'R2"
+      }
+    ]
+  },
+  {
+    "subset": "Case 24",
+    "algorithms": [
+      {
+        "name": "ZBLS-185",
+        "algorithm": "(U)RBLUL'UB'UR'"
+      },
+      {
+        "name": "ZBLS-186",
+        "algorithm": "(U)F'UL'ULFRUR'"
+      },
+      {
+        "name": "ZBLS-187",
+        "algorithm": "(U)RURU2FRF'U2R2"
+      },
+      {
+        "name": "ZBLS-188",
+        "algorithm": "F'U'FRU'R'F'U'F"
+      },
+      {
+        "name": "ZBLS-189",
+        "algorithm": "(U)F'L'ULFRUR'"
+      },
+      {
+        "name": "ZBLS-190",
+        "algorithm": "(U)RU2RUBU'B'R2"
+      },
+      {
+        "name": "ZBLS-191",
+        "algorithm": "(U)B'R'U'RUBRUR'"
+      },
+      {
+        "name": "ZBLS-192",
+        "algorithm": "U2F2U2FUF'UF2"
+      }
+    ]
+  },
+  {
+    "subset": "Case 25",
+    "algorithms": [
+      {
+        "name": "ZBLS-193",
+        "algorithm": "(U)R2DL'BLD'R'U'R'"
+      },
+      {
+        "name": "ZBLS-194",
+        "algorithm": "(U)B'R2U'RUR2B"
+      },
+      {
+        "name": "ZBLS-195",
+        "algorithm": "B'R2U'R'UR2B"
+      },
+      {
+        "name": "ZBLS-196",
+        "algorithm": "(U2)RU2BU2B'U2R'"
+      },
+      {
+        "name": "ZBLS-197",
+        "algorithm": "(U')F'U'FURUR'"
+      },
+      {
+        "name": "ZBLS-198",
+        "algorithm": "(U')F'UFURU'R'"
+      },
+      {
+        "name": "ZBLS-199",
+        "algorithm": "(U')F'UFR'FRF'"
+      },
+      {
+        "name": "ZBLS-200",
+        "algorithm": "R'U'R'U'R'URUR"
+      }
+    ]
+  },
+  {
+    "subset": "Case 26",
+    "algorithms": [
+      {
+        "name": "ZBLS-201",
+        "algorithm": "(U)RURDL'B'LD'R2"
+      },
+      {
+        "name": "ZBLS-202",
+        "algorithm": "y'(U')FR2UR'U'R2F'y"
+      },
+      {
+        "name": "ZBLS-203",
+        "algorithm": "y'FR2URU'R2F'y"
+      },
+      {
+        "name": "ZBLS-204",
+        "algorithm": "(U2)F'U2L'U2LU2F"
+      },
+      {
+        "name": "ZBLS-205",
+        "algorithm": "(U)RUR'U'F'U'F"
+      },
+      {
+        "name": "ZBLS-206",
+        "algorithm": "(U)RU'R'U'F'UF"
+      },
+      {
+        "name": "ZBLS-207",
+        "algorithm": "(U)RU'R'FR'F'R"
+      },
+      {
+        "name": "ZBLS-208",
+        "algorithm": "FUFUFU'F'U'F'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 27",
+    "algorithms": [
+      {
+        "name": "ZBLS-209",
+        "algorithm": "yL'U2LFU'RU'R'F'y'"
+      },
+      {
+        "name": "ZBLS-210",
+        "algorithm": "URw'R2U'R'URwU'R'"
+      },
+      {
+        "name": "ZBLS-211",
+        "algorithm": "RU'R2U'FURU'F'"
+      },
+      {
+        "name": "ZBLS-212",
+        "algorithm": "RU'R2FRF'"
+      },
+      {
+        "name": "ZBLS-213",
+        "algorithm": "F'U2FRU2R'"
+      },
+      {
+        "name": "ZBLS-214",
+        "algorithm": "y'R'U2R'FRF'Ry"
+      },
+      {
+        "name": "ZBLS-215",
+        "algorithm": "F'U'FU'RU2R'"
+      },
+      {
+        "name": "ZBLS-216",
+        "algorithm": "RU'R'URU'R'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 28",
+    "algorithms": [
+      {
+        "name": "ZBLS-217",
+        "algorithm": "RU2R2FRF2U2F"
+      },
+      {
+        "name": "ZBLS-218",
+        "algorithm": "(U2)F'U'L'U'LU'F"
+      },
+      {
+        "name": "ZBLS-219",
+        "algorithm": "F'UFU'RBUB'R'"
+      },
+      {
+        "name": "ZBLS-220",
+        "algorithm": "F'UF2R'F'R"
+      },
+      {
+        "name": "ZBLS-221",
+        "algorithm": "RU2R'F'U2F"
+      },
+      {
+        "name": "ZBLS-222",
+        "algorithm": "FR'F'RFR'F'R"
+      },
+      {
+        "name": "ZBLS-223",
+        "algorithm": "RUR'UF'U2F"
+      },
+      {
+        "name": "ZBLS-224",
+        "algorithm": "F'UFU'F'UF"
+      }
+    ]
+  },
+  {
+    "subset": "Case 29",
+    "algorithms": [
+      {
+        "name": "ZBLS-225",
+        "algorithm": "y'(U')R2FRF2U'FU2Ry"
+      },
+      {
+        "name": "ZBLS-226",
+        "algorithm": "y'R'U'LFR'F'L'R2y"
+      },
+      {
+        "name": "ZBLS-227",
+        "algorithm": "(U)F'UL'U2LF"
+      },
+      {
+        "name": "ZBLS-228",
+        "algorithm": "y'(U2)R2FRF'U2Ry"
+      },
+      {
+        "name": "ZBLS-229",
+        "algorithm": "R'U'R2U'R2U2RF'U'F"
+      },
+      {
+        "name": "ZBLS-230",
+        "algorithm": "R'FRF'R'FRF'"
+      },
+      {
+        "name": "ZBLS-231",
+        "algorithm": "(U2)RU'R'F'U'F"
+      },
+      {
+        "name": "ZBLS-232",
+        "algorithm": "F'U'FUF'U'F"
+      }
+    ]
+  },
+  {
+    "subset": "Case 30",
+    "algorithms": [
+      {
+        "name": "ZBLS-233",
+        "algorithm": "(U)R2B'R'yR2UR'U2F'y'"
+      },
+      {
+        "name": "ZBLS-234",
+        "algorithm": "RUL'B'RBR2L"
+      },
+      {
+        "name": "ZBLS-235",
+        "algorithm": "(U')RU'BU2B'R'"
+      },
+      {
+        "name": "ZBLS-236",
+        "algorithm": "(U')FR'F'R2UR'"
+      },
+      {
+        "name": "ZBLS-237",
+        "algorithm": "(U)F'U'FU'F'U'FRUR'"
+      },
+      {
+        "name": "ZBLS-238",
+        "algorithm": "FR'F'RFR'F'R"
+      },
+      {
+        "name": "ZBLS-239",
+        "algorithm": "(U2)F'UFRUR'"
+      },
+      {
+        "name": "ZBLS-240",
+        "algorithm": "RUR'U'RUR'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 31",
+    "algorithms": [
+      {
+        "name": "ZBLS-241",
+        "algorithm": "y'R2FRF2U'FRy"
+      },
+      {
+        "name": "ZBLS-242",
+        "algorithm": "RU'R2FRF2U2F"
+      },
+      {
+        "name": "ZBLS-243",
+        "algorithm": "R2B'R'yR2U2R'U'F'y'"
+      },
+      {
+        "name": "ZBLS-244",
+        "algorithm": "R2B'R'yR2UR'F'y'"
+      },
+      {
+        "name": "ZBLS-245",
+        "algorithm": "RU'R'F'U2F"
+      },
+      {
+        "name": "ZBLS-246",
+        "algorithm": "F'UFRU2R'"
+      },
+      {
+        "name": "ZBLS-247",
+        "algorithm": "F'U2FU'RU2R'"
+      },
+      {
+        "name": "ZBLS-248",
+        "algorithm": "RU2R'UF'U2F"
+      }
+    ]
+  },
+  {
+    "subset": "Case 32",
+    "algorithms": [
+      {
+        "name": "ZBLS-249",
+        "algorithm": "yFR2U2FR'F'U2R2F'y'"
+      },
+      {
+        "name": "ZBLS-250",
+        "algorithm": "(U2)RU'BUB'UR'"
+      },
+      {
+        "name": "ZBLS-251",
+        "algorithm": "rRUR2UR2U2R'r'"
+      },
+      {
+        "name": "ZBLS-252",
+        "algorithm": "(U2)F'UL'U'LU'F"
+      },
+      {
+        "name": "ZBLS-253",
+        "algorithm": "RUR'UF'UFRUR'"
+      },
+      {
+        "name": "ZBLS-254",
+        "algorithm": "(U)RU'BU2B'UR'"
+      },
+      {
+        "name": "ZBLS-255",
+        "algorithm": "(U')F'UL'U2LU'F"
+      },
+      {
+        "name": "ZBLS-256",
+        "algorithm": "R2UR2UR2U2R2"
+      }
+    ]
+  },
+  {
+    "subset": "Case 33",
+    "algorithms": [
+      {
+        "name": "ZBLS-257",
+        "algorithm": "(U')FR'F'R2U2R2FRF'"
+      },
+      {
+        "name": "ZBLS-258",
+        "algorithm": "(U')RU'R'UR'FRF'"
+      },
+      {
+        "name": "ZBLS-259",
+        "algorithm": "yFR2UR'URU2R2F'y'"
+      },
+      {
+        "name": "ZBLS-260",
+        "algorithm": "(U)RUBUB'U2R'"
+      },
+      {
+        "name": "ZBLS-261",
+        "algorithm": "(U2)RBU2B'U2R'"
+      },
+      {
+        "name": "ZBLS-262",
+        "algorithm": "(U2)F'RL'U'LUR'F"
+      },
+      {
+        "name": "ZBLS-263",
+        "algorithm": "(U')F'U2L'ULUF"
+      },
+      {
+        "name": "ZBLS-264",
+        "algorithm": "(U')RU'R'U2RU'R'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 34",
+    "algorithms": [
+      {
+        "name": "ZBLS-265",
+        "algorithm": "yU'FR2U2FRF'U2R2F'y'"
+      },
+      {
+        "name": "ZBLS-266",
+        "algorithm": "(U')F'U'L'U'LU2F"
+      },
+      {
+        "name": "ZBLS-267",
+        "algorithm": "(U)RF'U'L'ULFR'"
+      },
+      {
+        "name": "ZBLS-268",
+        "algorithm": "(U)F'UFU'FR'F'R"
+      },
+      {
+        "name": "ZBLS-269",
+        "algorithm": "(U)RU2BU2B'R'"
+      },
+      {
+        "name": "ZBLS-270",
+        "algorithm": "(U)RU2BU'B'U'R'"
+      },
+      {
+        "name": "ZBLS-271",
+        "algorithm": "(U)FDRUR'U'D'F'"
+      },
+      {
+        "name": "ZBLS-272",
+        "algorithm": "(U')RU2R'URUR'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 35",
+    "algorithms": [
+      {
+        "name": "ZBLS-273",
+        "algorithm": "y'R2D'LF'L'DRU'Ry"
+      },
+      {
+        "name": "ZBLS-274",
+        "algorithm": "(U')RUR2U'F'UF2RF'"
+      },
+      {
+        "name": "ZBLS-275",
+        "algorithm": "(U)R'D'LFL'DR2U2R'"
+      },
+      {
+        "name": "ZBLS-276",
+        "algorithm": "RUR'UR'FRF2U'F"
+      },
+      {
+        "name": "ZBLS-277",
+        "algorithm": "(U2)RUR'U'F'UF"
+      },
+      {
+        "name": "ZBLS-278",
+        "algorithm": "(U')RUR'UF'U'F"
+      },
+      {
+        "name": "ZBLS-279",
+        "algorithm": "(U2)RU'R'U'F'U'F"
+      },
+      {
+        "name": "ZBLS-280",
+        "algorithm": "(U2)RUR'FR'F'R"
+      }
+    ]
+  },
+  {
+    "subset": "Case 36",
+    "algorithms": [
+      {
+        "name": "ZBLS-281",
+        "algorithm": "F'U'FU'FR'F'R2UR'"
+      },
+      {
+        "name": "ZBLS-282",
+        "algorithm": "FR'F'R2U2R'U2F'U'F"
+      },
+      {
+        "name": "ZBLS-283",
+        "algorithm": "(U')R2U2FRF'U2R2F'UF"
+      },
+      {
+        "name": "ZBLS-284",
+        "algorithm": "R2DL'BLD'R'UR'"
+      },
+      {
+        "name": "ZBLS-285",
+        "algorithm": "(U)F'U'FU'RUR'"
+      },
+      {
+        "name": "ZBLS-286",
+        "algorithm": "(U2)F'U'FURU'R'"
+      },
+      {
+        "name": "ZBLS-287",
+        "algorithm": "(U2)F'U'FR'FRF'"
+      },
+      {
+        "name": "ZBLS-288",
+        "algorithm": "(U2)F'UFURUR'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 37",
+    "algorithms": [
+      {
+        "name": "ZBLS-289",
+        "algorithm": "RU2R2FRF'U2R'FRF'"
+      },
+      {
+        "name": "ZBLS-290",
+        "algorithm": "FURU'R'F'"
+      },
+      {
+        "name": "ZBLS-291",
+        "algorithm": "FRUR'U'F'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 38",
+    "algorithms": [
+      {
+        "name": "ZBLS-293",
+        "algorithm": "R2B'R'U'yR2U'R2U2RF'y'"
+      },
+      {
+        "name": "ZBLS-294",
+        "algorithm": "RU'RU2FR2F'U2R2"
+      }
+    ]
+  },
+  {
+    "subset": "Case 39",
+    "algorithms": [
+      {
+        "name": "ZBLS-295",
+        "algorithm": "yFRU2R2FRy'R2URUR'"
+      },
+      {
+        "name": "ZBLS-296",
+        "algorithm": "RU2RU2FRF'U2R2"
+      },
+      {
+        "name": "ZBLS-297",
+        "algorithm": "RU'R'U'RUBU'B'UR'"
+      },
+      {
+        "name": "ZBLS-298",
+        "algorithm": "R2U2R'U'RU'R'U2R'"
+      }
+    ]
+  },
+  {
+    "subset": "Case 40",
+    "algorithms": [
+      {
+        "name": "ZBLS-299",
+        "algorithm": "RU'R'U'R2B'R'yR2U2R'F'y'"
+      },
+      {
+        "name": "ZBLS-300",
+        "algorithm": "R2U2FR'F'U2R'U2R'"
+      },
+      {
+        "name": "ZBLS-301",
+        "algorithm": "yFRU2R'URU2R'UF'y'"
+      },
+      {
+        "name": "ZBLS-302",
+        "algorithm": "RU2RUR'URU2R2"
+      }
+    ]
+  },
+  {
+    "subset": "Case 41",
+    "algorithms": [
+      {
+        "name": "ZBLS-303",
+        "algorithm": "F'L'U2LFRUR'"
+      },
+      {
+        "name": "ZBLS-304",
+        "algorithm": "RU'RUBU'B'R2"
+      }
+    ]
+  },
+  {
+    "subset": "Case 42",
+    "algorithms": [
+      {
+        "name": "ZBLS-305",
+        "algorithm": "RU'R'F'L'U2LF"
+      },
+      {
+        "name": "ZBLS-306",
+        "algorithm": "R2BUB'U'R'UR'"
+      }
+    ]
+  }
+]

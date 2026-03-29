@@ -1,0 +1,130 @@
+[
+  {
+    "subset": "0 Oriented",
+    "algorithms": [
+      {
+        "name": "WV 20",
+        "algorithm": "U R U' R' U' R U R' U R U2 R'"
+      },
+      {
+        "name": "WV 21",
+        "algorithm": "U R U' R2 U2 R U R' U R"
+      },
+      {
+        "name": "WV 22",
+        "algorithm": "U R2 D R' U R D' R' U2 R'"
+      },
+      {
+        "name": "WV 23",
+        "algorithm": "R2 U R' U R' U' R U R U2 R2"
+      },
+      {
+        "name": "WV 24",
+        "algorithm": "U2 R U' R' U R U' R' U R U2 R'"
+      },
+      {
+        "name": "WV 25",
+        "algorithm": "U2 R U2 R2 U2 R U R' U R"
+      },
+      {
+        "name": "WV 26",
+        "algorithm": "U R U' R2 U' R U' R' U2 R"
+      },
+      {
+        "name": "WV 27",
+        "algorithm": "U R U R' U' R U R' U' R U' R'"
+      }
+    ]
+  },
+  {
+    "subset": "1 Oriented",
+    "algorithms": [
+      {
+        "name": "WV 8",
+        "algorithm": "U2 R U' R' U R U2 R'"
+      },
+      {
+        "name": "WV 9",
+        "algorithm": "U2 F' R U2 R' U2 R' F R"
+      },
+      {
+        "name": "WV 10",
+        "algorithm": "R' U2 R U R' U R2 U2 R'"
+      },
+      {
+        "name": "WV 11",
+        "algorithm": "U2 R' U' R2 U' R2 U2 R"
+      },
+      {
+        "name": "WV 12",
+        "algorithm": "R' F2 R F2 U L' U L"
+      },
+      {
+        "name": "WV 13",
+        "algorithm": "U2 R U2 R2 U' R U' R' U2 R"
+      },
+      {
+        "name": "WV 14",
+        "algorithm": "U2 R2 D R' U2 R D' R2"
+      },
+      {
+        "name": "WV 15",
+        "algorithm": "L' U R U' R' L"
+      },
+      {
+        "name": "WV 16",
+        "algorithm": "U R' D' R U R' D R2 U2 R'"
+      },
+      {
+        "name": "WV 17",
+        "algorithm": "R' F' R U2 R U2 R' F"
+      },
+      {
+        "name": "WV 18",
+        "algorithm": "U2 R U2 R'"
+      },
+      {
+        "name": "WV 19",
+        "algorithm": "R' F2 R2 U' R' U' R U R' F2"
+      }
+    ]
+  },
+  {
+    "subset": "2 Oriented",
+    "algorithms": [
+      {
+        "name": "WV 2",
+        "algorithm": "U R U' R'"
+      },
+      {
+        "name": "WV 3",
+        "algorithm": "R' F R U R U' R' F'"
+      },
+      {
+        "name": "WV 4",
+        "algorithm": "U R2 D R' U' R D' R2"
+      },
+      {
+        "name": "WV 5",
+        "algorithm": "U R U' R' U R' U' R U' R' U2 R"
+      },
+      {
+        "name": "WV 6",
+        "algorithm": "U' R' D' R U2 R' D R2 U' R'"
+      },
+      {
+        "name": "WV 7",
+        "algorithm": "U R U R' U' R U' R'"
+      }
+    ]
+  },
+  {
+    "subset": "3 Oriented",
+    "algorithms": [
+      {
+        "name": "WV 1",
+        "algorithm": "U' L' U2 R U' R' U2 L"
+      }
+    ]
+  }
+]

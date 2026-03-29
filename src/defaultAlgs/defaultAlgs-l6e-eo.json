@@ -1,0 +1,66 @@
+[
+  {
+    "subset": "11-mover",
+    "algorithms": [
+      {
+        "name": "All 6",
+        "algorithm": "M' U' M' U2 M' U' M U' M' U' M'"
+      }
+    ]
+  },
+  {
+    "subset": "3-mover",
+    "algorithms": [
+      {
+        "name": "Front Arrow",
+        "algorithm": "M' U M"
+      },
+      {
+        "name": "Back Arrow",
+        "algorithm": "M U M'"
+      }
+    ]
+  },
+  {
+    "subset": "5-mover",
+    "algorithms": [
+      {
+        "name": "2 Adj / 2",
+        "algorithm": "M2 U' M' U' M'"
+      }
+    ]
+  },
+  {
+    "subset": "7-mover",
+    "algorithms": [
+      {
+        "name": "Front 1 / 1",
+        "algorithm": "M U' M' U' M U' M'"
+      },
+      {
+        "name": "Back 1 / 1",
+        "algorithm": "M' U' M U' M' U' M'"
+      },
+      {
+        "name": "2 Adj / 0",
+        "algorithm": "M' U' M' U2 M' U' M'"
+      },
+      {
+        "name": "2 Opp / 2",
+        "algorithm": "M' U2 M' U2 M U' M'"
+      },
+      {
+        "name": "2 Opp / 0",
+        "algorithm": "M' U' M U M' U' M'"
+      },
+      {
+        "name": "0 / 2",
+        "algorithm": "M' U' M' U M U' M'"
+      },
+      {
+        "name": "4 / 0",
+        "algorithm": "M' U2 M' U2 M' U' M'"
+      }
+    ]
+  }
+]

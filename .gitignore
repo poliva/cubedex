@@ -135,3 +135,8 @@ dist
 
 # package-lock.json
 package-lock.json
+
+# Playwright
+test-results/
+playwright-report/
+todo.md
