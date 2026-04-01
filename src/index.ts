@@ -906,6 +906,7 @@ function handleCubeEvent(event: SmartCubeEvent) {
   } else if (event.type == "FACELETS") {
     handleFaceletsEvent(event);
   } else if (event.type == "HARDWARE") {
+    $('#deviceProtocol').val(conn?.protocol.name || '- n/a -');
     $('#hardwareName').val(event.hardwareName || '- n/a -');
     $('#hardwareVersion').val(event.hardwareVersion || '- n/a -');
     $('#softwareVersion').val(event.softwareVersion || '- n/a -');
@@ -940,8 +941,7 @@ const customMacAddressProvider: MacAddressProvider = async (device, isFallbackCa
   const promptDefault = getCachedMacForDevice(device) ?? '';
   if (!isFallbackCall) {
     // Let the library try cache, request-device advertisement data, waitForAdvertisements,
-    // and MoYu32/QiYi MAC candidate probing (enableAddressSearch) first. Prompting here when
-    // watchAdvertisements is missing was redundant: those paths often succeed without it.
+    // and MoYu32/QiYi MAC candidate probing (enableAddressSeasch) first.
     return null;
   }
   const flagHint =
@@ -1116,6 +1116,7 @@ $('#connect-button').on('click', async () => {
   }
   $('#deviceName').val(conn.deviceName);
   $('#deviceMAC').val(conn.deviceMAC);
+  $('#deviceProtocol').val(conn.protocol.name);
   if (!conn.capabilities.hardware) {
     setGyroscopeUiFromSupported(conn.capabilities.gyroscope);
   }
