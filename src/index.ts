@@ -196,6 +196,10 @@ function resetAlg() {
   hideMistakes();
 }
 
+let suppressTimerForNextLoadedCase = false;
+let skipRecognitionTimeForCurrentCase = false;
+let isFirstAlgAfterLoad = false;
+
 $('#train-alg').on('click', () => {
   const algInput = $('#alg-input').val()?.toString().trim();
   if (algInput) {
@@ -217,7 +221,17 @@ $('#train-alg').on('click', () => {
     patternStates = [];
     algPatternStates = [];
     fetchNextPatterns();
-    setTimerState("READY");
+    if (suppressTimerForNextLoadedCase) {
+      suppressTimerForNextLoadedCase = false;
+      skipRecognitionTimeForCurrentCase = true;
+      clearAlgSwitchTimer();
+      setTimerState("READY");
+      resetAlgSwitchTimerDisplay();
+    } else {
+      skipRecognitionTimeForCurrentCase = false;
+      setTimerState("READY");
+      startAlgSwitchTimer();
+    }
     updateTimesDisplay();
     scrambleToAlg = [];
     if (alwaysScrambleTo) {
@@ -681,6 +695,7 @@ async function processMoveEvent(event: SmartCubeEvent, visualMove?: string, slic
     }
 
     if (timerState === "READY") {
+      recordAlgSwitchToFirstMove();
       setTimerState("RUNNING");
     }
     if (timerState === "STOPPED") {
@@ -1000,6 +1015,8 @@ $('#input-alg').on('click', () => {
   $('#load-container').hide();
   $('#save-container').hide();
   $('#info').hide();
+  clearAlgSwitchTimer();
+  resetAlgSwitchTimerDisplay();
 });
 
 $('#show-help').on('click', () => {
@@ -1132,6 +1149,87 @@ $('#connect-button').on('click', async () => {
 });
 
 var timerState: "IDLE" | "READY" | "RUNNING" | "STOPPED" = "IDLE";
+let algSwitchStartTs: number | null = null;
+let algSwitchPending = false;
+var algSwitchLiveTimer: Subscription | null = null;
+
+function setAlgSwitchTimerValue(timestamp: number) {
+  let t = makeTimeFromTimestamp(timestamp);
+  $('#first-move-timer-value').html(`${t.minutes}:${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}`);
+}
+
+function startAlgSwitchLiveTimer() {
+  stopAlgSwitchLiveTimer();
+  const startTime = algSwitchStartTs ?? now();
+  algSwitchLiveTimer = interval(30).subscribe(() => {
+    setAlgSwitchTimerValue(now() - startTime);
+  });
+}
+
+function stopAlgSwitchLiveTimer() {
+  algSwitchLiveTimer?.unsubscribe();
+  algSwitchLiveTimer = null;
+}
+
+function resetAlgSwitchTimerDisplay() {
+  stopAlgSwitchLiveTimer();
+  setAlgSwitchTimerValue(0);
+  $('#first-move-timer').hide();
+}
+
+function getAlgSwitchTimes(algId: string): number[] {
+  const stored = localStorage.getItem('AlgSwitchTimes-' + algId);
+  if (!stored) return [];
+  return stored
+    .split(',')
+    .map((num) => Number(num.trim()))
+    .filter((num) => Number.isFinite(num) && num >= 0);
+}
+
+function saveAlgSwitchTime(algId: string, elapsedMs: number) {
+  const times = getAlgSwitchTimes(algId);
+  times.push(elapsedMs);
+  if (times.length > 100) {
+    times.shift();
+  }
+  localStorage.setItem('AlgSwitchTimes-' + algId, times.join(','));
+}
+
+function startAlgSwitchTimer() {
+  algSwitchStartTs = now();
+  algSwitchPending = true;
+  setAlgSwitchTimerValue(0);
+  $('#first-move-timer').show();
+  $('#first-move-timer').css('color', '#080');
+  startAlgSwitchLiveTimer();
+}
+
+function clearAlgSwitchTimer() {
+  algSwitchStartTs = null;
+  algSwitchPending = false;
+  stopAlgSwitchLiveTimer();
+}
+
+function recordAlgSwitchToFirstMove() {
+  if (skipRecognitionTimeForCurrentCase) {
+    clearAlgSwitchTimer();
+    resetAlgSwitchTimerDisplay();
+    return;
+  }
+  if (!algSwitchPending || algSwitchStartTs == null) return;
+  const algId = algToId(originalUserAlg.join(' '));
+  const elapsed = Math.max(0, now() - algSwitchStartTs);
+  setAlgSwitchTimerValue(elapsed);
+  $('#first-move-timer').css('color', darkModeToggle.checked ? '#ccc' : '#333');
+  saveAlgSwitchTime(algId, elapsed);
+  const algSwitchTimes = getAlgSwitchTimes(algId);
+  const averageAlgSwitchTime = algSwitchTimes.length
+    ? algSwitchTimes.reduce((sum, time) => sum + time, 0) / algSwitchTimes.length
+    : null;
+  $('#alg-switch-time-' + algId).html(`Recognition Time: ${averageTimeString(averageAlgSwitchTime)}`);
+  clearAlgSwitchTimer();
+  updateTimesDisplay();
+}
 
 function updateTimesDisplay() {
   const timesDisplay = $('#times-display');
@@ -1142,12 +1240,13 @@ function updateTimesDisplay() {
   // Use the new function to get last times
   const lastTimes = getLastTimes(algId);
   const bestTime = bestTimeNumber(algId);
+  const algSwitchTimes = getAlgSwitchTimes(algId);
 
   algNameDisplay.text(showAlgNameEnabled ? currentAlgName : '');
   algNameDisplay2.text(showAlgNameEnabled ? currentAlgName : '');
 
-  createTimeGraph(lastTimes.slice(-5));
-  createStatsGraph(lastTimes);
+  createTimeGraph(lastTimes.slice(-5), algSwitchTimes.slice(-5));
+  createStatsGraph(lastTimes, algSwitchTimes);
 
   // Calculate average time
   const averageTime = lastTimes.reduce((a: number, b: number) => a + b, 0) / lastTimes.length;
@@ -1161,6 +1260,15 @@ function updateTimesDisplay() {
   // check if the last item added to lastTimes is a PB
   const lastTime = lastTimes.slice(-1)[0];
   const isPB = lastTime === bestTime;
+
+  const algSwitchLast = algSwitchTimes.slice(-1)[0] ?? 0;
+  const algSwitchAverage = algSwitchTimes.length
+    ? algSwitchTimes.reduce((a, b) => a + b, 0) / algSwitchTimes.length
+    : 0;
+  const algSwitchDisplay = algSwitchAverage > 0
+    ? `${averageTimeString(algSwitchAverage)} (${bestTimeString(algSwitchLast)})`
+    : '-';
+  $('#alg-switch-box').html(`Recognition Time<br />${algSwitchDisplay}`);
 
   // Get single PB
   const singlePB = isPB ? `${bestTimeString(bestTime)} 🎉` : bestTimeString(bestTime);
@@ -1218,6 +1326,7 @@ function setTimerState(state: typeof timerState) {
     case "IDLE":
       stopLocalTimer();
       $('#timer').hide();
+      resetAlgSwitchTimerDisplay();
       $('#train-alg').html('<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>');
       break;
     case 'READY':
@@ -1376,6 +1485,7 @@ $('#alg-cases').on('change', 'input[type="checkbox"]', function() {
     checkedAlgorithmsCopy = checkedAlgorithmsCopy.filter(alg => alg.algorithm !== algorithm || alg.name !== name);
   }
   if (checkedAlgorithms.length > 0) {
+    suppressTimerForNextLoadedCase = true;
     $('#alg-input').val(checkedAlgorithms[0].algorithm);
     if (algorithm === checkedAlgorithms[0].algorithm) {
       $('#train-alg').trigger('click');
@@ -1406,6 +1516,7 @@ $('#delete-times').on('click', () => {
         const algId = algToId(algorithm.algorithm);
         localStorage.removeItem('Best-' + algId);
         localStorage.removeItem('LastTimes-' + algId);
+        localStorage.removeItem('AlgSwitchTimes-' + algId);
       }
     }
     loadAlgorithms(category); // Refresh the algorithm list
@@ -1572,6 +1683,8 @@ function resetDrill() {
   $('#alg-input').show();
   $('#alg-stats').hide();
   $('#left-side-inner').hide();
+  clearAlgSwitchTimer();
+  resetAlgSwitchTimerDisplay();
 }
 
 // Event listener for Category select change

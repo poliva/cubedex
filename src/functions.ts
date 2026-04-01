@@ -273,6 +273,7 @@ export function deleteAlgorithm(category: string, algorithm: string) {
     const algId = algToId(algorithm);
     localStorage.removeItem('Best-' + algId);
     localStorage.removeItem('LastTimes-' + algId);
+    localStorage.removeItem('AlgSwitchTimes-' + algId);
     localStorage.removeItem('Learned-' + algId);
 
     localStorage.setItem('savedAlgorithms', JSON.stringify(savedAlgorithms));
@@ -416,6 +417,7 @@ export function loadAlgorithms(category: string) {
           let gray = i % 2 == 0 ? "bg-gray-400" : "bg-gray-50";
           let grayDarkMode = i % 2 == 0 ? "bg-gray-800" : "bg-gray-600";
           const bestTime = bestTimeNumber(algId)
+          const averageAlgFirstMove = averageAlgFirstMoveTimeNumber(algId);
 
           algCases.append(`
             <div class="case-wrapper rounded-lg shadow-md ${gray} dark:${grayDarkMode} relative p-4" id="${algId}" data-name="${alg.name}" data-algorithm="${alg.algorithm}" data-category="${category}" data-subset="${subset}">
@@ -426,6 +428,7 @@ export function loadAlgorithms(category: string) {
               <label for="case-toggle-${algId}" class="cursor-pointer" title="${alg.algorithm}">
               <div id="best-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">Best: ${bestTimeString(bestTime)}</div>
               <div id="ao5-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">Ao5: ${averageTimeString(averageOfFiveTimeNumber(algId))}</div>
+              <div id="alg-switch-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">Recognition Time: ${averageTimeString(averageAlgFirstMove)}</div>
               <div id="alg-case-${algId}" class="flex items-center justify-center scale-50 -mx-20 -mt-10 -mb-10 relative z-10">
                 <twisty-player puzzle="3x3x3" visualization="${visualization}" experimental-stickering="${matchedStickering}" alg="${alg.algorithm}" experimental-setup-anchor="end" control-panel="none" hint-facelets="none" experimental-drag-input="none" background="none"></twisty-player>
               </div>
@@ -503,6 +506,17 @@ export function bestTimeString(time: number | null): string {
   return `${best.seconds.toString(10)}.${best.milliseconds.toString(10).padStart(3, '0')}`;
 }
 
+export function getAlgFirstMoveTimes(algId: string): number[] {
+  const stored = localStorage.getItem('AlgSwitchTimes-' + algId);
+  return stored ? stored.split(',').map(num => Number(num.trim())).filter(num => Number.isFinite(num) && num >= 0) : [];
+}
+
+export function averageAlgFirstMoveTimeNumber(algId: string): number | null {
+  const times = getAlgFirstMoveTimes(algId);
+  if (times.length === 0) return null;
+  return times.reduce((sum, time) => sum + time, 0) / times.length;
+}
+
 export function averageOfFiveTimeNumber(algId: string): number | null {
   const lastTimes = getLastTimes(algId);
   if (lastTimes.length < 5) return null;
@@ -558,7 +572,7 @@ let myTimeChart: Chart | null = null;
 let myStatsChart: Chart | null = null;
 
 // Function to create the graph
-export function createTimeGraph(times: number[]) {
+export function createTimeGraph(times: number[], algSwitchTimes: number[] = []) {
   const ctx = document.getElementById('timeGraph') as HTMLCanvasElement;
 
   // If a chart instance already exists, destroy it
@@ -567,6 +581,7 @@ export function createTimeGraph(times: number[]) {
   }
 
   if (ctx) {
+      const recentAlgSwitchTimes = algSwitchTimes.slice(-times.length);
       const minTime = Math.min(...times);
       const backgroundColors = times.map((time: number) =>
           time === minTime ? 'rgba(75, 192, 192, 0.2)' : 'rgba(54, 162, 235, 0.2)'
@@ -582,12 +597,22 @@ export function createTimeGraph(times: number[]) {
               labels: times.map((_, index) => `${index + 1}`),
               datasets: [
                   {
-                      label: 'Seconds',
+                  label: 'Solve',
                       data: timesInSeconds,
                       backgroundColor: backgroundColors,
                       borderColor: borderColors,
                       borderWidth: 1,
                   },
+                {
+                      label: 'Recognition Time',
+                  data: recentAlgSwitchTimes.map((time: number) => time / 1000),
+                  type: 'line',
+                  backgroundColor: 'rgba(255, 99, 132, 0.15)',
+                  borderColor: 'rgba(255, 99, 132, 1)',
+                  borderWidth: 2,
+                  fill: false,
+                  tension: 0.25,
+                },
               ],
           },
           options: {
@@ -645,7 +670,7 @@ $('#toggle-display').on('click', toggleGraphTimesDisplay);
 $('#alg-name-display').on('click', toggleGraphTimesDisplay);
 
 // Function to create the stats graph
-export function createStatsGraph(times: number[]) {
+export function createStatsGraph(times: number[], algSwitchTimes: number[] = []) {
   const ctx = document.getElementById('statsGraph') as HTMLCanvasElement;
 
   if (ctx) {
@@ -654,6 +679,8 @@ export function createStatsGraph(times: number[]) {
       // Delay the calculation of the canvas dimensions - needed for the gradient to work when the graph is redrawn
       setTimeout(() => {
         const timesInSeconds = times.map((time: number) => time / 1000);
+        const algSwitchTimesInSeconds = algSwitchTimes.map((time: number) => time / 1000);
+        const labelCount = Math.max(times.length, algSwitchTimes.length);
 
         // Calculate averages
         const ao5 = calculateTrimmedAverage(timesInSeconds, 5, 3);
@@ -673,7 +700,7 @@ export function createStatsGraph(times: number[]) {
         myStatsChart = new Chart(ctx, {
           type: 'line',
           data: {
-            labels: times.map((_, index) => `${index + 1}`),
+            labels: Array.from({ length: labelCount }, (_, index) => `${index + 1}`),
             datasets: [
               {
                 label: 'Single',
@@ -696,6 +723,14 @@ export function createStatsGraph(times: number[]) {
                 data: ao12,
                 backgroundColor: 'rgba(75, 192, 192, 1)',
                 borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                fill: false,
+              },
+              {
+                label: 'Recognition Time',
+                data: algSwitchTimesInSeconds,
+                backgroundColor: 'rgba(255, 99, 132, 1)',
+                borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 1,
                 fill: false,
               },
