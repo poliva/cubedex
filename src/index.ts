@@ -198,7 +198,7 @@ function resetAlg() {
 
 let suppressTimerForNextLoadedCase = false;
 let skipRecognitionTimeForCurrentCase = false;
-let isFirstAlgAfterLoad = false;
+
 
 $('#train-alg').on('click', () => {
   const algInput = $('#alg-input').val()?.toString().trim();
