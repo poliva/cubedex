@@ -1710,15 +1710,19 @@ $('#subset-checkboxes').on('change', 'input[type="checkbox"]', () => {
   loadAlgorithms(selectedCategory);
   checkedAlgorithms = [];
   checkedAlgorithmsCopy = [];
-  // if select all toggle is checked select all alg-cases, if select learning toggle is checked select learning alg-cases
+  // if select all toggle is checked select all alg-cases, if select learning toggle is checked select learning alg-cases, if select learned toggle is checked select learned alg-cases
   const selectAllToggle = $('#select-all-toggle');
   const selectLearningToggle = $('#select-learning-toggle');
+  const selectLearnedToggle = $('#select-learned-toggle');
   if (selectAllToggle.is(':checked')) {
     $('#alg-cases input[type="checkbox"]').prop('checked', true).trigger('change');
-  } else if (selectLearningToggle.is(':checked')) {
+  } else if (selectLearningToggle.is(':checked') || selectLearnedToggle.is(':checked')) {
     $('#alg-cases input[type="checkbox"]').each(function() {
       const algId = algToId($(this).data('algorithm'));
-      if (learnedStatus(algId) === 1) {
+      const status = learnedStatus(algId);
+      const isLearning = selectLearningToggle.is(':checked') && status === 1;
+      const isLearned = selectLearnedToggle.is(':checked') && status === 2;
+      if (isLearning || isLearned) {
         $(this).prop('checked', true).trigger('change');
       } else {
         $(this).prop('checked', false).trigger('change');
@@ -2108,6 +2112,7 @@ darkModeToggle.addEventListener('change', () => {
 $('#select-all-subsets-toggle').on('change', function() {
   const selectAllToggle = $('#select-all-toggle');
   const selectLearningToggle = $('#select-learning-toggle');
+  const selectLearnedToggle = $('#select-learned-toggle');
   checkedAlgorithms = [];
   checkedAlgorithmsCopy = [];
   const isChecked = $(this).is(':checked');
@@ -2115,14 +2120,17 @@ $('#select-all-subsets-toggle').on('change', function() {
     $('#subset-checkboxes-container input[type="checkbox"]').prop('checked', true);
     const selectedCategory = $('#category-select').val() as string;
     loadAlgorithms(selectedCategory);
-    // if select all toggle is checked select all alg-cases, if select learning toggle is checked select learning alg-cases
+    // if select all toggle is checked select all alg-cases, if select learning/learned toggle is checked select those alg-cases
     if (selectAllToggle.is(':checked')) {
       $('#alg-cases input[type="checkbox"]').prop('checked', true).trigger('change');
-    } else if (selectLearningToggle.is(':checked')) {
-      // check learnedStatus for each algorithm and select the ones that are learned
+    } else if (selectLearningToggle.is(':checked') || selectLearnedToggle.is(':checked')) {
+      // check learnedStatus for each algorithm and select the ones that match the selected filters
       $('#alg-cases input[type="checkbox"]').each(function() {
         const algId = algToId($(this).data('algorithm'));
-        if (learnedStatus(algId) === 1) {
+        const status = learnedStatus(algId);
+        const isLearning = selectLearningToggle.is(':checked') && status === 1;
+        const isLearned = selectLearnedToggle.is(':checked') && status === 2;
+        if (isLearning || isLearned) {
           $(this).prop('checked', true).trigger('change');
         } else {
           $(this).prop('checked', false).trigger('change');
@@ -2138,49 +2146,72 @@ $('#select-all-subsets-toggle').on('change', function() {
 // Add event listener for the select all toggle
 const selectAllToggle = document.getElementById('select-all-toggle') as HTMLInputElement;
 selectAllToggle.addEventListener('change', () => {
-  // when select all toggle is checked, uncheck the select learning toggle
+  // when select all toggle is checked, uncheck the select learning and select learned toggles
   $('#select-learning-toggle').prop('checked', false);
+  $('#select-learned-toggle').prop('checked', false);
   checkedAlgorithms = [];
   checkedAlgorithmsCopy = [];
   $('#alg-cases input[type="checkbox"]').prop('checked', selectAllToggle.checked).trigger('change');
 });
 
+// Helper function to apply selection filters based on Learning and Learned toggles
+function applySelectionFilters() {
+  const selectLearningToggle = $('#select-learning-toggle');
+  const selectLearnedToggle = $('#select-learned-toggle');
+  const isLearningChecked = selectLearningToggle.is(':checked');
+  const isLearnedChecked = selectLearnedToggle.is(':checked');
+
+  if (!isLearningChecked && !isLearnedChecked) {
+    // Both unchecked, uncheck all
+    $('#alg-cases input[type="checkbox"]').prop('checked', false).trigger('change');
+    return;
+  }
+
+  // Apply combined filter using savedAlgorithms to respect subset filtering
+  const currentCategory = $('#category-select').val() as string;
+  const checkedSubsets = $('#subset-checkboxes-container input[type="checkbox"]:checked')
+    .map((_, el) => $(el).val())
+    .get() as string[];
+
+  const savedAlgorithms = JSON.parse(localStorage.getItem('savedAlgorithms') || '{}');
+  
+  if (savedAlgorithms[currentCategory]) {
+    savedAlgorithms[currentCategory].forEach((subset: { subset: string, algorithms: { name: string, algorithm: string }[] }) => {
+      if (checkedSubsets.includes(subset.subset)) {
+        subset.algorithms.forEach(alg => {
+          const algId = algToId(alg.algorithm);
+          const status = learnedStatus(algId);
+          const matchesLearning = isLearningChecked && status === 1;
+          const matchesLearned = isLearnedChecked && status === 2;
+          
+          const $checkbox = $(`#alg-cases input[data-algorithm="${alg.algorithm}"][data-name="${alg.name}"]`);
+          if (matchesLearning || matchesLearned) {
+            $checkbox.prop('checked', true).trigger('change');
+          } else {
+            $checkbox.prop('checked', false).trigger('change');
+          }
+        });
+      }
+    });
+  }
+}
+
 // Add event listener for the select learning toggle
 $('#select-learning-toggle').on('change', function() {
   // when select learning toggle is checked, uncheck the select all toggle
   $('#select-all-toggle').prop('checked', false);
-  // when select learning toggle is checked, uncheck all the selected algorithms
-  $('#alg-cases input[type="checkbox"]:checked').prop('checked', false);
-  const isChecked = $(this).is(':checked');
-  const currentCategory = $('#category-select').val() as string;
-  const checkedSubsets = $('#subset-checkboxes-container input[type="checkbox"]:checked')
-    .map((_, el) => $(el).val())
-    .get();
-
-  // Clear current selections
   checkedAlgorithms = [];
   checkedAlgorithmsCopy = [];
+  applySelectionFilters();
+});
 
-  if (isChecked) {
-    // Iterate over the current category and checked subsets
-    const savedAlgorithms = JSON.parse(localStorage.getItem('savedAlgorithms') || '{}');
-    if (savedAlgorithms[currentCategory]) {
-      savedAlgorithms[currentCategory].forEach((subset: { subset: string, algorithms: { name: string, algorithm: string }[] }) => {
-        if (checkedSubsets.includes(subset.subset)) {
-          subset.algorithms.forEach(alg => {
-            const algId = algToId(alg.algorithm);
-            if (learnedStatus(algId) === 1) {
-              // Check the checkbox for this algorithm
-              $(`#alg-cases input[data-algorithm="${alg.algorithm}"][data-name="${alg.name}"]`).prop('checked', true).trigger('change');
-            }
-          });
-        }
-      });
-    }
-  } else {
-    // Uncheck all checkboxes if the toggle is unchecked
-    $('#alg-cases input[type="checkbox"]').prop('checked', false).trigger('change');
-  }
+// Add event listener for the select learned toggle
+$('#select-learned-toggle').on('change', function() {
+  // when select learned toggle is checked, uncheck the select all toggle
+  $('#select-all-toggle').prop('checked', false);
+  checkedAlgorithms = [];
+  checkedAlgorithmsCopy = [];
+  applySelectionFilters();
 });
 
 // Add event listener for the random order toggle
