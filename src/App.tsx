@@ -9,10 +9,10 @@ import { useScrambleState } from './hooks/useScrambleState';
 import { useSmartcubeConnection } from './hooks/useSmartcubeConnection';
 import { useLegacyManagement } from './hooks/useLegacyManagement';
 import { getLegacyStickering } from './lib/legacy-stickering';
-import { deleteAlgorithm, getBestTime, removeAlgorithmTimesStorage } from './lib/legacy-storage';
+import { deleteAlgorithm, getBestTime, getSavedAlgorithms, removeAlgorithmTimesStorage } from './lib/legacy-storage';
 import { usePracticeToggles } from './hooks/usePracticeToggles';
 import { useLegacyCharts } from './hooks/useLegacyCharts';
-import { averageOfFiveTimeNumber, averageTimeString, bestTimeString } from './lib/legacy-algorithms';
+import { averageOfFiveTimeNumber, averageTimeString, bestTimeString, makeTimeParts } from './lib/legacy-algorithms';
 import { patternToPlayerAlg } from './lib/legacy-scramble';
 
 type MenuView = 'practice' | 'new-alg' | 'options' | 'help';
@@ -26,6 +26,16 @@ const MENU_ITEMS: Array<{ id: MenuView; label: string }> = [
 
 function isVisible(activeView: MenuView, view: MenuView) {
   return activeView === view;
+}
+
+function formatHistoryMetric(time: number | null) {
+  if (!time) {
+    return '-';
+  }
+
+  const parts = makeTimeParts(time);
+  const minutesPart = parts.minutes > 0 ? `${parts.minutes}:` : '';
+  return `${minutesPart}${parts.seconds.toString(10).padStart(2, '0')}.${parts.milliseconds.toString(10).padStart(3, '0')}`;
 }
 
 export function App() {
@@ -572,9 +582,9 @@ export function App() {
                         </>
                       ))}
                       <div className="times-grid-label times-grid-emphasis">Ao5:</div>
-                      <div className="times-grid-value times-grid-emphasis">{training.stats.ao5}</div>
+                      <div className="times-grid-value times-grid-emphasis">{formatHistoryMetric(averageOfFiveTimeNumber(training.statsAlgId))}</div>
                       <div className="times-grid-label">Best:</div>
-                      <div className="times-grid-value">{training.stats.best}</div>
+                      <div className="times-grid-value">{formatHistoryMetric(getBestTime(training.statsAlgId))}</div>
                     </div>
                   </div>
                   <div id="graph-display" className={`${showTimesInsteadOfGraph ? 'hidden graph-display' : 'graph-display'}`}>
@@ -1269,6 +1279,8 @@ export function App() {
                 void management.importFromFile(file).then((imported) => {
                   if (imported) {
                     training.clearFailedCounts();
+                    const firstCategory = Object.keys(getSavedAlgorithms())[0] ?? '';
+                    setSelectedCategory(firstCategory);
                     setStatsRefreshToken((value) => value + 1);
                   }
                 });

@@ -845,6 +845,76 @@ html.dark .case-metric {
   background: #f87171;
 }
 
+.toggle-grid .toggle-item,
+.options-panel > .toggle-item,
+#device-options-container .toggle-item,
+.white-bottom-group .toggle-item,
+.delete-mode-container .toggle-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.toggle-grid .toggle-item input[type='checkbox'],
+.options-panel > .toggle-item input[type='checkbox'],
+#device-options-container .toggle-item input[type='checkbox'],
+.white-bottom-group .toggle-item input[type='checkbox'],
+.delete-mode-container .toggle-item input[type='checkbox'] {
+  appearance: none;
+  width: 2.75rem;
+  height: 1.5rem;
+  margin: 0;
+  border: 0;
+  border-radius: 9999px;
+  background: #e5e7eb;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.12);
+  position: relative;
+  cursor: pointer;
+}
+
+.toggle-grid .toggle-item input[type='checkbox']::before,
+.options-panel > .toggle-item input[type='checkbox']::before,
+#device-options-container .toggle-item input[type='checkbox']::before,
+.white-bottom-group .toggle-item input[type='checkbox']::before,
+.delete-mode-container .toggle-item input[type='checkbox']::before {
+  content: '';
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.18);
+  transition: transform 0.2s ease-in-out;
+}
+
+.toggle-grid .toggle-item input[type='checkbox']:checked,
+.options-panel > .toggle-item input[type='checkbox']:checked,
+#device-options-container .toggle-item input[type='checkbox']:checked,
+.white-bottom-group .toggle-item input[type='checkbox']:checked,
+.delete-mode-container .toggle-item input[type='checkbox']:checked {
+  background: #3b82f6;
+}
+
+.toggle-grid .toggle-item input[type='checkbox']:checked::before,
+.options-panel > .toggle-item input[type='checkbox']:checked::before,
+#device-options-container .toggle-item input[type='checkbox']:checked::before,
+.white-bottom-group .toggle-item input[type='checkbox']:checked::before,
+.delete-mode-container .toggle-item input[type='checkbox']:checked::before {
+  transform: translateX(1.25rem);
+}
+
+.toggle-grid .toggle-item input[type='checkbox']:disabled,
+.options-panel > .toggle-item input[type='checkbox']:disabled,
+#device-options-container .toggle-item input[type='checkbox']:disabled,
+.white-bottom-group .toggle-item input[type='checkbox']:disabled,
+.delete-mode-container .toggle-item input[type='checkbox']:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .delete-mode-container,
 .button-row,
 .options-group,
