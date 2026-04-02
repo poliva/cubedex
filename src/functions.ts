@@ -274,6 +274,8 @@ export function deleteAlgorithm(category: string, algorithm: string) {
     localStorage.removeItem('Best-' + algId);
     localStorage.removeItem('LastTimes-' + algId);
     localStorage.removeItem('AlgSwitchTimes-' + algId);
+    localStorage.removeItem('AlgSwitchTimesByStartAUF-' + algId);
+    localStorage.removeItem('SolveTimesByStartAUF-' + algId);
     localStorage.removeItem('Learned-' + algId);
 
     localStorage.setItem('savedAlgorithms', JSON.stringify(savedAlgorithms));
@@ -423,7 +425,14 @@ export function loadAlgorithms(category: string) {
             <div class="case-wrapper rounded-lg shadow-md ${gray} dark:${grayDarkMode} relative p-4" id="${algId}" data-name="${alg.name}" data-algorithm="${alg.algorithm}" data-category="${category}" data-subset="${subset}">
               <div class="flex justify-between">
                 <div class="text-left text-sm w-full" title="${alg.algorithm}">${alg.name}</div>
-                <div class="text-right"><button id="bookmark-${algId}" data-value="${learnedStatus(algId)}" title="Learning status" class="block">${learnedSVG(learnedStatus(algId))}</button></div>
+                <div class="flex items-center gap-1">
+                  <button id="graph-${algId}" title="Open graphs" class="case-graph-btn" type="button" aria-label="Open graphs for ${alg.name}">
+                    <svg fill="none" class="h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M4 19.5H20M7.5 16V10M12 16V6.5M16.5 16V12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                  <div class="text-right"><button id="bookmark-${algId}" data-value="${learnedStatus(algId)}" title="Learning status" class="block" type="button">${learnedSVG(learnedStatus(algId))}</button></div>
+                </div>
               </div>
               <label for="case-toggle-${algId}" class="cursor-pointer" title="${alg.algorithm}">
               <div id="best-time-${algId}" class="col-span-1 font-mono text-gray-900 dark:text-white text-xs">Best: ${bestTimeString(bestTime)}</div>
@@ -464,6 +473,28 @@ document.addEventListener('click', (event) => {
     localStorage.setItem('Learned-' + algId, currentStatus.toString());
     // Update the button's SVG
     button.innerHTML = `${learnedSVG(currentStatus)}`;
+    return;
+  }
+
+  if (target.closest('button[id^="graph-"]')) {
+    const button = target.closest('button') as HTMLButtonElement;
+    const algId = button.id.replace('graph-', '');
+    const caseToggle = document.getElementById(`case-toggle-${algId}`) as HTMLInputElement | null;
+
+    if (caseToggle) {
+      if (!caseToggle.checked) {
+        caseToggle.checked = true;
+        caseToggle.dispatchEvent(new Event('change', { bubbles: true }));
+      } else {
+        $('#alg-input').val(caseToggle.dataset.algorithm || '');
+        $('#train-alg').trigger('click');
+      }
+    }
+
+    const statsSection = document.getElementById('alg-stats');
+    if (statsSection) {
+      statsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 });
 
@@ -570,6 +601,12 @@ export function isSymmetricOLL(alg: string): boolean {
 // Store the chart instance
 let myTimeChart: Chart | null = null;
 let myStatsChart: Chart | null = null;
+let myAUFStatsCharts: Record<StartAUF, Chart | null> = {
+  '': null,
+  'U': null,
+  "U'": null,
+  'U2': null,
+};
 
 // Function to create the graph
 export function createTimeGraph(times: number[], algSwitchTimes: number[] = []) {
@@ -770,6 +807,124 @@ export function createStatsGraph(times: number[], algSwitchTimes: number[] = [])
         });
       }, 0);
     }
+  }
+}
+
+type StartAUF = '' | 'U' | "U'" | 'U2';
+type StartAUFTimes = Record<StartAUF, number[]>;
+
+export function createAUFStatsGraphs(solveTimesByAUF: StartAUFTimes, recognitionTimesByAUF: StartAUFTimes) {
+  const labels: StartAUF[] = ['', 'U', "U'", 'U2'];
+  const canvasIds: Record<StartAUF, string> = {
+    '': 'aufStatsGraph-none',
+    'U': 'aufStatsGraph-u',
+    "U'": 'aufStatsGraph-up',
+    'U2': 'aufStatsGraph-u2',
+  };
+  const titles: Record<StartAUF, string> = {
+    '': 'No AUF',
+    'U': 'U',
+    "U'": "U'",
+    'U2': 'U2',
+  };
+
+  for (const auf of labels) {
+    const ctx = document.getElementById(canvasIds[auf]) as HTMLCanvasElement;
+    if (!ctx) continue;
+
+    if (myAUFStatsCharts[auf]) {
+      myAUFStatsCharts[auf]?.destroy();
+      myAUFStatsCharts[auf] = null;
+    }
+
+    const solveSamples = solveTimesByAUF[auf] || [];
+    const recognitionSamples = recognitionTimesByAUF[auf] || [];
+    const solveInSeconds = solveSamples.map((value) => value / 1000);
+    const recognitionInSeconds = recognitionSamples.map((value) => value / 1000);
+    const pointCount = Math.max(solveInSeconds.length, recognitionInSeconds.length);
+    const pointLabels = Array.from({ length: pointCount }, (_, i) => `${i + 1}`);
+
+    const ao5 = calculateTrimmedAverage(solveInSeconds, 5, 3);
+    const ao12 = calculateTrimmedAverage(solveInSeconds, 12, 10);
+
+    myAUFStatsCharts[auf] = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: pointLabels,
+        datasets: [
+          {
+            label: 'Single',
+            data: solveInSeconds,
+            backgroundColor: 'rgba(54, 162, 235, 0.15)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1,
+            fill: true,
+          },
+          {
+            label: 'Ao5',
+            data: ao5,
+            backgroundColor: 'rgba(255, 159, 64, 1)',
+            borderColor: 'rgba(255, 159, 64, 1)',
+            borderWidth: 1,
+            fill: false,
+          },
+          {
+            label: 'Ao12',
+            data: ao12,
+            backgroundColor: 'rgba(75, 192, 192, 1)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1,
+            fill: false,
+          },
+          {
+            label: 'Recognition Time',
+            data: recognitionInSeconds,
+            backgroundColor: 'rgba(255, 99, 132, 1)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1,
+            fill: false,
+          },
+        ],
+      },
+      options: {
+        animation: false,
+        responsive: true,
+        maintainAspectRatio: false,
+        elements: {
+          point: {
+            pointStyle: 'circle',
+            radius: 2,
+          },
+        },
+        plugins: {
+          legend: {
+            display: false,
+          },
+          title: {
+            display: true,
+            text: `AUF ${titles[auf]}`,
+          },
+          tooltip: {
+            callbacks: {
+              footer: () => `Samples - Solve: ${solveSamples.length}, Recognition: ${recognitionSamples.length}`,
+            },
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+          },
+          x: {
+            grid: {
+              display: false,
+            },
+            ticks: {
+              display: false,
+            },
+          },
+        },
+      },
+    });
   }
 }
 

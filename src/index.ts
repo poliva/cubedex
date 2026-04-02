@@ -26,7 +26,7 @@ import {
 } from 'smartcube-web-bluetooth';
 
 import { faceletsToPattern, patternToFacelets } from './utils';
-import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, setCategoryStickeringDeferred, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageOfFiveTimeNumber, learnedStatus, createTimeGraph, createStatsGraph, countMovesETM, getLastTimes, trailingWholeCubeRotationMoveCount } from './functions';
+import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, setCategoryStickeringDeferred, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageOfFiveTimeNumber, learnedStatus, createTimeGraph, createStatsGraph, createAUFStatsGraphs, countMovesETM, getLastTimes, trailingWholeCubeRotationMoveCount } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -182,6 +182,7 @@ async function handleGyroEvent(event: SmartCubeEvent) {
 var userAlg: string[] = [];
 var originalUserAlg: string[] = [];
 var scrambleToAlg: string[] = [];
+var currentStartAUF: "" | "U" | "U'" | "U2" = "";
 var badAlg: string[] = [];
 var patternStates: KPattern[] = [];
 var algPatternStates: KPattern[] = [];
@@ -271,6 +272,7 @@ function fetchNextPatterns() {
 
 function drawAlgInCube() {
   originalUserAlg = [...userAlg];
+  currentStartAUF = "";
   if (randomizeAUF && scrambleToAlg.length === 0) {
     let AUF = ["U", "U'", "U2", ""];
     let randomAUF = AUF[Math.floor(Math.random() * AUF.length)];
@@ -305,6 +307,7 @@ function drawAlgInCube() {
 
       if ((areNotIdentical && !isOLL) || isOLL && !isSymmetricOLL(userAlg.join(' '))) {
         userAlg.unshift(randomAUF); // add randomAUF to the beginning of the alg
+        currentStartAUF = randomAUF as "U" | "U'" | "U2";
         userAlg = Alg.fromString(userAlg.join(' ')).experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 }).toString().split(/\s+/); // simplify alg by cancelling possible U moves at the beginning
         $('#alg-display').text(userAlg.join(' '));
       }
@@ -1195,6 +1198,78 @@ function saveAlgSwitchTime(algId: string, elapsedMs: number) {
   localStorage.setItem('AlgSwitchTimes-' + algId, times.join(','));
 }
 
+type StartAUF = "" | "U" | "U'" | "U2";
+type StartAUFTimes = Record<StartAUF, number[]>;
+
+function getDefaultStartAUFTimes(): StartAUFTimes {
+  return {
+    "": [],
+    "U": [],
+    "U'": [],
+    "U2": [],
+  };
+}
+
+function getAlgSwitchTimesByStartAUF(algId: string): StartAUFTimes {
+  const key = 'AlgSwitchTimesByStartAUF-' + algId;
+  const raw = localStorage.getItem(key);
+  if (!raw) return getDefaultStartAUFTimes();
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<Record<StartAUF, number[]>>;
+    const result = getDefaultStartAUFTimes();
+    for (const auf of Object.keys(result) as StartAUF[]) {
+      const values = parsed[auf];
+      if (Array.isArray(values)) {
+        result[auf] = values.filter((num) => Number.isFinite(num) && num >= 0).slice(-100);
+      }
+    }
+    return result;
+  } catch {
+    return getDefaultStartAUFTimes();
+  }
+}
+
+function saveAlgSwitchTimeByStartAUF(algId: string, startAUF: StartAUF, elapsedMs: number) {
+  const key = 'AlgSwitchTimesByStartAUF-' + algId;
+  const timesByAUF = getAlgSwitchTimesByStartAUF(algId);
+  timesByAUF[startAUF].push(elapsedMs);
+  if (timesByAUF[startAUF].length > 100) {
+    timesByAUF[startAUF].shift();
+  }
+  localStorage.setItem(key, JSON.stringify(timesByAUF));
+}
+
+function getSolveTimesByStartAUF(algId: string): StartAUFTimes {
+  const key = 'SolveTimesByStartAUF-' + algId;
+  const raw = localStorage.getItem(key);
+  if (!raw) return getDefaultStartAUFTimes();
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<Record<StartAUF, number[]>>;
+    const result = getDefaultStartAUFTimes();
+    for (const auf of Object.keys(result) as StartAUF[]) {
+      const values = parsed[auf];
+      if (Array.isArray(values)) {
+        result[auf] = values.filter((num) => Number.isFinite(num) && num >= 0).slice(-100);
+      }
+    }
+    return result;
+  } catch {
+    return getDefaultStartAUFTimes();
+  }
+}
+
+function saveSolveTimeByStartAUF(algId: string, startAUF: StartAUF, elapsedMs: number) {
+  const key = 'SolveTimesByStartAUF-' + algId;
+  const timesByAUF = getSolveTimesByStartAUF(algId);
+  timesByAUF[startAUF].push(elapsedMs);
+  if (timesByAUF[startAUF].length > 100) {
+    timesByAUF[startAUF].shift();
+  }
+  localStorage.setItem(key, JSON.stringify(timesByAUF));
+}
+
 function startAlgSwitchTimer() {
   algSwitchStartTs = now();
   algSwitchPending = true;
@@ -1222,6 +1297,7 @@ function recordAlgSwitchToFirstMove() {
   setAlgSwitchTimerValue(elapsed);
   $('#first-move-timer').css('color', darkModeToggle.checked ? '#ccc' : '#333');
   saveAlgSwitchTime(algId, elapsed);
+  saveAlgSwitchTimeByStartAUF(algId, currentStartAUF, elapsed);
   const algSwitchTimes = getAlgSwitchTimes(algId);
   const averageAlgSwitchTime = algSwitchTimes.length
     ? algSwitchTimes.reduce((sum, time) => sum + time, 0) / algSwitchTimes.length
@@ -1241,12 +1317,15 @@ function updateTimesDisplay() {
   const lastTimes = getLastTimes(algId);
   const bestTime = bestTimeNumber(algId);
   const algSwitchTimes = getAlgSwitchTimes(algId);
+  const algSwitchTimesByStartAUF = getAlgSwitchTimesByStartAUF(algId);
+  const solveTimesByStartAUF = getSolveTimesByStartAUF(algId);
 
   algNameDisplay.text(showAlgNameEnabled ? currentAlgName : '');
   algNameDisplay2.text(showAlgNameEnabled ? currentAlgName : '');
 
   createTimeGraph(lastTimes.slice(-5), algSwitchTimes.slice(-5));
   createStatsGraph(lastTimes, algSwitchTimes);
+  createAUFStatsGraphs(solveTimesByStartAUF, algSwitchTimesByStartAUF);
 
   // Calculate average time
   const averageTime = lastTimes.reduce((a: number, b: number) => a + b, 0) / lastTimes.length;
@@ -1378,6 +1457,7 @@ function setTimerState(state: typeof timerState) {
         if (lastTimes.length > 100) {
           lastTimes.shift(); // Keep only the last 100 times
         }
+        saveSolveTimeByStartAUF(algId, currentStartAUF, finalTime);
         practiceCount++; // Increment the practice count
 
         localStorage.setItem('LastTimes-' + algId, lastTimes.join(','));
@@ -1517,6 +1597,8 @@ $('#delete-times').on('click', () => {
         localStorage.removeItem('Best-' + algId);
         localStorage.removeItem('LastTimes-' + algId);
         localStorage.removeItem('AlgSwitchTimes-' + algId);
+        localStorage.removeItem('AlgSwitchTimesByStartAUF-' + algId);
+        localStorage.removeItem('SolveTimesByStartAUF-' + algId);
       }
     }
     loadAlgorithms(category); // Refresh the algorithm list

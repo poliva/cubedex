@@ -268,10 +268,24 @@
         <div id="save-success" class="hidden mt-4 text-green-600 p-4 bg-gray-100 border border-gray-300 rounded-lg mb-4 dark:bg-gray-700 dark:text-green-500 dark:border-green-400 text-sm sm:text-base"></div>
       </div>
 
-      <div id="alg-stats" class="hidden flex-col lg:flex-row max-w-[1032px] mx-auto border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-800 dark:text-white dark:border-gray-700">
-        <div id="stats-container" class="pl-2 pr-2 pt-2 sm:pl-4 sm:pr-4 sm:pt-4 lg:pt-4 lg:pl-4 lg:pr-0 lg:pb-4 min-h-[240px] max-h-[600px] max-w-[750px] flex-grow flex-shrink">
-          <div class="relative mx-auto my-auto h-[300px] sm:h-[350px] md:h-[450px] lg:h-full lg:w-full max-w-[90vw]">
+      <div id="alg-stats" class="hidden flex-col lg:flex-row max-w-[1032px] mx-auto mb-4 border border-gray-400 rounded-lg bg-gray-50 text-gray-900 shadow-md transition-colors duration-300 ease-in-out dark:bg-gray-800 dark:text-white dark:border-gray-700">
+        <div id="stats-container" class="pl-2 pr-2 pt-2 sm:pl-4 sm:pr-4 sm:pt-4 lg:pt-4 lg:pl-4 lg:pr-0 lg:pb-4 min-h-[240px] max-w-[750px] flex-grow flex-shrink">
+          <div class="relative mx-auto my-auto h-[280px] sm:h-[320px] md:h-[360px] lg:h-[320px] lg:w-full max-w-[90vw]">
             <canvas id="statsGraph" class="w-full h-full"></canvas>
+          </div>
+          <div class="mx-auto mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 lg:w-full max-w-[90vw]">
+            <div class="relative h-[150px] sm:h-[160px] md:h-[170px] lg:h-[160px]">
+              <canvas id="aufStatsGraph-none" class="w-full h-full"></canvas>
+            </div>
+            <div class="relative h-[150px] sm:h-[160px] md:h-[170px] lg:h-[160px]">
+              <canvas id="aufStatsGraph-u" class="w-full h-full"></canvas>
+            </div>
+            <div class="relative h-[150px] sm:h-[160px] md:h-[170px] lg:h-[160px]">
+              <canvas id="aufStatsGraph-up" class="w-full h-full"></canvas>
+            </div>
+            <div class="relative h-[150px] sm:h-[160px] md:h-[170px] lg:h-[160px]">
+              <canvas id="aufStatsGraph-u2" class="w-full h-full"></canvas>
+            </div>
           </div>
         </div>
         <div id="metrics-container" class="min-w-[250px] lg:min-w-[290px] lg:max-w-[290px]">
