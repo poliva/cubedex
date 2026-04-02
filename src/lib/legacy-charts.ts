@@ -1,0 +1,171 @@
+import { Chart, registerables } from 'chart.js';
+import { Alg } from 'cubing/alg';
+import { experimentalCountMovesETM } from 'cubing/notation';
+
+Chart.register(...registerables);
+
+let timeChart: Chart | null = null;
+let statsChart: Chart | null = null;
+
+export function countMovesETM(alg: string): number {
+  return experimentalCountMovesETM(Alg.fromString(alg));
+}
+
+export function createTimeGraph(canvas: HTMLCanvasElement | null, times: number[]) {
+  if (!canvas) {
+    return;
+  }
+
+  if (timeChart) {
+    timeChart.destroy();
+    timeChart = null;
+  }
+
+  if (times.length === 0) {
+    return;
+  }
+
+  const minTime = Math.min(...times);
+  const backgroundColors = times.map((time) =>
+    time === minTime ? 'rgba(75, 192, 192, 0.2)' : 'rgba(54, 162, 235, 0.2)',
+  );
+  const borderColors = times.map((time) =>
+    time === minTime ? 'rgba(75, 192, 192, 1)' : 'rgba(54, 162, 235, 1)',
+  );
+  const timesInSeconds = times.map((time) => time / 1000);
+
+  timeChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: times.map((_, index) => `${index + 1}`),
+      datasets: [
+        {
+          label: 'Seconds',
+          data: timesInSeconds,
+          backgroundColor: backgroundColors,
+          borderColor: borderColors,
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      animation: false,
+      maintainAspectRatio: true,
+      aspectRatio: 1,
+      plugins: {
+        legend: { display: false },
+        title: { display: false },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+        x: {
+          grid: { display: false },
+          ticks: { display: false },
+        },
+      },
+    },
+  });
+}
+
+function calculateTrimmedAverage(data: number[], windowSize: number, meanSize: number): Array<number | null> {
+  const averages: Array<number | null> = [];
+  for (let i = 0; i < data.length; i += 1) {
+    if (i < windowSize - 1) {
+      averages.push(null);
+    } else {
+      const window = data.slice(i - windowSize + 1, i + 1);
+      const sortedWindow = [...window].sort((a, b) => a - b);
+      const trimmedWindow = sortedWindow.slice(1, -1);
+      const average = trimmedWindow.reduce((sum, value) => sum + value, 0) / meanSize;
+      averages.push(average);
+    }
+  }
+  return averages;
+}
+
+export function createStatsGraph(canvas: HTMLCanvasElement | null, times: number[]) {
+  if (!canvas) {
+    return;
+  }
+
+  const context = canvas.getContext('2d');
+  if (!context) {
+    return;
+  }
+
+  const timesInSeconds = times.map((time) => time / 1000);
+  const ao5 = calculateTrimmedAverage(timesInSeconds, 5, 3);
+  const ao12 = calculateTrimmedAverage(timesInSeconds, 12, 10);
+  const canvasHeight = canvas.clientHeight || canvas.getBoundingClientRect().height || 300;
+  const gradient = context.createLinearGradient(0, 0, 0, canvasHeight);
+  gradient.addColorStop(0, 'rgba(54, 162, 235, 0.6)');
+  gradient.addColorStop(1, 'rgba(54, 162, 235, 0.0)');
+
+  if (statsChart) {
+    statsChart.destroy();
+    statsChart = null;
+  }
+
+  if (times.length === 0) {
+    return;
+  }
+
+  statsChart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: times.map((_, index) => `${index + 1}`),
+      datasets: [
+        {
+          label: 'Single',
+          data: timesInSeconds,
+          backgroundColor: gradient,
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1,
+          fill: true,
+        },
+        {
+          label: 'Ao5',
+          data: ao5,
+          backgroundColor: 'rgba(255, 159, 64, 1)',
+          borderColor: 'rgba(255, 159, 64, 1)',
+          borderWidth: 1,
+          fill: false,
+        },
+        {
+          label: 'Ao12',
+          data: ao12,
+          backgroundColor: 'rgba(75, 192, 192, 1)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+          fill: false,
+        },
+      ],
+    },
+    options: {
+      elements: {
+        point: {
+          pointStyle: 'circle',
+        },
+      },
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true },
+        title: { display: false },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+        },
+        x: {
+          grid: { display: false },
+          ticks: { display: false },
+        },
+      },
+    },
+  });
+}

@@ -1,0 +1,145 @@
+import { useEffect, useState } from 'react';
+import { readOption, writeOption } from '../lib/legacy-storage';
+
+export interface LegacyOptionsState {
+  darkMode: boolean;
+  showAlgName: boolean;
+  alwaysScrambleTo: boolean;
+  visualization: string;
+  backview: string;
+  hintFacelets: string;
+  fullStickering: boolean;
+  whiteOnBottom: boolean;
+  gyroscope: boolean;
+  controlPanel: string;
+  flashingIndicatorEnabled: boolean;
+  cubeSizePx: number;
+  setDarkMode: (value: boolean) => void;
+  setShowAlgName: (value: boolean) => void;
+  setAlwaysScrambleTo: (value: boolean) => void;
+  setVisualization: (value: string) => void;
+  setBackview: (value: string) => void;
+  setHintFacelets: (value: string) => void;
+  setFullStickering: (value: boolean) => void;
+  setWhiteOnBottom: (value: boolean) => void;
+  setGyroscope: (value: boolean) => void;
+  setControlPanel: (value: string) => void;
+  setFlashingIndicatorEnabled: (value: boolean) => void;
+  setCubeSizePx: (value: number) => void;
+}
+
+function clampInt(value: unknown, min: number, max: number, fallback: number) {
+  const n = typeof value === 'string' ? Number.parseInt(value, 10) : typeof value === 'number' ? value : Number.NaN;
+  if (!Number.isFinite(n)) {
+    return fallback;
+  }
+  return Math.min(max, Math.max(min, Math.round(n)));
+}
+
+function detectInitialDarkMode() {
+  if (readOption('theme') === 'dark') {
+    return true;
+  }
+  if (readOption('theme') === 'light') {
+    return false;
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+export function useLegacyOptions(): LegacyOptionsState {
+  const [darkMode, setDarkModeState] = useState(detectInitialDarkMode);
+  const [showAlgName, setShowAlgNameState] = useState(readOption('showAlgName') !== 'false');
+  const [alwaysScrambleTo, setAlwaysScrambleToState] = useState(readOption('alwaysScrambleTo') === 'true');
+  const [visualization, setVisualizationState] = useState(readOption('visualization') || 'PG3D');
+  const [backview, setBackviewState] = useState(readOption('backview') || 'none');
+  const [hintFacelets, setHintFaceletsState] = useState(readOption('hintFacelets') || 'none');
+  const [fullStickering, setFullStickeringState] = useState(readOption('fullStickering') === 'true');
+  const [whiteOnBottom, setWhiteOnBottomState] = useState(readOption('whiteOnBottom') === 'true');
+  const [gyroscope, setGyroscopeState] = useState(readOption('gyroscope') !== 'disabled');
+  const [controlPanel, setControlPanelState] = useState(readOption('controlPanel') || 'none');
+  const [flashingIndicatorEnabled, setFlashingIndicatorEnabledState] = useState(
+    readOption('flashingIndicatorEnabled') !== 'false',
+  );
+  const [cubeSizePx, setCubeSizePxState] = useState(
+    clampInt(readOption('cubeSizePx'), 240, 600, 400),
+  );
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+    writeOption('theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
+
+  useEffect(() => {
+    writeOption('showAlgName', String(showAlgName));
+  }, [showAlgName]);
+
+  useEffect(() => {
+    writeOption('alwaysScrambleTo', String(alwaysScrambleTo));
+  }, [alwaysScrambleTo]);
+
+  useEffect(() => {
+    writeOption('visualization', visualization);
+  }, [visualization]);
+
+  useEffect(() => {
+    writeOption('backview', backview);
+  }, [backview]);
+
+  useEffect(() => {
+    writeOption('hintFacelets', hintFacelets);
+  }, [hintFacelets]);
+
+  useEffect(() => {
+    writeOption('fullStickering', String(fullStickering));
+    if (!fullStickering && whiteOnBottom) {
+      setWhiteOnBottomState(false);
+    }
+  }, [fullStickering, whiteOnBottom]);
+
+  useEffect(() => {
+    writeOption('whiteOnBottom', String(whiteOnBottom && fullStickering));
+  }, [whiteOnBottom, fullStickering]);
+
+  useEffect(() => {
+    writeOption('gyroscope', gyroscope ? 'enabled' : 'disabled');
+  }, [gyroscope]);
+
+  useEffect(() => {
+    writeOption('controlPanel', controlPanel);
+  }, [controlPanel]);
+
+  useEffect(() => {
+    writeOption('flashingIndicatorEnabled', String(flashingIndicatorEnabled));
+  }, [flashingIndicatorEnabled]);
+
+  useEffect(() => {
+    writeOption('cubeSizePx', String(cubeSizePx));
+  }, [cubeSizePx]);
+
+  return {
+    darkMode,
+    showAlgName,
+    alwaysScrambleTo,
+    visualization,
+    backview,
+    hintFacelets,
+    fullStickering,
+    whiteOnBottom,
+    gyroscope,
+    controlPanel,
+    flashingIndicatorEnabled,
+    cubeSizePx,
+    setDarkMode: setDarkModeState,
+    setShowAlgName: setShowAlgNameState,
+    setAlwaysScrambleTo: setAlwaysScrambleToState,
+    setVisualization: setVisualizationState,
+    setBackview: setBackviewState,
+    setHintFacelets: setHintFaceletsState,
+    setFullStickering: setFullStickeringState,
+    setWhiteOnBottom: setWhiteOnBottomState,
+    setGyroscope: setGyroscopeState,
+    setControlPanel: setControlPanelState,
+    setFlashingIndicatorEnabled: setFlashingIndicatorEnabledState,
+    setCubeSizePx: (value: number) => setCubeSizePxState(clampInt(value, 240, 600, 400)),
+  };
+}
