@@ -296,6 +296,11 @@ function drawAlgInCube() {
       }
     }
   }
+  if (randomizeColors && scrambleToAlg.length == 0) {
+    let rotations = [[], ["y"], ["y2"], ["y'"]]
+    let randomRot = rotations[Math.floor(Math.random() * rotations.length)];
+    userAlg = userAlg.concat(randomRot);
+  }
   if (randomizeAUF && scrambleToAlg.length > 0) {
     userAlg = [...scrambleToAlg];
     $('#alg-display').text(userAlg.join(' '));
@@ -2087,6 +2092,13 @@ const randomAUFToggle = document.getElementById('random-auf-toggle') as HTMLInpu
 randomAUFToggle.addEventListener('change', () => {
   randomizeAUF = randomAUFToggle.checked;
 });
+
+let randomizeColors: boolean = false;
+const randomColorsToggle = document.getElementById('random-colors-toggle') as HTMLInputElement;
+randomColorsToggle.addEventListener('change', () => {
+  randomizeColors = randomColorsToggle.checked;
+});
+
 
 // Add event listener for the prioritize slow toggle
 let prioritizeSlowAlgs: boolean = false;
