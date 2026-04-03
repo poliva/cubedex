@@ -30,7 +30,7 @@ export const LEGACY_STORAGE_KEYS = {
 
 export function expandNotation(input: string): string {
   let output = input
-    .replace(/["´`‘]/g, "'")
+    .replace(/["´`'\u2018\u2019]/g, "'")
     .replace(/\[/g, '(')
     .replace(/\]/g, ')')
     .replace(/XYZ/g, 'xyz');
@@ -81,7 +81,7 @@ export function setSavedAlgorithms(savedAlgorithms: SavedAlgorithms) {
   writeJsonStorage(LEGACY_STORAGE_KEYS.savedAlgorithms, savedAlgorithms);
 }
 
-export function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) {
+export function migrateLastFiveTimesToLastTimes() {
   for (let index = 0; index < window.localStorage.length; index += 1) {
     const key = window.localStorage.key(index);
     if (key && key.startsWith('LastFiveTimes-')) {
@@ -90,6 +90,10 @@ export function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) {
       window.localStorage.removeItem(key);
     }
   }
+}
+
+export function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) {
+  migrateLastFiveTimesToLastTimes();
 
   if (!window.localStorage.getItem(LEGACY_STORAGE_KEYS.savedAlgorithms)) {
     setSavedAlgorithms(defaultAlgs);

@@ -60,6 +60,7 @@ export interface SmartcubeMoveRecord {
   move: string;
   localTimestamp: number | null;
   cubeTimestamp: number | null;
+  isBugged?: boolean;
 }
 
 export interface TrainingFlashRequest {
@@ -111,10 +112,12 @@ export interface TrainingState {
   activateTimer: () => void;
   handleSpaceKeyDown: () => void;
   handleSpaceKeyUp: () => void;
-  handleSmartcubeMove: (currentPattern: KPattern, move: string, rawMoves?: SmartcubeMoveRecord[]) => boolean;
+  handleSmartcubeMove: (currentPattern: KPattern, move: string, rawMoves?: SmartcubeMoveRecord[], isBugged?: boolean) => boolean;
   stopAndRecordSolve: (timeMs: number) => void;
+  getElapsedMs: () => number;
   prepareForScramble: () => void;
   resetDrill: () => void;
+  setKeepInitialState: (value: boolean) => void;
 }
 
 function formatTimerTimestamp(timestamp: number) {
@@ -128,7 +131,7 @@ function formatHistoryTimestamp(timestamp: number) {
   return `${minutesPart}${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}`;
 }
 
-function buildStats(algId: string, displayAlg: string, practiceCount: number): TrainingStats {
+function buildStats(algId: string, displayAlg: string, _practiceCount: number): TrainingStats {
   if (!algId) {
     return {
       best: '-',
@@ -152,6 +155,7 @@ function buildStats(algId: string, displayAlg: string, practiceCount: number): T
     ? (moveCount / (averageValue / 1000)).toFixed(2)
     : '-';
   const historyCount = lastTimes.length;
+  const derivedPracticeCount = lastTimes.length;
 
   return {
     best: bestTimeString(bestTime),
@@ -159,11 +163,11 @@ function buildStats(algId: string, displayAlg: string, practiceCount: number): T
     average: averageTimeString(averageValue),
     averageTps,
     singlePb: bestTimeString(bestTime),
-    practiceCount,
+    practiceCount: derivedPracticeCount,
     hasHistory: historyCount > 0,
     lastFive: lastTimes.slice(-5).map((time, index, times) => ({
       value: time,
-      label: `Time ${practiceCount < 5 ? index + 1 : practiceCount - times.length + index + 1}: ${formatHistoryTimestamp(time)}`,
+      label: `Time ${derivedPracticeCount < 5 ? index + 1 : derivedPracticeCount - times.length + index + 1}: ${formatHistoryTimestamp(time)}`,
       isPb: bestTime === time,
     })),
   };
@@ -417,6 +421,7 @@ export function useTrainingState(
   const hasFailedCurrentCaseRef = useRef(false);
   const flashKeyRef = useRef(0);
   const previousSelectedIdsRef = useRef<string[]>([]);
+  const keepInitialStateRef = useRef(false);
 
   currentCaseRef.current = currentCase;
 
@@ -667,9 +672,15 @@ export function useTrainingState(
           options.randomizeAUF,
         );
 
-    const basePattern = initialPattern
-      ?? (options.smartcubeConnected ? options.currentPattern ?? initialPatternRef.current : initialPatternRef.current ?? options.currentPattern)
-      ?? await solvedPattern();
+    let basePattern: KPattern;
+    if (keepInitialStateRef.current && initialPattern) {
+      basePattern = initialPattern;
+      keepInitialStateRef.current = false;
+    } else {
+      basePattern = initialPattern
+        ?? (options.smartcubeConnected ? options.currentPattern ?? initialPatternRef.current : initialPatternRef.current ?? options.currentPattern)
+        ?? await solvedPattern();
+    }
     initialPatternRef.current = basePattern;
     originalAlgTextRef.current = normalizedAlgorithm;
     originalAlgIdRef.current = algToId(normalizedAlgorithm) || 'default-alg-id';
@@ -716,8 +727,11 @@ export function useTrainingState(
     }
 
     if (previousSelectedIds.length === 0 || options.selectionChangeMode === 'bulk') {
-      selectedQueueRef.current = buildQueue(selectedCases, options.prioritizeSlowCases);
-      selectedQueueCopyRef.current = [];
+      const newQueue = buildQueue(selectedCases, options.prioritizeSlowCases);
+      const existingCopyIds = new Set(newQueue.map((c) => c.id));
+      const retainedCopy = selectedQueueCopyRef.current.filter((c) => existingCopyIds.has(c.id));
+      selectedQueueRef.current = newQueue;
+      selectedQueueCopyRef.current = retainedCopy;
       retrainQueueHead(selectedQueueRef.current[0] ?? null);
       return;
     }
@@ -799,15 +813,15 @@ export function useTrainingState(
     setTimerStateInternal('STOPPED');
     isKeyboardTimerActiveRef.current = false;
 
-    const nextInitialPattern = options.smartcubeConnected
-      ? initialPatternRef.current
-      : patternStatesRef.current.at(-1) ?? initialPatternRef.current;
+    if (!options.smartcubeConnected) {
+      const nextInitialPattern = patternStatesRef.current.at(-1) ?? initialPatternRef.current;
 
-    switchToNextAlgorithm();
+      switchToNextAlgorithm();
 
-    const nextCase = selectedQueueRef.current[0] ?? null;
-    if (nextCase) {
-      void trainCurrent(nextInitialPattern, { algorithm: nextCase.algorithm });
+      const nextCase = selectedQueueRef.current[0] ?? null;
+      if (nextCase) {
+        void trainCurrent(nextInitialPattern, { algorithm: nextCase.algorithm });
+      }
     }
   }
 
@@ -847,12 +861,16 @@ export function useTrainingState(
     }
   }
 
-  function handleSmartcubeMove(currentPattern: KPattern, move: string, rawMoves?: SmartcubeMoveRecord[]) {
+  function handleSmartcubeMove(currentPattern: KPattern, move: string, rawMoves?: SmartcubeMoveRecord[], isBugged = false) {
     if (inputMode || scrambleMode || patternStatesRef.current.length === 0) {
       return false;
     }
 
-    if (timerState === 'READY' || timerState === 'STOPPED') {
+    if (isBugged) {
+      return false;
+    }
+
+    if (timerState === 'READY') {
       setTimerState('RUNNING');
     }
 
@@ -901,8 +919,18 @@ export function useTrainingState(
 
       if (matchedIndex === expectedMovesRef.current.length - 1 || finishedIncludingIgnoredRotations) {
         clearProgressState();
-        initialPatternRef.current = patternAfterMove;
+        const completedPattern = patternAfterMove;
+        initialPatternRef.current = completedPattern;
+        setCurrentMoveIndex(0);
         stopAndRecordSolve(getElapsedMs());
+
+        if (options.smartcubeConnected) {
+          switchToNextAlgorithm();
+          const nextCase = selectedQueueRef.current[0] ?? null;
+          if (nextCase) {
+            void trainCurrent(completedPattern, { algorithm: nextCase.algorithm });
+          }
+        }
         return true;
       }
       return false;
@@ -963,6 +991,10 @@ export function useTrainingState(
     setTimerState('IDLE');
   }
 
+  function setKeepInitialState(value: boolean) {
+    keepInitialStateRef.current = value;
+  }
+
   return {
     inputMode,
     scrambleMode,
@@ -992,7 +1024,9 @@ export function useTrainingState(
     handleSpaceKeyUp,
     handleSmartcubeMove,
     stopAndRecordSolve,
+    getElapsedMs,
     prepareForScramble,
     resetDrill,
+    setKeepInitialState,
   };
 }

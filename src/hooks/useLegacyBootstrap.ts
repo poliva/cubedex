@@ -9,6 +9,7 @@ import {
 import {
   getSavedAlgorithms,
   initializeDefaultAlgorithms,
+  migrateLastFiveTimesToLastTimes,
   type SavedAlgorithms,
 } from '../lib/legacy-storage';
 
@@ -65,6 +66,7 @@ export function useLegacyBootstrap(): LegacyBootstrapState {
   }
 
   useEffect(() => {
+    migrateLastFiveTimesToLastTimes();
     const result = initializeDefaultAlgorithms(defaultAlgs as SavedAlgorithms);
     if (result.alertMessage) {
       window.alert(result.alertMessage);

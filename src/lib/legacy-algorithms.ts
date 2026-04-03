@@ -68,14 +68,14 @@ export function learnedLabel(status: number) {
   return 'Not learned';
 }
 
-export function learnedGlyph(status: number) {
+export function learnedTitle(status: number) {
   if (status === 1) {
-    return '🟧';
+    return 'Learning';
   }
   if (status === 2) {
-    return '✅';
+    return 'Learned';
   }
-  return '🔖';
+  return 'Not learned';
 }
 
 export function cycleLearnedStatus(algId: string) {

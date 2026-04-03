@@ -2,8 +2,8 @@ import { useState } from 'react';
 import type { KPattern } from 'cubing/kpuzzle';
 import type { CaseCardData } from '../lib/legacy-algorithms';
 import { solvedPattern } from '../lib/cube-utils';
-import { expandNotation } from '../lib/legacy-storage';
 import { getScrambleToSolution } from '../lib/legacy-scramble';
+import { prepareTrainingAlgorithm } from '../lib/legacy-auf';
 
 export interface ScrambleState {
   scrambleMode: boolean;
@@ -15,6 +15,7 @@ export interface ScrambleState {
     algorithm: string,
     currentCase: CaseCardData | null,
     currentPattern?: KPattern | null,
+    randomizeAUF?: boolean,
   ) => Promise<boolean>;
   advanceScramble: (move: string, currentPattern: KPattern | null) => Promise<boolean>;
   clearScramble: () => void;
@@ -29,11 +30,11 @@ export function useScrambleState(): ScrambleState {
 
   async function startScrambleTo(
     algorithm: string,
-    _currentCase: CaseCardData | null,
+    currentCase: CaseCardData | null,
     currentPattern?: KPattern | null,
+    randomizeAUF = false,
   ) {
-    const normalizedAlgorithm = expandNotation(algorithm.trim());
-    if (!normalizedAlgorithm) {
+    if (!algorithm.trim()) {
       setScrambleMode(false);
       setScrambleText('');
       setTargetAlgorithm('');
@@ -44,11 +45,22 @@ export function useScrambleState(): ScrambleState {
     setIsComputing(true);
     try {
       const pattern = currentPattern ?? await solvedPattern();
-      const scramble = await getScrambleToSolution(normalizedAlgorithm, pattern);
+      const scramble = await getScrambleToSolution(algorithm, pattern);
+      
+      let aufModifiedAlgorithm = algorithm;
+      if (randomizeAUF && currentCase?.category) {
+        const prepared = await prepareTrainingAlgorithm(
+          algorithm.split(/\s+/).filter(Boolean),
+          currentCase.category,
+          true,
+        );
+        aufModifiedAlgorithm = prepared.displayAlgorithm;
+      }
+      
       if (scramble.length > 0) {
         setScrambleMode(true);
         setScrambleText(scramble);
-        setTargetAlgorithm(normalizedAlgorithm);
+        setTargetAlgorithm(aufModifiedAlgorithm);
         setHelpTone('hidden');
         return true;
       } else {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties } from 'react';
 import { Alg } from 'cubing/alg';
 import { cube3x3x3 } from 'cubing/puzzles';
 import { TwistyCube } from './components/TwistyCube';
@@ -14,14 +14,28 @@ import { usePracticeToggles } from './hooks/usePracticeToggles';
 import { useLegacyCharts } from './hooks/useLegacyCharts';
 import { averageOfFiveTimeNumber, averageTimeString, bestTimeString, makeTimeParts } from './lib/legacy-algorithms';
 import { patternToPlayerAlg } from './lib/legacy-scramble';
+import {
+  BookOpenIcon,
+  BookClosedGreenIcon,
+  BookClosedOrangeIcon,
+  HamburgerIcon,
+  PlayIcon,
+  StopIcon,
+  ScatterIcon,
+  BluetoothIcon,
+  EyeIcon,
+  EyeSlashIcon,
+} from './components/Icons';
+import { LegacySwitch } from './components/LegacySwitch';
+import { MenuHelpIcon, MenuNewAlgIcon, MenuOptionsIcon, MenuPracticeIcon } from './components/MenuNavIcons';
 
 type MenuView = 'practice' | 'new-alg' | 'options' | 'help';
 
-const MENU_ITEMS: Array<{ id: MenuView; label: string }> = [
-  { id: 'practice', label: 'Practice' },
-  { id: 'new-alg', label: 'New Alg' },
-  { id: 'options', label: 'Options' },
-  { id: 'help', label: 'Help' },
+const MENU_ITEMS: Array<{ id: MenuView; label: string; Icon: ComponentType }> = [
+  { id: 'practice', label: 'Practice', Icon: MenuPracticeIcon },
+  { id: 'new-alg', label: 'New Alg', Icon: MenuNewAlgIcon },
+  { id: 'options', label: 'Options', Icon: MenuOptionsIcon },
+  { id: 'help', label: 'Help', Icon: MenuHelpIcon },
 ];
 
 function isVisible(activeView: MenuView, view: MenuView) {
@@ -206,7 +220,7 @@ export function App() {
       event.preventDefault();
       const shouldFlash = training.timerState === 'READY';
       training.handleSpaceKeyUp();
-      if (shouldFlash && options.flashingIndicatorEnabled) {
+      if (shouldFlash) {
         showFlashingIndicator('gray', 200);
       }
     }
@@ -217,7 +231,7 @@ export function App() {
       document.removeEventListener('keydown', onKeyDown);
       document.removeEventListener('keyup', onKeyUp);
     };
-  }, [options.flashingIndicatorEnabled, smartcube.connected, training]);
+  }, [smartcube.connected, training]);
 
   useEffect(() => {
     return () => {
@@ -228,12 +242,12 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    if (!training.flashRequest || !options.flashingIndicatorEnabled) {
+    if (!training.flashRequest) {
       return;
     }
 
     showFlashingIndicator(training.flashRequest.color, training.flashRequest.durationMs);
-  }, [options.flashingIndicatorEnabled, training.flashRequest]);
+  }, [training.flashRequest]);
 
   useEffect(() => {
     if (options.flashingIndicatorEnabled) {
@@ -282,6 +296,7 @@ export function App() {
       training.displayAlg || training.algInput,
       training.currentCase,
       smartcube.currentPattern,
+      practiceToggles.randomizeAUF,
     ).then((started) => {
       if (!started) {
         return;
@@ -331,6 +346,7 @@ export function App() {
           smartcube.lastProcessedMove.currentPattern,
           smartcube.lastProcessedMove.move,
           smartcube.lastProcessedMove.rawMoves,
+          smartcube.lastProcessedMove.isBugged,
         );
       }
       return;
@@ -343,6 +359,7 @@ export function App() {
 
     void scramble.advanceScramble(smartcube.lastProcessedMove.move, smartcube.currentPattern).then((completed) => {
       if (completed) {
+        training.setKeepInitialState(true);
         void training.trainCurrent(smartcube.currentPattern, {
           algorithm: scramble.targetAlgorithm,
           preserveDisplayedAlgorithm: true,
@@ -377,6 +394,10 @@ export function App() {
   }
 
   function showFlashingIndicator(color: 'gray' | 'red' | 'green', durationMs: number) {
+    if (!options.flashingIndicatorEnabled && color !== 'gray') {
+      return;
+    }
+
     setFlashingIndicatorColor(color);
     setIsFlashingIndicatorVisible(true);
     if (flashingIndicatorTimeoutRef.current !== null) {
@@ -406,7 +427,7 @@ export function App() {
       training.timerState === 'IDLE' ||
       training.timerState === 'READY';
 
-    if (shouldFlash && options.flashingIndicatorEnabled) {
+    if (shouldFlash) {
       showFlashingIndicator('gray', 200);
     }
 
@@ -463,12 +484,9 @@ export function App() {
     }
 
     training.enterInputMode(algorithm);
-    management.clearMessages();
-    management.setCategoryInput(training.currentCase?.category || selectedCategory || '');
-    management.setSubsetInput(training.currentCase?.subset || '');
-    management.setAlgNameInput(training.currentCase?.name || training.currentAlgName || '');
-    setActiveView('new-alg');
-    setInfoVisible(false);
+    queueMicrotask(() => {
+      document.getElementById('alg-input')?.focus();
+    });
   }
 
   return (
@@ -484,7 +502,7 @@ export function App() {
               onClick={() => setMenuOpen((open) => !open)}
               aria-label="Toggle menu"
             >
-              ☰
+              <HamburgerIcon />
             </button>
             <div
               id="menu-items"
@@ -499,6 +517,7 @@ export function App() {
                     : index === MENU_ITEMS.length - 1
                       ? 'menu-item-bottom'
                       : '';
+                const MenuIcon = item.Icon;
 
                 return (
                   <button
@@ -516,7 +535,10 @@ export function App() {
                     type="button"
                     onClick={() => selectView(item.id)}
                   >
-                    {item.label}
+                    <span className="menu-item-icon-wrap" aria-hidden>
+                      <MenuIcon />
+                    </span>
+                    <span className="menu-item-label">{item.label}</span>
                   </button>
                 );
               })}
@@ -595,11 +617,18 @@ export function App() {
 
               <div
                 id="cube"
-                className="cube-area shell-card"
+                className="cube-area"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
-                style={{ width: `${options.cubeSizePx}px`, height: `${options.cubeSizePx}px`, maxWidth: '100%', overflow: 'visible' }}
+                style={{
+                  width: `min(100%, ${options.cubeSizePx}px)`,
+                  aspectRatio: '1',
+                  height: 'auto',
+                  maxWidth: '100%',
+                  minWidth: 0,
+                  overflow: 'visible',
+                }}
               >
                 <TwistyCube
                   alg={mainCubeAlg}
@@ -640,7 +669,7 @@ export function App() {
                   >
                     <div id="connect">{smartcube.connectLabel}</div>
                     <div id="bluetooth-indicator" className={`${smartcube.connected ? 'hidden indicator-badge' : 'indicator-badge'}`}>
-                      ⓑ
+                      <BluetoothIcon />
                     </div>
                     <div
                       id="battery-indicator"
@@ -716,25 +745,29 @@ export function App() {
                     lastProcessedScrambleMoveRef.current = '';
                   }
 
+                  if (training.timerState === 'RUNNING') {
+                    training.stopAndRecordSolve(training.getElapsedMs());
+                  }
                   void training.trainCurrent(smartcube.currentPattern);
                 }}
               >
-                {training.timerState === 'RUNNING' ? '■' : '▶'}
+                {training.timerState === 'RUNNING' ? <StopIcon /> : <PlayIcon />}
               </button>
 
-              {training.inputMode ? (
-                <input
-                  id="alg-input"
-                  type="text"
-                  placeholder="Enter alg e.g., (R U R' U) (R U2' R')"
-                  className="alg-input"
-                  value={training.algInput}
-                  onChange={(event) => training.setAlgInput(event.target.value)}
-                />
-              ) : null}
+              <input
+                id="alg-input"
+                type="text"
+                placeholder="Enter alg e.g., (R U R' U) (R U2' R')"
+                className={`alg-input ${training.inputMode ? '' : 'hidden'}`.trim()}
+                value={training.algInput}
+                onChange={(event) => training.setAlgInput(event.target.value)}
+              />
 
-                <div id="alg-display-container" className={`${training.inputMode ? 'hidden alg-display-container' : 'alg-display-container'}`}>
-                  <div className="alg-display-actions">
+              <div
+                id="alg-display-container"
+                className={`alg-display-container ${training.inputMode ? 'hidden' : ''}`.trim()}
+              >
+                <div className="alg-display-mask-row">
                   <a
                     href="#"
                     id="toggle-move-mask"
@@ -742,14 +775,16 @@ export function App() {
                     style={{ backgroundColor: isMoveMasked ? '#f97316' : '#3b82f6' }}
                     onClick={(event) => {
                       event.preventDefault();
+                      event.stopPropagation();
                       setIsMoveMasked((value) => !value);
                     }}
                   >
-                    {isMoveMasked ? 'Unmask alg' : 'Mask alg'}
+                    {isMoveMasked ? <><EyeSlashIcon /> Unmask alg</> : <><EyeIcon /> Mask alg</>}
                   </a>
-                  </div>
-                  <div id="alg-display" className="alg-display" onClick={handleEditCurrentAlgorithm}>
-                    {training.displayMoves.map((move, index) => {
+                </div>
+                <div id="alg-display" className="alg-display" onClick={handleEditCurrentAlgorithm}>
+                  <div className="alg-display-moves">
+                  {training.displayMoves.map((move, index) => {
                       const color = move.color === 'green'
                         ? 'green'
                         : move.color === 'red'
@@ -788,6 +823,7 @@ export function App() {
                     })}
                   </div>
                 </div>
+              </div>
 
               <button
                 id="scramble-to"
@@ -799,6 +835,7 @@ export function App() {
                     training.displayAlg || training.algInput,
                     training.currentCase,
                     smartcube.currentPattern,
+                    practiceToggles.randomizeAUF,
                   ).then((started) => {
                     if (!started) {
                       return;
@@ -811,7 +848,7 @@ export function App() {
                   });
                 }}
               >
-                {scramble.isComputing ? '…' : '✦'}
+                {scramble.isComputing ? '…' : <ScatterIcon />}
               </button>
             </div>
 
@@ -834,15 +871,19 @@ export function App() {
             <div className="panel-header-row">
               <p id="help-title" className="panel-title">{showDumbcubeHelp ? 'DUMBCUBE HELP' : 'SMARTCUBE HELP'}</p>
               <p id="dumbcube-toggle" className="help-toggle-text">
-                <button
-                  type="button"
-                  className="link-button"
-                  onClick={() => setShowDumbcubeHelp((value) => !value)}
-                >
-                  {showDumbcubeHelp
-                    ? '🛜 USING a smart cube? CLICK HERE'
-                    : '🛜 NOT using a smart cube? CLICK HERE'}
-                </button>
+                {showDumbcubeHelp ? (
+                  <>🛜 USING a smart cube?{' '}
+                    <button type="button" className="text-blue-500" onClick={() => setShowDumbcubeHelp(false)}>
+                      CLICK HERE
+                    </button>
+                  </>
+                ) : (
+                  <>🛜 NOT using a smart cube?{' '}
+                    <button type="button" className="text-blue-500" onClick={() => setShowDumbcubeHelp(true)}>
+                      CLICK HERE
+                    </button>
+                  </>
+                )}
               </p>
             </div>
 
@@ -952,10 +993,11 @@ export function App() {
                 onChange={(event) => management.setAlgNameInput(event.target.value)}
               />
             </div>
-            <button
-              id="confirm-save"
-              className="primary-button"
-              type="button"
+            <div className="save-panel-actions">
+              <button
+                id="confirm-save"
+                className="save-panel-button"
+                type="button"
                 onClick={() => {
                   const nextCategory = management.categoryInput.trim();
                   if (management.submitSave(training.displayAlg || training.algInput) && nextCategory) {
@@ -965,14 +1007,14 @@ export function App() {
                     setSelectedCategory(nextCategory);
                     setMainCubeStickeringDeferred(false);
                   }
-              }}
-            >
-              Save
-            </button>
-            <button
-              id="cancel-save"
-              className="primary-button"
-              type="button"
+                }}
+              >
+                Save
+              </button>
+              <button
+                id="cancel-save"
+                className="save-panel-button"
+                type="button"
                 onClick={() => {
                   management.clearMessages();
                   setAcknowledgedDisconnectToken(smartcube.disconnectToken);
@@ -980,8 +1022,9 @@ export function App() {
                   void training.trainCurrent(smartcube.currentPattern);
                 }}
               >
-              Cancel
-            </button>
+                Cancel
+              </button>
+            </div>
             <div id="save-error" className={`${management.saveError ? 'status-panel status-error' : 'hidden status-panel status-error'}`}>
               {management.saveError}
             </div>
@@ -1013,7 +1056,7 @@ export function App() {
           </div>
 
           <div id="load-container" className={`load-panel shell-card ${isVisible(activeView, 'practice') ? '' : 'hidden'}`.trim()}>
-            <div id="default-alg-id" className="hidden" />
+            <div id="default-alg-id" className="hidden bg-red-400" />
 
             <div className="control-row">
               <div id="category-selector" className="selector-card">
@@ -1031,6 +1074,7 @@ export function App() {
                     scramble.clearScramble();
                   }}
                 >
+                  <option value="">Filter by Category</option>
                   {categories.map((category) => (
                     <option key={category} value={category}>
                       {category}
@@ -1041,81 +1085,64 @@ export function App() {
               <div id="options-selector" className="selector-options-card">
                 <p className="input-label">Options:</p>
                 <div className="toggle-grid">
-                  <label htmlFor="select-all-toggle" className="toggle-item">
-                    <input
-                      type="checkbox"
-                      id="select-all-toggle"
-                      checked={selectAllCases}
-                      onChange={(event) => {
-                        setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                        if (event.target.checked) {
-                          setMainCubeStickeringDeferred(false);
-                        }
-                        setSelectAllCases(event.target.checked);
-                      }}
-                    />
-                    <span>Select All</span>
-                  </label>
-                  <label htmlFor="select-learning-toggle" className="toggle-item">
-                    <input
-                      type="checkbox"
-                      id="select-learning-toggle"
-                      checked={selectLearningCases}
-                      onChange={(event) => {
-                        setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                        if (event.target.checked) {
-                          setMainCubeStickeringDeferred(false);
-                        }
-                        setSelectLearningCases(event.target.checked);
-                      }}
-                    />
-                    <span>Select Learning</span>
-                  </label>
-                  <label htmlFor="random-auf-toggle" className="toggle-item">
-                    <input
-                      type="checkbox"
-                      id="random-auf-toggle"
-                      checked={practiceToggles.randomizeAUF}
-                      onChange={(event) => practiceToggles.setRandomizeAUF(event.target.checked)}
-                    />
-                    <span>Random AUF</span>
-                  </label>
-                  <label htmlFor="random-order-toggle" className="toggle-item">
-                    <input
-                      type="checkbox"
-                      id="random-order-toggle"
-                      checked={practiceToggles.randomOrder}
-                      onChange={(event) => practiceToggles.setRandomOrder(event.target.checked)}
-                    />
-                    <span>Random Order</span>
-                  </label>
-                  <label htmlFor="prioritize-slow-toggle" className="toggle-item">
-                    <input
-                      type="checkbox"
-                      id="prioritize-slow-toggle"
-                      checked={practiceToggles.prioritizeSlowCases}
-                      onChange={(event) => practiceToggles.setPrioritizeSlowCases(event.target.checked)}
-                    />
-                    <span>Slow Cases First</span>
-                  </label>
-                  <label htmlFor="prioritize-failed-toggle" className="toggle-item">
-                    <input
-                      type="checkbox"
-                      id="prioritize-failed-toggle"
-                      checked={practiceToggles.prioritizeFailedCases}
-                      onChange={(event) => practiceToggles.setPrioritizeFailedCases(event.target.checked)}
-                    />
-                    <span>Prioritize Failed Cases</span>
-                  </label>
+                  <LegacySwitch
+                    id="select-all-toggle"
+                    checked={selectAllCases}
+                    onChange={(checked) => {
+                      setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+                      if (checked) {
+                        setMainCubeStickeringDeferred(false);
+                      }
+                      setSelectAllCases(checked);
+                    }}
+                    label="Select All"
+                  />
+                  <LegacySwitch
+                    id="select-learning-toggle"
+                    checked={selectLearningCases}
+                    onChange={(checked) => {
+                      setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+                      if (checked) {
+                        setMainCubeStickeringDeferred(false);
+                      }
+                      setSelectLearningCases(checked);
+                    }}
+                    label="Select Learning"
+                  />
+                  <LegacySwitch
+                    id="random-auf-toggle"
+                    checked={practiceToggles.randomizeAUF}
+                    onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
+                    label="Random AUF"
+                  />
+                  <LegacySwitch
+                    id="random-order-toggle"
+                    checked={practiceToggles.randomOrder}
+                    onChange={(checked) => practiceToggles.setRandomOrder(checked)}
+                    label="Random Order"
+                  />
+                  <LegacySwitch
+                    id="prioritize-slow-toggle"
+                    checked={practiceToggles.prioritizeSlowCases}
+                    onChange={(checked) => practiceToggles.setPrioritizeSlowCases(checked)}
+                    label="Slow Cases First"
+                  />
+                  <LegacySwitch
+                    id="prioritize-failed-toggle"
+                    checked={practiceToggles.prioritizeFailedCases}
+                    onChange={(checked) => practiceToggles.setPrioritizeFailedCases(checked)}
+                    label="Prioritize Failed Cases"
+                  />
                 </div>
               </div>
             </div>
 
-            <p className="input-label subset-label">
+            <p className="input-label subset-label subset-label-row">
               <label htmlFor="select-all-subsets-toggle">Subset:</label>
               <input
                 type="checkbox"
                 id="select-all-subsets-toggle"
+                className="subset-checkbox"
                 checked={subsets.length > 0 && selectedSubsets.length === subsets.length}
                 onChange={(event) => {
                   setAcknowledgedDisconnectToken(smartcube.disconnectToken);
@@ -1133,6 +1160,7 @@ export function App() {
                   <label key={subset} className="toggle-item subset-item">
                     <input
                       type="checkbox"
+                      className="subset-checkbox"
                       checked={selectedSubsets.includes(subset)}
                       onChange={(event) => {
                         setAcknowledgedDisconnectToken(smartcube.disconnectToken);
@@ -1152,7 +1180,7 @@ export function App() {
               {caseCards.map((card, index) => (
                 <div
                   key={`${card.id}-${card.name}`}
-                  className={`case-wrapper shell-card ${training.failedCounts[card.id] ? 'bg-red-400' : index % 2 === 0 ? 'case-alt-dark' : 'case-alt-light'}`}
+                  className={`case-wrapper ${training.failedCounts[card.id] ? 'bg-red-400 dark:bg-red-400' : index % 2 === 0 ? 'case-alt-dark' : 'case-alt-light'}`}
                   id={card.id}
                   data-name={card.name}
                   data-algorithm={card.algorithm}
@@ -1180,7 +1208,15 @@ export function App() {
                       type="button"
                       onClick={() => cycleCaseLearnedState(card.id)}
                     >
-                      <span aria-hidden="true">{card.learned === 2 ? '✅' : card.learned === 1 ? '🟧' : '🔖'}</span>
+                      <span aria-hidden="true">
+                        {card.learned === 2 ? (
+                          <BookClosedGreenIcon />
+                        ) : card.learned === 1 ? (
+                          <BookClosedOrangeIcon />
+                        ) : (
+                          <BookOpenIcon />
+                        )}
+                      </span>
                     </button>
                   </div>
                   <label htmlFor={`case-toggle-${card.id}`} className="case-card-body" title={card.algorithm}>
@@ -1215,7 +1251,7 @@ export function App() {
                         }}
                       />
                       <div className="toggle-track" />
-                      <div className="toggle-dot" />
+                      <div className="toggle-dot dot" />
                       <div className="case-results">
                         <div id={`${card.id}-failed`} className="failed-count">{failedCount > 0 ? `❌: ${failedCount}` : ''}</div>
                         <div id={`${card.id}-success`} className="success-count">{practiceCount > 0 ? `✅: ${successCount}` : ''}</div>
@@ -1230,20 +1266,18 @@ export function App() {
             </div>
 
             <div className="delete-mode-container">
-              <label htmlFor="delete-mode-toggle" className="toggle-item compact-toggle">
-                <input
-                  type="checkbox"
-                  id="delete-mode-toggle"
-                  checked={deleteMode}
-                  onChange={(event) => {
-                    setDeleteMode(event.target.checked);
-                    if (!event.target.checked) {
-                      setDeleteSuccessMessage('');
-                    }
-                  }}
-                />
-                <span>Delete Mode</span>
-              </label>
+              <LegacySwitch
+                id="delete-mode-toggle"
+                className="legacy-switch--inline"
+                checked={deleteMode}
+                onChange={(checked) => {
+                  setDeleteMode(checked);
+                  if (!checked) {
+                    setDeleteSuccessMessage('');
+                  }
+                }}
+                label="Delete Mode"
+              />
               <button
                 id="delete-alg"
                 disabled={!deleteMode}
@@ -1317,9 +1351,9 @@ export function App() {
           </div>
 
           <div id="options-container" className={`options-panel shell-card ${isVisible(activeView, 'options') && !infoVisible ? '' : 'hidden'}`.trim()}>
-            <div id="alg-options-container" className="options-group">
-              <p className="input-label">Algorithms Options:</p>
-              <div className="button-row">
+            <div id="alg-options-container" className="options-section">
+              <p className="options-section-title">Algorithms Options:</p>
+              <div className="button-row options-button-row">
                 <button id="export-algs" className="primary-button" type="button" onClick={() => management.exportAll()}>
                   Export Algs
                 </button>
@@ -1334,9 +1368,9 @@ export function App() {
               </div>
             </div>
 
-            <div id="device-options-container" className="options-group">
-              <p className="input-label">Smartcube Options:</p>
-              <div className="button-row">
+            <div id="device-options-container" className="options-section">
+              <p className="options-section-title">Smartcube Options:</p>
+              <div className="button-row options-button-row">
                 <button
                   id="reset-state"
                   disabled={!smartcube.connected}
@@ -1367,110 +1401,99 @@ export function App() {
                   Device Info
                 </button>
               </div>
-              <label htmlFor="smartcube-show-all-ble-toggle" className="toggle-item">
-                <input
-                  type="checkbox"
+              <div className="device-ble-toggle-row">
+                <LegacySwitch
                   id="smartcube-show-all-ble-toggle"
                   checked={smartcube.showAllBluetoothDevices}
-                  onChange={(event) => smartcube.setShowAllBluetoothDevices(event.target.checked)}
+                  onChange={(checked) => smartcube.setShowAllBluetoothDevices(checked)}
+                  label="Show all Bluetooth devices when connecting"
                 />
-                <span>Show all Bluetooth devices when connecting</span>
-              </label>
+              </div>
             </div>
 
-            <label htmlFor="dark-mode-toggle" className="toggle-item">
-              <input
-                type="checkbox"
+            <div className="options-toggle-row">
+              <LegacySwitch
                 id="dark-mode-toggle"
                 checked={options.darkMode}
-                onChange={(event) => options.setDarkMode(event.target.checked)}
+                onChange={(checked) => options.setDarkMode(checked)}
+                label="Dark Mode"
               />
-              <span>Dark Mode</span>
-            </label>
-            <label htmlFor="gyroscope-toggle" className="toggle-item">
-              <input
-                type="checkbox"
+            </div>
+            <div className="options-toggle-row">
+              <LegacySwitch
                 id="gyroscope-toggle"
                 checked={smartcube.connected && !smartcube.gyroSupported ? false : options.gyroscope}
                 disabled={smartcube.gyroscopeToggleDisabled}
-                onChange={(event) => options.setGyroscope(event.target.checked)}
+                onChange={(checked) => options.setGyroscope(checked)}
+                label="Animate Virtual Cube Using Gyroscope"
               />
-              <span>Animate Virtual Cube Using Gyroscope</span>
-            </label>
-            <label htmlFor="control-panel-toggle" className="toggle-item">
-              <input
-                type="checkbox"
+            </div>
+            <div className="options-toggle-row">
+              <LegacySwitch
                 id="control-panel-toggle"
                 checked={options.controlPanel === 'bottom-row'}
-                onChange={(event) => options.setControlPanel(event.target.checked ? 'bottom-row' : 'none')}
+                onChange={(checked) => options.setControlPanel(checked ? 'bottom-row' : 'none')}
+                label="Virtual Cube Control Panel"
               />
-              <span>Virtual Cube Control Panel</span>
-            </label>
-            <label htmlFor="hintFacelets-toggle" className="toggle-item">
-              <input
-                type="checkbox"
+            </div>
+            <div className="options-toggle-row">
+              <LegacySwitch
                 id="hintFacelets-toggle"
                 checked={options.hintFacelets === 'floating'}
-                onChange={(event) => options.setHintFacelets(event.target.checked ? 'floating' : 'none')}
+                onChange={(checked) => options.setHintFacelets(checked ? 'floating' : 'none')}
+                label="Floating Mirror Stickers"
               />
-              <span>Floating Mirror Stickers</span>
-            </label>
-            <label htmlFor="full-stickering-toggle" className="toggle-item">
-              <input
-                type="checkbox"
+            </div>
+            <div className="options-toggle-row">
+              <LegacySwitch
                 id="full-stickering-toggle"
                 checked={options.fullStickering}
-                onChange={(event) => options.setFullStickering(event.target.checked)}
+                onChange={(checked) => options.setFullStickering(checked)}
+                label="Always Show Full Stickers"
               />
-              <span>Always Show Full Stickers</span>
-            </label>
+            </div>
 
             <div className="white-bottom-group">
-              <label htmlFor="white-on-bottom-toggle" className="toggle-item">
-                <input
-                  type="checkbox"
-                  id="white-on-bottom-toggle"
-                  checked={options.whiteOnBottom}
-                  disabled={!options.fullStickering}
-                  onChange={(event) => options.setWhiteOnBottom(event.target.checked)}
-                />
-                <span>Virtual Cube White on Bottom</span>
-              </label>
+              <LegacySwitch
+                id="white-on-bottom-toggle"
+                className="legacy-switch--indented"
+                checked={options.whiteOnBottom}
+                disabled={!options.fullStickering}
+                onChange={(checked) => options.setWhiteOnBottom(checked)}
+                label="Virtual Cube White on Bottom"
+              />
               <span id="white-on-bottom-hint" className={`${options.fullStickering ? 'hidden subtle-text' : 'subtle-text'}`}>
                 Requires “Always Show Full Stickers”
               </span>
             </div>
 
-            <label htmlFor="flashing-indicator-toggle" className="toggle-item">
-              <input
-                type="checkbox"
+            <div className="options-toggle-row">
+              <LegacySwitch
                 id="flashing-indicator-toggle"
                 checked={options.flashingIndicatorEnabled}
-                onChange={(event) => options.setFlashingIndicatorEnabled(event.target.checked)}
+                onChange={(checked) => options.setFlashingIndicatorEnabled(checked)}
+                label="Flashing Indicator"
               />
-              <span>Flashing Indicator</span>
-            </label>
-            <label htmlFor="show-alg-name-toggle" className="toggle-item">
-              <input
-                type="checkbox"
+            </div>
+            <div className="options-toggle-row">
+              <LegacySwitch
                 id="show-alg-name-toggle"
                 checked={options.showAlgName}
-                onChange={(event) => options.setShowAlgName(event.target.checked)}
+                onChange={(checked) => options.setShowAlgName(checked)}
+                label="Show Case Name"
               />
-              <span>Show Case Name</span>
-            </label>
-            <label htmlFor="always-scramble-to-toggle" className="toggle-item">
-              <input
-                type="checkbox"
+            </div>
+            <div className="options-toggle-row">
+              <LegacySwitch
                 id="always-scramble-to-toggle"
                 checked={options.alwaysScrambleTo}
-                onChange={(event) => options.setAlwaysScrambleTo(event.target.checked)}
+                onChange={(checked) => options.setAlwaysScrambleTo(checked)}
+                label='Always Keep "Scramble To" Enabled'
               />
-              <span>Always Keep "Scramble To" Enabled</span>
-            </label>
+            </div>
 
-            <div id="visualization-container" className="options-group">
-              <label htmlFor="visualization-select" className="input-label">Cube Visualization Mode:</label>
+            <div id="visualization-container">
+              <label htmlFor="visualization-select" className="options-viz-label">Cube Visualization Mode:</label>
               <select
                 id="visualization-select"
                 className="select-input"
@@ -1484,7 +1507,7 @@ export function App() {
                 <option value="experimental-2D-LL-face">2D-LL-face</option>
               </select>
 
-              <label htmlFor="backview-select" className="input-label">Cube Back View:</label>
+              <label htmlFor="backview-select" className="options-viz-label">Cube Back View:</label>
               <select
                 id="backview-select"
                 className="select-input"
@@ -1497,8 +1520,8 @@ export function App() {
               </select>
             </div>
 
-            <div id="large-cube-container" className="options-group">
-              <label htmlFor="cube-size" className="input-label">Cube Size:</label>
+            <div id="large-cube-container">
+              <label htmlFor="cube-size" className="options-cube-size-label">Cube Size:</label>
               <div className="cube-size-row">
                 <input
                   id="cube-size"

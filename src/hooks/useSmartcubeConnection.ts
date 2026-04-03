@@ -11,7 +11,7 @@ import {
   type SmartCubeEvent,
   type SmartCubeMoveEvent,
 } from 'smartcube-web-bluetooth';
-import { faceletsToPattern, solvedPattern } from '../lib/cube-utils';
+import { faceletsToPattern, patternToFacelets, solvedPattern } from '../lib/cube-utils';
 import { readOption, writeOption } from '../lib/legacy-storage';
 import {
   getSliceForPair,
@@ -94,6 +94,7 @@ export interface SmartcubeProcessedMove {
   }>;
   visualMove: string;
   currentPattern: KPattern | null;
+  isBugged: boolean;
 }
 
 export interface SmartcubeConnectionState {
@@ -154,6 +155,8 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   const sliceOrientationRef = useRef<FacePerm>({ ...IDENTITY });
   const recentMovesRef = useRef<SmartCubeMoveEvent[]>([]);
   const gyroBasisRef = useRef<THREE.Quaternion | null>(null);
+  const previousFaceletsRef = useRef<string>('');
+  const isBuggedRef = useRef(false);
 
   const [connected, setConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -238,6 +241,8 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     sliceOrientationRef.current = { ...IDENTITY };
     recentMovesRef.current = [];
     gyroBasisRef.current = null;
+    previousFaceletsRef.current = '';
+    isBuggedRef.current = false;
     setConnected(false);
     setConnecting(false);
     setConnectLabel('Connect');
@@ -256,6 +261,13 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     if (!trackerPattern) {
       trackerPattern = await solvedPattern();
     }
+
+    const currentFacelets = patternToFacelets(trackerPattern);
+    const isBuggedState = currentFacelets === previousFaceletsRef.current && !isBuggedRef.current;
+    if (isBuggedState) {
+      isBuggedRef.current = true;
+    }
+    previousFaceletsRef.current = currentFacelets;
 
     for (const rawMove of rawMoves) {
       trackerPattern = trackerPattern.applyMove(rawMove.move);
@@ -291,6 +303,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       })),
       visualMove: effectiveVisualMove,
       currentPattern: trackerPattern,
+      isBugged: isBuggedRef.current,
     });
   }, []);
 

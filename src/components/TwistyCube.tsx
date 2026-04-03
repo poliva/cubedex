@@ -183,10 +183,12 @@ export function TwistyCube({
       return;
     }
 
-    player.style.width = `${sizePx}px`;
-    player.style.height = `${sizePx}px`;
-    player.style.maxWidth = 'none';
-    player.style.maxHeight = 'none';
+    /* Fill host (width capped by parent min(100%, sizePx)); max-* caps upscaling on wide hosts */
+    player.style.width = '100%';
+    player.style.height = '100%';
+    player.style.maxWidth = `${sizePx}px`;
+    player.style.maxHeight = `${sizePx}px`;
+    player.style.boxSizing = 'border-box';
     player.style.overflow = 'visible';
   }, [sizePx]);
 
