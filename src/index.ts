@@ -120,6 +120,29 @@ var solutionMoves: SmartCubeMove[] = [];
 
 var twistyScene: THREE.Scene | null = null;
 var twistyVantage: any;
+var plasticMaterial: THREE.MeshBasicMaterial | null = null;
+
+function applyPlasticColor() {
+  if (!plasticMaterial) return;
+  const isDark = document.documentElement.classList.contains('dark');
+  (plasticMaterial as THREE.MeshBasicMaterial).color.set(isDark ? 0xffffff : 0x000000);
+  plasticMaterial.needsUpdate = true;
+}
+
+function cachePlasticMaterial() {
+  if (!twistyScene || plasticMaterial) return;
+  twistyScene.traverse((obj: any) => {
+    if (plasticMaterial) return;
+    if (obj.isMesh) {
+      const mat = obj.material as THREE.MeshBasicMaterial;
+      if (mat?.transparent && Math.abs((mat.opacity ?? 1) - 0.3) < 0.01 &&
+          mat.color?.r < 0.01 && mat.color?.g < 0.01 && mat.color?.b < 0.01) {
+        plasticMaterial = mat;
+      }
+    }
+  });
+  applyPlasticColor();
+}
 
 const HOME_ORIENTATION = new THREE.Quaternion().setFromEuler(new THREE.Euler(15 * Math.PI / 180, -5 * Math.PI / 180, 0));
 var cubeQuaternion: THREE.Quaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(15 * Math.PI / 180, -20 * Math.PI / 180, 0));
@@ -139,6 +162,7 @@ async function amimateCubeOrientation() {
     }
 
     twistyScene = await twistyVantage.scene.scene();
+    cachePlasticMaterial();
 
     if (forceFix) forceFix = false;
   }
@@ -2064,6 +2088,7 @@ darkModeToggle.addEventListener('change', () => {
   } else {
     localStorage.setItem('theme', 'light');
   }
+  applyPlasticColor();
   // redraw input alg
   updateAlgDisplay();
 });
