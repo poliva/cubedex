@@ -118,7 +118,7 @@ type SmartCubeMove = {
 var lastMoves: SmartCubeMove[] = [];
 var solutionMoves: SmartCubeMove[] = [];
 
-var twistyPuzzleObject: THREE.Object3D | null = null;
+var twistyScene: THREE.Scene | null = null;
 var twistyVantage: any;
 
 const HOME_ORIENTATION = new THREE.Quaternion().setFromEuler(new THREE.Euler(15 * Math.PI / 180, -5 * Math.PI / 180, 0));
@@ -129,7 +129,7 @@ const DR_LOCK_ORIENTATION = new THREE.Quaternion().setFromEuler(
 );
 
 async function amimateCubeOrientation() {
-  if (!twistyPuzzleObject || !twistyVantage || forceFix) {
+  if (!twistyScene || !twistyVantage || forceFix) {
     const vantageList = await twistyPlayer.experimentalCurrentVantages();
     twistyVantage = [...vantageList][0];
 
@@ -138,22 +138,18 @@ async function amimateCubeOrientation() {
       return;
     }
 
-    // Newer `cubing` versions return DOM vantages (e.g. `<twisty-3d-vantage>`),
-    // so we use the documented three.js puzzle Object3D instead of reaching into internal scenes.
-    twistyPuzzleObject = await twistyPlayer.experimentalCurrentThreeJSPuzzleObject();
+    twistyScene = await twistyVantage.scene.scene();
 
     if (forceFix) forceFix = false;
   }
 
-  // If no 3D object is available (e.g. 2D visualization), avoid crashing.
   if (gyroscopeEnabled) {
-    twistyPuzzleObject?.quaternion.slerp(cubeQuaternion, 0.25);
+    twistyScene?.quaternion.slerp(cubeQuaternion, 0.25);
   } else {
-    twistyPuzzleObject?.quaternion.slerp(DR_LOCK_ORIENTATION, 0.25);
+    twistyScene?.quaternion.slerp(DR_LOCK_ORIENTATION, 0.25);
   }
 
-  // Trigger a render if the vantage supports it.
-  twistyVantage?.render?.();
+  twistyVantage.render();
   requestAnimationFrame(amimateCubeOrientation);
 }
 requestAnimationFrame(amimateCubeOrientation);
