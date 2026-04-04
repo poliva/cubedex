@@ -3,8 +3,11 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 const workerImportMetaUrlRE = /\bnew\s+(?:Worker|SharedWorker)\s*\(\s*(new\s+URL\s*\(\s*('[^']+'|"[^"]+"|`[^`]+`)\s*,\s*import\.meta\.url\s*\))/g;
 
+const rawBase = process.env.BASE_PATH ?? '/';
+const base = (rawBase.startsWith('/') ? rawBase : '/' + rawBase).replace(/\/?$/, '/');
+
 export default defineConfig({
-  base: "/",
+  base,
   build: {
     chunkSizeWarningLimit: 2048
   },
@@ -40,9 +43,9 @@ export default defineConfig({
         "name": "Cubedex",
         "short_name": "Cubedex",
         "description": "Cubedex allows to train Rubik's cube algorithms like PLL or OLL using a smartcube.",
-        "start_url": "index.html",
+        "start_url": base,
         "display": "standalone",
-        "scope":"/",
+        "scope": base,
         "background_color": "#111827",
         "theme_color": "#111827",
         "icons": [
