@@ -133,6 +133,11 @@ async function amimateCubeOrientation() {
     const vantageList = await twistyPlayer.experimentalCurrentVantages();
     twistyVantage = [...vantageList][0];
 
+    if (!twistyVantage) {
+      requestAnimationFrame(amimateCubeOrientation);
+      return;
+    }
+
     // Newer `cubing` versions return DOM vantages (e.g. `<twisty-3d-vantage>`),
     // so we use the documented three.js puzzle Object3D instead of reaching into internal scenes.
     twistyPuzzleObject = await twistyPlayer.experimentalCurrentThreeJSPuzzleObject();
@@ -1128,6 +1133,8 @@ $('#connect-button').on('click', async () => {
   $('#device-info').prop('disabled', false);
   $('#alg-input').attr('placeholder', "Enter alg e.g., (R U R' U) (R U2' R')");
   requestWakeLock();
+  forceFix = true;
+  requestAnimationFrame(amimateCubeOrientation);
   updateHeaderResetGyroState();
 });
 
