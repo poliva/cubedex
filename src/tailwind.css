@@ -50,3 +50,16 @@ input:checked + div + .dot {
 .selected {
   @apply bg-blue-100 dark:bg-gray-700;
 }
+
+#quick-settings-panel label {
+  margin-bottom: 0.25rem;
+}
+
+#quick-settings-panel .dot {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#quick-settings-panel input:checked + div + .dot {
+  transform: translate(1.25rem, -50%);
+}
