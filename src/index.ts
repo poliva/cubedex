@@ -26,7 +26,7 @@ import {
 } from 'smartcube-web-bluetooth';
 
 import { faceletsToPattern, patternToFacelets } from './utils';
-import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, setCategoryStickeringDeferred, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageOfFiveTimeNumber, learnedStatus, createTimeGraph, createStatsGraph, countMovesETM, getLastTimes, trailingWholeCubeRotationMoveCount } from './functions';
+import { expandNotation, fixOrientation, getInverseMove, getOppositeMove, requestWakeLock, releaseWakeLock, initializeDefaultAlgorithms, saveAlgorithm, deleteAlgorithm, exportAlgorithms, importAlgorithms, loadAlgorithms, loadCategories, isSymmetricOLL, algToId, setStickering, setCategoryStickeringDeferred, loadSubsets, bestTimeString, bestTimeNumber, averageTimeString, averageOfFiveTimeNumber, learnedStatus, createTimeGraph, createStatsGraph, countMovesETM, getLastTimes, trailingWholeCubeRotationMoveCount, fullStickeringEnabled, setFullStickeringEnabled } from './functions';
 
 const SOLVED_STATE = "UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB";
 
@@ -796,11 +796,11 @@ async function processMoveEvent(event: SmartCubeEvent, visualMove?: string, slic
       badAlg.push(event.move);
       //console.log("Pushing 1 incorrect move. badAlg: " + badAlg)
 
-      if (currentMoveIndex === 0 && badAlg.length === 1 && lastMoves[lastMoves.length - 1].move === getInverseMove(userAlg[currentMoveIndex].replace(/[()]/g, ""))) { 
+      if (currentMoveIndex === 0 && badAlg.length === 1 && lastMoves[lastMoves.length - 1].move === getInverseMove(userAlg[currentMoveIndex].replace(/[()]/g, ""))) {
         currentMoveIndex--;
         badAlg.pop();
         //console.log("Cancelling first correct move");
-      }  else if (lastMoves[lastMoves.length - 1].move === getInverseMove(badAlg[badAlg.length -2])) { 
+      }  else if (lastMoves[lastMoves.length - 1].move === getInverseMove(badAlg[badAlg.length -2])) {
         badAlg.pop();
         badAlg.pop();
         //console.log("Popping last incorrect move. badAlg=" + badAlg);
@@ -1685,10 +1685,10 @@ function loadConfiguration() {
   const fullStickering = localStorage.getItem('fullStickering');
   if (fullStickering) {
     fullStickeringToggle.checked = fullStickering === 'true';
-    fullStickeringEnabled = fullStickering === 'true';
+    setFullStickeringEnabled(fullStickering === 'true');
   } else {
     fullStickeringToggle.checked = false;
-    fullStickeringEnabled = false;
+    setFullStickeringEnabled(false);
   }
 
   const whiteOnBottom = localStorage.getItem('whiteOnBottom');
@@ -1813,10 +1813,9 @@ hintFaceletsToggle.addEventListener('change', () => {
 });
 
 // Add event listener for the full sticker toggle
-export var fullStickeringEnabled: boolean = false;
 const fullStickeringToggle = document.getElementById('full-stickering-toggle') as HTMLInputElement;
 fullStickeringToggle.addEventListener('change', () => {
-  fullStickeringEnabled = fullStickeringToggle.checked;
+  setFullStickeringEnabled(fullStickeringToggle.checked);
   localStorage.setItem('fullStickering', fullStickeringToggle.checked.toString());
   if (fullStickeringEnabled) {
     twistyPlayer.experimentalStickering = 'full';

@@ -3,7 +3,11 @@ import $ from 'jquery';
 import { Alg } from "cubing/alg";
 import { experimentalCountMovesETM } from "cubing/notation";
 import { faceletsToPattern } from "./utils";
-import { fullStickeringEnabled } from "./index";
+export var fullStickeringEnabled: boolean = false;
+
+export function setFullStickeringEnabled(value: boolean) {
+  fullStickeringEnabled = value;
+}
 import { makeTimeFromTimestamp } from 'smartcube-web-bluetooth';
 import { Chart, registerables } from 'chart.js';
 
