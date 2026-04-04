@@ -1486,6 +1486,15 @@ input:checked + div + .dot {
   /* Initial position of the dot */
 }
 
+#quick-settings-panel label {
+  margin-bottom: 0.25rem;
+}
+
+#quick-settings-panel input:disabled + div,
+#quick-settings-panel input:disabled + div + .dot {
+  opacity: 0.25;
+}
+
 @keyframes flash {
   0%, 100% {
     opacity: 0.75;

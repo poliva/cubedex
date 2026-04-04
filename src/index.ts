@@ -1657,6 +1657,7 @@ smartcubeShowAllBleToggle.addEventListener('change', () => {
 $(function() {
   renameOldKeys();
   loadConfiguration();
+  initQuickBar();
 });
 
 function renameOldKeys() {
@@ -1758,6 +1759,8 @@ function loadConfiguration() {
     alwaysScrambleTo = false;
   }
   $('#always-scramble-to-toggle').prop('checked', alwaysScrambleTo);
+
+  applyQuickSettingsPanel(localStorage.getItem('quickSettingsPanel') === 'true');
 
   // Large cube size
   const cubeSizeStored = localStorage.getItem('cubeSizePx');
@@ -1895,6 +1898,78 @@ $('#always-scramble-to-toggle').on('change', () => {
   alwaysScrambleTo = $('#always-scramble-to-toggle').is(':checked');
   localStorage.setItem('alwaysScrambleTo', alwaysScrambleTo.toString());
 });
+
+// Quick Settings Bar
+const quickSettingsPanelToggle = document.getElementById('quick-settings-panel-toggle') as HTMLInputElement;
+const quickSettingsPanelToggleMenu = document.getElementById('quick-settings-panel-toggle-menu') as HTMLInputElement;
+const quickSettingsPanel = document.getElementById('quick-settings-panel') as HTMLElement;
+
+function applyQuickSettingsPanel(enabled: boolean) {
+  quickSettingsPanelToggle.checked = enabled;
+  quickSettingsPanelToggleMenu.checked = enabled;
+  quickSettingsPanel.classList.toggle('hidden', !enabled);
+  quickSettingsPanel.classList.toggle('flex', enabled);
+  localStorage.setItem('quickSettingsPanel', enabled.toString());
+}
+
+quickSettingsPanelToggle.addEventListener('change', () => {
+  applyQuickSettingsPanel(quickSettingsPanelToggle.checked);
+});
+
+quickSettingsPanelToggleMenu.addEventListener('change', () => {
+  applyQuickSettingsPanel(quickSettingsPanelToggleMenu.checked);
+});
+
+/** Wire a quick-bar checkbox to its counterpart in the settings panel, keeping both in sync. */
+function setupQuickToggleSync(quickId: string, originalId: string) {
+  const quick = document.getElementById(quickId) as HTMLInputElement | null;
+  const original = document.getElementById(originalId) as HTMLInputElement | null;
+  if (!quick || !original) return;
+
+  const syncFromOriginal = () => {
+    quick.checked = original.checked;
+    quick.disabled = original.disabled;
+  };
+  syncFromOriginal();
+  original.addEventListener('change', syncFromOriginal);
+
+  // Catch disabled attribute changes (e.g. gyro not supported)
+  new MutationObserver(syncFromOriginal).observe(original, {
+    attributes: true, attributeFilter: ['disabled'],
+  });
+
+  quick.addEventListener('change', () => {
+    original.checked = quick.checked;
+    original.dispatchEvent(new Event('change'));
+  });
+}
+
+function setupQuickSelectSync(quickId: string, originalId: string) {
+  const quick = document.getElementById(quickId) as HTMLSelectElement | null;
+  const original = document.getElementById(originalId) as HTMLSelectElement | null;
+  if (!quick || !original) return;
+
+  quick.value = original.value;
+  original.addEventListener('change', () => { quick.value = original.value; });
+  quick.addEventListener('change', () => {
+    original.value = quick.value;
+    original.dispatchEvent(new Event('change'));
+  });
+}
+
+function initQuickBar() {
+  setupQuickToggleSync('quick-dark-mode',           'dark-mode-toggle');
+  setupQuickToggleSync('quick-gyroscope',           'gyroscope-toggle');
+  setupQuickToggleSync('quick-control-panel',       'control-panel-toggle');
+  setupQuickToggleSync('quick-hint-facelets',       'hintFacelets-toggle');
+  setupQuickToggleSync('quick-full-stickering',     'full-stickering-toggle');
+  setupQuickToggleSync('quick-white-on-bottom',     'white-on-bottom-toggle');
+  setupQuickToggleSync('quick-flashing-indicator',  'flashing-indicator-toggle');
+  setupQuickToggleSync('quick-show-alg-name',       'show-alg-name-toggle');
+  setupQuickToggleSync('quick-always-scramble-to',  'always-scramble-to-toggle');
+  setupQuickSelectSync('quick-visualization-select', 'visualization-select');
+  setupQuickSelectSync('quick-backview-select',      'backview-select');
+}
 
 // Large cube size
 const cubeSizeEl = document.getElementById('cube-size') as HTMLInputElement | null;
