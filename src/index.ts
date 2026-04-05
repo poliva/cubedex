@@ -2018,6 +2018,38 @@ if (cubeSizeNumberEl) {
   });
 }
 
+const animSpeedEl = document.getElementById('anim-speed') as HTMLInputElement | null;
+const animSpeedNumberEl = document.getElementById('anim-speed-number') as HTMLInputElement | null;
+const quickAnimSpeedEl = document.getElementById('quick-anim-speed') as HTMLInputElement | null;
+const quickAnimSpeedNumberEl = document.getElementById('quick-anim-speed-number') as HTMLInputElement | null;
+
+function setAnimSpeed(speed: number) {
+  speed = Math.max(0.05, Math.min(1.25, speed));
+  localStorage.setItem('animSpeed', String(speed));
+  if (animSpeedEl) animSpeedEl.value = String(speed);
+  if (animSpeedNumberEl) animSpeedNumberEl.value = speed.toFixed(2);
+  if (quickAnimSpeedEl) quickAnimSpeedEl.value = String(speed);
+  if (quickAnimSpeedNumberEl) quickAnimSpeedNumberEl.value = speed.toFixed(2);
+  twistyPlayer.tempoScale = 5 * speed;
+  twistyTracker.tempoScale = 5 * speed;
+}
+
+const storedAnimSpeed = parseFloat(localStorage.getItem('animSpeed') ?? '1');
+setAnimSpeed(isNaN(storedAnimSpeed) ? 1 : storedAnimSpeed);
+
+if (animSpeedEl) {
+  animSpeedEl.addEventListener('input', () => setAnimSpeed(Number(animSpeedEl.value)));
+}
+if (animSpeedNumberEl) {
+  animSpeedNumberEl.addEventListener('input', () => setAnimSpeed(Number(animSpeedNumberEl.value)));
+}
+if (quickAnimSpeedEl) {
+  quickAnimSpeedEl.addEventListener('input', () => setAnimSpeed(Number(quickAnimSpeedEl.value)));
+}
+if (quickAnimSpeedNumberEl) {
+  quickAnimSpeedNumberEl.addEventListener('input', () => setAnimSpeed(Number(quickAnimSpeedNumberEl.value)));
+}
+
 // Add event listeners for the selectors to update twistyPlayer settings
 var forceFix: boolean = false;
 $('#visualization-select').on('change', () => {
