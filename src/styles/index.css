@@ -803,8 +803,10 @@ html.dark .text-input::placeholder {
 }
 
 .alg-display .circle .move {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+  /* Default: white text on orange highlight.
+     Let inline styles override this (e.g. red on mistakes). */
+  color: #ffffff;
+  -webkit-text-fill-color: currentColor;
 }
 
 .info-inline {
