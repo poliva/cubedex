@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type MutableRefObject } from 'react';
 import * as THREE from 'three';
 import { TwistyPlayer } from 'cubing/twisty';
 import type { SmartcubeQuaternion } from '../hooks/useSmartcubeConnection';
@@ -20,6 +20,8 @@ export interface TwistyCubeProps {
   appendMove?: string;
   gyroscopeEnabled?: boolean;
   cubeQuaternion?: SmartcubeQuaternion | null;
+  cubeQuaternionRef?: MutableRefObject<SmartcubeQuaternion | null>;
+  enableExternalOrientationLoop?: boolean;
   className?: string;
 }
 
@@ -60,6 +62,8 @@ export function TwistyCube({
   appendMove,
   gyroscopeEnabled = false,
   cubeQuaternion = null,
+  cubeQuaternionRef,
+  enableExternalOrientationLoop = true,
   className,
 }: TwistyCubeProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -71,13 +75,17 @@ export function TwistyCube({
   const latestQuaternionRef = useRef<THREE.Quaternion | null>(null);
   const latestGyroscopeEnabledRef = useRef(false);
   const forceRefreshRef = useRef(false);
+  const latestEnableLoopRef = useRef(true);
+  const targetQuaternionRef = useRef(new THREE.Quaternion());
 
   useEffect(() => {
     latestGyroscopeEnabledRef.current = gyroscopeEnabled;
-    latestQuaternionRef.current = cubeQuaternion
-      ? new THREE.Quaternion(cubeQuaternion.x, cubeQuaternion.y, cubeQuaternion.z, cubeQuaternion.w)
+    latestEnableLoopRef.current = enableExternalOrientationLoop;
+    const q = cubeQuaternionRef?.current ?? cubeQuaternion;
+    latestQuaternionRef.current = q
+      ? new THREE.Quaternion(q.x, q.y, q.z, q.w)
       : null;
-  }, [cubeQuaternion, gyroscopeEnabled]);
+  }, [cubeQuaternion, cubeQuaternionRef, enableExternalOrientationLoop, gyroscopeEnabled]);
 
   useEffect(() => {
     forceRefreshRef.current = true;
@@ -120,6 +128,11 @@ export function TwistyCube({
         return;
       }
 
+      if (!latestEnableLoopRef.current) {
+        animationFrameRef.current = null;
+        return;
+      }
+
       if (!puzzleObjectRef.current || !vantageRef.current || forceRefreshRef.current) {
         try {
           const vantageList = await activePlayer.experimentalCurrentVantages();
@@ -134,8 +147,10 @@ export function TwistyCube({
 
       const puzzleObject = puzzleObjectRef.current;
       if (puzzleObject) {
-        if (latestGyroscopeEnabledRef.current && latestQuaternionRef.current) {
-          puzzleObject.quaternion.slerp(latestQuaternionRef.current, 0.25);
+        const liveQuaternion = cubeQuaternionRef?.current ?? null;
+        if (latestGyroscopeEnabledRef.current && liveQuaternion) {
+          targetQuaternionRef.current.set(liveQuaternion.x, liveQuaternion.y, liveQuaternion.z, liveQuaternion.w);
+          puzzleObject.quaternion.slerp(targetQuaternionRef.current, 0.25);
         } else {
           puzzleObject.quaternion.slerp(DR_LOCK_ORIENTATION, 0.25);
         }
@@ -145,7 +160,9 @@ export function TwistyCube({
       animationFrameRef.current = window.requestAnimationFrame(animateOrientation);
     }
 
-    animationFrameRef.current = window.requestAnimationFrame(animateOrientation);
+    if (enableExternalOrientationLoop) {
+      animationFrameRef.current = window.requestAnimationFrame(animateOrientation);
+    }
 
     return () => {
       if (animationFrameRef.current !== null) {

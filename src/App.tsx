@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties, type ReactElement } from 'react';
 import { Alg } from 'cubing/alg';
 import { cube3x3x3 } from 'cubing/puzzles';
 import { TwistyCube } from './components/TwistyCube';
@@ -12,7 +12,7 @@ import { getLegacyStickering } from './lib/legacy-stickering';
 import { deleteAlgorithm, getBestTime, getSavedAlgorithms, removeAlgorithmTimesStorage } from './lib/legacy-storage';
 import { usePracticeToggles } from './hooks/usePracticeToggles';
 import { useLegacyCharts } from './hooks/useLegacyCharts';
-import { averageOfFiveTimeNumber, averageTimeString, bestTimeString, makeTimeParts } from './lib/legacy-algorithms';
+import { averageOfFiveTimeNumber, averageTimeString, bestTimeString, makeTimeParts, type CaseCardData } from './lib/legacy-algorithms';
 import { patternToPlayerAlg } from './lib/legacy-scramble';
 import {
   BookOpenIcon,
@@ -50,6 +50,171 @@ function formatHistoryMetric(time: number | null) {
   const parts = makeTimeParts(time);
   const minutesPart = parts.minutes > 0 ? `${parts.minutes}:` : '';
   return `${minutesPart}${parts.seconds.toString(10).padStart(2, '0')}.${parts.milliseconds.toString(10).padStart(3, '0')}`;
+}
+
+function CaseCubePreview({
+  alg,
+  visualization,
+  stickering,
+  setupAnchor,
+  enabled,
+}: {
+  alg: string;
+  visualization: string;
+  stickering: string;
+  setupAnchor: 'start' | 'end';
+  enabled: boolean;
+}) {
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    const el = hostRef.current;
+    if (!el) return;
+
+    if (!enabled) {
+      setIsActive(false);
+      return;
+    }
+
+    if (!('IntersectionObserver' in window)) {
+      setIsActive(true);
+      return;
+    }
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        setIsActive(entry.isIntersecting);
+      },
+      { rootMargin: '0px 0px' },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [enabled]);
+
+  return (
+    <div ref={hostRef} style={{ width: '100%', height: '100%' }}>
+      {isActive ? (
+        <TwistyCube
+          alg={alg}
+          sizePx={120}
+          visualization={visualization}
+          hintFacelets="none"
+          controlPanel="none"
+          experimentalStickering={stickering}
+          setupAnchor={setupAnchor}
+          dragInput="none"
+          enableExternalOrientationLoop={false}
+          className="twisty-case-host"
+        />
+      ) : (
+        <div className="twisty-case-host" />
+      )}
+    </div>
+  );
+}
+
+function VirtualizedCaseGrid({
+  cards,
+  renderCaseCard,
+}: {
+  cards: CaseCardData[];
+  renderCaseCard: (card: CaseCardData, index: number, style?: CSSProperties) => ReactElement;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const containerTopRef = useRef<number>(0);
+  const [viewport, setViewport] = useState<{ scrollY: number; vh: number; width: number }>({
+    scrollY: typeof window !== 'undefined' ? window.scrollY : 0,
+    vh: typeof window !== 'undefined' ? window.innerHeight : 0,
+    width: 0,
+  });
+
+  useEffect(() => {
+    function measureContainerTop() {
+      const el = containerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      containerTopRef.current = rect.top + window.scrollY;
+    }
+
+    function scheduleUpdate() {
+      if (rafRef.current != null) return;
+      rafRef.current = window.requestAnimationFrame(() => {
+        rafRef.current = null;
+        measureContainerTop();
+        setViewport((v) => ({
+          ...v,
+          scrollY: window.scrollY,
+          vh: window.innerHeight,
+        }));
+      });
+    }
+
+    function onScrollOrResize() {
+      scheduleUpdate();
+    }
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    onScrollOrResize();
+    return () => {
+      window.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('resize', onScrollOrResize);
+      if (rafRef.current != null) {
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const nextWidth = entries[0]?.contentRect.width ?? 0;
+      setViewport((v) => (v.width === nextWidth ? v : { ...v, width: nextWidth }));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const gap = 16;
+  const itemHeight = 280;
+  const overscanRows = 4;
+  const cols = Math.max(1, Math.floor((viewport.width + gap) / (260 + gap)));
+  const itemWidth = cols > 0 ? Math.max(220, Math.floor((viewport.width - gap * (cols - 1)) / cols)) : 220;
+  const rowHeight = itemHeight + gap;
+  const totalRows = Math.ceil(cards.length / cols);
+  const totalHeight = Math.max(0, totalRows * rowHeight - gap);
+
+  const containerTop = containerTopRef.current;
+  const viewTop = viewport.scrollY;
+  const viewBottom = viewport.scrollY + viewport.vh;
+  const startRow = Math.max(0, Math.floor((viewTop - containerTop) / rowHeight) - overscanRows);
+  const endRow = Math.min(totalRows - 1, Math.ceil((viewBottom - containerTop) / rowHeight) + overscanRows);
+  const startIndex = Math.max(0, startRow * cols);
+  const endIndexExclusive = Math.min(cards.length, (endRow + 1) * cols);
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative', width: '100%', height: `${totalHeight}px` }}>
+      {cards.slice(startIndex, endIndexExclusive).map((card, i) => {
+        const absoluteIndex = startIndex + i;
+        const row = Math.floor(absoluteIndex / cols);
+        const col = absoluteIndex % cols;
+        const top = row * rowHeight;
+        const left = col * (itemWidth + gap);
+        return renderCaseCard(card, absoluteIndex, {
+          position: 'absolute',
+          top,
+          left,
+          width: itemWidth,
+          height: itemHeight,
+        });
+      })}
+    </div>
+  );
 }
 
 export function App() {
@@ -156,6 +321,89 @@ export function App() {
     training.statsAlgId,
     `${statsRefreshToken}:${training.stats.practiceCount}`,
   );
+
+  function renderCaseCard(card: (typeof caseCards)[number], index: number, style?: CSSProperties) {
+    const liveBestTime = getBestTime(card.id);
+    const liveAo5 = averageOfFiveTimeNumber(card.id);
+    const practiceCount = training.practiceCounts[card.id] || 0;
+    const failedCount = training.failedCounts[card.id] || 0;
+    const successCount = Math.max(0, practiceCount - Math.min(failedCount, practiceCount));
+
+    return (
+      <div
+        key={`${card.id}-${card.name}`}
+        className={`case-wrapper ${training.failedCounts[card.id] ? 'bg-red-400 dark:bg-red-400' : index % 2 === 0 ? 'case-alt-dark' : 'case-alt-light'}`}
+        id={card.id}
+        data-name={card.name}
+        data-algorithm={card.algorithm}
+        data-category={card.category}
+        data-subset={card.subset}
+        style={style}
+      >
+        <div className="case-card-header">
+          <div className="case-name" title={card.algorithm}>
+            {card.name}
+          </div>
+          <button
+            id={`bookmark-${card.id}`}
+            data-value={card.learned}
+            title="Learning status"
+            className="bookmark-button"
+            type="button"
+            onClick={() => cycleCaseLearnedState(card.id)}
+          >
+            <span aria-hidden="true">
+              {card.learned === 2 ? (
+                <BookClosedGreenIcon />
+              ) : card.learned === 1 ? (
+                <BookClosedOrangeIcon />
+              ) : (
+                <BookOpenIcon />
+              )}
+            </span>
+          </button>
+        </div>
+        <label htmlFor={`case-toggle-${card.id}`} className="case-card-body" title={card.algorithm}>
+          <div id={`best-time-${card.id}`} className="case-metric">
+            Best: {bestTimeString(liveBestTime)}
+          </div>
+          <div id={`ao5-time-${card.id}`} className="case-metric">
+            Ao5: {averageTimeString(liveAo5)}
+          </div>
+          <div id={`alg-case-${card.id}`} className="case-preview">
+            <CaseCubePreview
+              alg={card.algorithm}
+              visualization={card.category.toLowerCase().includes('ll') ? 'experimental-2D-LL' : '3D'}
+              stickering={getLegacyStickering(card.category, options.fullStickering)}
+              setupAnchor="end"
+              enabled
+            />
+          </div>
+          <div className="case-toggle-row">
+            <input
+              type="checkbox"
+              id={`case-toggle-${card.id}`}
+              className="sr-only"
+              checked={selectedCaseIds.includes(card.id)}
+              onChange={(event) => {
+                setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+                setMainCubeStickeringDeferred(false);
+                toggleCaseSelection(card.id, event.target.checked);
+              }}
+            />
+            <div className="toggle-track" />
+            <div className="toggle-dot dot" />
+            <div className="case-results">
+              <div id={`${card.id}-failed`} className="failed-count">{failedCount > 0 ? `❌: ${failedCount}` : ''}</div>
+              <div id={`${card.id}-success`} className="success-count">{practiceCount > 0 ? `✅: ${successCount}` : ''}</div>
+            </div>
+          </div>
+        </label>
+      </div>
+    );
+  }
+
+  // (virtualized grid + preview components are defined at module scope to avoid remount/flicker)
 
   useEffect(() => {
     if (!scramble.scrambleMode) {
@@ -662,7 +910,7 @@ export function App() {
                   appendMoveKey={smartcubeAppendMoveKey}
                   appendMove={smartcubeAppendMove}
                   gyroscopeEnabled={options.gyroscope && smartcube.connected}
-                  cubeQuaternion={smartcube.cubeQuaternion}
+                  cubeQuaternionRef={smartcube.cubeQuaternionRef}
                   className="twisty-cube-host"
                 />
               </div>
@@ -1195,94 +1443,15 @@ export function App() {
               </div>
             </div>
 
-            <div id="alg-cases" className="alg-cases-grid">
-              {caseCards.map((card, index) => (
-                <div
-                  key={`${card.id}-${card.name}`}
-                  className={`case-wrapper ${training.failedCounts[card.id] ? 'bg-red-400 dark:bg-red-400' : index % 2 === 0 ? 'case-alt-dark' : 'case-alt-light'}`}
-                  id={card.id}
-                  data-name={card.name}
-                  data-algorithm={card.algorithm}
-                  data-category={card.category}
-                  data-subset={card.subset}
-                >
-                  {(() => {
-                    const liveBestTime = getBestTime(card.id);
-                    const liveAo5 = averageOfFiveTimeNumber(card.id);
-                    const practiceCount = training.practiceCounts[card.id] || 0;
-                    const failedCount = training.failedCounts[card.id] || 0;
-                    const successCount = Math.max(0, practiceCount - Math.min(failedCount, practiceCount));
-
-                    return (
-                      <>
-                  <div className="case-card-header">
-                    <div className="case-name" title={card.algorithm}>
-                      {card.name}
-                    </div>
-                    <button
-                      id={`bookmark-${card.id}`}
-                      data-value={card.learned}
-                      title="Learning status"
-                      className="bookmark-button"
-                      type="button"
-                      onClick={() => cycleCaseLearnedState(card.id)}
-                    >
-                      <span aria-hidden="true">
-                        {card.learned === 2 ? (
-                          <BookClosedGreenIcon />
-                        ) : card.learned === 1 ? (
-                          <BookClosedOrangeIcon />
-                        ) : (
-                          <BookOpenIcon />
-                        )}
-                      </span>
-                    </button>
-                  </div>
-                  <label htmlFor={`case-toggle-${card.id}`} className="case-card-body" title={card.algorithm}>
-                    <div id={`best-time-${card.id}`} className="case-metric">
-                      Best: {bestTimeString(liveBestTime)}
-                    </div>
-                    <div id={`ao5-time-${card.id}`} className="case-metric">
-                      Ao5: {averageTimeString(liveAo5)}
-                    </div>
-                    <div id={`alg-case-${card.id}`} className="case-preview">
-                      <TwistyCube
-                        alg={card.algorithm}
-                        visualization={card.category.toLowerCase().includes('ll') ? 'experimental-2D-LL' : '3D'}
-                        hintFacelets="none"
-                        controlPanel="none"
-                        experimentalStickering={getLegacyStickering(card.category, options.fullStickering)}
-                        setupAnchor="end"
-                        dragInput="none"
-                        className="twisty-case-host"
-                      />
-                    </div>
-                    <div className="case-toggle-row">
-                      <input
-                        type="checkbox"
-                        id={`case-toggle-${card.id}`}
-                        className="sr-only"
-                        checked={selectedCaseIds.includes(card.id)}
-                        onChange={(event) => {
-                          setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                          setMainCubeStickeringDeferred(false);
-                          toggleCaseSelection(card.id, event.target.checked);
-                        }}
-                      />
-                      <div className="toggle-track" />
-                      <div className="toggle-dot dot" />
-                      <div className="case-results">
-                        <div id={`${card.id}-failed`} className="failed-count">{failedCount > 0 ? `❌: ${failedCount}` : ''}</div>
-                        <div id={`${card.id}-success`} className="success-count">{practiceCount > 0 ? `✅: ${successCount}` : ''}</div>
-                      </div>
-                    </div>
-                  </label>
-                      </>
-                    );
-                  })()}
-                </div>
-              ))}
-            </div>
+            {caseCards.length > 200 ? (
+              <div id="alg-cases" className="alg-cases-virtualized">
+                <VirtualizedCaseGrid cards={caseCards} renderCaseCard={renderCaseCard} />
+              </div>
+            ) : (
+              <div id="alg-cases" className="alg-cases-grid">
+                {caseCards.map((card, index) => renderCaseCard(card, index))}
+              </div>
+            )}
 
             <div className="delete-mode-container">
               <LegacySwitch

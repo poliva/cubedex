@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import type { Subscription } from 'rxjs';
 import * as THREE from 'three';
 import type { KPattern } from 'cubing/kpuzzle';
@@ -116,6 +116,7 @@ export interface SmartcubeConnectionState {
   gyroSupportResolved: boolean;
   gyroscopeToggleDisabled: boolean;
   cubeQuaternion: SmartcubeQuaternion | null;
+  cubeQuaternionRef: MutableRefObject<SmartcubeQuaternion | null>;
 }
 
 const EMPTY_INFO: SmartcubeDeviceInfo = {
@@ -170,7 +171,11 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   const [showAllBluetoothDevices, setShowAllBluetoothDevicesState] = useState(
     storedSmartCubeDeviceSelection() === 'any',
   );
+  const cubeQuaternionRef = useRef<SmartcubeQuaternion | null>(null);
   const [cubeQuaternion, setCubeQuaternion] = useState<SmartcubeQuaternion | null>(null);
+  const cubeQuaternionRefMirrorThrottleRef = useRef<number>(0);
+  const gyroInfoThrottleRef = useRef<number>(0);
+  const gyroInfoRef = useRef<{ quaternionText: string; velocityText: string | null }>({ quaternionText: '', velocityText: null });
 
   useEffect(() => {
     writeOption(
@@ -251,6 +256,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     setCurrentFacelets(null);
     setCurrentPattern(null);
     setLastProcessedMove(null);
+    cubeQuaternionRef.current = null;
     setCubeQuaternion(null);
     setDisconnectToken((value) => value + 1);
     void releaseWakeLock();
@@ -344,14 +350,23 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     }
 
     if (event.type === 'GYRO') {
-      setInfo((current) => ({
-        ...current,
-        gyroSupported: current.gyroSupported === '- n/a -' ? 'YES' : current.gyroSupported,
-        quaternion: `x: ${event.quaternion.x.toFixed(3)}, y: ${event.quaternion.y.toFixed(3)}, z: ${event.quaternion.z.toFixed(3)}, w: ${event.quaternion.w.toFixed(3)}`,
-        velocity: event.velocity
-          ? `x: ${event.velocity.x}, y: ${event.velocity.y}, z: ${event.velocity.z}`
-          : current.velocity,
-      }));
+      // This data is primarily for display/debug panels; updating it at gyro-rate
+      // causes large React rerender storms. Keep a ref updated always, and
+      // throttle state updates.
+      gyroInfoRef.current = {
+        quaternionText: `x: ${event.quaternion.x.toFixed(3)}, y: ${event.quaternion.y.toFixed(3)}, z: ${event.quaternion.z.toFixed(3)}, w: ${event.quaternion.w.toFixed(3)}`,
+        velocityText: event.velocity ? `x: ${event.velocity.x}, y: ${event.velocity.y}, z: ${event.velocity.z}` : null,
+      };
+      const infoNow = Date.now();
+      if (infoNow - gyroInfoThrottleRef.current > 250) {
+        gyroInfoThrottleRef.current = infoNow;
+        setInfo((current) => ({
+          ...current,
+          gyroSupported: current.gyroSupported === '- n/a -' ? 'YES' : current.gyroSupported,
+          quaternion: gyroInfoRef.current.quaternionText,
+          velocity: gyroInfoRef.current.velocityText ?? current.velocity,
+        }));
+      }
 
       const rawQuaternion = new THREE.Quaternion(
         event.quaternion.x,
@@ -365,12 +380,22 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       }
 
       const displayQuaternion = rawQuaternion.clone().premultiply(gyroBasisRef.current).premultiply(HOME_ORIENTATION);
-      setCubeQuaternion({
+      const next = {
         x: displayQuaternion.x,
         y: displayQuaternion.y,
         z: displayQuaternion.z,
         w: displayQuaternion.w,
-      });
+      };
+
+      // Store in ref so consumers (e.g. cube renderer) can read without rerendering App.
+      cubeQuaternionRef.current = next;
+
+      // Keep legacy state updated, but throttle to reduce whole-app rerenders.
+      const now2 = Date.now();
+      if (now2 - cubeQuaternionRefMirrorThrottleRef.current > 250) {
+        cubeQuaternionRefMirrorThrottleRef.current = now2;
+        setCubeQuaternion(next);
+      }
       return;
     }
 
@@ -549,5 +574,6 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     gyroSupportResolved,
     gyroscopeToggleDisabled,
     cubeQuaternion,
+    cubeQuaternionRef,
   };
 }
