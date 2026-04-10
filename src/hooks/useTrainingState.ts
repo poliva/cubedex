@@ -596,6 +596,18 @@ export function useTrainingState(
     hasFailedCurrentCaseRef.current = false;
   }
 
+  function resetAttemptStateKeepAlgorithm() {
+    lastMovesRef.current = [];
+    solutionMovesRef.current = [];
+    setCurrentMoveIndex(-1);
+    setBadMoves([]);
+    setFixVisible(false);
+    setHelpTone('hidden');
+    previousFixLengthRef.current = 0;
+    hasShownFailureFlashRef.current = false;
+    hasFailedCurrentCaseRef.current = false;
+  }
+
   function clearStatsIdentity() {
     originalAlgIdRef.current = '';
     originalAlgTextRef.current = '';
@@ -887,7 +899,7 @@ export function useTrainingState(
 
     const patternAfterMove = fixOrientation(currentPattern);
     if (patternStatesRef.current.length > 0 && currentMoveIndex === 0 && initialPatternRef.current?.isIdentical(patternAfterMove)) {
-      clearProgressState();
+      resetAttemptStateKeepAlgorithm();
       return false;
     }
 
