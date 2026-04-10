@@ -649,9 +649,9 @@ html.dark .number-input {
   line-height: 1.5;
   margin-top: 0;
   margin-bottom: 1rem;
-  height: calc(2rem + 1.5 * 1em + 2px);
-  min-height: calc(2rem + 1.5 * 1em + 2px);
-  max-height: calc(2rem + 1.5 * 1em + 2px);
+  height: calc(2rem + 1.5 * 1.0625rem + 2px);
+  min-height: calc(2rem + 1.5 * 1.0625rem + 2px);
+  max-height: calc(2rem + 1.5 * 1.0625rem + 2px);
   -webkit-text-fill-color: #111827;
   caret-color: #111827;
 }
@@ -666,9 +666,9 @@ html.dark .number-input {
 @media (min-width: 640px) {
   .alg-input {
     font-size: 1.125rem;
-    height: calc(2rem + 1.5 * 1.125em + 2px);
-    min-height: calc(2rem + 1.5 * 1.125em + 2px);
-    max-height: calc(2rem + 1.5 * 1.125em + 2px);
+    height: calc(2rem + 1.5 * 1.1875rem + 2px);
+    min-height: calc(2rem + 1.5 * 1.1875rem + 2px);
+    max-height: calc(2rem + 1.5 * 1.1875rem + 2px);
   }
 }
 
@@ -753,14 +753,14 @@ html.dark .text-input::placeholder {
   font-size: 1rem;
   line-height: 1.5;
   letter-spacing: 0.025em;
-  min-height: calc(2rem + 1.5 * 1em + 2px);
+  min-height: calc(2rem + 1.5 * 1.0625rem + 2px);
 }
 
 /* Match alg-input sm size so the bar slot height stays identical when swapping input ↔ display */
 @media (min-width: 640px) {
   .alg-display {
     font-size: 1.125rem;
-    min-height: calc(2rem + 1.5 * 1.125em + 2px);
+    min-height: calc(2rem + 1.5 * 1.1875rem + 2px);
   }
 }
 
@@ -768,10 +768,12 @@ html.dark .text-input::placeholder {
 .alg-display-moves {
   display: block;
   width: 100%;
+  font-size: 1.0625rem;
 }
 
 @media (min-width: 640px) {
   .alg-display-moves {
+    font-size: 1.1875rem;
     white-space: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
@@ -1106,10 +1108,14 @@ html.dark .stats-panel.shell-card {
 }
 
 @media (min-width: 1024px) {
+  /* Drop legacy max-w-[750px] here so the graph column flex-grows; otherwise ~1125px panel leaves a gap right of metrics */
   .stats-graph-container {
     display: flex;
     flex-direction: column;
     padding: 1rem 0 1rem 1rem;
+    max-width: none;
+    flex: 1 1 0;
+    min-width: 0;
   }
 }
 
