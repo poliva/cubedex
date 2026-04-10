@@ -291,8 +291,10 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       sliceOrientationRef.current = updateSliceOrientation(sliceOrientationRef.current, visualMove);
     }
 
+    const computedKey = `${event.timestamp}:${effectiveVisualMove}:${rawMoves.map((entry) => entry.move).join(',')}`;
+
     setLastProcessedMove({
-      key: `${event.timestamp}:${effectiveVisualMove}:${rawMoves.map((entry) => entry.move).join(',')}`,
+      key: computedKey,
       move: event.move,
       rawMoves: rawMoves.map((entry) => ({
         face: entry.face,

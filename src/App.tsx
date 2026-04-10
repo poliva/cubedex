@@ -144,6 +144,10 @@ export function App() {
 
     return Alg.fromString(training.displayAlg).invert().toString();
   }, [acknowledgedDisconnectToken, scramble.scrambleMode, scrambleStartAlg, smartcube.connected, smartcube.currentPattern, smartcube.disconnectToken, training.displayAlg, training.inputMode]);
+
+  const smartcubeVisualDrivenByPattern = Boolean(training.inputMode && smartcube.connected && smartcube.currentPattern);
+  const smartcubeAppendMoveKey = smartcubeVisualDrivenByPattern ? undefined : smartcube.lastProcessedMove?.key;
+  const smartcubeAppendMove = smartcubeVisualDrivenByPattern ? undefined : smartcube.lastProcessedMove?.visualMove;
   useLegacyCharts(
     training.currentCase,
     training.displayAlg || training.algInput,
@@ -640,8 +644,8 @@ export function App() {
                   setupAlg={options.whiteOnBottom ? 'z2' : ''}
                   backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
                   resetToken={`${smartcube.connected}:${smartcube.currentFacelets ?? 'none'}`}
-                  appendMoveKey={smartcube.lastProcessedMove?.key}
-                  appendMove={smartcube.lastProcessedMove?.visualMove}
+                  appendMoveKey={smartcubeAppendMoveKey}
+                  appendMove={smartcubeAppendMove}
                   gyroscopeEnabled={options.gyroscope && smartcube.connected}
                   cubeQuaternion={smartcube.cubeQuaternion}
                   className="twisty-cube-host"
