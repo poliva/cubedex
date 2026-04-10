@@ -1,4 +1,14 @@
-import { Fragment, useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties, type ReactElement } from 'react';
+import {
+  Fragment,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentType,
+  type CSSProperties,
+  type ReactElement,
+} from 'react';
 import { Alg } from 'cubing/alg';
 import { cube3x3x3 } from 'cubing/puzzles';
 import { TwistyCube } from './components/TwistyCube';
@@ -136,14 +146,18 @@ function VirtualizedCaseGrid({
     width: 0,
   });
 
-  useEffect(() => {
-    function measureContainerTop() {
-      const el = containerRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      containerTopRef.current = rect.top + window.scrollY;
-    }
+  function measureContainerTop() {
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    containerTopRef.current = rect.top + window.scrollY;
+  }
 
+  useLayoutEffect(() => {
+    measureContainerTop();
+  }, [viewport.width, cards.length]);
+
+  useEffect(() => {
     function scheduleUpdate() {
       if (rafRef.current != null) return;
       rafRef.current = window.requestAnimationFrame(() => {
@@ -185,7 +199,9 @@ function VirtualizedCaseGrid({
   }, []);
 
   const gap = 16;
-  const itemHeight = 280;
+  // Keep in sync with `.case-wrapper` padding + inner content height.
+  // Virtualization needs a fixed height; too small causes bottom clipping (toggle flush to card bottom).
+  const itemHeight = 300;
   const overscanRows = 4;
   const cols = Math.max(1, Math.floor((viewport.width + gap) / (260 + gap)));
   const itemWidth = cols > 0 ? Math.max(220, Math.floor((viewport.width - gap * (cols - 1)) / cols)) : 220;
@@ -193,11 +209,21 @@ function VirtualizedCaseGrid({
   const totalRows = Math.ceil(cards.length / cols);
   const totalHeight = Math.max(0, totalRows * rowHeight - gap);
 
+  if (totalRows === 0) {
+    return <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '0px' }} />;
+  }
+
   const containerTop = containerTopRef.current;
   const viewTop = viewport.scrollY;
   const viewBottom = viewport.scrollY + viewport.vh;
-  const startRow = Math.max(0, Math.floor((viewTop - containerTop) / rowHeight) - overscanRows);
-  const endRow = Math.min(totalRows - 1, Math.ceil((viewBottom - containerTop) / rowHeight) + overscanRows);
+  const startRow = Math.min(
+    totalRows - 1,
+    Math.max(0, Math.floor((viewTop - containerTop) / rowHeight) - overscanRows),
+  );
+  const endRow = Math.min(
+    totalRows - 1,
+    Math.max(startRow, Math.ceil((viewBottom - containerTop) / rowHeight) + overscanRows),
+  );
   const startIndex = Math.max(0, startRow * cols);
   const endIndexExclusive = Math.min(cards.length, (endRow + 1) * cols);
 
@@ -1451,7 +1477,7 @@ export function App() {
               </div>
             </div>
 
-            {caseCards.length > 200 ? (
+            {caseCards.length > 10 ? (
               <div id="alg-cases" className="alg-cases-virtualized">
                 <VirtualizedCaseGrid cards={caseCards} renderCaseCard={renderCaseCard} />
               </div>
