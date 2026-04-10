@@ -1538,10 +1538,20 @@ html.dark .case-metric {
   margin: 0.25rem -0.5rem;
 }
 
+.case-preview-inner {
+  /* scale the preview wrapper, not the twisty-player itself */
+  transform: scale(0.5);
+  transform-origin: center;
+  margin-left: -5rem;
+  margin-right: -5rem;
+  margin-top: -2.5rem;
+  margin-bottom: -2.5rem;
+}
+
 .twisty-case-host {
-  width: 100%;
-  min-height: 120px;
-  height: 120px;
+  width: 240px;
+  min-height: 240px;
+  height: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1550,8 +1560,6 @@ html.dark .case-metric {
 .twisty-case-host twisty-player {
   width: 100%;
   height: 100%;
-  transform: scale(0.5);
-  transform-origin: center;
 }
 
 .case-toggle-row {

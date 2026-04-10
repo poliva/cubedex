@@ -99,14 +99,18 @@ function CaseCubePreview({
       {isActive ? (
         <TwistyCube
           alg={alg}
-          sizePx={120}
+          sizePx={240}
           visualization={visualization}
           hintFacelets="none"
           controlPanel="none"
           experimentalStickering={stickering}
           setupAnchor={setupAnchor}
+          cameraLatitude={25}
+          cameraLongitude={-35}
+          background="none"
           dragInput="none"
           enableExternalOrientationLoop={false}
+          nudgeRenderOnMount
           className="twisty-case-host"
         />
       ) : (
@@ -371,13 +375,15 @@ export function App() {
             Ao5: {averageTimeString(liveAo5)}
           </div>
           <div id={`alg-case-${card.id}`} className="case-preview">
-            <CaseCubePreview
-              alg={card.algorithm}
-              visualization={card.category.toLowerCase().includes('ll') ? 'experimental-2D-LL' : '3D'}
-              stickering={getLegacyStickering(card.category, options.fullStickering)}
-              setupAnchor="end"
-              enabled
-            />
+            <div className="case-preview-inner">
+              <CaseCubePreview
+                alg={card.algorithm}
+                visualization={card.category.toLowerCase().includes('ll') ? 'experimental-2D-LL' : '3D'}
+                stickering={getLegacyStickering(card.category, options.fullStickering)}
+                setupAnchor="end"
+                enabled
+              />
+            </div>
           </div>
           <div className="case-toggle-row">
             <input
@@ -905,6 +911,8 @@ export function App() {
                   controlPanel={options.controlPanel}
                   experimentalStickering={selectedStickering}
                   setupAlg={options.whiteOnBottom ? 'z2' : ''}
+                  cameraLatitude={0}
+                  cameraLongitude={0}
                   backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
                   resetToken={`${smartcube.connected}:${smartcube.currentFacelets ?? 'none'}:${training.visualResetKey}`}
                   appendMoveKey={smartcubeAppendMoveKey}

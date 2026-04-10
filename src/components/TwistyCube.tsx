@@ -15,6 +15,8 @@ export interface TwistyCubeProps {
   background?: 'none' | 'checkered';
   dragInput?: 'auto' | 'none';
   backView?: 'none' | 'side-by-side' | 'top-right';
+  cameraLatitude?: number;
+  cameraLongitude?: number;
   resetToken?: string | number;
   appendMoveKey?: string;
   appendMove?: string;
@@ -22,6 +24,7 @@ export interface TwistyCubeProps {
   cubeQuaternion?: SmartcubeQuaternion | null;
   cubeQuaternionRef?: MutableRefObject<SmartcubeQuaternion | null>;
   enableExternalOrientationLoop?: boolean;
+  nudgeRenderOnMount?: boolean;
   className?: string;
 }
 
@@ -57,6 +60,8 @@ export function TwistyCube({
   background = 'none',
   dragInput = 'auto',
   backView = 'none',
+  cameraLatitude,
+  cameraLongitude,
   resetToken,
   appendMoveKey,
   appendMove,
@@ -64,6 +69,7 @@ export function TwistyCube({
   cubeQuaternion = null,
   cubeQuaternionRef,
   enableExternalOrientationLoop = true,
+  nudgeRenderOnMount = false,
   className,
 }: TwistyCubeProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -107,20 +113,39 @@ export function TwistyCube({
       viewerLink: 'none',
       hintFacelets: hintFacelets === 'floating' ? 'floating' : 'none',
       experimentalDragInput: dragInput,
-      cameraLatitude: 0,
-      cameraLongitude: 0,
       tempoScale: 5,
       experimentalStickering,
       backView,
     });
 
     player.experimentalSetupAlg = setupAlg;
+    if (cameraLatitude != null) {
+      player.cameraLatitude = cameraLatitude;
+    }
+    if (cameraLongitude != null) {
+      player.cameraLongitude = cameraLongitude;
+    }
     playerRef.current = player;
     if (!existing) {
       hostRef.current.append(player);
     }
     hostRef.current.style.overflow = 'visible';
     forceRefreshRef.current = true;
+
+    if (nudgeRenderOnMount) {
+      // Twisty sometimes initializes before it has a stable size; nudge a render to avoid stale/blank frames.
+      queueMicrotask(() => {
+        void (async () => {
+          try {
+            const vantages = await player.experimentalCurrentVantages();
+            const vantage = [...vantages][0] as { render?: () => void } | undefined;
+            vantage?.render?.();
+          } catch {
+            // ignore
+          }
+        })();
+      });
+    }
 
     async function animateOrientation() {
       const activePlayer = playerRef.current;
@@ -230,7 +255,24 @@ export function TwistyCube({
     player.experimentalSetupAnchor = setupAnchor;
     player.experimentalDragInput = dragInput;
     player.backView = backView;
-  }, [backView, controlPanel, dragInput, experimentalStickering, hintFacelets, setupAlg, setupAnchor, visualization]);
+    if (cameraLatitude != null) {
+      player.cameraLatitude = cameraLatitude;
+    }
+    if (cameraLongitude != null) {
+      player.cameraLongitude = cameraLongitude;
+    }
+  }, [
+    backView,
+    cameraLatitude,
+    cameraLongitude,
+    controlPanel,
+    dragInput,
+    experimentalStickering,
+    hintFacelets,
+    setupAlg,
+    setupAnchor,
+    visualization,
+  ]);
 
   useEffect(() => {
     const player = playerRef.current;
