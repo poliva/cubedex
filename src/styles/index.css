@@ -1596,13 +1596,13 @@ html.dark .case-metric {
 .toggle-dot {
   position: absolute;
   left: 0.25rem;
-  top: 0.25rem;
+  top: 50%;
   width: 1rem;
   height: 1rem;
   background: #ffffff;
   border-radius: 9999px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.18);
-  transform: translateX(0);
+  transform: translate(0, -50%);
   transition: transform 0.2s ease-in-out;
 }
 
@@ -1611,7 +1611,7 @@ html.dark .case-metric {
 }
 
 .case-toggle-row > input:checked + .toggle-track + .toggle-dot {
-  transform: translateX(1.25rem);
+  transform: translate(1.25rem, -50%);
 }
 
 .case-results {
@@ -1660,13 +1660,13 @@ html.dark .case-metric {
 .legacy-switch-dot {
   position: absolute;
   left: 0.25rem;
-  top: 0.25rem;
+  top: 50%;
   width: 1rem;
   height: 1rem;
   background: #ffffff;
   border-radius: 9999px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.18);
-  transform: translateX(0);
+  transform: translate(0, -50%);
   transition: transform 0.2s ease-in-out;
 }
 
@@ -1675,7 +1675,7 @@ html.dark .case-metric {
 }
 
 .legacy-switch input.sr-only:checked + .legacy-switch-track + .legacy-switch-dot {
-  transform: translateX(1.25rem);
+  transform: translate(1.25rem, -50%);
 }
 
 .legacy-switch input.sr-only:disabled + .legacy-switch-track {
