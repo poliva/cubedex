@@ -88,7 +88,8 @@ export function TwistyCube({
       return;
     }
 
-    const player = new TwistyPlayer({
+    const existing = hostRef.current.querySelector('twisty-player') as (TwistyPlayer & HTMLElement) | null;
+    const player = existing ?? new TwistyPlayer({
       puzzle: '3x3x3',
       visualization: toVisualization(visualization),
       alg,
@@ -107,7 +108,9 @@ export function TwistyCube({
 
     player.experimentalSetupAlg = setupAlg;
     playerRef.current = player;
-    hostRef.current.append(player);
+    if (!existing) {
+      hostRef.current.append(player);
+    }
     hostRef.current.style.overflow = 'visible';
     forceRefreshRef.current = true;
 
@@ -151,9 +154,8 @@ export function TwistyCube({
       }
       puzzleObjectRef.current = null;
       vantageRef.current = null;
-      if (player.parentNode) {
-        player.parentNode.removeChild(player);
-      }
+      // Important: do NOT manually detach `player` from the DOM here.
+      // React will remove the subtree during unmount; manual removal can race and trigger NotFoundError.
       playerRef.current = null;
     };
   }, []);
