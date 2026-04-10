@@ -72,6 +72,7 @@ export function App() {
   const lastProcessedScrambleMoveRef = useRef('');
   const lastProcessedInputMoveRef = useRef('');
   const lastProcessedPracticeMoveRef = useRef('');
+  const lastProcessedAnyMoveKeyRef = useRef('');
   const handledGyroSupportSessionRef = useRef('');
   const flashingIndicatorTimeoutRef = useRef<number | null>(null);
   const [isFlashingIndicatorVisible, setIsFlashingIndicatorVisible] = useState(false);
@@ -330,6 +331,13 @@ export function App() {
     }
 
     const moveKey = smartcube.lastProcessedMove.key;
+
+    // Global dedupe: UI state transitions can cause this effect to re-run with the same moveKey.
+    // We should never process the same smartcube move twice, regardless of mode.
+    if (lastProcessedAnyMoveKeyRef.current === moveKey) {
+      return;
+    }
+    lastProcessedAnyMoveKeyRef.current = moveKey;
 
     if (training.inputMode) {
       if (lastProcessedInputMoveRef.current === moveKey) {
@@ -650,7 +658,7 @@ export function App() {
                   experimentalStickering={selectedStickering}
                   setupAlg={options.whiteOnBottom ? 'z2' : ''}
                   backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
-                  resetToken={`${smartcube.connected}:${smartcube.currentFacelets ?? 'none'}`}
+                  resetToken={`${smartcube.connected}:${smartcube.currentFacelets ?? 'none'}:${training.visualResetKey}`}
                   appendMoveKey={smartcubeAppendMoveKey}
                   appendMove={smartcubeAppendMove}
                   gyroscopeEnabled={options.gyroscope && smartcube.connected}

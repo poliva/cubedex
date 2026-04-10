@@ -166,7 +166,12 @@ export function TwistyCube({
       return;
     }
 
-    appendedMoveKeyRef.current = '';
+    // Prevent replaying a previously-processed smartcube move when the cube resets due to
+    // algorithm/selection changes (appendMoveKey is still "old" until the next physical move).
+    //
+    // Important: do NOT include appendMoveKey in this effect's deps, otherwise every physical move
+    // would reset player.alg and the cube would appear to "not follow" the smartcube.
+    appendedMoveKeyRef.current = appendMoveKey ?? '';
     player.alg = alg;
   }, [alg, resetToken]);
 

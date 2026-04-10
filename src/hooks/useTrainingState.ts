@@ -90,6 +90,7 @@ export interface TrainingState {
   scrambleMode: boolean;
   timerState: TimerState;
   timerText: string;
+  visualResetKey: number;
   algInput: string;
   displayAlg: string;
   currentCase: CaseCardData | null;
@@ -391,6 +392,7 @@ export function useTrainingState(
   const [scrambleMode, setScrambleMode] = useState(false);
   const [timerState, setTimerStateInternal] = useState<TimerState>('IDLE');
   const [timerText, setTimerText] = useState('');
+  const [visualResetKey, setVisualResetKey] = useState(0);
   const [algInput, setAlgInputState] = useState('');
   const [displayAlg, setDisplayAlg] = useState('');
   const [currentCase, setCurrentCase] = useState<CaseCardData | null>(null);
@@ -711,6 +713,7 @@ export function useTrainingState(
     setInputMode(false);
     setScrambleMode(false);
     setTimerState('READY');
+    setVisualResetKey((v) => v + 1);
   }
 
   useEffect(() => {
@@ -1001,6 +1004,7 @@ export function useTrainingState(
     setDisplayAlg('');
     setTimerText('');
     setTimerState('IDLE');
+    setVisualResetKey((v) => v + 1);
   }
 
   function setKeepInitialState(value: boolean) {
@@ -1012,6 +1016,7 @@ export function useTrainingState(
     scrambleMode,
     timerState,
     timerText,
+    visualResetKey,
     algInput,
     displayAlg,
     currentCase,
