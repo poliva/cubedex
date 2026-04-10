@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ComponentType, type CSSProperties } from 'react';
 import { Alg } from 'cubing/alg';
 import { cube3x3x3 } from 'cubing/puzzles';
 import { TwistyCube } from './components/TwistyCube';
@@ -71,6 +71,7 @@ export function App() {
   const lastAutoScrambleKeyRef = useRef('');
   const lastProcessedScrambleMoveRef = useRef('');
   const lastProcessedInputMoveRef = useRef('');
+  const lastProcessedPracticeMoveRef = useRef('');
   const handledGyroSupportSessionRef = useRef('');
   const flashingIndicatorTimeoutRef = useRef<number | null>(null);
   const [isFlashingIndicatorVisible, setIsFlashingIndicatorVisible] = useState(false);
@@ -335,6 +336,7 @@ export function App() {
         return;
       }
       lastProcessedInputMoveRef.current = moveKey;
+      lastProcessedPracticeMoveRef.current = '';
 
       const currentValue = training.algInput.trim();
       const nextValue = Alg.fromString(`${currentValue} ${smartcube.lastProcessedMove.rawMoves.map((entry) => entry.move).join(' ')}`.trim())
@@ -345,6 +347,10 @@ export function App() {
     }
 
     if (!scramble.scrambleMode) {
+      if (lastProcessedPracticeMoveRef.current === moveKey) {
+        return;
+      }
+      lastProcessedPracticeMoveRef.current = moveKey;
       if (smartcube.lastProcessedMove.currentPattern) {
         training.handleSmartcubeMove(
           smartcube.lastProcessedMove.currentPattern,
@@ -360,6 +366,7 @@ export function App() {
       return;
     }
     lastProcessedScrambleMoveRef.current = moveKey;
+    lastProcessedPracticeMoveRef.current = '';
 
     void scramble.advanceScramble(smartcube.lastProcessedMove.move, smartcube.currentPattern).then((completed) => {
       if (completed) {
@@ -600,12 +607,12 @@ export function App() {
                   >
                     <div className="times-grid">
                       {training.stats.lastFive.map((entry, index) => (
-                        <>
-                          <div key={`time-label-${entry.value}-${index}`} className="times-grid-label">{entry.label.split(': ')[0]}:</div>
-                          <div key={`time-value-${entry.value}-${index}`} className="times-grid-value">
+                        <Fragment key={`time-row-${entry.value}-${entry.label}-${index}`}>
+                          <div className="times-grid-label">{entry.label.split(': ')[0]}:</div>
+                          <div className="times-grid-value">
                             {entry.label.split(': ').slice(1).join(': ')}{entry.isPb ? ' 🎉' : ''}
                           </div>
-                        </>
+                        </Fragment>
                       ))}
                       <div className="times-grid-label times-grid-emphasis">Ao5:</div>
                       <div className="times-grid-value times-grid-emphasis">{formatHistoryMetric(averageOfFiveTimeNumber(training.statsAlgId))}</div>
