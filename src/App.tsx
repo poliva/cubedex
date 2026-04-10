@@ -316,6 +316,27 @@ export function App() {
   const selectedStickering = mainCubeStickeringDeferred && !options.fullStickering
     ? 'full'
     : getLegacyStickering(selectedCategory || 'PLL', options.fullStickering);
+
+  const [inputModeSmartcubeSeed, setInputModeSmartcubeSeed] = useState<{ key: string; alg: string } | null>(null);
+  useEffect(() => {
+    // In input-mode with a connected smartcube, we want the virtual cube to animate turns.
+    // We seed the cube's state once from the current pattern, then animate incremental moves via appendMove.
+    const pattern = smartcube.currentPattern;
+    if (!training.inputMode || !smartcube.connected || !pattern) {
+      setInputModeSmartcubeSeed(null);
+      return;
+    }
+
+    const seedKey = `${smartcube.disconnectToken}:${training.visualResetKey}`;
+    setInputModeSmartcubeSeed((current) => {
+      if (current?.key === seedKey) {
+        return current;
+      }
+      const alg = patternToPlayerAlg(pattern);
+      return { key: seedKey, alg };
+    });
+  }, [smartcube.connected, smartcube.currentPattern, smartcube.disconnectToken, training.inputMode, training.visualResetKey]);
+
   const mainCubeAlg = useMemo(() => {
     if (!smartcube.connected && smartcube.disconnectToken !== acknowledgedDisconnectToken) {
       return '';
@@ -327,7 +348,7 @@ export function App() {
 
     if (training.inputMode) {
       if (smartcube.connected && smartcube.currentPattern) {
-        return patternToPlayerAlg(smartcube.currentPattern);
+        return inputModeSmartcubeSeed?.alg ?? '';
       }
 
       return training.displayAlg.trim()
@@ -340,11 +361,20 @@ export function App() {
     }
 
     return Alg.fromString(training.displayAlg).invert().toString();
-  }, [acknowledgedDisconnectToken, scramble.scrambleMode, scrambleStartAlg, smartcube.connected, smartcube.currentPattern, smartcube.disconnectToken, training.displayAlg, training.inputMode]);
+  }, [
+    acknowledgedDisconnectToken,
+    inputModeSmartcubeSeed?.alg,
+    scramble.scrambleMode,
+    scrambleStartAlg,
+    smartcube.connected,
+    smartcube.currentPattern,
+    smartcube.disconnectToken,
+    training.displayAlg,
+    training.inputMode,
+  ]);
 
-  const smartcubeVisualDrivenByPattern = Boolean(training.inputMode && smartcube.connected && smartcube.currentPattern);
-  const smartcubeAppendMoveKey = smartcubeVisualDrivenByPattern ? undefined : smartcube.lastProcessedMove?.key;
-  const smartcubeAppendMove = smartcubeVisualDrivenByPattern ? undefined : smartcube.lastProcessedMove?.visualMove;
+  const smartcubeAppendMoveKey = smartcube.lastProcessedMove?.key;
+  const smartcubeAppendMove = smartcube.lastProcessedMove?.visualMove;
   useLegacyCharts(
     training.currentCase,
     training.displayAlg || training.algInput,
