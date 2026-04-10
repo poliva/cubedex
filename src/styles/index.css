@@ -823,6 +823,18 @@ html.dark .info-inline {
   color: #9ca3af;
 }
 
+.info-inline-row {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.info-inline-row-text {
+  margin: 0;
+  padding-top: 0.25rem;
+}
+
 .status-panel {
   width: 100%;
   max-width: var(--practice-alg-track-max);
@@ -834,9 +846,18 @@ html.dark .info-inline {
   background: #f9fafb;
 }
 
+/* Legacy dark: dark:border-red-400 / dark:border-green-400 on #alg-fix / #alg-scramble. */
 html.dark .status-panel {
   border-color: #374151;
   background: #374151;
+}
+
+html.dark .status-panel.status-error {
+  border-color: #f87171;
+}
+
+html.dark .status-panel.status-success {
+  border-color: #4ade80;
 }
 
 .status-error {

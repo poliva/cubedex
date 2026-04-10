@@ -32,6 +32,7 @@ import {
   PlayIcon,
   StopIcon,
   ScatterIcon,
+  AlgHelpInfoIcon,
   BluetoothIcon,
   EyeIcon,
   EyeSlashIcon,
@@ -970,7 +971,7 @@ export function App() {
                   cameraLatitude={0}
                   cameraLongitude={0}
                   backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
-                  resetToken={`${smartcube.connected}:${smartcube.currentFacelets ?? 'none'}:${training.visualResetKey}`}
+                  resetToken={`${smartcube.connected}:${training.visualResetKey}`}
                   appendMoveKey={smartcubeAppendMoveKey}
                   appendMove={smartcubeAppendMove}
                   gyroscopeEnabled={options.gyroscope && smartcube.connected}
@@ -1188,7 +1189,10 @@ export function App() {
               className={`${scramble.helpTone === 'green' || training.helpTone === 'red' ? 'info-inline' : 'hidden info-inline'}`}
               style={{ color: training.helpTone === 'red' ? '#f87171' : scramble.helpTone === 'green' ? '#34d399' : undefined }}
             >
-              <p>Ensure the cube is oriented with WHITE center on top and GREEN center on front.</p>
+              <div className="info-inline-row">
+                <AlgHelpInfoIcon />
+                <p className="info-inline-row-text">Ensure the cube is oriented with WHITE center on top and GREEN center on front.</p>
+              </div>
             </div>
             <div id="alg-fix" className={`${training.fixVisible && training.fixText ? 'status-panel status-error' : 'hidden status-panel status-error'}`}>
               {training.fixText}

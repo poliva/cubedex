@@ -46,6 +46,26 @@ export function StopIcon() {
   );
 }
 
+export function AlgHelpInfoIcon() {
+  const s = {
+    fill: 'none' as const,
+    stroke: 'currentColor',
+    strokeMiterlimit: 10,
+    strokeWidth: 1.91,
+  };
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6 shrink-0" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <path
+        {...s}
+        d="M18.68,1.48H5.32A3.82,3.82,0,0,0,1.5,5.3v9.54a3.82,3.82,0,0,0,3.82,3.82H9.14L12,21.52l2.86-2.86h3.82a3.82,3.82,0,0,0,3.82-3.82V5.3A3.82,3.82,0,0,0,18.68,1.48Z"
+      />
+      <line {...s} x1="10.09" y1="13.89" x2="13.91" y2="13.89" />
+      <polyline {...s} points="10.09 8.16 12 8.16 12 13.89" />
+      <line {...s} x1="11.05" y1="5.3" x2="12.95" y2="5.3" />
+    </svg>
+  );
+}
+
 export function ScatterIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6" xmlns="http://www.w3.org/2000/svg">
