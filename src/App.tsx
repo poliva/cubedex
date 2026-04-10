@@ -1077,7 +1077,7 @@ export function App() {
                   }
 
                   if (training.timerState === 'RUNNING') {
-                    training.stopAndRecordSolve(training.getElapsedMs());
+                    training.abortRunningAttempt();
                   }
                   void training.trainCurrent(smartcube.currentPattern);
                 }}

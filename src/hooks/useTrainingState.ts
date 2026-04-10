@@ -115,6 +115,7 @@ export interface TrainingState {
   handleSpaceKeyUp: () => void;
   handleSmartcubeMove: (currentPattern: KPattern, move: string, rawMoves?: SmartcubeMoveRecord[], isBugged?: boolean) => boolean;
   stopAndRecordSolve: (timeMs: number) => void;
+  abortRunningAttempt: () => void;
   getElapsedMs: () => number;
   prepareForScramble: () => void;
   resetDrill: () => void;
@@ -840,11 +841,22 @@ export function useTrainingState(
     }
   }
 
+  function abortRunningAttempt() {
+    if (timerState !== 'RUNNING') {
+      return;
+    }
+    timerStartRef.current = null;
+    isKeyboardTimerActiveRef.current = false;
+    solutionMovesRef.current = [];
+    setTimerText('0:00.000');
+    setTimerStateInternal('READY');
+  }
+
   function activateTimer() {
     if (timerState === 'STOPPED' || timerState === 'IDLE' || timerState === 'READY') {
       setTimerState('RUNNING');
     } else {
-      stopAndRecordSolve(getElapsedMs());
+      abortRunningAttempt();
     }
   }
 
@@ -857,7 +869,7 @@ export function useTrainingState(
       setTimerText('0:00.000');
       setTimerState('READY');
     } else if (timerState === 'RUNNING') {
-      stopAndRecordSolve(getElapsedMs());
+      abortRunningAttempt();
     } else if (timerState === 'READY' && !isKeyboardTimerActiveRef.current) {
       setTimerText('0:00.000');
     }
@@ -1041,6 +1053,7 @@ export function useTrainingState(
     handleSpaceKeyUp,
     handleSmartcubeMove,
     stopAndRecordSolve,
+    abortRunningAttempt,
     getElapsedMs,
     prepareForScramble,
     resetDrill,
