@@ -4,8 +4,21 @@ import { experimentalCountMovesETM } from 'cubing/notation';
 
 Chart.register(...registerables);
 
-let timeChart: Chart | null = null;
-let statsChart: Chart | null = null;
+// Instance caches keyed by canvas element so repeated calls (on every solve or
+// refresh token bump) mutate the existing Chart in place instead of destroying
+// and recreating it. `chart.update('none')` animates nothing, matching the
+// original behavior (`animation: false`) while reusing the WebGL/2D context.
+const timeChartByCanvas = new WeakMap<HTMLCanvasElement, Chart>();
+const statsChartByCanvas = new WeakMap<HTMLCanvasElement, Chart>();
+// Track last-data signatures so we can skip work entirely when nothing changed.
+const timeChartSignature = new WeakMap<HTMLCanvasElement, string>();
+const statsChartSignature = new WeakMap<HTMLCanvasElement, string>();
+
+function signatureOf(times: number[]): string {
+  // Cheap stable signature. Collisions don't matter for correctness — a miss
+  // just means we do the update anyway; we mainly want to dedupe identical runs.
+  return `${times.length}|${times[0] ?? ''}|${times[times.length - 1] ?? ''}`;
+}
 
 export function countMovesETM(alg: string): number {
   return experimentalCountMovesETM(Alg.fromString(alg));
@@ -16,12 +29,19 @@ export function createTimeGraph(canvas: HTMLCanvasElement | null, times: number[
     return;
   }
 
-  if (timeChart) {
-    timeChart.destroy();
-    timeChart = null;
+  const sig = signatureOf(times);
+  if (timeChartSignature.get(canvas) === sig && timeChartByCanvas.get(canvas)) {
+    return;
   }
+  timeChartSignature.set(canvas, sig);
 
   if (times.length === 0) {
+    const existing = timeChartByCanvas.get(canvas);
+    if (existing) {
+      existing.data.labels = [];
+      (existing.data.datasets[0] as { data: number[] }).data = [];
+      existing.update('none');
+    }
     return;
   }
 
@@ -34,7 +54,22 @@ export function createTimeGraph(canvas: HTMLCanvasElement | null, times: number[
   );
   const timesInSeconds = times.map((time) => time / 1000);
 
-  timeChart = new Chart(canvas, {
+  const existing = timeChartByCanvas.get(canvas);
+  if (existing) {
+    existing.data.labels = times.map((_, index) => `${index + 1}`);
+    const dataset = existing.data.datasets[0] as unknown as {
+      data: number[];
+      backgroundColor: string[];
+      borderColor: string[];
+    };
+    dataset.data = timesInSeconds;
+    dataset.backgroundColor = backgroundColors;
+    dataset.borderColor = borderColors;
+    existing.update('none');
+    return;
+  }
+
+  const created = new Chart(canvas, {
     type: 'bar',
     data: {
       labels: times.map((_, index) => `${index + 1}`),
@@ -68,6 +103,7 @@ export function createTimeGraph(canvas: HTMLCanvasElement | null, times: number[
       },
     },
   });
+  timeChartByCanvas.set(canvas, created);
 }
 
 function calculateTrimmedAverage(data: number[], windowSize: number, meanSize: number): Array<number | null> {
@@ -91,8 +127,26 @@ export function createStatsGraph(canvas: HTMLCanvasElement | null, times: number
     return;
   }
 
+  const sig = signatureOf(times);
+  if (statsChartSignature.get(canvas) === sig && statsChartByCanvas.get(canvas)) {
+    return;
+  }
+  statsChartSignature.set(canvas, sig);
+
   const context = canvas.getContext('2d');
   if (!context) {
+    return;
+  }
+
+  if (times.length === 0) {
+    const existing = statsChartByCanvas.get(canvas);
+    if (existing) {
+      existing.data.labels = [];
+      for (const ds of existing.data.datasets) {
+        (ds as { data: unknown[] }).data = [];
+      }
+      existing.update('none');
+    }
     return;
   }
 
@@ -104,16 +158,24 @@ export function createStatsGraph(canvas: HTMLCanvasElement | null, times: number
   gradient.addColorStop(0, 'rgba(54, 162, 235, 0.6)');
   gradient.addColorStop(1, 'rgba(54, 162, 235, 0.0)');
 
-  if (statsChart) {
-    statsChart.destroy();
-    statsChart = null;
-  }
-
-  if (times.length === 0) {
+  const existing = statsChartByCanvas.get(canvas);
+  if (existing) {
+    existing.data.labels = times.map((_, index) => `${index + 1}`);
+    const datasets = existing.data.datasets as unknown as Array<{
+      data: Array<number | null>;
+      backgroundColor?: CanvasGradient | string;
+    }>;
+    if (datasets[0]) {
+      datasets[0].data = timesInSeconds;
+      datasets[0].backgroundColor = gradient;
+    }
+    if (datasets[1]) datasets[1].data = ao5;
+    if (datasets[2]) datasets[2].data = ao12;
+    existing.update('none');
     return;
   }
 
-  statsChart = new Chart(canvas, {
+  const createdStats = new Chart(canvas, {
     type: 'line',
     data: {
       labels: times.map((_, index) => `${index + 1}`),
@@ -168,4 +230,5 @@ export function createStatsGraph(canvas: HTMLCanvasElement | null, times: number
       },
     },
   });
+  statsChartByCanvas.set(canvas, createdStats);
 }

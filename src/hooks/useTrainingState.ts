@@ -262,6 +262,24 @@ function splitMoveToken(move: string) {
 const fixSimplifyCache = new Map<string, string>();
 const FIX_SIMPLIFY_CACHE_CAPACITY = 256;
 
+// Cheap deterministic hash of a KPattern. For the 3x3x3 we serialize just the
+// three orbits we use (EDGES/CORNERS/CENTERS) as `pieces|orientation`.
+// JSON.stringify is fine here since the values are plain numeric arrays.
+function hashKPattern(pattern: KPattern): string {
+  const data = (pattern as unknown as { patternData: Record<string, { pieces: number[]; orientation: number[] }> }).patternData;
+  if (!data) return '';
+  const edges = data.EDGES;
+  const corners = data.CORNERS;
+  const centers = data.CENTERS;
+  return (
+    (edges ? `${edges.pieces.join(',')}|${edges.orientation.join(',')}` : '') +
+    '/' +
+    (corners ? `${corners.pieces.join(',')}|${corners.orientation.join(',')}` : '') +
+    '/' +
+    (centers ? `${centers.pieces.join(',')}|${centers.orientation.join(',')}` : '')
+  );
+}
+
 function simplifyFixAlg(badMoves: string[]): string {
   if (badMoves.length === 0) return '';
   const cacheKey = badMoves.join(' ');
@@ -437,6 +455,9 @@ export function useTrainingState(
   const isKeyboardTimerActiveRef = useRef(false);
   const initialPatternRef = useRef<KPattern | null>(null);
   const patternStatesRef = useRef<KPattern[]>([]);
+  // Hash of each pattern in `patternStatesRef` → index in that array.
+  // Used to replace an O(n) `isIdentical` scan per smartcube move with an O(1) lookup.
+  const patternHashMapRef = useRef<Map<string, number>>(new Map());
   const expectedMovesRef = useRef<string[]>([]);
   const lastMovesRef = useRef<string[]>([]);
   const selectedQueueRef = useRef<CaseCardData[]>([]);
@@ -615,6 +636,7 @@ export function useTrainingState(
   function clearProgressState() {
     expectedMovesRef.current = [];
     patternStatesRef.current = [];
+    patternHashMapRef.current.clear();
     lastMovesRef.current = [];
     solutionMovesRef.current = [];
     setCurrentMoveIndex(-1);
@@ -735,6 +757,17 @@ export function useTrainingState(
       previousPattern = previousPattern.applyMove(move);
       return fixOrientation(previousPattern);
     });
+    // Rebuild the hash index in lockstep so `handleSmartcubeMove` can do O(1) lookups
+    // instead of an O(n) `isIdentical` scan across pattern states.
+    patternHashMapRef.current.clear();
+    for (let i = 0; i < patternStatesRef.current.length; i += 1) {
+      const hash = hashKPattern(patternStatesRef.current[i]);
+      // First occurrence wins so the earliest matching index is returned when a
+      // repeated pattern appears (rare but possible, e.g. A2 following A).
+      if (!patternHashMapRef.current.has(hash)) {
+        patternHashMapRef.current.set(hash, i);
+      }
+    }
 
     setAlgInputState(normalizedAlgorithm);
     setDisplayAlg(prepared.displayAlgorithm);
@@ -948,6 +981,9 @@ export function useTrainingState(
     const nextExpectedIdx = currentMoveIndex + 1;
     let matchedIndex: number | null = null;
 
+    // Fast path: the user made the expected next move. Keep the direct
+    // `isIdentical` check first — it's the common case and cheaper than hashing
+    // when it hits.
     if (
       nextExpectedIdx >= 0
       && nextExpectedIdx < patternStatesRef.current.length
@@ -955,11 +991,12 @@ export function useTrainingState(
     ) {
       matchedIndex = nextExpectedIdx;
     } else {
-      patternStatesRef.current.forEach((pattern, index) => {
-        if (matchedIndex === null && patternAfterMove.isIdentical(pattern)) {
-          matchedIndex = index;
-        }
-      });
+      // Fallback: O(1) hash lookup against all known pattern states.
+      const hash = hashKPattern(patternAfterMove);
+      const hit = patternHashMapRef.current.get(hash);
+      if (hit !== undefined) {
+        matchedIndex = hit;
+      }
     }
 
     if (matchedIndex !== null) {
