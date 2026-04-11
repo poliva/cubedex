@@ -255,6 +255,40 @@ function splitMoveToken(move: string) {
   return { prefix, token, suffix };
 }
 
+// Cache for fix-alg simplification. Keyed by the raw `badMoves.join(' ')`
+// so that redundant calls (e.g. same badMoves with a new `currentMoveIndex`)
+// don't pay for `experimentalSimplify({ puzzleLoader: cube3x3x3 })`, which is
+// by far the hottest part of `buildDisplayState`.
+const fixSimplifyCache = new Map<string, string>();
+const FIX_SIMPLIFY_CACHE_CAPACITY = 256;
+
+function simplifyFixAlg(badMoves: string[]): string {
+  if (badMoves.length === 0) return '';
+  const cacheKey = badMoves.join(' ');
+  const cached = fixSimplifyCache.get(cacheKey);
+  if (cached !== undefined) {
+    // Refresh LRU ordering.
+    fixSimplifyCache.delete(cacheKey);
+    fixSimplifyCache.set(cacheKey, cached);
+    return cached;
+  }
+  let raw = '';
+  for (let index = 0; index < badMoves.length; index += 1) {
+    raw += `${getInverseMove(badMoves[badMoves.length - 1 - index])} `;
+  }
+  const simplified = Alg.fromString(raw)
+    .experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 })
+    .toString()
+    .trim();
+  fixSimplifyCache.set(cacheKey, simplified);
+  while (fixSimplifyCache.size > FIX_SIMPLIFY_CACHE_CAPACITY) {
+    const oldest = fixSimplifyCache.keys().next().value;
+    if (oldest === undefined) break;
+    fixSimplifyCache.delete(oldest);
+  }
+  return simplified;
+}
+
 function buildDisplayState(displayAlg: string, currentMoveIndex: number, badMoves: string[], randomizeAUF: boolean): {
   moves: TrainingDisplayMove[];
   fixText: string;
@@ -265,14 +299,7 @@ function buildDisplayState(displayAlg: string, currentMoveIndex: number, badMove
   let simplifiedBadAlg: string[] = [];
 
   if (badMoves.length > 0) {
-    for (let index = 0; index < badMoves.length; index += 1) {
-      fixText += `${getInverseMove(badMoves[badMoves.length - 1 - index])} `;
-    }
-
-    const simplified = Alg.fromString(fixText)
-      .experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 })
-      .toString()
-      .trim();
+    const simplified = simplifyFixAlg(badMoves);
     fixText = simplified;
     simplifiedBadAlg = simplified ? simplified.split(/\s+/) : [];
   }

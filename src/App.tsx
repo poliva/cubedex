@@ -7,12 +7,12 @@ import {
   useState,
   type ComponentType,
   type CSSProperties,
-  type ReactElement,
 } from 'react';
 import { Alg } from 'cubing/alg';
 import { cube3x3x3 } from 'cubing/puzzles';
 import { TwistyCube } from './components/TwistyCube';
-import { CaseCardPreview } from './components/CaseCardPreview';
+import { CaseCard } from './components/CaseCard';
+import { caseCardStore, setCaseCardActions } from './state/caseCardStore';
 import { useLegacyBootstrap } from './hooks/useLegacyBootstrap';
 import { useTrainingState } from './hooks/useTrainingState';
 import { useLegacyOptions } from './hooks/useLegacyOptions';
@@ -23,12 +23,9 @@ import { getLegacyStickering } from './lib/legacy-stickering';
 import { deleteAlgorithm, getBestTime, getSavedAlgorithms, removeAlgorithmTimesStorage } from './lib/legacy-storage';
 import { usePracticeToggles } from './hooks/usePracticeToggles';
 import { useLegacyCharts } from './hooks/useLegacyCharts';
-import { averageOfFiveTimeNumber, averageTimeString, bestTimeString, makeTimeParts, type CaseCardData } from './lib/legacy-algorithms';
+import { averageOfFiveTimeNumber, makeTimeParts, type CaseCardData } from './lib/legacy-algorithms';
 import { patternToPlayerAlg } from './lib/legacy-scramble';
 import {
-  BookOpenIcon,
-  BookClosedGreenIcon,
-  BookClosedOrangeIcon,
   HamburgerIcon,
   PlayIcon,
   StopIcon,
@@ -66,10 +63,8 @@ function formatHistoryMetric(time: number | null) {
 
 function VirtualizedCaseGrid({
   cards,
-  renderCaseCard,
 }: {
   cards: CaseCardData[];
-  renderCaseCard: (card: CaseCardData, index: number, style?: CSSProperties) => ReactElement;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -169,13 +164,20 @@ function VirtualizedCaseGrid({
         const col = absoluteIndex % cols;
         const top = row * rowHeight;
         const left = col * (itemWidth + gap);
-        return renderCaseCard(card, absoluteIndex, {
-          position: 'absolute',
-          top,
-          left,
-          width: itemWidth,
-          height: itemHeight,
-        });
+        return (
+          <CaseCard
+            key={`${card.id}-${card.name}`}
+            card={card}
+            index={absoluteIndex}
+            style={{
+              position: 'absolute',
+              top,
+              left,
+              width: itemWidth,
+              height: itemHeight,
+            }}
+          />
+        );
       })}
     </div>
   );
@@ -271,6 +273,11 @@ export function App() {
     });
   }, [smartcube.connected, smartcube.currentPattern, smartcube.disconnectToken, training.inputMode, training.visualResetKey]);
 
+  // `mainCubeAlg` represents the *algorithm shown on the main cube*, which only
+  // changes at case transitions — not per move. Deps intentionally exclude
+  // `smartcube.currentPattern`, which fires on every physical move and would
+  // otherwise rerun this memo (and the Alg.fromString(...).invert() work) each
+  // time, even when the returned string is identical.
   const mainCubeAlg = useMemo(() => {
     if (!smartcube.connected && smartcube.disconnectToken !== acknowledgedDisconnectToken) {
       return '';
@@ -281,8 +288,8 @@ export function App() {
     }
 
     if (training.inputMode) {
-      if (smartcube.connected && smartcube.currentPattern) {
-        return inputModeSmartcubeSeed?.alg ?? '';
+      if (smartcube.connected && inputModeSmartcubeSeed) {
+        return inputModeSmartcubeSeed.alg;
       }
 
       return training.displayAlg.trim()
@@ -297,11 +304,10 @@ export function App() {
     return Alg.fromString(training.displayAlg).invert().toString();
   }, [
     acknowledgedDisconnectToken,
-    inputModeSmartcubeSeed?.alg,
+    inputModeSmartcubeSeed,
     scramble.scrambleMode,
     scrambleStartAlg,
     smartcube.connected,
-    smartcube.currentPattern,
     smartcube.disconnectToken,
     training.displayAlg,
     training.inputMode,
@@ -316,89 +322,46 @@ export function App() {
     `${statsRefreshToken}:${training.stats.practiceCount}`,
   );
 
-  function renderCaseCard(card: (typeof caseCards)[number], index: number, style?: CSSProperties) {
-    const liveBestTime = getBestTime(card.id);
-    const liveAo5 = averageOfFiveTimeNumber(card.id);
-    const practiceCount = training.practiceCounts[card.id] || 0;
-    const failedCount = training.failedCounts[card.id] || 0;
-    const successCount = Math.max(0, practiceCount - Math.min(failedCount, practiceCount));
+  // Sync case-card slices into the store so CaseCard instances subscribe via selectors
+  // and don't re-render on every training state change.
+  useEffect(() => {
+    caseCardStore.setState({
+      practiceCounts: training.practiceCounts,
+      failedCounts: training.failedCounts,
+    });
+  }, [training.practiceCounts, training.failedCounts]);
 
-    return (
-      <div
-        key={`${card.id}-${card.name}`}
-        className={`case-wrapper ${training.failedCounts[card.id] ? 'bg-red-400 dark:bg-red-400' : index % 2 === 0 ? 'case-alt-dark' : 'case-alt-light'}`}
-        id={card.id}
-        data-name={card.name}
-        data-algorithm={card.algorithm}
-        data-category={card.category}
-        data-subset={card.subset}
-        style={style}
-      >
-        <div className="case-card-header">
-          <div className="case-name" title={card.algorithm}>
-            {card.name}
-          </div>
-          <button
-            id={`bookmark-${card.id}`}
-            data-value={card.learned}
-            title="Learning status"
-            className="bookmark-button"
-            type="button"
-            onClick={() => cycleCaseLearnedState(card.id)}
-          >
-            <span aria-hidden="true">
-              {card.learned === 2 ? (
-                <BookClosedGreenIcon />
-              ) : card.learned === 1 ? (
-                <BookClosedOrangeIcon />
-              ) : (
-                <BookOpenIcon />
-              )}
-            </span>
-          </button>
-        </div>
-        <label htmlFor={`case-toggle-${card.id}`} className="case-card-body" title={card.algorithm}>
-          <div id={`best-time-${card.id}`} className="case-metric">
-            Best: {bestTimeString(liveBestTime)}
-          </div>
-          <div id={`ao5-time-${card.id}`} className="case-metric">
-            Ao5: {averageTimeString(liveAo5)}
-          </div>
-          <div id={`alg-case-${card.id}`} className="case-preview">
-            <div className="case-preview-inner">
-              <CaseCardPreview
-                alg={card.algorithm}
-                visualization={card.category.toLowerCase().includes('ll') ? 'experimental-2D-LL' : '3D'}
-                stickering={getLegacyStickering(card.category, options.fullStickering)}
-                setupAnchor="end"
-              />
-            </div>
-          </div>
-          <div className="case-toggle-row">
-            <input
-              type="checkbox"
-              id={`case-toggle-${card.id}`}
-              className="sr-only"
-              checked={selectedCaseIds.includes(card.id)}
-              onChange={(event) => {
-                setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                setMainCubeStickeringDeferred(false);
-                toggleCaseSelection(card.id, event.target.checked);
-              }}
-            />
-            <div className="toggle-track" />
-            <div className="toggle-dot dot" />
-            <div className="case-results">
-              <div id={`${card.id}-failed`} className="failed-count">{failedCount > 0 ? `❌: ${failedCount}` : ''}</div>
-              <div id={`${card.id}-success`} className="success-count">{practiceCount > 0 ? `✅: ${successCount}` : ''}</div>
-            </div>
-          </div>
-        </label>
-      </div>
-    );
-  }
+  useEffect(() => {
+    caseCardStore.setState({ selectedCaseIds });
+  }, [selectedCaseIds]);
 
-  // (virtualized grid + preview components are defined at module scope to avoid remount/flicker)
+  useEffect(() => {
+    caseCardStore.setState({ fullStickering: options.fullStickering });
+  }, [options.fullStickering]);
+
+  // Refresh per-card best/ao5 from localStorage whenever solves may have changed.
+  useEffect(() => {
+    const bestTimes: Record<string, number | null> = {};
+    const ao5Times: Record<string, number | null> = {};
+    for (const card of caseCards) {
+      bestTimes[card.id] = getBestTime(card.id);
+      ao5Times[card.id] = averageOfFiveTimeNumber(card.id);
+    }
+    caseCardStore.setState({ bestTimes, ao5Times });
+  }, [caseCards, statsRefreshToken, training.stats.practiceCount]);
+
+  // Keep action wrappers pointing at the latest closures.
+  useEffect(() => {
+    setCaseCardActions({
+      cycleCaseLearnedState,
+      toggleCaseSelection,
+      onBeforeToggleCase: () => {
+        setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+        setMainCubeStickeringDeferred(false);
+      },
+    });
+  }, [cycleCaseLearnedState, toggleCaseSelection, smartcube.disconnectToken]);
+
 
   useEffect(() => {
     if (!scramble.scrambleMode) {
@@ -1445,11 +1408,13 @@ export function App() {
 
             {caseCards.length > 10 ? (
               <div id="alg-cases" className="alg-cases-virtualized">
-                <VirtualizedCaseGrid cards={caseCards} renderCaseCard={renderCaseCard} />
+                <VirtualizedCaseGrid cards={caseCards} />
               </div>
             ) : (
               <div id="alg-cases" className="alg-cases-grid">
-                {caseCards.map((card, index) => renderCaseCard(card, index))}
+                {caseCards.map((card, index) => (
+                  <CaseCard key={`${card.id}-${card.name}`} card={card} index={index} />
+                ))}
               </div>
             )}
 
