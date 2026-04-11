@@ -94,12 +94,6 @@ export function CaseCardPreview({
           draggable={false}
           style={{ ...innerStyle, objectFit: 'contain' }}
         />
-      ) : preview && preview.kind === 'svg' && preview.markup ? (
-        <div
-          style={innerStyle}
-          // Markup comes from cubing.js' own SVG renderer in our offscreen TwistyPlayer.
-          dangerouslySetInnerHTML={{ __html: preview.markup }}
-        />
       ) : (
         <div style={innerStyle} />
       )}

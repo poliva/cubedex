@@ -1,8 +1,6 @@
 import { TwistyPlayer } from 'cubing/twisty';
 
-export type Preview =
-  | { kind: 'image'; src: string }
-  | { kind: 'svg'; markup: string };
+export type Preview = { kind: 'image'; src: string };
 
 export interface PreviewParams {
   alg: string;
@@ -20,6 +18,7 @@ const pending = new Map<PreviewKey, Promise<Preview>>();
 const subscribers = new Map<PreviewKey, Set<() => void>>();
 
 function touch(key: PreviewKey, value: Preview) {
+  if (!value.src) return;
   if (cache.has(key)) {
     cache.delete(key);
   }
@@ -74,8 +73,7 @@ function ensureHost(): HTMLDivElement {
   if (offscreenHost) return offscreenHost;
   const host = document.createElement('div');
   host.setAttribute('aria-hidden', 'true');
-  // Keep the host technically on-screen at (0,0) so twisty's lazy
-  // IntersectionObserver-based init still fires. Hide via opacity + z-index.
+  // Position on-screen so layout has non-zero size; hide visually.
   host.style.position = 'fixed';
   host.style.left = '0';
   host.style.top = '0';
@@ -83,7 +81,7 @@ function ensureHost(): HTMLDivElement {
   host.style.height = '240px';
   host.style.pointerEvents = 'none';
   host.style.opacity = '0';
-  host.style.zIndex = '-2147483647';
+  host.style.zIndex = '-1';
   host.style.overflow = 'hidden';
   document.body.appendChild(host);
   offscreenHost = host;
@@ -96,6 +94,24 @@ type Backend = {
 };
 
 const backends = new Map<string, Backend>();
+
+/** Cubing mounts visualization after IntersectionObserver calls this async hook; offscreen hosts often never intersect — invoke and await the same hook. */
+async function awaitTwistyIntersectedCallback(player: TwistyPlayer): Promise<void> {
+  let fn: ((this: TwistyPlayer) => Promise<unknown>) | undefined;
+  for (
+    let p: object | null = Object.getPrototypeOf(player);
+    p && !fn;
+    p = Object.getPrototypeOf(p)
+  ) {
+    const sym = Object.getOwnPropertySymbols(p).find(
+      (s) => s.description === 'intersectedCallback',
+    );
+    if (sym === undefined) continue;
+    const candidate = (p as Record<symbol, unknown>)[sym];
+    if (typeof candidate === 'function') fn = candidate as (this: TwistyPlayer) => Promise<unknown>;
+  }
+  if (fn) await fn.call(player);
+}
 
 function ensureBackend(visualization: string): Backend {
   const existing = backends.get(visualization);
@@ -148,41 +164,6 @@ function ensureBackend(visualization: string): Backend {
   return backend;
 }
 
-function deepQuerySelector<T extends Element>(
-  root: ParentNode | null,
-  selector: string,
-): T | null {
-  if (!root) return null;
-  const direct = (root as ParentNode).querySelector?.(selector) as T | null;
-  if (direct) return direct;
-  const walker = (root as Document | DocumentFragment | Element).querySelectorAll?.('*');
-  if (!walker) return null;
-  for (const el of Array.from(walker)) {
-    const sr = (el as Element & { shadowRoot?: ShadowRoot | null }).shadowRoot;
-    if (sr) {
-      const found = deepQuerySelector<T>(sr, selector);
-      if (found) return found;
-    }
-  }
-  return null;
-}
-
-function findCanvas(player: TwistyPlayer): HTMLCanvasElement | null {
-  const el = player as unknown as HTMLElement;
-  return (
-    deepQuerySelector<HTMLCanvasElement>(el, 'canvas') ??
-    deepQuerySelector<HTMLCanvasElement>(el.shadowRoot ?? null, 'canvas')
-  );
-}
-
-function findSvg(player: TwistyPlayer): SVGElement | null {
-  const el = player as unknown as HTMLElement;
-  return (
-    deepQuerySelector<SVGElement>(el, 'svg') ??
-    deepQuerySelector<SVGElement>(el.shadowRoot ?? null, 'svg')
-  );
-}
-
 // ----------------- Job queue (single-slot) -----------------
 
 type Job = () => Promise<void>;
@@ -217,144 +198,23 @@ function nextFrame(): Promise<void> {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
-async function waitForElement<T>(
-  finder: () => T | null,
-  maxFrames = 60,
-): Promise<T | null> {
-  for (let i = 0; i < maxFrames; i += 1) {
-    const found = finder();
-    if (found) return found;
-    await nextFrame();
-  }
-  return finder();
-}
-
-function tryReadCanvasImage(canvas: HTMLCanvasElement): string {
-  // Path 1: toDataURL (works only if WebGL was created with preserveDrawingBuffer
-  // OR we call this synchronously with the prior render() before the next composite).
-  try {
-    const direct = canvas.toDataURL('image/png');
-    if (direct && direct !== 'data:,' && !direct.endsWith('AAAAASUVORK5CYII=')) {
-      return direct;
-    }
-  } catch {
-    // ignore
-  }
-  // Path 2: copy via a 2D canvas (works for non-WebGL canvases / where direct toDataURL is blank).
-  try {
-    const off = document.createElement('canvas');
-    off.width = canvas.width;
-    off.height = canvas.height;
-    const ctx = off.getContext('2d');
-    if (!ctx) return '';
-    ctx.drawImage(canvas, 0, 0);
-    return off.toDataURL('image/png');
-  } catch {
-    return '';
-  }
-}
-
 async function renderImagePreview(params: PreviewParams): Promise<Preview> {
   const backend = ensureBackend(params.visualization);
   const { player } = backend;
+  await awaitTwistyIntersectedCallback(player);
   player.experimentalStickering = params.stickering;
   player.experimentalSetupAnchor = params.setupAnchor ?? 'end';
   player.experimentalSetupAlg = params.alg;
   player.alg = '';
-
-  // Wait until twisty has built its internal canvas with non-zero dimensions.
-  const canvas = await waitForElement(
-    () => {
-      const c = findCanvas(player);
-      return c && c.width > 0 && c.height > 0 ? c : null;
-    },
-    90,
-  );
-  if (!canvas) return { kind: 'image', src: '' };
-
-  // Get a vantage and force a render.
-  let vantage: { render?: () => void } | undefined;
+  await nextFrame();
+  await nextFrame();
+  let src = '';
   try {
-    const vantages = await player.experimentalCurrentVantages();
-    vantage = [...vantages][0] as { render?: () => void } | undefined;
+    src = await player.experimentalScreenshot({ width: 512, height: 512 });
   } catch {
-    // ignore
+    src = '';
   }
-
-  // Render across a few frames so pending stickering / setup-alg layout
-  // is flushed before we read the buffer.
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    try {
-      vantage?.render?.();
-    } catch {
-      // ignore
-    }
-    await nextFrame();
-  }
-  try {
-    vantage?.render?.();
-  } catch {
-    // ignore
-  }
-  // Read pixels in the same task as the final render() so the drawing buffer is still valid.
-  const src = tryReadCanvasImage(canvas);
   return { kind: 'image', src };
-}
-
-function svgHasContent(svg: SVGElement): boolean {
-  // Twisty mounts an empty <svg/> first, then fills it with sticker children.
-  // We require some descendants and a non-zero viewBox to consider it ready.
-  if (!svg.childNodes || svg.childNodes.length === 0) return false;
-  // A useful 2D-LL svg has at least a few <rect>/<polygon>/<g> elements.
-  const meaningful = svg.querySelectorAll('rect, polygon, path, g').length;
-  return meaningful > 0;
-}
-
-async function renderSvgPreview(params: PreviewParams): Promise<Preview> {
-  const backend = ensureBackend(params.visualization);
-  const { player } = backend;
-  player.experimentalStickering = params.stickering;
-  player.experimentalSetupAnchor = params.setupAnchor ?? 'end';
-  player.experimentalSetupAlg = params.alg;
-  player.alg = '';
-
-  // Wait for the svg to appear in the player's shadow DOM AND get filled in.
-  const svg = await waitForElement(
-    () => {
-      const s = findSvg(player);
-      if (!s) return null;
-      return svgHasContent(s) ? s : null;
-    },
-    120,
-  );
-  if (!svg) return { kind: 'svg', markup: '' };
-
-  // Give twisty a couple more frames so the latest stickering/alg settles.
-  await nextFrame();
-  await nextFrame();
-  const latest = findSvg(player) ?? svg;
-
-  // Clone so we can normalize attributes without mutating twisty's live SVG.
-  const clone = latest.cloneNode(true) as SVGElement;
-  if (!clone.getAttribute('xmlns')) {
-    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-  }
-  // Force responsive sizing inside the card.
-  clone.setAttribute('width', '100%');
-  clone.setAttribute('height', '100%');
-  clone.removeAttribute('style');
-  if (!clone.getAttribute('viewBox')) {
-    const w = latest.getAttribute('width') ?? '256';
-    const h = latest.getAttribute('height') ?? '256';
-    clone.setAttribute('viewBox', `0 0 ${w} ${h}`);
-  }
-
-  const markup = new XMLSerializer().serializeToString(clone);
-  return { kind: 'svg', markup };
-}
-
-function isSvgVisualization(visualization: string): boolean {
-  return visualization === 'experimental-2D-LL' || visualization === 'experimental-2D-LL-face' || visualization === '2D';
 }
 
 export function requestPreview(params: PreviewParams): Promise<Preview> {
@@ -367,16 +227,12 @@ export function requestPreview(params: PreviewParams): Promise<Preview> {
   const promise = new Promise<Preview>((resolve) => {
     enqueue(async () => {
       try {
-        const preview = isSvgVisualization(params.visualization)
-          ? await renderSvgPreview(params)
-          : await renderImagePreview(params);
+        const preview = await renderImagePreview(params);
         touch(key, preview);
         resolve(preview);
         notify(key);
       } catch {
-        const fallback: Preview = isSvgVisualization(params.visualization)
-          ? { kind: 'svg', markup: '' }
-          : { kind: 'image', src: '' };
+        const fallback: Preview = { kind: 'image', src: '' };
         resolve(fallback);
       } finally {
         pending.delete(key);
