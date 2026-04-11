@@ -12,6 +12,7 @@ import {
 import { Alg } from 'cubing/alg';
 import { cube3x3x3 } from 'cubing/puzzles';
 import { TwistyCube } from './components/TwistyCube';
+import { CaseCardPreview } from './components/CaseCardPreview';
 import { useLegacyBootstrap } from './hooks/useLegacyBootstrap';
 import { useTrainingState } from './hooks/useTrainingState';
 import { useLegacyOptions } from './hooks/useLegacyOptions';
@@ -61,74 +62,6 @@ function formatHistoryMetric(time: number | null) {
   const parts = makeTimeParts(time);
   const minutesPart = parts.minutes > 0 ? `${parts.minutes}:` : '';
   return `${minutesPart}${parts.seconds.toString(10).padStart(2, '0')}.${parts.milliseconds.toString(10).padStart(3, '0')}`;
-}
-
-function CaseCubePreview({
-  alg,
-  visualization,
-  stickering,
-  setupAnchor,
-  enabled,
-}: {
-  alg: string;
-  visualization: string;
-  stickering: string;
-  setupAnchor: 'start' | 'end';
-  enabled: boolean;
-}) {
-  const hostRef = useRef<HTMLDivElement | null>(null);
-  const [isActive, setIsActive] = useState(false);
-
-  useEffect(() => {
-    const el = hostRef.current;
-    if (!el) return;
-
-    if (!enabled) {
-      setIsActive(false);
-      return;
-    }
-
-    if (!('IntersectionObserver' in window)) {
-      setIsActive(true);
-      return;
-    }
-
-    const obs = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry) return;
-        setIsActive(entry.isIntersecting);
-      },
-      { rootMargin: '0px 0px' },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [enabled]);
-
-  return (
-    <div ref={hostRef} style={{ width: '100%', height: '100%' }}>
-      {isActive ? (
-        <TwistyCube
-          alg={alg}
-          sizePx={240}
-          visualization={visualization}
-          hintFacelets="none"
-          controlPanel="none"
-          experimentalStickering={stickering}
-          setupAnchor={setupAnchor}
-          cameraLatitude={25}
-          cameraLongitude={-35}
-          background="none"
-          dragInput="none"
-          enableExternalOrientationLoop={false}
-          nudgeRenderOnMount
-          className="twisty-case-host"
-        />
-      ) : (
-        <div className="twisty-case-host" />
-      )}
-    </div>
-  );
 }
 
 function VirtualizedCaseGrid({
@@ -433,12 +366,11 @@ export function App() {
           </div>
           <div id={`alg-case-${card.id}`} className="case-preview">
             <div className="case-preview-inner">
-              <CaseCubePreview
+              <CaseCardPreview
                 alg={card.algorithm}
                 visualization={card.category.toLowerCase().includes('ll') ? 'experimental-2D-LL' : '3D'}
                 stickering={getLegacyStickering(card.category, options.fullStickering)}
                 setupAnchor="end"
-                enabled
               />
             </div>
           </div>
