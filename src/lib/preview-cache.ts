@@ -1,6 +1,8 @@
 import { TwistyPlayer } from 'cubing/twisty';
 
-export type Preview = { kind: 'image'; src: string };
+export type Preview =
+  | { kind: 'image'; src: string }
+  | { kind: 'svg'; markup: string };
 
 export interface PreviewParams {
   alg: string;
@@ -17,8 +19,16 @@ const cache = new Map<PreviewKey, Preview>();
 const pending = new Map<PreviewKey, Promise<Preview>>();
 const subscribers = new Map<PreviewKey, Set<() => void>>();
 
+function previewIsEmpty(value: Preview): boolean {
+  return value.kind === 'image' ? !value.src : !value.markup;
+}
+
+function is2DVisualization(visualization: string): boolean {
+  return ['2D', 'experimental-2D-LL', 'experimental-2D-LL-face'].includes(visualization);
+}
+
 function touch(key: PreviewKey, value: Preview) {
-  if (!value.src) return;
+  if (previewIsEmpty(value)) return;
   if (cache.has(key)) {
     cache.delete(key);
   }
@@ -198,6 +208,23 @@ function nextFrame(): Promise<void> {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
+async function renderSvgPreview(params: PreviewParams): Promise<Preview> {
+  const backend = ensureBackend(params.visualization);
+  const { player } = backend;
+  await awaitTwistyIntersectedCallback(player);
+  player.experimentalStickering = params.stickering;
+  player.experimentalSetupAnchor = params.setupAnchor ?? 'end';
+  player.experimentalSetupAlg = params.alg;
+  player.alg = '';
+  let markup = '';
+  try {
+    markup = await player.experimentalGet2DSvgMarkup();
+  } catch {
+    markup = '';
+  }
+  return { kind: 'svg', markup };
+}
+
 async function renderImagePreview(params: PreviewParams): Promise<Preview> {
   const backend = ensureBackend(params.visualization);
   const { player } = backend;
@@ -227,7 +254,9 @@ export function requestPreview(params: PreviewParams): Promise<Preview> {
   const promise = new Promise<Preview>((resolve) => {
     enqueue(async () => {
       try {
-        const preview = await renderImagePreview(params);
+        const preview = is2DVisualization(params.visualization)
+          ? await renderSvgPreview(params)
+          : await renderImagePreview(params);
         touch(key, preview);
         resolve(preview);
         notify(key);
