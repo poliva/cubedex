@@ -85,12 +85,7 @@ export function CaseCardPreview({
 
   return (
     <div ref={hostRef} style={wrapperStyle} className="twisty-case-host">
-      {preview && preview.kind === 'svg' && preview.markup ? (
-        <div
-          style={{ ...innerStyle, overflow: 'hidden' }}
-          dangerouslySetInnerHTML={{ __html: preview.markup }}
-        />
-      ) : preview && preview.kind === 'image' && preview.src ? (
+      {preview?.src ? (
         <img
           src={preview.src}
           alt=""
