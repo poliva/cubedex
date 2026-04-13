@@ -1,4 +1,5 @@
 import { TwistyPlayer } from 'cubing/twisty';
+import { Alg } from 'cubing/alg';
 
 export type Preview =
   | { kind: 'image'; src: string }
@@ -18,6 +19,52 @@ const LRU_CAPACITY = 512;
 const cache = new Map<PreviewKey, Preview>();
 const pending = new Map<PreviewKey, Promise<Preview>>();
 const subscribers = new Map<PreviewKey, Set<() => void>>();
+
+function hashString(input: string): string {
+  // djb2-ish, cheap + deterministic
+  let h = 5381;
+  for (let i = 0; i < input.length; i += 1) {
+    h = ((h << 5) + h) ^ input.charCodeAt(i);
+  }
+  return (h >>> 0).toString(16);
+}
+
+function namespaceSvgIds(svgMarkup: string, prefix: string): { markup: string; idCount: number; replacedRefCount: number } {
+  // Avoid global <defs id="..."> collisions across many inline SVG instances.
+  const ids = new Set<string>();
+  for (const match of svgMarkup.matchAll(/\sid="([^"]+)"/g)) {
+    const id = match[1];
+    if (id) ids.add(id);
+  }
+  if (ids.size === 0) return { markup: svgMarkup, idCount: 0, replacedRefCount: 0 };
+
+  const idMap = new Map<string, string>();
+  for (const id of ids) {
+    idMap.set(id, `${prefix}-${id}`);
+  }
+
+  let replacedRefCount = 0;
+  let out = svgMarkup.replace(/\sid="([^"]+)"/g, (full, id: string) => {
+    const next = idMap.get(id);
+    return next ? ` id="${next}"` : full;
+  });
+
+  out = out.replace(/url\(#([^)]+)\)/g, (full, id: string) => {
+    const next = idMap.get(id);
+    if (!next) return full;
+    replacedRefCount += 1;
+    return `url(#${next})`;
+  });
+
+  out = out.replace(/\s(href|xlink:href)="#([^"]+)"/g, (full, attr: string, id: string) => {
+    const next = idMap.get(id);
+    if (!next) return full;
+    replacedRefCount += 1;
+    return ` ${attr}="#${next}"`;
+  });
+
+  return { markup: out, idCount: ids.size, replacedRefCount };
+}
 
 function previewIsEmpty(value: Preview): boolean {
   return value.kind === 'image' ? !value.src : !value.markup;
@@ -208,19 +255,41 @@ function nextFrame(): Promise<void> {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
+function nextTask(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+async function flushTwistyModel(): Promise<void> {
+  // TwistyPlayer/model dispatch some listeners async (setTimeout 0).
+  // For 2D SVG serialization, we need stickering/setup changes applied before we serialize.
+  await nextTask();
+  await nextFrame();
+}
+
 async function renderSvgPreview(params: PreviewParams): Promise<Preview> {
   const backend = ensureBackend(params.visualization);
   const { player } = backend;
   await awaitTwistyIntersectedCallback(player);
   player.experimentalStickering = params.stickering;
   player.experimentalSetupAnchor = params.setupAnchor ?? 'end';
-  player.experimentalSetupAlg = params.alg;
+  player.experimentalSetupAlg = Alg.fromString(params.alg).invert().toString();
   player.alg = '';
   let markup = '';
   try {
-    markup = await player.experimentalGet2DSvgMarkup();
+    // Retry a couple times to avoid capturing an uninitialized/previous state SVG.
+    for (let attempt = 0; attempt < 3 && !markup; attempt += 1) {
+      await flushTwistyModel();
+
+      markup = await player.experimentalGet2DSvgMarkup();
+    }
   } catch {
     markup = '';
+  }
+
+  // Namespace internal SVG IDs per preview key to avoid DOM collisions.
+  if (markup) {
+    const prefix = `pv-${hashString(previewKey(params))}`;
+    markup = namespaceSvgIds(markup, prefix).markup;
   }
   return { kind: 'svg', markup };
 }
@@ -260,7 +329,7 @@ export function requestPreview(params: PreviewParams): Promise<Preview> {
         touch(key, preview);
         resolve(preview);
         notify(key);
-      } catch {
+      } catch (e) {
         const fallback: Preview = { kind: 'image', src: '' };
         resolve(fallback);
       } finally {
