@@ -15,9 +15,10 @@
     "react-dom": "^19.1.1",
     "rxjs": "^7.8.2",
     "smartcube-web-bluetooth": "github:poliva/smartcube-web-bluetooth",
-    "three": "^0.180.0"
+    "three": "0.170.0"
   },
   "devDependencies": {
+    "@types/three": "0.169.0",
     "@types/node": "^24.5.2",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
@@ -30,6 +31,8 @@
     "vite-plugin-pwa": "^1.2.0"
   },
   "overrides": {
-    "serialize-javascript": "7.0.4"
+    "serialize-javascript": "7.0.4",
+    "three": "0.170.0",
+    "@types/three": "0.169.0"
   }
 }
