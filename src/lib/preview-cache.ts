@@ -27,6 +27,71 @@ function is2DVisualization(visualization: string): boolean {
   return ['2D', 'experimental-2D-LL', 'experimental-2D-LL-face'].includes(visualization);
 }
 
+async function get2DSvgMarkupFromPlayer(
+  player: TwistyPlayer,
+): Promise<string> {
+  try {
+    // `TwistyPlayer` uses a closed shadow root, so `shadowRoot` is not accessible.
+    // Instead, reuse the built-in 2D screenshot path by intercepting the SVG Blob it creates.
+    // Note: this project’s TS lib/types may not include DOM `Blob`, so keep this `any`.
+    let capturedBlob: any = null;
+    const prevCreateObjectURL = URL.createObjectURL;
+    const prevRevokeObjectURL = URL.revokeObjectURL;
+    const prevCreateElement = document.createElement.bind(document);
+    const objectUrls: string[] = [];
+
+    URL.createObjectURL = ((blob: Blob) => {
+      capturedBlob = blob;
+      const url = prevCreateObjectURL(blob);
+      objectUrls.push(url);
+      return url;
+    }) as typeof URL.createObjectURL;
+
+    URL.revokeObjectURL = ((url: string) => {
+      // Avoid breaking the download path while we're capturing.
+      try {
+        prevRevokeObjectURL(url);
+      } catch {
+        // ignore
+      }
+    }) as typeof URL.revokeObjectURL;
+
+    document.createElement = ((tagName: string, options?: ElementCreationOptions) => {
+      const el = prevCreateElement(tagName, options);
+      if (tagName.toLowerCase() === 'a') {
+        // Suppress the synthetic download click.
+        (el as HTMLAnchorElement).click = () => {};
+      }
+      return el;
+    }) as typeof document.createElement;
+
+    try {
+      await player.experimentalDownloadScreenshot('__cubedex_preview_cache__');
+    } finally {
+      URL.createObjectURL = prevCreateObjectURL;
+      URL.revokeObjectURL = prevRevokeObjectURL;
+      document.createElement = prevCreateElement;
+      for (const url of objectUrls) {
+        try {
+          prevRevokeObjectURL(url);
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    if (!capturedBlob) return '';
+
+    const markup =
+      typeof capturedBlob?.text === 'function'
+        ? await capturedBlob.text()
+        : await new Response(capturedBlob).text();
+    return markup;
+  } catch {
+    return '';
+  }
+}
+
 async function rasterizeSvgToPng(svgMarkup: string, width: number, height: number): Promise<string> {
   if (!svgMarkup) return '';
   try {
@@ -126,9 +191,19 @@ function ensureHost(): HTMLDivElement {
 type Backend = {
   player: TwistyPlayer;
   container: HTMLDivElement;
+  baseline2DSvgChecksum?: number;
 };
 
 const backends = new Map<string, Backend>();
+
+function checksum32(str: string): number {
+  // Simple non-crypto checksum to detect SVG changes.
+  let hash = 5381;
+  for (let i = 0; i < str.length; i += 1) {
+    hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
+  }
+  return hash >>> 0;
+}
 
 /** Cubing mounts visualization after IntersectionObserver calls this async hook; offscreen hosts often never intersect — invoke and await the same hook. */
 async function awaitTwistyIntersectedCallback(player: TwistyPlayer): Promise<void> {
@@ -248,17 +323,29 @@ async function renderSvgPreview(params: PreviewParams): Promise<Preview> {
   const backend = ensureBackend(params.visualization);
   const { player } = backend;
   await awaitTwistyIntersectedCallback(player);
+
+  // Capture a baseline "solved" SVG checksum per backend so we can avoid caching
+  // the initial solved render if the first capture happens too early.
+  if (backend.baseline2DSvgChecksum === undefined) {
+    await flushTwistyModel();
+    const baselineMarkup = await get2DSvgMarkupFromPlayer(player);
+    backend.baseline2DSvgChecksum = checksum32(baselineMarkup);
+  }
+
   player.experimentalStickering = params.stickering;
   player.experimentalSetupAnchor = params.setupAnchor ?? 'end';
   player.experimentalSetupAlg = Alg.fromString(params.alg).invert().toString();
   player.alg = '';
   let markup = '';
   try {
-    // Retry a couple times to avoid capturing an uninitialized/previous state SVG.
-    for (let attempt = 0; attempt < 3 && !markup; attempt += 1) {
+    // Retry a few times to avoid capturing an uninitialized/previous state SVG.
+    for (let attempt = 0; attempt < 4 && !markup; attempt += 1) {
       await flushTwistyModel();
 
-      markup = await player.experimentalGet2DSvgMarkup();
+      markup = await get2DSvgMarkupFromPlayer(player);
+      const currentChecksum = checksum32(markup);
+
+      if (markup && currentChecksum !== backend.baseline2DSvgChecksum) break;
     }
   } catch {
     markup = '';
