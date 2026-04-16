@@ -401,10 +401,9 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
 
     if (event.type === 'FACELETS') {
       // MoYu32 (and possibly other protocols) may emit FACELETS immediately after each MOVE.
-      // If we are buffering a MOVE to detect slice pairs, flush it now so the UI still animates.
-      if (sliceBufferRef.current?.event.type === 'MOVE') {
-        void flushBufferedMove();
-      } else {
+      // If a slice candidate is buffered, leave it alone so the pair-detection window (100 ms
+      // timer + next MOVE) can still fire.  Only clear when there is nothing useful buffered.
+      if (sliceBufferRef.current?.event.type !== 'MOVE') {
         clearSliceBuffer();
       }
       sliceOrientationRef.current = { ...IDENTITY };
@@ -436,7 +435,18 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
           if (sliceMove) {
             void processResolvedMove(event, [bufferedEvent, event], sliceMove);
           } else {
-            void processResolvedMove(bufferedEvent, [bufferedEvent]).then(() => processResolvedMove(event, [event]));
+            // Not a slice pair.  Flush the buffered event, then re-buffer the
+            // incoming event so each gets its own React render and the effect in
+            // App.tsx sees both moves.  A chained .then() would let React 18's
+            // automatic batching collapse both setLastProcessedMove calls into one
+            // render, silently dropping the first move.
+            void processResolvedMove(bufferedEvent, [bufferedEvent]);
+            sliceBufferRef.current = {
+              event,
+              timer: window.setTimeout(() => {
+                void flushBufferedMove();
+              }, 100),
+            };
           }
           return;
         }
@@ -451,7 +461,10 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       }
 
       if (sliceBufferRef.current) {
-        void flushBufferedMove().then(() => processResolvedMove(event, [event]));
+        // Same React-18 batching concern: schedule the non-slice-candidate move
+        // in a macrotask so it renders separately from the flushed buffer event.
+        void flushBufferedMove();
+        window.setTimeout(() => void processResolvedMove(event, [event]), 0);
         return;
       }
     } else if (sliceBufferRef.current) {
