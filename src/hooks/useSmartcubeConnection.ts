@@ -400,7 +400,13 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     }
 
     if (event.type === 'FACELETS') {
-      clearSliceBuffer();
+      // MoYu32 (and possibly other protocols) may emit FACELETS immediately after each MOVE.
+      // If we are buffering a MOVE to detect slice pairs, flush it now so the UI still animates.
+      if (sliceBufferRef.current?.event.type === 'MOVE') {
+        void flushBufferedMove();
+      } else {
+        clearSliceBuffer();
+      }
       sliceOrientationRef.current = { ...IDENTITY };
       setCurrentFacelets(event.facelets);
       void faceletsToPattern(event.facelets).then((pattern) => {
@@ -420,7 +426,9 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     }
 
     if (!gyroscopeEnabled) {
-      if (isSliceCandidate(event.move)) {
+      const sliceCandidate = isSliceCandidate(event.move);
+
+      if (sliceCandidate) {
         if (sliceBufferRef.current?.event.type === 'MOVE') {
           const bufferedEvent = sliceBufferRef.current.event;
           clearSliceBuffer();
