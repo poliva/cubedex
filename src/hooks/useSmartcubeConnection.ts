@@ -407,7 +407,6 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       if (!hasBufferedMove) {
         clearSliceBuffer();
       }
-      sliceOrientationRef.current = { ...IDENTITY };
       setCurrentFacelets(event.facelets);
       // Skip the faceletsToPattern update while a move is buffered.  faceletsToPattern is
       // async and resolves on the microtask queue — always before the next MOVE macro-task.
