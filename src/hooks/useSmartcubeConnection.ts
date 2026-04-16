@@ -403,15 +403,24 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       // MoYu32 (and possibly other protocols) may emit FACELETS immediately after each MOVE.
       // If a slice candidate is buffered, leave it alone so the pair-detection window (100 ms
       // timer + next MOVE) can still fire.  Only clear when there is nothing useful buffered.
-      if (sliceBufferRef.current?.event.type !== 'MOVE') {
+      const hasBufferedMove = sliceBufferRef.current?.event.type === 'MOVE';
+      if (!hasBufferedMove) {
         clearSliceBuffer();
       }
       sliceOrientationRef.current = { ...IDENTITY };
       setCurrentFacelets(event.facelets);
-      void faceletsToPattern(event.facelets).then((pattern) => {
-        currentPatternRef.current = pattern;
-        setCurrentPattern(pattern);
-      });
+      // Skip the faceletsToPattern update while a move is buffered.  faceletsToPattern is
+      // async and resolves on the microtask queue — always before the next MOVE macro-task.
+      // If we let it run, currentPatternRef gets overwritten with the intermediate
+      // post-first-half state (e.g. post-R2 for an M2), so processResolvedMove would
+      // incorrectly apply the first raw move a second time.  processResolvedMove tracks
+      // the pattern itself and will call setCurrentPattern when the pair resolves.
+      if (!hasBufferedMove) {
+        void faceletsToPattern(event.facelets).then((pattern) => {
+          currentPatternRef.current = pattern;
+          setCurrentPattern(pattern);
+        });
+      }
       return;
     }
 
