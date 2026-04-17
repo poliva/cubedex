@@ -270,24 +270,9 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     }
 
     const currentFacelets = patternToFacelets(trackerPattern);
-    console.log('[processResolvedMove:start]', JSON.stringify({
-      eventMove: event.move,
-      rawMoves: rawMoves.map((rawMove) => rawMove.move),
-      visualMove,
-      timestamp: event.timestamp,
-      currentFacelets,
-      previousFacelets: previousFaceletsRef.current,
-      hasCurrentPattern: currentPatternRef.current !== null,
-      currentSliceOrientation: sliceOrientationRef.current,
-    }));
     const isBuggedState = currentFacelets === previousFaceletsRef.current && !isBuggedRef.current;
     if (isBuggedState) {
       isBuggedRef.current = true;
-      console.log('[processResolvedMove:bugged-state-detected]', JSON.stringify({
-        move: event.move,
-        timestamp: event.timestamp,
-        facelets: currentFacelets,
-      }));
     }
     previousFaceletsRef.current = currentFacelets;
 
@@ -295,12 +280,6 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       trackerPattern = trackerPattern.applyMove(rawMove.move);
       recentMovesRef.current.push(rawMove);
     }
-    console.log('[processResolvedMove:applied-raw-moves]', JSON.stringify({
-      eventMove: event.move,
-      rawMoves: rawMoves.map((rawMove) => rawMove.move),
-      resultingFacelets: patternToFacelets(trackerPattern),
-      recentMoveCount: recentMovesRef.current.length,
-    }));
     currentPatternRef.current = trackerPattern;
     setCurrentPattern(trackerPattern);
 
@@ -317,19 +296,9 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       : remapMoveForPlayer(event.move, sliceOrientationRef.current);
     if (visualMove) {
       sliceOrientationRef.current = updateSliceOrientation(sliceOrientationRef.current, visualMove);
-      console.log('[slice orientation]', JSON.stringify(sliceOrientationRef.current));
     }
 
     const computedKey = `${event.timestamp}:${effectiveVisualMove}:${rawMoves.map((entry) => entry.move).join(',')}`;
-    console.log('[processResolvedMove:resolved]', JSON.stringify({
-      eventMove: event.move,
-      effectiveVisualMove,
-      rawMoves: rawMoves.map((entry) => entry.move),
-      computedKey,
-      isBugged: isBuggedRef.current,
-      currentSliceOrientation: sliceOrientationRef.current,
-      trackerFacelets: patternToFacelets(trackerPattern),
-    }));
 
     // flushSync forces a synchronous commit so two MOVEs arriving back-to-back (e.g. R'+L
     // for an M' in gyroscope mode) each produce their own render.  Without it, React 18's
@@ -365,9 +334,6 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   }, [clearSliceBuffer, processResolvedMove]);
 
   const handleCubeEvent = useCallback((event: SmartCubeEvent) => {
-    if (event.type === 'MOVE') {
-      console.log('[cube move]', JSON.stringify(event.move));
-    }
     if (event.type === 'HARDWARE') {
       setInfo((current) => ({
         ...current,
@@ -520,9 +486,6 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       void flushBufferedMove();
       return;
     }
-
-
-    console.log('[processing ResolvedMove for gyroscope enabled]', JSON.stringify(event.move));
     void processResolvedMove(event, [event]);
   }, [clearSliceBuffer, disconnect, flushBufferedMove, gyroscopeEnabled, processResolvedMove]);
 
