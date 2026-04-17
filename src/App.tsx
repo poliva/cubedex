@@ -28,7 +28,6 @@ import {
 import { ImportFileInput } from './components/ImportFileInput';
 import { MenuHelpIcon, MenuNewAlgIcon, MenuOptionsIcon, MenuPracticeIcon } from './components/MenuNavIcons';
 import { PracticeView } from './views/PracticeView';
-import { NewAlgView } from './views/NewAlgView';
 import { OptionsView } from './views/OptionsView';
 import { HelpView } from './views/HelpView';
 import { trainingViewStore } from './state/trainingViewStore';
@@ -55,6 +54,8 @@ export function App() {
   const [scrambleStartAlg, setScrambleStartAlg] = useState('');
   const [acknowledgedDisconnectToken, setAcknowledgedDisconnectToken] = useState(0);
   const [statsRefreshToken, setStatsRefreshToken] = useState(0);
+  const [algEditorVisible, setAlgEditorVisible] = useState(false);
+  const hideAlgEditorTimeoutRef = useRef<number | null>(null);
   const menuToggleRef = useRef<HTMLButtonElement | null>(null);
   const menuItemsRef = useRef<HTMLDivElement | null>(null);
   const isTouchScrollingRef = useRef(false);
@@ -509,10 +510,16 @@ export function App() {
     setActiveView(view);
     setMenuOpen(false);
     setInfoVisible(false);
+    if (hideAlgEditorTimeoutRef.current != null) {
+      window.clearTimeout(hideAlgEditorTimeoutRef.current);
+      hideAlgEditorTimeoutRef.current = null;
+    }
+    setAlgEditorVisible(view === 'new-alg');
 
     if (view === 'new-alg') {
       training.enterInputMode(training.algInput || training.displayAlg);
       scramble.clearScramble();
+      management.clearForm();
       management.clearMessages();
     }
 
@@ -621,11 +628,29 @@ export function App() {
       return;
     }
 
+    if (training.currentCase) {
+      management.setCategoryInput(training.currentCase.category);
+      management.setSubsetInput(training.currentCase.subset);
+      management.setAlgNameInput(training.currentCase.name);
+      management.clearMessages();
+    }
+
+    if (hideAlgEditorTimeoutRef.current != null) {
+      window.clearTimeout(hideAlgEditorTimeoutRef.current);
+      hideAlgEditorTimeoutRef.current = null;
+    }
+    setAlgEditorVisible(true);
     training.enterInputMode(algorithm);
     queueMicrotask(() => {
       document.getElementById('alg-input')?.focus();
     });
-  }, [training.algInput, training.currentCase, training.displayAlg, training.enterInputMode]);
+  }, [
+    management,
+    training.algInput,
+    training.currentCase,
+    training.displayAlg,
+    training.enterInputMode,
+  ]);
 
   const handleNewAlgSave = useCallback(() => {
     const nextCategory = management.categoryInput.trim();
@@ -649,7 +674,59 @@ export function App() {
   const handleNewAlgCancel = useCallback(() => {
     management.clearMessages();
     setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+    if (hideAlgEditorTimeoutRef.current != null) {
+      window.clearTimeout(hideAlgEditorTimeoutRef.current);
+      hideAlgEditorTimeoutRef.current = null;
+    }
+    setAlgEditorVisible(false);
     setActiveView('practice');
+    void training.trainCurrent(smartcube.currentPattern);
+  }, [
+    management.clearMessages,
+    smartcube.currentPattern,
+    smartcube.disconnectToken,
+    training.trainCurrent,
+  ]);
+
+  const handleInlineAlgSave = useCallback(() => {
+    const nextCategory = management.categoryInput.trim();
+    const ok = management.submitSave(training.algInput);
+    if (ok && nextCategory) {
+      training.clearFailedCounts();
+      setStatsRefreshToken((value) => value + 1);
+      setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+      setSelectedCategory(nextCategory);
+      setMainCubeStickeringDeferred(false);
+    }
+    if (ok) {
+      void training.trainCurrent(smartcube.currentPattern);
+      if (hideAlgEditorTimeoutRef.current != null) {
+        window.clearTimeout(hideAlgEditorTimeoutRef.current);
+      }
+      hideAlgEditorTimeoutRef.current = window.setTimeout(() => {
+        hideAlgEditorTimeoutRef.current = null;
+        setAlgEditorVisible(false);
+      }, 3100);
+    }
+  }, [
+    management.submitSave,
+    management.categoryInput,
+    setSelectedCategory,
+    smartcube.currentPattern,
+    smartcube.disconnectToken,
+    training.algInput,
+    training.clearFailedCounts,
+    training.trainCurrent,
+  ]);
+
+  const handleInlineAlgCancel = useCallback(() => {
+    management.clearMessages();
+    setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+    if (hideAlgEditorTimeoutRef.current != null) {
+      window.clearTimeout(hideAlgEditorTimeoutRef.current);
+      hideAlgEditorTimeoutRef.current = null;
+    }
+    setAlgEditorVisible(false);
     void training.trainCurrent(smartcube.currentPattern);
   }, [
     management.clearMessages,
@@ -741,6 +818,10 @@ export function App() {
             training={training}
             scramble={scramble}
             smartcube={smartcube}
+            management={management}
+            showAlgEditor={algEditorVisible}
+            onAlgEditorSave={newAlgVisible ? handleNewAlgSave : handleInlineAlgSave}
+            onAlgEditorCancel={newAlgVisible ? handleNewAlgCancel : handleInlineAlgCancel}
             mainCubeAlg={mainCubeAlg}
             selectedStickering={selectedStickering}
             setAcknowledgedDisconnectToken={setAcknowledgedDisconnectToken}
@@ -772,15 +853,6 @@ export function App() {
               visible
               showDumbcubeHelp={showDumbcubeHelp}
               setShowDumbcubeHelp={setShowDumbcubeHelp}
-            />
-          ) : null}
-
-          {newAlgVisible ? (
-            <NewAlgView
-              visible
-              management={management}
-              onSave={handleNewAlgSave}
-              onCancel={handleNewAlgCancel}
             />
           ) : null}
 

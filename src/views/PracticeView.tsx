@@ -5,6 +5,7 @@ import type { PracticeTogglesState } from '../hooks/usePracticeToggles';
 import type { TrainingState } from '../hooks/useTrainingState';
 import type { ScrambleState } from '../hooks/useScrambleState';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
+import type { LegacyManagementState } from '../hooks/useLegacyManagement';
 import { LegacySwitch } from '../components/LegacySwitch';
 import {
   AlgHelpInfoIcon,
@@ -20,6 +21,7 @@ import { CaseGrid } from './CaseGrid';
 import { MainCubeArea } from './MainCubeArea';
 import { MoveListPanel } from './MoveListPanel';
 import { StatsPanel } from './StatsPanel';
+import { NewAlgView } from './NewAlgView';
 
 function formatHistoryMetric(time: number | null) {
   if (!time) {
@@ -40,6 +42,10 @@ export const PracticeView = memo(function PracticeView({
   training,
   scramble,
   smartcube,
+  management,
+  showAlgEditor,
+  onAlgEditorSave,
+  onAlgEditorCancel,
   mainCubeAlg,
   selectedStickering,
   setAcknowledgedDisconnectToken,
@@ -73,6 +79,10 @@ export const PracticeView = memo(function PracticeView({
   training: TrainingState;
   scramble: ScrambleState;
   smartcube: SmartcubeConnectionState;
+  management: LegacyManagementState;
+  showAlgEditor: boolean;
+  onAlgEditorSave: () => void;
+  onAlgEditorCancel: () => void;
   mainCubeAlg: string;
   selectedStickering: string;
   setAcknowledgedDisconnectToken: (value: number) => void;
@@ -418,6 +428,13 @@ export const PracticeView = memo(function PracticeView({
             {scramble.isComputing ? '…' : <ScatterIcon />}
           </button>
         </div>
+
+        <NewAlgView
+          visible={showAlgEditor}
+          management={management}
+          onSave={onAlgEditorSave}
+          onCancel={onAlgEditorCancel}
+        />
 
         <div
           id="alg-help-info"

@@ -35,6 +35,10 @@ export function useLegacyManagement(onStorageChanged?: () => void): LegacyManage
     setAlgNameInput('');
   }, []);
 
+  const clearAlgNameOnly = useCallback(() => {
+    setAlgNameInput('');
+  }, []);
+
   const submitSave = useCallback((algorithm: string) => {
     const category = categoryInput.trim();
     const subset = subsetInput.trim();
@@ -52,14 +56,14 @@ export function useLegacyManagement(onStorageChanged?: () => void): LegacyManage
 
     saveAlgorithm(category, subset, name, normalizedAlgorithm);
     onStorageChanged?.();
-    clearForm();
+    clearAlgNameOnly();
     setSaveError('');
     setSaveSuccess('Algorithm saved successfully');
     window.setTimeout(() => {
       setSaveSuccess('');
     }, 3000);
     return true;
-  }, [algNameInput, categoryInput, clearForm, onStorageChanged, subsetInput]);
+  }, [algNameInput, categoryInput, clearAlgNameOnly, onStorageChanged, subsetInput]);
 
   const exportAll = useCallback(() => {
     exportAlgorithms();
