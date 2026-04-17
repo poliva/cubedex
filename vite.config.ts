@@ -2,9 +2,12 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 const workerImportMetaUrlRE = /\bnew\s+(?:Worker|SharedWorker)\s*\(\s*(new\s+URL\s*\(\s*('[^']+'|"[^"]+"|`[^`]+`)\s*,\s*import\.meta\.url\s*\))/g;
+const repoName = process.env.GITHUB_REPOSITORY?.split('/')[1] ?? '';
+const githubPagesBase = repoName && !repoName.endsWith('.github.io') ? `/${repoName}/` : '/';
+const base = process.env.GITHUB_ACTIONS === 'true' ? githubPagesBase : '/';
 
 export default defineConfig({
-  base: "/",
+  base,
   build: {
     chunkSizeWarningLimit: 2048
   },
@@ -40,9 +43,9 @@ export default defineConfig({
         "name": "Cubedex",
         "short_name": "Cubedex",
         "description": "Cubedex allows to train Rubik's cube algorithms like PLL or OLL using a smartcube.",
-        "start_url": "index.html",
+        "start_url": base,
         "display": "standalone",
-        "scope":"/",
+        "scope": base,
         "background_color": "#111827",
         "theme_color": "#111827",
         "icons": [
@@ -82,7 +85,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,png,svg}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/cubedex\.app\/.*\.(png|jpg|svg)$/,
+            urlPattern: ({ request, sameOrigin }) => sameOrigin && request.destination === 'image',
             handler: 'CacheFirst',
             options: {
               cacheName: 'images-cache',
