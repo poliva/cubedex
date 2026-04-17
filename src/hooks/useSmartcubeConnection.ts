@@ -591,7 +591,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   const gyroSupportResolved = info.gyroSupported !== '- n/a -' || !Boolean(connRef.current?.capabilities.hardware);
   const gyroscopeToggleDisabled = connected && !gyroSupported;
 
-  return {
+  return useMemo(() => ({
     connected,
     connecting,
     disconnectToken,
@@ -611,5 +611,24 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     gyroscopeToggleDisabled,
     cubeQuaternion,
     cubeQuaternionRef,
-  };
+  }), [
+    battery,
+    connectLabel,
+    connectOrDisconnect,
+    connected,
+    connecting,
+    cubeQuaternion,
+    currentFacelets,
+    currentPattern,
+    disconnectToken,
+    gyroSupportResolved,
+    gyroSupported,
+    gyroscopeToggleDisabled,
+    info,
+    lastProcessedMove,
+    resetGyro,
+    resetState,
+    setShowAllBluetoothDevices,
+    showAllBluetoothDevices,
+  ]);
 }

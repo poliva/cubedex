@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { readOption, writeOption } from '../lib/legacy-storage';
 
 export interface LegacyOptionsState {
@@ -116,7 +116,11 @@ export function useLegacyOptions(): LegacyOptionsState {
     writeOption('cubeSizePx', String(cubeSizePx));
   }, [cubeSizePx]);
 
-  return {
+  const setCubeSizePx = useCallback((value: number) => {
+    setCubeSizePxState(clampInt(value, 240, 600, 400));
+  }, []);
+
+  return useMemo(() => ({
     darkMode,
     showAlgName,
     alwaysScrambleTo,
@@ -140,6 +144,20 @@ export function useLegacyOptions(): LegacyOptionsState {
     setGyroscope: setGyroscopeState,
     setControlPanel: setControlPanelState,
     setFlashingIndicatorEnabled: setFlashingIndicatorEnabledState,
-    setCubeSizePx: (value: number) => setCubeSizePxState(clampInt(value, 240, 600, 400)),
-  };
+    setCubeSizePx,
+  }), [
+    alwaysScrambleTo,
+    backview,
+    controlPanel,
+    cubeSizePx,
+    darkMode,
+    flashingIndicatorEnabled,
+    fullStickering,
+    gyroscope,
+    hintFacelets,
+    setCubeSizePx,
+    showAlgName,
+    visualization,
+    whiteOnBottom,
+  ]);
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import defaultAlgs from '../data/defaultAlgs.json';
 import {
   cycleLearnedStatus,
@@ -48,7 +48,7 @@ export function useLegacyBootstrap(): LegacyBootstrapState {
   const [learnedRefreshToken, setLearnedRefreshToken] = useState(0);
   const previousCategoryRef = useRef('');
 
-  function reloadSavedAlgorithms() {
+  const reloadSavedAlgorithms = useCallback(() => {
     const saved = getSavedAlgorithms();
     const initialCategory = Object.keys(saved)[0] ?? '';
 
@@ -61,9 +61,9 @@ export function useLegacyBootstrap(): LegacyBootstrapState {
       const activeCategory = (selectedCategory && saved[selectedCategory]) ? selectedCategory : initialCategory;
       const available = getSubsetsForCategory(saved, activeCategory).map((entry) => entry.subset);
       const retained = current.filter((subset) => available.includes(subset));
-       return retained;
+      return retained;
     });
-  }
+  }, [selectedCategory]);
 
   useEffect(() => {
     migrateLastFiveTimesToLastTimes();
@@ -125,7 +125,7 @@ export function useLegacyBootstrap(): LegacyBootstrapState {
     setSelectedCaseIds((current) => current.filter((algId) => caseCards.some((card) => card.id === algId)));
   }, [autoApplySelectionMode, caseCards]);
 
-  function toggleSubset(subset: string, checked: boolean) {
+  const toggleSubset = useCallback((subset: string, checked: boolean) => {
     setSelectedCaseIds([]);
     setAutoApplySelectionMode(selectLearningCases ? 'learning' : selectAllCases ? 'all' : null);
     setSelectionChangeMode('bulk');
@@ -135,9 +135,9 @@ export function useLegacyBootstrap(): LegacyBootstrapState {
       }
       return current.filter((entry) => entry !== subset);
     });
-  }
+  }, [selectAllCases, selectLearningCases]);
 
-  function toggleAllSubsets(checked: boolean) {
+  const toggleAllSubsets = useCallback((checked: boolean) => {
     setSelectedCaseIds([]);
     setAutoApplySelectionMode(
       checked && (selectLearningCases || selectAllCases)
@@ -146,9 +146,9 @@ export function useLegacyBootstrap(): LegacyBootstrapState {
     );
     setSelectionChangeMode('bulk');
     setSelectedSubsets(checked ? subsets : []);
-  }
+  }, [selectAllCases, selectLearningCases, subsets]);
 
-  function toggleCaseSelection(algId: string, checked: boolean) {
+  const toggleCaseSelection = useCallback((algId: string, checked: boolean) => {
     setSelectionChangeMode('manual');
     setSelectedCaseIds((current) => {
       if (checked) {
@@ -156,9 +156,9 @@ export function useLegacyBootstrap(): LegacyBootstrapState {
       }
       return current.filter((entry) => entry !== algId);
     });
-  }
+  }, []);
 
-  function setSelectAllCases(checked: boolean) {
+  const setSelectAllCases = useCallback((checked: boolean) => {
     setSelectionChangeMode('bulk');
     setSelectAllCasesState(checked);
     if (checked) {
@@ -168,9 +168,9 @@ export function useLegacyBootstrap(): LegacyBootstrapState {
       setAutoApplySelectionMode(null);
       setSelectedCaseIds([]);
     }
-  }
+  }, []);
 
-  function setSelectLearningCases(checked: boolean) {
+  const setSelectLearningCases = useCallback((checked: boolean) => {
     setSelectionChangeMode('bulk');
     setSelectLearningCasesState(checked);
     if (checked) {
@@ -180,14 +180,21 @@ export function useLegacyBootstrap(): LegacyBootstrapState {
       setAutoApplySelectionMode(null);
       setSelectedCaseIds([]);
     }
-  }
+  }, []);
 
-  function cycleCaseLearnedState(algId: string) {
+  const cycleCaseLearnedState = useCallback((algId: string) => {
     cycleLearnedStatus(algId);
     setLearnedRefreshToken((value) => value + 1);
-  }
+  }, []);
 
-  return {
+  const handleSetSelectedCategory = useCallback((category: string) => {
+    setSelectedCaseIds([]);
+    setAutoApplySelectionMode(null);
+    setSelectionChangeMode('bulk');
+    setSelectedCategory(category);
+  }, []);
+
+  return useMemo(() => ({
     isReady,
     savedAlgorithms,
     categories,
@@ -199,12 +206,7 @@ export function useLegacyBootstrap(): LegacyBootstrapState {
     selectionChangeMode,
     selectAllCases,
     selectLearningCases,
-    setSelectedCategory: (category: string) => {
-      setSelectedCaseIds([]);
-      setAutoApplySelectionMode(null);
-      setSelectionChangeMode('bulk');
-      setSelectedCategory(category);
-    },
+    setSelectedCategory: handleSetSelectedCategory,
     toggleSubset,
     toggleAllSubsets,
     toggleCaseSelection,
@@ -212,5 +214,25 @@ export function useLegacyBootstrap(): LegacyBootstrapState {
     setSelectLearningCases,
     cycleCaseLearnedState,
     reloadSavedAlgorithms,
-  };
+  }), [
+    caseCards,
+    categories,
+    cycleCaseLearnedState,
+    handleSetSelectedCategory,
+    isReady,
+    reloadSavedAlgorithms,
+    savedAlgorithms,
+    selectAllCases,
+    selectLearningCases,
+    selectedCaseIds,
+    selectedCategory,
+    selectedSubsets,
+    selectionChangeMode,
+    setSelectAllCases,
+    setSelectLearningCases,
+    subsets,
+    toggleAllSubsets,
+    toggleCaseSelection,
+    toggleSubset,
+  ]);
 }

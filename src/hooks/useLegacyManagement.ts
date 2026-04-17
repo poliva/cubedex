@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { expandNotation, exportAlgorithms, importAlgorithmsFromJson, saveAlgorithm } from '../lib/legacy-storage';
 
 export interface LegacyManagementState {
@@ -24,18 +24,18 @@ export function useLegacyManagement(onStorageChanged?: () => void): LegacyManage
   const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState('');
 
-  function clearMessages() {
+  const clearMessages = useCallback(() => {
     setSaveError('');
     setSaveSuccess('');
-  }
+  }, []);
 
-  function clearForm() {
+  const clearForm = useCallback(() => {
     setCategoryInput('');
     setSubsetInput('');
     setAlgNameInput('');
-  }
+  }, []);
 
-  function submitSave(algorithm: string) {
+  const submitSave = useCallback((algorithm: string) => {
     const category = categoryInput.trim();
     const subset = subsetInput.trim();
     const name = algNameInput.trim();
@@ -59,13 +59,13 @@ export function useLegacyManagement(onStorageChanged?: () => void): LegacyManage
       setSaveSuccess('');
     }, 3000);
     return true;
-  }
+  }, [algNameInput, categoryInput, clearForm, onStorageChanged, subsetInput]);
 
-  function exportAll() {
+  const exportAll = useCallback(() => {
     exportAlgorithms();
-  }
+  }, []);
 
-  async function importFromFile(file: File) {
+  const importFromFile = useCallback(async (file: File) => {
     try {
       const text = await file.text();
       importAlgorithmsFromJson(text);
@@ -80,9 +80,9 @@ export function useLegacyManagement(onStorageChanged?: () => void): LegacyManage
       window.alert('Failed to import algorithms. Please ensure the file is in the correct format.');
       return false;
     }
-  }
+  }, [onStorageChanged]);
 
-  return {
+  return useMemo(() => ({
     categoryInput,
     subsetInput,
     algNameInput,
@@ -96,5 +96,16 @@ export function useLegacyManagement(onStorageChanged?: () => void): LegacyManage
     submitSave,
     exportAll,
     importFromFile,
-  };
+  }), [
+    algNameInput,
+    categoryInput,
+    clearForm,
+    clearMessages,
+    exportAll,
+    importFromFile,
+    saveError,
+    saveSuccess,
+    submitSave,
+    subsetInput,
+  ]);
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { KPattern } from 'cubing/kpuzzle';
 import type { CaseCardData } from '../lib/legacy-algorithms';
 import { solvedPattern } from '../lib/cube-utils';
@@ -28,12 +28,12 @@ export function useScrambleState(): ScrambleState {
   const [targetAlgorithm, setTargetAlgorithm] = useState('');
   const [helpTone, setHelpTone] = useState<'hidden' | 'green'>('hidden');
 
-  async function startScrambleTo(
+  const startScrambleTo = useCallback(async (
     algorithm: string,
     currentCase: CaseCardData | null,
     currentPattern?: KPattern | null,
     randomizeAUF = false,
-  ) {
+  ) => {
     if (!algorithm.trim()) {
       setScrambleMode(false);
       setScrambleText('');
@@ -73,9 +73,9 @@ export function useScrambleState(): ScrambleState {
     } finally {
       setIsComputing(false);
     }
-  }
+  }, []);
 
-  async function advanceScramble(move: string, currentPattern: KPattern | null) {
+  const advanceScramble = useCallback(async (move: string, currentPattern: KPattern | null) => {
     if (!scrambleMode || !scrambleText.trim() || !currentPattern || !targetAlgorithm.trim()) {
       return false;
     }
@@ -109,16 +109,16 @@ export function useScrambleState(): ScrambleState {
       setHelpTone('hidden');
     }
     return completed;
-  }
+  }, [scrambleMode, scrambleText, targetAlgorithm]);
 
-  function clearScramble() {
+  const clearScramble = useCallback(() => {
     setScrambleMode(false);
     setScrambleText('');
     setTargetAlgorithm('');
     setHelpTone('hidden');
-  }
+  }, []);
 
-  return {
+  return useMemo(() => ({
     scrambleMode,
     scrambleText,
     isComputing,
@@ -127,5 +127,14 @@ export function useScrambleState(): ScrambleState {
     startScrambleTo,
     advanceScramble,
     clearScramble,
-  };
+  }), [
+    advanceScramble,
+    clearScramble,
+    helpTone,
+    isComputing,
+    scrambleMode,
+    scrambleText,
+    startScrambleTo,
+    targetAlgorithm,
+  ]);
 }

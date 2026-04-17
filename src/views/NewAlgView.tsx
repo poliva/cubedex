@@ -1,16 +1,14 @@
+import { memo } from 'react';
 import type { LegacyManagementState } from '../hooks/useLegacyManagement';
-import type { TrainingState } from '../hooks/useTrainingState';
 
-export function NewAlgView({
+export const NewAlgView = memo(function NewAlgView({
   visible,
   management,
-  training,
   onSave,
   onCancel,
 }: {
   visible: boolean;
   management: LegacyManagementState;
-  training: TrainingState;
   onSave: () => void;
   onCancel: () => void;
 }) {
@@ -69,8 +67,6 @@ export function NewAlgView({
       <div id="save-success" className={`${management.saveSuccess ? 'status-panel status-success' : 'hidden status-panel status-success'}`}>
         {management.saveSuccess}
       </div>
-      {/* Keep `training` referenced to preserve identical behavior expectations (input mode lives in App). */}
-      <span className="hidden" aria-hidden>{training.inputMode ? '' : ''}</span>
     </div>
   );
-}
+});

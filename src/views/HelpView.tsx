@@ -1,6 +1,6 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { memo, type Dispatch, type SetStateAction } from 'react';
 
-export function HelpView({
+export const HelpView = memo(function HelpView({
   visible,
   showDumbcubeHelp,
   setShowDumbcubeHelp,
@@ -106,4 +106,4 @@ export function HelpView({
       </div>
     </div>
   );
-}
+});

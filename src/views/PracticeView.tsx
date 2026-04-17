@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, memo } from 'react';
 import type { LegacyBootstrapState } from '../hooks/useLegacyBootstrap';
 import type { LegacyOptionsState } from '../hooks/useLegacyOptions';
 import type { PracticeTogglesState } from '../hooks/usePracticeToggles';
@@ -31,7 +31,7 @@ function formatHistoryMetric(time: number | null) {
   return `${minutesPart}${parts.seconds.toString(10).padStart(2, '0')}.${parts.milliseconds.toString(10).padStart(3, '0')}`;
 }
 
-export function PracticeView({
+export const PracticeView = memo(function PracticeView({
   topVisible,
   practiceVisible,
   options,
@@ -557,5 +557,5 @@ export function PracticeView({
       <button type="button" className="hidden" onClick={handleTouchTimerActivation} aria-hidden />
     </>
   );
-}
+});
 

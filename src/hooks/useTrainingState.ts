@@ -24,6 +24,7 @@ import {
   setLastTimes,
 } from '../lib/legacy-storage';
 import { FACES, IDENTITY, SLICE_ROTATION, composePerm, invertPerm, type Face, type FacePerm } from '../lib/smartcube-parity';
+import { useStableCallback } from './useStableCallback';
 
 export type TimerState = 'IDLE' | 'READY' | 'RUNNING' | 'STOPPED';
 
@@ -1087,7 +1088,23 @@ export function useTrainingState(
     keepInitialStateRef.current = value;
   }
 
-  return {
+  const stableSetAlgInput = useStableCallback(setAlgInput);
+  const stableClearFailedCounts = useStableCallback(clearFailedCounts);
+  const stableEnterInputMode = useStableCallback(enterInputMode);
+  const stableTrainCurrent = useStableCallback(trainCurrent);
+  const stableSetTimerState = useStableCallback(setTimerState);
+  const stableActivateTimer = useStableCallback(activateTimer);
+  const stableHandleSpaceKeyDown = useStableCallback(handleSpaceKeyDown);
+  const stableHandleSpaceKeyUp = useStableCallback(handleSpaceKeyUp);
+  const stableHandleSmartcubeMove = useStableCallback(handleSmartcubeMove);
+  const stableStopAndRecordSolve = useStableCallback(stopAndRecordSolve);
+  const stableAbortRunningAttempt = useStableCallback(abortRunningAttempt);
+  const stableGetElapsedMs = useStableCallback(getElapsedMs);
+  const stablePrepareForScramble = useStableCallback(prepareForScramble);
+  const stableResetDrill = useStableCallback(resetDrill);
+  const stableSetKeepInitialState = useStableCallback(setKeepInitialState);
+
+  return useMemo(() => ({
     inputMode,
     scrambleMode,
     timerState,
@@ -1107,20 +1124,54 @@ export function useTrainingState(
     failedCounts,
     practiceCounts,
     flashRequest,
-    setAlgInput,
-    clearFailedCounts,
-    enterInputMode,
-    trainCurrent,
-    setTimerState,
-    activateTimer,
-    handleSpaceKeyDown,
-    handleSpaceKeyUp,
-    handleSmartcubeMove,
-    stopAndRecordSolve,
-    abortRunningAttempt,
-    getElapsedMs,
-    prepareForScramble,
-    resetDrill,
-    setKeepInitialState,
-  };
+    setAlgInput: stableSetAlgInput,
+    clearFailedCounts: stableClearFailedCounts,
+    enterInputMode: stableEnterInputMode,
+    trainCurrent: stableTrainCurrent,
+    setTimerState: stableSetTimerState,
+    activateTimer: stableActivateTimer,
+    handleSpaceKeyDown: stableHandleSpaceKeyDown,
+    handleSpaceKeyUp: stableHandleSpaceKeyUp,
+    handleSmartcubeMove: stableHandleSmartcubeMove,
+    stopAndRecordSolve: stableStopAndRecordSolve,
+    abortRunningAttempt: stableAbortRunningAttempt,
+    getElapsedMs: stableGetElapsedMs,
+    prepareForScramble: stablePrepareForScramble,
+    resetDrill: stableResetDrill,
+    setKeepInitialState: stableSetKeepInitialState,
+  }), [
+    algInput,
+    currentCase,
+    displayAlg,
+    displayState.fixText,
+    displayState.moves,
+    failedCounts,
+    fixVisible,
+    flashRequest,
+    helpTone,
+    inputMode,
+    practiceCounts,
+    scrambleMode,
+    selectedCases,
+    stableAbortRunningAttempt,
+    stableActivateTimer,
+    stableClearFailedCounts,
+    stableEnterInputMode,
+    stableGetElapsedMs,
+    stableHandleSmartcubeMove,
+    stableHandleSpaceKeyDown,
+    stableHandleSpaceKeyUp,
+    stablePrepareForScramble,
+    stableResetDrill,
+    stableSetAlgInput,
+    stableSetKeepInitialState,
+    stableSetTimerState,
+    stableStopAndRecordSolve,
+    stableTrainCurrent,
+    stats,
+    statsAlgId,
+    timerState,
+    timerText,
+    visualResetKey,
+  ]);
 }

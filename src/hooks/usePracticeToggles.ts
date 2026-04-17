@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 export interface PracticeTogglesState {
   randomizeAUF: boolean;
@@ -17,29 +17,29 @@ export function usePracticeToggles(): PracticeTogglesState {
   const [prioritizeSlowCases, setPrioritizeSlowCasesState] = useState(false);
   const [prioritizeFailedCases, setPrioritizeFailedCasesState] = useState(false);
 
-  function setRandomizeAUF(value: boolean) {
+  const setRandomizeAUF = useCallback((value: boolean) => {
     setRandomizeAUFState(value);
-  }
+  }, []);
 
-  function setRandomOrder(value: boolean) {
+  const setRandomOrder = useCallback((value: boolean) => {
     setRandomOrderState(value);
     if (value) {
       setPrioritizeSlowCasesState(false);
     }
-  }
+  }, []);
 
-  function setPrioritizeSlowCases(value: boolean) {
+  const setPrioritizeSlowCases = useCallback((value: boolean) => {
     setPrioritizeSlowCasesState(value);
     if (value) {
       setRandomOrderState(false);
     }
-  }
+  }, []);
 
-  function setPrioritizeFailedCases(value: boolean) {
+  const setPrioritizeFailedCases = useCallback((value: boolean) => {
     setPrioritizeFailedCasesState(value);
-  }
+  }, []);
 
-  return {
+  return useMemo(() => ({
     randomizeAUF,
     randomOrder,
     prioritizeSlowCases,
@@ -48,5 +48,14 @@ export function usePracticeToggles(): PracticeTogglesState {
     setRandomOrder,
     setPrioritizeSlowCases,
     setPrioritizeFailedCases,
-  };
+  }), [
+    prioritizeFailedCases,
+    prioritizeSlowCases,
+    randomOrder,
+    randomizeAUF,
+    setPrioritizeFailedCases,
+    setPrioritizeSlowCases,
+    setRandomOrder,
+    setRandomizeAUF,
+  ]);
 }

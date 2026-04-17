@@ -1,8 +1,10 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
   useState,
+  type ChangeEventHandler,
   type ComponentType,
 } from 'react';
 import { Alg } from 'cubing/alg';
@@ -23,6 +25,7 @@ import { patternToPlayerAlg } from './lib/legacy-scramble';
 import {
   HamburgerIcon,
 } from './components/Icons';
+import { ImportFileInput } from './components/ImportFileInput';
 import { MenuHelpIcon, MenuNewAlgIcon, MenuOptionsIcon, MenuPracticeIcon } from './components/MenuNavIcons';
 import { PracticeView } from './views/PracticeView';
 import { NewAlgView } from './views/NewAlgView';
@@ -100,6 +103,25 @@ export function App() {
   const selectedStickering = mainCubeStickeringDeferred && !options.fullStickering
     ? 'full'
     : getLegacyStickering(selectedCategory || 'PLL', options.fullStickering);
+  const optionsVisible = activeView === 'options';
+  const helpVisible = activeView === 'help';
+  const newAlgVisible = activeView === 'new-alg';
+  const optionsMounted = optionsVisible || infoVisible;
+  const showFlashingIndicator = useCallback((color: 'gray' | 'red' | 'green', durationMs: number) => {
+    if (!options.flashingIndicatorEnabled && color !== 'gray') {
+      return;
+    }
+
+    setFlashingIndicatorColor(color);
+    setIsFlashingIndicatorVisible(true);
+    if (flashingIndicatorTimeoutRef.current !== null) {
+      window.clearTimeout(flashingIndicatorTimeoutRef.current);
+    }
+    flashingIndicatorTimeoutRef.current = window.setTimeout(() => {
+      setIsFlashingIndicatorVisible(false);
+      flashingIndicatorTimeoutRef.current = null;
+    }, durationMs);
+  }, [options.flashingIndicatorEnabled]);
 
   const [inputModeSmartcubeSeed, setInputModeSmartcubeSeed] = useState<{ key: string; alg: string } | null>(null);
   useEffect(() => {
@@ -250,7 +272,16 @@ export function App() {
     } else if (options.gyroscope) {
       options.setGyroscope(false);
     }
-  }, [options, smartcube.connected, smartcube.disconnectToken, smartcube.gyroSupportResolved, smartcube.gyroSupported, smartcube.info.deviceMAC, smartcube.info.gyroSupported]);
+  }, [
+    options.gyroscope,
+    options.setGyroscope,
+    smartcube.connected,
+    smartcube.disconnectToken,
+    smartcube.gyroSupportResolved,
+    smartcube.gyroSupported,
+    smartcube.info.deviceMAC,
+    smartcube.info.gyroSupported,
+  ]);
 
   useEffect(() => {
     function onDocumentClick(event: MouseEvent) {
@@ -302,7 +333,14 @@ export function App() {
       document.removeEventListener('keydown', onKeyDown);
       document.removeEventListener('keyup', onKeyUp);
     };
-  }, [smartcube.connected, training]);
+  }, [
+    showFlashingIndicator,
+    smartcube.connected,
+    training.handleSpaceKeyDown,
+    training.handleSpaceKeyUp,
+    training.inputMode,
+    training.timerState,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -318,7 +356,7 @@ export function App() {
     }
 
     showFlashingIndicator(training.flashRequest.color, training.flashRequest.durationMs);
-  }, [training.flashRequest]);
+  }, [showFlashingIndicator, training.flashRequest]);
 
   useEffect(() => {
     if (options.flashingIndicatorEnabled) {
@@ -380,12 +418,15 @@ export function App() {
     });
   }, [
     options.alwaysScrambleTo,
-    scramble,
+    practiceToggles.randomizeAUF,
+    scramble.startScrambleTo,
     smartcube.currentPattern,
+    smartcube.disconnectToken,
     training.algInput,
+    training.currentCase,
     training.displayAlg,
     training.inputMode,
-    training,
+    training.prepareForScramble,
     training.statsAlgId,
     training.timerState,
   ]);
@@ -450,9 +491,21 @@ export function App() {
         });
       }
     });
-  }, [scramble, smartcube.currentPattern, smartcube.lastProcessedMove, training]);
+  }, [
+    scramble.advanceScramble,
+    scramble.scrambleMode,
+    scramble.targetAlgorithm,
+    smartcube.currentPattern,
+    smartcube.lastProcessedMove,
+    training.algInput,
+    training.handleSmartcubeMove,
+    training.inputMode,
+    training.setAlgInput,
+    training.setKeepInitialState,
+    training.trainCurrent,
+  ]);
 
-  function selectView(view: MenuView) {
+  const selectView = useCallback((view: MenuView) => {
     setActiveView(view);
     setMenuOpen(false);
     setInfoVisible(false);
@@ -475,33 +528,28 @@ export function App() {
     if (view !== 'practice') {
       lastProcessedScrambleMoveRef.current = '';
     }
-  }
+  }, [
+    management.clearMessages,
+    options.alwaysScrambleTo,
+    scramble.clearScramble,
+    scramble.scrambleMode,
+    smartcube.currentPattern,
+    smartcube.disconnectToken,
+    training.algInput,
+    training.displayAlg,
+    training.enterInputMode,
+    training.trainCurrent,
+  ]);
 
-  function showFlashingIndicator(color: 'gray' | 'red' | 'green', durationMs: number) {
-    if (!options.flashingIndicatorEnabled && color !== 'gray') {
-      return;
-    }
-
-    setFlashingIndicatorColor(color);
-    setIsFlashingIndicatorVisible(true);
-    if (flashingIndicatorTimeoutRef.current !== null) {
-      window.clearTimeout(flashingIndicatorTimeoutRef.current);
-    }
-    flashingIndicatorTimeoutRef.current = window.setTimeout(() => {
-      setIsFlashingIndicatorVisible(false);
-      flashingIndicatorTimeoutRef.current = null;
-    }, durationMs);
-  }
-
-  function handleTouchStart() {
+  const handleTouchStart = useCallback(() => {
     isTouchScrollingRef.current = false;
-  }
+  }, []);
 
-  function handleTouchMove() {
+  const handleTouchMove = useCallback(() => {
     isTouchScrollingRef.current = true;
-  }
+  }, []);
 
-  function handleTimerActivation() {
+  const handleTimerActivation = useCallback(() => {
     if (smartcube.connected || training.inputMode) {
       return;
     }
@@ -516,15 +564,21 @@ export function App() {
     }
 
     training.activateTimer();
-  }
+  }, [
+    showFlashingIndicator,
+    smartcube.connected,
+    training.activateTimer,
+    training.inputMode,
+    training.timerState,
+  ]);
 
-  function handleTouchEnd() {
+  const handleTouchEnd = useCallback(() => {
     if (!isTouchScrollingRef.current) {
       handleTimerActivation();
     }
-  }
+  }, [handleTimerActivation]);
 
-  function handleDeleteAlgorithms() {
+  const handleDeleteAlgorithms = useCallback(() => {
     if (!selectedCategory || selectedCases.length === 0) {
       return;
     }
@@ -542,9 +596,9 @@ export function App() {
     setDeleteMode(false);
     setDeleteSuccessMessage('Algorithms deleted successfully');
     setStatsRefreshToken((value) => value + 1);
-  }
+  }, [reloadSavedAlgorithms, selectedCategory, selectedCases, training.clearFailedCounts]);
 
-  function handleDeleteTimes() {
+  const handleDeleteTimes = useCallback(() => {
     if (selectedCases.length === 0) {
       return;
     }
@@ -559,9 +613,9 @@ export function App() {
 
     training.clearFailedCounts();
     setStatsRefreshToken((value) => value + 1);
-  }
+  }, [selectedCases, training.clearFailedCounts]);
 
-  function handleEditCurrentAlgorithm() {
+  const handleEditCurrentAlgorithm = useCallback(() => {
     const algorithm = training.currentCase?.algorithm || training.displayAlg || training.algInput;
     if (!algorithm.trim()) {
       return;
@@ -571,7 +625,53 @@ export function App() {
     queueMicrotask(() => {
       document.getElementById('alg-input')?.focus();
     });
-  }
+  }, [training.algInput, training.currentCase, training.displayAlg, training.enterInputMode]);
+
+  const handleNewAlgSave = useCallback(() => {
+    const nextCategory = management.categoryInput.trim();
+    if (management.submitSave(training.displayAlg || training.algInput) && nextCategory) {
+      training.clearFailedCounts();
+      setStatsRefreshToken((value) => value + 1);
+      setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+      setSelectedCategory(nextCategory);
+      setMainCubeStickeringDeferred(false);
+    }
+  }, [
+    management.categoryInput,
+    management.submitSave,
+    setSelectedCategory,
+    smartcube.disconnectToken,
+    training.algInput,
+    training.clearFailedCounts,
+    training.displayAlg,
+  ]);
+
+  const handleNewAlgCancel = useCallback(() => {
+    management.clearMessages();
+    setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+    setActiveView('practice');
+    void training.trainCurrent(smartcube.currentPattern);
+  }, [
+    management.clearMessages,
+    smartcube.currentPattern,
+    smartcube.disconnectToken,
+    training.trainCurrent,
+  ]);
+
+  const handleImportFileChange = useCallback<ChangeEventHandler<HTMLInputElement>>((event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      void management.importFromFile(file).then((imported) => {
+        if (imported) {
+          training.clearFailedCounts();
+          const firstCategory = Object.keys(getSavedAlgorithms())[0] ?? '';
+          setSelectedCategory(firstCategory);
+          setStatsRefreshToken((value) => value + 1);
+        }
+      });
+    }
+    event.currentTarget.value = '';
+  }, [management.importFromFile, setSelectedCategory, training.clearFailedCounts]);
 
   return (
     <div className="app-shell">
@@ -667,62 +767,35 @@ export function App() {
             smartcubeAppendMove={smartcubeAppendMove}
           />
 
-          <HelpView
-            visible={activeView === 'help'}
-            showDumbcubeHelp={showDumbcubeHelp}
-            setShowDumbcubeHelp={setShowDumbcubeHelp}
-          />
+          {helpVisible ? (
+            <HelpView
+              visible
+              showDumbcubeHelp={showDumbcubeHelp}
+              setShowDumbcubeHelp={setShowDumbcubeHelp}
+            />
+          ) : null}
 
-          <NewAlgView
-            visible={activeView === 'new-alg'}
-            management={management}
-            training={training}
-            onSave={() => {
-              const nextCategory = management.categoryInput.trim();
-              if (management.submitSave(training.displayAlg || training.algInput) && nextCategory) {
-                training.clearFailedCounts();
-                setStatsRefreshToken((value) => value + 1);
-                setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                setSelectedCategory(nextCategory);
-                setMainCubeStickeringDeferred(false);
-              }
-            }}
-            onCancel={() => {
-              management.clearMessages();
-              setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-              setActiveView('practice');
-              void training.trainCurrent(smartcube.currentPattern);
-            }}
-          />
+          {newAlgVisible ? (
+            <NewAlgView
+              visible
+              management={management}
+              onSave={handleNewAlgSave}
+              onCancel={handleNewAlgCancel}
+            />
+          ) : null}
 
-          <input
-            type="file"
-            id="import-file"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) {
-                void management.importFromFile(file).then((imported) => {
-                  if (imported) {
-                    training.clearFailedCounts();
-                    const firstCategory = Object.keys(getSavedAlgorithms())[0] ?? '';
-                    setSelectedCategory(firstCategory);
-                    setStatsRefreshToken((value) => value + 1);
-                  }
-                });
-              }
-              event.currentTarget.value = '';
-            }}
-          />
+          <ImportFileInput onChange={handleImportFileChange} />
 
-          <OptionsView
-            visible={activeView === 'options'}
-            infoVisible={infoVisible}
-            setInfoVisible={setInfoVisible}
-            options={options}
-            smartcube={smartcube}
-            management={management}
-          />
+          {optionsMounted ? (
+            <OptionsView
+              visible={optionsVisible}
+              infoVisible={infoVisible}
+              setInfoVisible={setInfoVisible}
+              options={options}
+              smartcube={smartcube}
+              management={management}
+            />
+          ) : null}
         </div>
       </div>
 

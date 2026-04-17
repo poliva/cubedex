@@ -1,9 +1,10 @@
+import { memo } from 'react';
 import type { LegacyManagementState } from '../hooks/useLegacyManagement';
 import type { LegacyOptionsState } from '../hooks/useLegacyOptions';
 import { LegacySwitch } from '../components/LegacySwitch';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
 
-export function OptionsView({
+export const OptionsView = memo(function OptionsView({
   visible,
   infoVisible,
   setInfoVisible,
@@ -247,4 +248,4 @@ export function OptionsView({
       </div>
     </>
   );
-}
+});
