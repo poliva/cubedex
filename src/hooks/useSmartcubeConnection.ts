@@ -297,10 +297,13 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       setInfo((current) => ({ ...current, skew: `${skew}%` }));
     }
 
+    const fixSliceOrientation = true;
     const effectiveVisualMove = visualMove
-      ? visualMove
+      ? fixSliceOrientation
+        ? visualMove
+        : rawMoves.map((entry) => entry.move).join(' ')
       : remapMoveForPlayer(event.move, sliceOrientationRef.current);
-    if (visualMove) {
+    if (visualMove && fixSliceOrientation) {
       sliceOrientationRef.current = updateSliceOrientation(sliceOrientationRef.current, visualMove);
     }
 
