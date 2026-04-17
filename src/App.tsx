@@ -163,11 +163,12 @@ export function App() {
 
   const smartcubeAppendMoveKey = smartcube.lastProcessedMove?.key;
   const smartcubeAppendMove = smartcube.lastProcessedMove?.visualMove;
+  const activeStatsSolveCount = training.practiceCounts[training.statsAlgId] ?? 0;
   useLegacyCharts(
     training.currentCase,
     training.displayAlg || training.algInput,
     training.statsAlgId,
-    `${statsRefreshToken}:${training.stats.practiceCount}`,
+    `${statsRefreshToken}:${activeStatsSolveCount}`,
   );
 
   // Mirror move-list specific fields into an external store so only the move list rerenders per-move.
@@ -206,7 +207,7 @@ export function App() {
       ao5Times[card.id] = averageOfFiveTimeNumber(card.id);
     }
     caseCardStore.setState({ bestTimes, ao5Times });
-  }, [caseCards, statsRefreshToken, training.stats.practiceCount]);
+  }, [activeStatsSolveCount, caseCards, statsRefreshToken]);
 
   // Keep action wrappers pointing at the latest closures.
   useEffect(() => {

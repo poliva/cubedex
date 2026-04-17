@@ -15,9 +15,9 @@ const timeChartSignature = new WeakMap<HTMLCanvasElement, string>();
 const statsChartSignature = new WeakMap<HTMLCanvasElement, string>();
 
 function signatureOf(times: number[]): string {
-  // Cheap stable signature. Collisions don't matter for correctness — a miss
-  // just means we do the update anyway; we mainly want to dedupe identical runs.
-  return `${times.length}|${times[0] ?? ''}|${times[times.length - 1] ?? ''}`;
+  // Histories are capped to a small rolling window, so a full-value signature is
+  // still cheap and avoids skipping redraws when only middle entries changed.
+  return `${times.length}|${times.join(',')}`;
 }
 
 export function countMovesETM(alg: string): number {
