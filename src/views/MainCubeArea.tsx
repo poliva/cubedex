@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import type { MutableRefObject } from 'react';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import { TwistyCube } from '../components/TwistyCube';
 import type { SmartcubeQuaternion } from '../hooks/useSmartcubeConnection';
 
@@ -39,26 +40,28 @@ function MainCubeAreaComponent({
   cubeQuaternionRef,
 }: MainCubeAreaProps) {
   return (
-    <TwistyCube
-      alg={alg}
-      sizePx={sizePx}
-      visualization={visualization}
-      hintFacelets={hintFacelets}
-      controlPanel={controlPanel}
-      experimentalStickering={experimentalStickering}
-      setupAlg={setupAlg}
-      cameraLatitude={0}
-      cameraLongitude={0}
-      backView={backView}
-      resetToken={resetToken}
-      orientationResetToken={orientationResetToken}
-      orientationResetAlg={orientationResetAlg}
-      appendMoveKey={appendMoveKey}
-      appendMove={appendMove}
-      gyroscopeEnabled={gyroscopeEnabled}
-      cubeQuaternionRef={cubeQuaternionRef}
-      className="twisty-cube-host"
-    />
+    <ErrorBoundary resetKey={`${resetToken}:${orientationResetToken}:${alg}`}>
+      <TwistyCube
+        alg={alg}
+        sizePx={sizePx}
+        visualization={visualization}
+        hintFacelets={hintFacelets}
+        controlPanel={controlPanel}
+        experimentalStickering={experimentalStickering}
+        setupAlg={setupAlg}
+        cameraLatitude={0}
+        cameraLongitude={0}
+        backView={backView}
+        resetToken={resetToken}
+        orientationResetToken={orientationResetToken}
+        orientationResetAlg={orientationResetAlg}
+        appendMoveKey={appendMoveKey}
+        appendMove={appendMove}
+        gyroscopeEnabled={gyroscopeEnabled}
+        cubeQuaternionRef={cubeQuaternionRef}
+        className="twisty-cube-host"
+      />
+    </ErrorBoundary>
   );
 }
 

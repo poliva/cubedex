@@ -306,7 +306,12 @@ export function TwistyCube({
     }
 
     appendedMoveKeyRef.current = appendMoveKey;
-    player.experimentalAddMove(appendMove, { cancel: false });
+    for (const move of appendMove.trim().split(/\s+/)) {
+      if (!move) {
+        continue;
+      }
+      player.experimentalAddMove(move, { cancel: false });
+    }
   }, [appendMove, appendMoveKey]);
 
   return <div ref={hostRef} className={className} />;
