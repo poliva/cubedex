@@ -48,7 +48,7 @@ export function CaseCardPreview({
     const marginY = 200;
     let settleChecks = 0;
     const maxSettleChecks = 3;
-    const promoteIfInRange = (reason: string) => {
+    const promoteIfInRange = (_reason: string) => {
       const r = el.getBoundingClientRect();
       const inRange = r.bottom >= -marginY && r.top <= window.innerHeight + marginY;
       if (inRange) {
