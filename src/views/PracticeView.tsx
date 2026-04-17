@@ -119,6 +119,35 @@ export const PracticeView = memo(function PracticeView({
   const showResetGyro = smartcube.connected && options.gyroscope && smartcube.gyroSupported;
   const showResetOrientation = smartcube.connected && (!smartcube.gyroSupported || !options.gyroscope);
 
+  /*
+  const lastAutoOrientationResetMoveKeyRef = useRef<string>('');
+  useEffect(() => {
+    const last = smartcube.lastProcessedMove;
+    if (!last || !smartcube.connected) return;
+
+    const moveKey = last.key ?? '';
+    if (!moveKey || lastAutoOrientationResetMoveKeyRef.current === moveKey) {
+      return;
+    }
+
+    const raw = last.rawMoves?.map((m) => m.move) ?? [];
+    const isOppositeUD =
+      raw.length === 2;
+      //&& ((raw[0] === 'U' && raw[1] === "D'") || (raw[0] === "D'" && raw[1] === 'U'));
+    const isNonGyroMode = !options.gyroscope || !smartcube.gyroSupported;
+    const shouldAutoReset = isNonGyroMode && raw.length === 2 && (last.visualMove === 'E' || last.visualMove === "E'" || last.visualMove === "S'" || last.visualMove === "S");
+    if (!shouldAutoReset) return;
+
+    console.log('[auto orientation reset]');
+    lastAutoOrientationResetMoveKeyRef.current = moveKey;
+    smartcube.resetOrientation();
+    setOrientationResetState((current) => ({
+      token: current.token + 1,
+      alg: smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : null,
+    }));
+  }, [options.gyroscope, smartcube, smartcube.connected, smartcube.currentPattern, smartcube.gyroSupported, smartcube.lastProcessedMove]);
+  */
+
   return (
     <>
       <div id="app-top" className={topVisible ? '' : 'hidden'}>
