@@ -123,6 +123,7 @@ var twistyVantage: any;
 
 const HOME_ORIENTATION = new THREE.Quaternion().setFromEuler(new THREE.Euler(15 * Math.PI / 180, -5 * Math.PI / 180, 0));
 var cubeQuaternion: THREE.Quaternion = new THREE.Quaternion().setFromEuler(new THREE.Euler(15 * Math.PI / 180, -20 * Math.PI / 180, 0));
+const WHITE_ON_BOTTOM_GYRO_ROTATION = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, Math.PI));
 
 const DR_LOCK_ORIENTATION = new THREE.Quaternion().setFromEuler(
   new THREE.Euler(15 * Math.PI / 180, -20 * Math.PI / 180, 0)
@@ -169,7 +170,13 @@ async function handleGyroEvent(event: SmartCubeEvent) {
     if (!basis) {
       basis = quat.clone().conjugate();
     }
-    cubeQuaternion.copy(quat.premultiply(basis).premultiply(HOME_ORIENTATION));
+    const relativeOrientation = quat.premultiply(basis);
+    if (whiteOnBottomEnabled) {
+      relativeOrientation
+        .premultiply(WHITE_ON_BOTTOM_GYRO_ROTATION)
+        .multiply(WHITE_ON_BOTTOM_GYRO_ROTATION);
+    }
+    cubeQuaternion.copy(relativeOrientation.premultiply(HOME_ORIENTATION));
     $('#quaternion').val(`x: ${qx.toFixed(3)}, y: ${qy.toFixed(3)}, z: ${qz.toFixed(3)}, w: ${qw.toFixed(3)}`);
     if (event.velocity) {
       let { x: vx, y: vy, z: vz } = event.velocity;
@@ -188,6 +195,63 @@ var algPatternStates: KPattern[] = [];
 var currentMoveIndex = 0;
 var inputMode: boolean = true;
 var scrambleMode: boolean = false;
+const WHITE_ON_BOTTOM_SETUP_ALG = 'z2';
+
+function normalizePatternForTraining(pattern: KPattern): KPattern {
+  const orientedPattern = fixOrientation(pattern);
+  return whiteOnBottomEnabled ? orientedPattern.applyAlg(WHITE_ON_BOTTOM_SETUP_ALG) : orientedPattern;
+}
+
+function remapMoveForWhiteOnBottom(move: string): string {
+  if (!whiteOnBottomEnabled) {
+    return move;
+  }
+  const trimmedMove = move.trim();
+  if (trimmedMove.length === 0) {
+    return trimmedMove;
+  }
+  const face = trimmedMove.charAt(0);
+  const suffix = trimmedMove.slice(1);
+  const remappedFaces: Record<string, string> = {
+    U: 'D',
+    D: 'U',
+    R: 'L',
+    L: 'R',
+    F: 'F',
+    B: 'B',
+    u: 'd',
+    d: 'u',
+    r: 'l',
+    l: 'r',
+    f: 'f',
+    b: 'b',
+    M: 'M',
+    E: 'E',
+    S: 'S',
+    x: 'x',
+    y: 'y',
+    z: 'z',
+  };
+  const invertDirectionFaces = new Set(['M', 'E', 'x', 'y']);
+  const remappedFace = remappedFaces[face];
+  if (!remappedFace) {
+    return trimmedMove;
+  }
+  const normalizedSuffix = suffix.includes('2') ? '2' : suffix;
+  const remappedSuffix =
+    invertDirectionFaces.has(face) && normalizedSuffix !== '2'
+      ? normalizedSuffix === "'" ? '' : "'"
+      : normalizedSuffix;
+  return remappedFace + remappedSuffix;
+}
+
+function remapHardwareMoveForDisplay(move: string): string {
+  return remapMoveForWhiteOnBottom(move);
+}
+
+function remapDisplayMoveForHardware(move: string): string {
+  return remapMoveForWhiteOnBottom(move);
+}
 
 function resetAlg() {
   currentMoveIndex = -1; // Reset the move index
@@ -243,14 +307,13 @@ function fetchNextPatterns() {
   if (keepInitialState) {
     keepInitialState = false;
   } else {
-    initialstate = patternStates.length === 0 ? myKpattern : patternStates[patternStates.length - 1];
+    initialstate = patternStates.length === 0 ? normalizePatternForTraining(myKpattern) : patternStates[patternStates.length - 1];
   }
   userAlg.forEach((move, index) => {
     move = move.replace(/[()]/g, "");
-    if (index === 0) patternStates[index] = initialstate.applyMove(move);
-    else patternStates[index] = algPatternStates[index - 1].applyMove(move);
-    algPatternStates[index]=patternStates[index];
-    patternStates[index]=fixOrientation(patternStates[index]);
+    const nextPattern = index === 0 ? initialstate.applyMove(move) : algPatternStates[index - 1].applyMove(move);
+    patternStates[index] = normalizePatternForTraining(nextPattern);
+    algPatternStates[index] = patternStates[index];
     //console.log("patternStates[" + index + "]=" + JSON.stringify(patternStates[index].patternData));
   });
 }
@@ -370,10 +433,11 @@ function updateAlgDisplay() {
   let previousColor = '';
   let simplifiedBadAlg: string[] = [];
   let fixHtml  = '';
+  const displayBadAlg = badAlg.map(remapHardwareMoveForDisplay);
 
-  if (badAlg.length > 0) {
-    for (let i=0 ; i < badAlg.length; i++){
-      fixHtml += getInverseMove(badAlg[badAlg.length - 1 - i])+" ";
+  if (displayBadAlg.length > 0) {
+    for (let i=0 ; i < displayBadAlg.length; i++){
+      fixHtml += getInverseMove(displayBadAlg[displayBadAlg.length - 1 - i])+" ";
     }
 
     // simplfy badAlg
@@ -629,9 +693,9 @@ async function processMoveEvent(event: SmartCubeEvent, visualMove?: string, slic
 
     if (visualMove) {
       updateSliceOrientation(visualMove);
-      twistyPlayer.experimentalAddMove(visualMove, { cancel: false });
+      twistyPlayer.experimentalAddMove(remapHardwareMoveForDisplay(visualMove), { cancel: false });
     } else {
-      twistyPlayer.experimentalAddMove(remapMoveForPlayer(event.move), { cancel: false });
+      twistyPlayer.experimentalAddMove(remapHardwareMoveForDisplay(remapMoveForPlayer(event.move)), { cancel: false });
     }
     twistyTracker.experimentalAddMove(event.move, { cancel: false });
 
@@ -673,7 +737,7 @@ async function processMoveEvent(event: SmartCubeEvent, visualMove?: string, slic
         scrambleMode = false;
 
         // this is the initial state for the new algorithm
-        initialstate = cubePattern;
+        initialstate = normalizePatternForTraining(cubePattern);
         keepInitialState = true;
         $('#train-alg').trigger('click');
       }
@@ -740,7 +804,7 @@ async function processMoveEvent(event: SmartCubeEvent, visualMove?: string, slic
     // experimentalAddMove already updated the tracker; use it as the only post-move state (avoids
     // double-apply when addFreshListener and myKpattern disagree on timing).
     const trackerPattern = await twistyTracker.experimentalModel.currentPattern.get();
-    const patternAfterMove = trackerPattern;
+    const patternAfterMove = normalizePatternForTraining(trackerPattern);
     const nextExpectedIdx = currentMoveIndex + 1;
     myKpattern = trackerPattern;
     previousFacelets = patternToFacelets(myKpattern);
@@ -796,7 +860,8 @@ async function processMoveEvent(event: SmartCubeEvent, visualMove?: string, slic
       badAlg.push(event.move);
       //console.log("Pushing 1 incorrect move. badAlg: " + badAlg)
 
-      if (currentMoveIndex === 0 && badAlg.length === 1 && lastMoves[lastMoves.length - 1].move === getInverseMove(userAlg[currentMoveIndex].replace(/[()]/g, ""))) { 
+      const currentHardwareMove = remapDisplayMoveForHardware(userAlg[currentMoveIndex]?.replace(/[()]/g, "") || '');
+      if (currentMoveIndex === 0 && badAlg.length === 1 && lastMoves[lastMoves.length - 1].move === getInverseMove(currentHardwareMove)) { 
         currentMoveIndex--;
         badAlg.pop();
         //console.log("Cancelling first correct move");
@@ -1309,7 +1374,7 @@ var initialstate: KPattern;
 
 twistyTracker.experimentalModel.currentPattern.addFreshListener(async (kpattern) => {
   myKpattern = kpattern;
-  if (patternStates.length > 0 && currentMoveIndex === 0 && myKpattern.isIdentical(initialstate)) {
+  if (patternStates.length > 0 && currentMoveIndex === 0 && normalizePatternForTraining(myKpattern).isIdentical(initialstate)) {
     console.log("Returning to initial state")
     resetAlg();
     updateAlgDisplay();
@@ -1841,7 +1906,7 @@ function applyWhiteOnBottomState(options?: { persist?: boolean }) {
   if (persist) {
     localStorage.setItem('whiteOnBottom', whiteOnBottomEnabled.toString());
   }
-  twistyPlayer.experimentalSetupAlg = whiteOnBottomEnabled ? 'z2' : '';
+  twistyPlayer.experimentalSetupAlg = whiteOnBottomEnabled ? WHITE_ON_BOTTOM_SETUP_ALG : '';
   if (conn) {
     void twistyTracker.experimentalGet.alg().then((alg) => {
       twistyPlayer.alg = alg.toString();
@@ -1859,7 +1924,15 @@ function updateWhiteOnBottomAvailability() {
 
 function setWhiteOnBottomEnabled(enabled: boolean, options?: { persist?: boolean }) {
   whiteOnBottomEnabled = enabled;
+  resetGyroBasis();
   applyWhiteOnBottomState({ persist: options?.persist ?? false });
+  if (!inputMode && userAlg.length > 0 && typeof myKpattern !== 'undefined') {
+    patternStates = [];
+    algPatternStates = [];
+    resetAlg();
+    fetchNextPatterns();
+    updateAlgDisplay();
+  }
 }
 
 whiteOnBottomToggle.addEventListener('change', () => {

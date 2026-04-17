@@ -130,6 +130,9 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+# Local vendor clone (used to build smartcube-web-bluetooth on Windows)
+vendor/
+
 # mac
 .DS_Store
 
