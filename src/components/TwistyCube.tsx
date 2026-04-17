@@ -18,6 +18,8 @@ export interface TwistyCubeProps {
   cameraLatitude?: number;
   cameraLongitude?: number;
   resetToken?: string | number;
+  orientationResetToken?: string | number;
+  orientationResetAlg?: string | null;
   appendMoveKey?: string;
   appendMove?: string;
   gyroscopeEnabled?: boolean;
@@ -63,6 +65,8 @@ export function TwistyCube({
   cameraLatitude,
   cameraLongitude,
   resetToken,
+  orientationResetToken,
+  orientationResetAlg = null,
   appendMoveKey,
   appendMove,
   gyroscopeEnabled = false,
@@ -273,6 +277,24 @@ export function TwistyCube({
     setupAnchor,
     visualization,
   ]);
+
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player) {
+      return;
+    }
+
+    if (orientationResetAlg != null) {
+      player.alg = orientationResetAlg;
+    }
+    if (cameraLatitude != null) {
+      player.cameraLatitude = cameraLatitude;
+    }
+    if (cameraLongitude != null) {
+      player.cameraLongitude = cameraLongitude;
+    }
+    vantageRef.current?.render?.();
+  }, [cameraLatitude, cameraLongitude, orientationResetAlg, orientationResetToken]);
 
   useEffect(() => {
     const player = playerRef.current;

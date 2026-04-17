@@ -1,4 +1,4 @@
-import { Fragment, memo } from 'react';
+import { Fragment, memo, useState } from 'react';
 import type { LegacyBootstrapState } from '../hooks/useLegacyBootstrap';
 import type { LegacyOptionsState } from '../hooks/useLegacyOptions';
 import type { PracticeTogglesState } from '../hooks/usePracticeToggles';
@@ -112,6 +112,12 @@ export const PracticeView = memo(function PracticeView({
     setSelectAllCases,
     setSelectLearningCases,
   } = bootstrap;
+  const [orientationResetState, setOrientationResetState] = useState<{ token: number; alg: string | null }>({
+    token: 0,
+    alg: null,
+  });
+  const showResetGyro = smartcube.connected && options.gyroscope && smartcube.gyroSupported;
+  const showResetOrientation = smartcube.connected && (!smartcube.gyroSupported || !options.gyroscope);
 
   return (
     <>
@@ -206,6 +212,8 @@ export const PracticeView = memo(function PracticeView({
               setupAlg={options.whiteOnBottom ? 'z2' : ''}
               backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
               resetToken={`${smartcube.connected}:${training.visualResetKey}`}
+              orientationResetToken={orientationResetState.token}
+              orientationResetAlg={orientationResetState.alg}
               appendMoveKey={smartcubeAppendMoveKey}
               appendMove={smartcubeAppendMove}
               gyroscopeEnabled={options.gyroscope && smartcube.connected}
@@ -217,7 +225,7 @@ export const PracticeView = memo(function PracticeView({
             <div className="connect-row">
               <button
                 id="header-reset-gyro"
-                className={`${smartcube.connected && options.gyroscope && smartcube.gyroSupported ? 'primary-button' : 'primary-button hidden'}`}
+                className={showResetGyro ? 'primary-button' : 'primary-button hidden'}
                 type="button"
                 disabled={!smartcube.connected || !options.gyroscope || !smartcube.gyroSupported}
                 title="Reset gyroscope orientation for the virtual cube"
@@ -225,6 +233,23 @@ export const PracticeView = memo(function PracticeView({
                 onClick={() => smartcube.resetGyro()}
               >
                 Reset Gyro
+              </button>
+              <button
+                id="header-reset-orientation"
+                className={showResetOrientation ? 'primary-button' : 'primary-button hidden'}
+                type="button"
+                disabled={!smartcube.connected}
+                title="Reset the virtual cube orientation to its default view"
+                aria-label="Reset the virtual cube orientation to its default view"
+                onClick={() => {
+                  smartcube.resetOrientation();
+                  setOrientationResetState((current) => ({
+                    token: current.token + 1,
+                    alg: smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : null,
+                  }));
+                }}
+              >
+                Reset Orientation
               </button>
               <button
                 id="connect-button"

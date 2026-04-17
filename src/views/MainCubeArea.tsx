@@ -3,6 +3,24 @@ import type { MutableRefObject } from 'react';
 import { TwistyCube } from '../components/TwistyCube';
 import type { SmartcubeQuaternion } from '../hooks/useSmartcubeConnection';
 
+interface MainCubeAreaProps {
+  alg: string;
+  sizePx: number;
+  visualization: string;
+  hintFacelets: string;
+  controlPanel: string;
+  experimentalStickering: string;
+  setupAlg: string;
+  backView: 'none' | 'side-by-side' | 'top-right';
+  resetToken: string;
+  orientationResetToken: number;
+  orientationResetAlg: string | null;
+  appendMoveKey?: string;
+  appendMove?: string;
+  gyroscopeEnabled: boolean;
+  cubeQuaternionRef: MutableRefObject<SmartcubeQuaternion | null>;
+}
+
 function MainCubeAreaComponent({
   alg,
   sizePx,
@@ -13,25 +31,13 @@ function MainCubeAreaComponent({
   setupAlg,
   backView,
   resetToken,
+  orientationResetToken,
+  orientationResetAlg,
   appendMoveKey,
   appendMove,
   gyroscopeEnabled,
   cubeQuaternionRef,
-}: {
-  alg: string;
-  sizePx: number;
-  visualization: string;
-  hintFacelets: string;
-  controlPanel: string;
-  experimentalStickering: string;
-  setupAlg: string;
-  backView: 'none' | 'side-by-side' | 'top-right';
-  resetToken: string;
-  appendMoveKey?: string;
-  appendMove?: string;
-  gyroscopeEnabled: boolean;
-  cubeQuaternionRef: MutableRefObject<SmartcubeQuaternion | null>;
-}) {
+}: MainCubeAreaProps) {
   return (
     <TwistyCube
       alg={alg}
@@ -45,6 +51,8 @@ function MainCubeAreaComponent({
       cameraLongitude={0}
       backView={backView}
       resetToken={resetToken}
+      orientationResetToken={orientationResetToken}
+      orientationResetAlg={orientationResetAlg}
       appendMoveKey={appendMoveKey}
       appendMove={appendMove}
       gyroscopeEnabled={gyroscopeEnabled}

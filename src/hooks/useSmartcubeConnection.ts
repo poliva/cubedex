@@ -113,6 +113,7 @@ export interface SmartcubeConnectionState {
   connectOrDisconnect: () => Promise<void>;
   resetState: () => Promise<void>;
   resetGyro: () => void;
+  resetOrientation: () => void;
   gyroSupported: boolean;
   gyroSupportResolved: boolean;
   gyroscopeToggleDisabled: boolean;
@@ -237,6 +238,11 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   const resetGyro = useCallback(() => {
     gyroBasisRef.current = null;
   }, []);
+
+  const resetOrientation = useCallback(() => {
+    clearSliceBuffer();
+    sliceOrientationRef.current = { ...IDENTITY };
+  }, [clearSliceBuffer]);
 
   const disconnect = useCallback(() => {
     subscriptionRef.current?.unsubscribe();
@@ -606,6 +612,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     connectOrDisconnect,
     resetState,
     resetGyro,
+    resetOrientation,
     gyroSupported,
     gyroSupportResolved,
     gyroscopeToggleDisabled,
@@ -627,6 +634,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     info,
     lastProcessedMove,
     resetGyro,
+    resetOrientation,
     resetState,
     setShowAllBluetoothDevices,
     showAllBluetoothDevices,
