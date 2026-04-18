@@ -21,7 +21,3 @@ If you enjoy using Cubedex, please consider supporting the development on [Ko-fi
 $ npm install
 $ npm run build && npm run preview
 ```
-**Publish gh-page:**
-```
-$ rm -rf docs && mv dist docs
-```
