@@ -156,6 +156,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   const currentPatternRef = useRef<KPattern | null>(null);
   const sliceBufferRef = useRef<{ event: SmartCubeEvent; timer: number } | null>(null);
   const sliceOrientationRef = useRef<FacePerm>({ ...IDENTITY });
+  const gyroscopeEnabledRef = useRef(gyroscopeEnabled);
   const recentMovesRef = useRef<SmartCubeMoveEvent[]>([]);
   const gyroBasisRef = useRef<THREE.Quaternion | null>(null);
   const previousFaceletsRef = useRef<string>('');
@@ -185,6 +186,10 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       showAllBluetoothDevices ? 'any' : 'filtered',
     );
   }, [showAllBluetoothDevices]);
+
+  useEffect(() => {
+    gyroscopeEnabledRef.current = gyroscopeEnabled;
+  }, [gyroscopeEnabled]);
 
   useEffect(() => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -303,8 +308,11 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
         ? visualMove
         : rawMoves.map((entry) => entry.move).join(' ')
       : remapMoveForPlayer(event.move, sliceOrientationRef.current);
+    const nextSliceOrientation = visualMove && fixSliceOrientation
+      ? updateSliceOrientation(sliceOrientationRef.current, visualMove)
+      : sliceOrientationRef.current;
     if (visualMove && fixSliceOrientation) {
-      sliceOrientationRef.current = updateSliceOrientation(sliceOrientationRef.current, visualMove);
+      sliceOrientationRef.current = nextSliceOrientation;
     }
 
     const computedKey = `${event.timestamp}:${effectiveVisualMove}:${rawMoves.map((entry) => entry.move).join(',')}`;
@@ -448,9 +456,10 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       return;
     }
 
-    if (!gyroscopeEnabled) {
-      const sliceCandidate = isSliceCandidate(event.move);
+    const currentGyroscopeEnabled = gyroscopeEnabledRef.current;
+    const sliceCandidate = isSliceCandidate(event.move);
 
+    if (!currentGyroscopeEnabled) {
       if (sliceCandidate) {
         if (sliceBufferRef.current?.event.type === 'MOVE') {
           const bufferedEvent = sliceBufferRef.current.event;
@@ -496,7 +505,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       return;
     }
     void processResolvedMove(event, [event]);
-  }, [clearSliceBuffer, disconnect, flushBufferedMove, gyroscopeEnabled, processResolvedMove]);
+  }, [clearSliceBuffer, disconnect, flushBufferedMove, processResolvedMove]);
 
   const connectOrDisconnect = useCallback(async () => {
     if (connRef.current) {

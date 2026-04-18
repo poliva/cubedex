@@ -298,10 +298,11 @@ export function TwistyCube({
 
   useEffect(() => {
     const player = playerRef.current;
+    const duplicateMove = Boolean(appendMoveKey) && appendedMoveKeyRef.current === appendMoveKey;
     if (!player || !appendMove || !appendMoveKey) {
       return;
     }
-    if (appendedMoveKeyRef.current === appendMoveKey) {
+    if (duplicateMove) {
       return;
     }
 
