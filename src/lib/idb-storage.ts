@@ -6,6 +6,10 @@ export interface ScopedStatsRecord {
   subset: string;
   algId: string;
   lastTimes: number[];
+  timeAttackLastRuns?: {
+    wallMs: number;
+    caseTimes: number[];
+  }[];
   best: number | null;
   learned: number;
 }

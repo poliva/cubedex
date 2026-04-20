@@ -116,11 +116,13 @@ export const PracticeView = memo(function PracticeView({
     caseCards,
     selectAllCases,
     selectLearningCases,
+    selectLearnedCases,
     setSelectedCategory,
     toggleSubset,
     toggleAllSubsets,
     setSelectAllCases,
     setSelectLearningCases,
+    setSelectLearnedCases,
   } = caseLibrary;
   const [orientationResetState, setOrientationResetState] = useState<{ token: number; alg: string | null }>({
     token: 0,
@@ -341,21 +343,33 @@ export const PracticeView = memo(function PracticeView({
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
-              <div
-                id="timer"
-                className={`${!training.inputMode && training.timerState !== 'IDLE' ? 'timer-display' : 'hidden timer-display'}`}
-                style={{
-                  color:
-                    training.timerState === 'READY'
-                      ? '#080'
-                      : training.timerState === 'RUNNING'
-                        ? '#999'
-                        : options.darkMode
-                          ? '#ccc'
-                          : '#333',
-                }}
-              >
-                {training.timerText}
+              <div className="timer-stack">
+                <div
+                  className={`${training.timeAttackMode && !training.inputMode ? 'time-attack-banner' : 'hidden time-attack-banner'}`}
+                >
+                  <span className="time-attack-banner-title">Complete all cases continuously</span>
+                  {training.timeAttackTotalCases > 0 ? (
+                    <span className="time-attack-banner-progress">
+                      Case {training.timeAttackCurrentCaseNumber} of {training.timeAttackTotalCases}
+                    </span>
+                  ) : null}
+                </div>
+                <div
+                  id="timer"
+                  className={`${!training.inputMode && training.timerState !== 'IDLE' ? 'timer-display' : 'hidden timer-display'}`}
+                  style={{
+                    color:
+                      training.timerState === 'READY'
+                        ? '#080'
+                        : training.timerState === 'RUNNING'
+                          ? '#999'
+                          : options.darkMode
+                            ? '#ccc'
+                            : '#333',
+                  }}
+                >
+                  {training.timerText}
+                </div>
               </div>
             </div>
           </div>
@@ -521,6 +535,18 @@ export const PracticeView = memo(function PracticeView({
                 label="Select Learning"
               />
               <ToggleSwitch
+                id="select-learned-toggle"
+                checked={selectLearnedCases}
+                onChange={(checked) => {
+                  setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+                  if (checked) {
+                    setMainCubeStickeringDeferred(false);
+                  }
+                  setSelectLearnedCases(checked);
+                }}
+                label="Select Learned"
+              />
+              <ToggleSwitch
                 id="random-auf-toggle"
                 checked={practiceToggles.randomizeAUF}
                 onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
@@ -543,6 +569,12 @@ export const PracticeView = memo(function PracticeView({
                 checked={practiceToggles.prioritizeFailedCases}
                 onChange={(checked) => practiceToggles.setPrioritizeFailedCases(checked)}
                 label="Prioritize Failed Cases"
+              />
+              <ToggleSwitch
+                id="time-attack-toggle"
+                checked={practiceToggles.timeAttack}
+                onChange={(checked) => practiceToggles.setTimeAttack(checked)}
+                label="Time Attack"
               />
             </div>
           </div>

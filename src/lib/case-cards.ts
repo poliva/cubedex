@@ -31,13 +31,21 @@ export function makeTimeParts(time: number) {
   return { minutes, seconds, milliseconds };
 }
 
+function formatTimeWithOptionalMinutes(time: number) {
+  const parts = makeTimeParts(time);
+  const minutesPart = parts.minutes > 0 ? `${parts.minutes}:` : '';
+  const seconds = parts.minutes > 0
+    ? parts.seconds.toString(10).padStart(2, '0')
+    : parts.seconds.toString(10);
+  return `${minutesPart}${seconds}.${parts.milliseconds.toString(10).padStart(3, '0')}`;
+}
+
 export function bestTimeString(time: number | null): string {
   if (!time) {
     return '-';
   }
 
-  const best = makeTimeParts(time);
-  return `${best.seconds.toString(10)}.${best.milliseconds.toString(10).padStart(3, '0')}`;
+  return formatTimeWithOptionalMinutes(time);
 }
 
 export function averageTimeString(time: number | null): string {
@@ -45,8 +53,7 @@ export function averageTimeString(time: number | null): string {
     return '-';
   }
 
-  const avg = makeTimeParts(time);
-  return `${avg.seconds.toString(10)}.${avg.milliseconds.toString(10).padStart(3, '0')}`;
+  return formatTimeWithOptionalMinutes(time);
 }
 
 export function averageOfFiveTimeNumber(algId: string): number | null {

@@ -93,6 +93,7 @@ export function App() {
     selectionChangeMode,
     randomizeAUF: practiceToggles.randomizeAUF,
     randomOrder: practiceToggles.randomOrder,
+    timeAttack: practiceToggles.timeAttack,
     prioritizeSlowCases: practiceToggles.prioritizeSlowCases,
     prioritizeFailedCases: practiceToggles.prioritizeFailedCases,
     smartcubeConnected: smartcube.connected,
@@ -392,6 +393,11 @@ export function App() {
       return;
     }
 
+    if (practiceToggles.timeAttack) {
+      lastAutoScrambleKeyRef.current = '';
+      return;
+    }
+
     if (training.inputMode || training.timerState !== 'READY') {
       return;
     }
@@ -420,6 +426,7 @@ export function App() {
   }, [
     options.alwaysScrambleTo,
     practiceToggles.randomizeAUF,
+    practiceToggles.timeAttack,
     scramble.startScrambleTo,
     smartcube.currentPattern,
     smartcube.disconnectToken,
@@ -489,7 +496,7 @@ export function App() {
         void training.trainCurrent(smartcube.currentPattern, {
           algorithm: scramble.targetAlgorithm,
           preserveDisplayedAlgorithm: true,
-          statsScopeId: training.currentCase?.id,
+          statsScopeId: training.timeAttackMode ? training.statsAlgId : training.currentCase?.id,
         });
       }
     });
@@ -505,6 +512,8 @@ export function App() {
     training.setAlgInput,
     training.setKeepInitialState,
     training.trainCurrent,
+    training.timeAttackMode,
+    training.statsAlgId,
   ]);
 
   const selectView = useCallback((view: MenuView) => {

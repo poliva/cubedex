@@ -16,12 +16,16 @@ import { solvedPattern } from '../lib/cube-utils';
 import { fixOrientation } from '../lib/scramble';
 import { getInverseMove, getOppositeMove, sanitizeMove, trailingWholeCubeRotationMoveCount } from '../lib/move-helpers';
 import {
+  TIME_ATTACK_SCOPE_PREFIX,
+  createTimeAttackScopeId,
   createGlobalScopeId,
   expandNotation,
   getBestTime,
   getLastTimes,
+  getTimeAttackLastRuns,
   setBestTime,
   setLastTimes,
+  setTimeAttackLastRuns,
 } from '../lib/storage';
 import { FACES, IDENTITY, SLICE_ROTATION, composePerm, invertPerm, type Face, type FacePerm } from '../lib/smartcube-parity';
 import { useStableCallback } from './useStableCallback';
@@ -74,6 +78,7 @@ export interface TrainingPracticeOptions {
   selectionChangeMode: 'bulk' | 'manual';
   randomizeAUF: boolean;
   randomOrder: boolean;
+  timeAttack: boolean;
   prioritizeSlowCases: boolean;
   prioritizeFailedCases: boolean;
   smartcubeConnected: boolean;
@@ -85,6 +90,7 @@ interface TrainCurrentOptions {
   algorithm?: string;
   preserveDisplayedAlgorithm?: boolean;
   statsScopeId?: string;
+  startTimerImmediately?: boolean;
 }
 
 export interface TrainingState {
@@ -107,6 +113,10 @@ export interface TrainingState {
   failedCounts: Record<string, number>;
   practiceCounts: Record<string, number>;
   flashRequest: TrainingFlashRequest | null;
+  timeAttackMode: boolean;
+  timeAttackActive: boolean;
+  timeAttackCurrentCaseNumber: number;
+  timeAttackTotalCases: number;
   setAlgInput: (value: string) => void;
   clearFailedCounts: () => void;
   enterInputMode: (algorithm?: string) => void;
@@ -135,7 +145,12 @@ function formatHistoryTimestamp(timestamp: number) {
   return `${minutesPart}${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}`;
 }
 
-function buildStats(algId: string, displayAlg: string, _practiceCount: number): TrainingStats {
+function buildStats(
+  algId: string,
+  displayAlg: string,
+  _practiceCount: number,
+  selectedCases: CaseCardData[] = [],
+) : TrainingStats {
   if (!algId) {
     return {
       best: '-',
@@ -154,8 +169,11 @@ function buildStats(algId: string, displayAlg: string, _practiceCount: number): 
   const averageValue = lastTimes.length > 0
     ? lastTimes.reduce((sum, time) => sum + time, 0) / lastTimes.length
     : null;
-  const moveCount = displayAlg ? countMovesETM(displayAlg) : 0;
-  const averageTps = averageValue && averageValue > 0
+  const isTimeAttackStats = algId.startsWith(TIME_ATTACK_SCOPE_PREFIX);
+  const moveCount = isTimeAttackStats
+    ? selectedCases.reduce((sum, currentCase) => sum + countMovesETM(currentCase.algorithm), 0)
+    : (displayAlg ? countMovesETM(displayAlg) : 0);
+  const averageTps = averageValue && averageValue > 0 && moveCount > 0
     ? (moveCount / (averageValue / 1000)).toFixed(2)
     : '-';
   const historyCount = lastTimes.length;
@@ -175,6 +193,14 @@ function buildStats(algId: string, displayAlg: string, _practiceCount: number): 
       isPb: bestTime === time,
     })),
   };
+}
+
+function appendLimitedTime<T>(value: T, values: T[]) {
+  const nextTimes = [...values, value];
+  if (nextTimes.length > 100) {
+    nextTimes.shift();
+  }
+  return nextTimes;
 }
 
 function insertSlowCase(queue: CaseCardData[], nextCase: CaseCardData) {
@@ -451,6 +477,11 @@ export function useTrainingState(
   const [failedCounts, setFailedCounts] = useState<Record<string, number>>({});
   const [practiceCounts, setPracticeCounts] = useState<Record<string, number>>({});
   const [flashRequest, setFlashRequest] = useState<TrainingFlashRequest | null>(null);
+  const [timeAttackProgress, setTimeAttackProgress] = useState({
+    active: false,
+    currentCaseNumber: 0,
+    totalCases: 0,
+  });
 
   const timerStartRef = useRef<number | null>(null);
   const frameRef = useRef<number | null>(null);
@@ -474,7 +505,14 @@ export function useTrainingState(
   const hasFailedCurrentCaseRef = useRef(false);
   const flashKeyRef = useRef(0);
   const previousSelectedIdsRef = useRef<string[]>([]);
+  const previousTimeAttackRef = useRef(options.timeAttack);
+  const previousRandomOrderRef = useRef(options.randomOrder);
+  const previousPrioritizeSlowCasesRef = useRef(options.prioritizeSlowCases);
+  const previousSelectionChangeModeRef = useRef(options.selectionChangeMode);
   const keepInitialStateRef = useRef(false);
+  const timeAttackSessionStartRef = useRef<number | null>(null);
+  const timeAttackCaseTimesRef = useRef<number[]>([]);
+  const timeAttackTotalCasesRef = useRef(0);
 
   currentCaseRef.current = currentCase;
 
@@ -485,9 +523,72 @@ export function useTrainingState(
 
   const statsAlgId = originalAlgIdRef.current;
   const stats = useMemo(
-    () => buildStats(statsAlgId, displayAlg, practiceCounts[statsAlgId] || 0),
-    [displayAlg, failedCounts, options.statsRefreshToken, practiceCounts, statsAlgId, timerState],
+    () => buildStats(statsAlgId, displayAlg, practiceCounts[statsAlgId] || 0, selectedCases),
+    [displayAlg, failedCounts, options.statsRefreshToken, practiceCounts, selectedCases, statsAlgId, timerState],
   );
+
+  function getTimeAttackStatsScopeId() {
+    return createTimeAttackScopeId(
+      category,
+      selectedCases.map((selectedCase) => selectedCase.id),
+    );
+  }
+
+  function syncTimeAttackProgress(active: boolean, currentCaseNumber: number, totalCases = timeAttackTotalCasesRef.current) {
+    setTimeAttackProgress({ active, currentCaseNumber, totalCases });
+  }
+
+  function clearTimeAttackSession(resetProgress = true) {
+    timeAttackSessionStartRef.current = null;
+    timeAttackCaseTimesRef.current = [];
+    if (resetProgress) {
+      timeAttackTotalCasesRef.current = 0;
+      syncTimeAttackProgress(false, 0, 0);
+    } else {
+      setTimeAttackProgress((current) => ({
+        active: false,
+        currentCaseNumber: current.currentCaseNumber,
+        totalCases: timeAttackTotalCasesRef.current,
+      }));
+    }
+  }
+
+  function buildSelectedQueueState(cases: CaseCardData[]) {
+    const nextQueue = buildQueue(cases, options.prioritizeSlowCases);
+    if (options.timeAttack && options.randomOrder) {
+      return shuffleCases(nextQueue);
+    }
+    return nextQueue;
+  }
+
+  function resetTimeAttackQueue() {
+    selectedQueueRef.current = buildSelectedQueueState(selectedCases);
+    selectedQueueCopyRef.current = [];
+    timeAttackTotalCasesRef.current = selectedQueueRef.current.length;
+    syncTimeAttackProgress(false, selectedQueueRef.current.length > 0 ? 1 : 0, timeAttackTotalCasesRef.current);
+  }
+
+  function prepareNextTimeAttack(totalTimeText?: string) {
+    clearTimeAttackSession();
+    resetTimeAttackQueue();
+    if (totalTimeText == null) {
+      setTimerText('');
+    }
+    const firstCase = selectedQueueRef.current[0] ?? null;
+    selectQueueHead(firstCase);
+    if (!firstCase) {
+      return;
+    }
+
+    void trainCurrent(undefined, {
+      algorithm: firstCase.algorithm,
+      statsScopeId: getTimeAttackStatsScopeId(),
+    }).then(() => {
+      if (totalTimeText) {
+        setTimerText(totalTimeText);
+      }
+    });
+  }
 
   useEffect(() => {
     if (timerState !== 'RUNNING') {
@@ -499,10 +600,13 @@ export function useTrainingState(
     }
 
     function tick() {
-      if (timerStartRef.current == null) {
+      const activeStart = options.timeAttack && timeAttackSessionStartRef.current != null
+        ? timeAttackSessionStartRef.current
+        : timerStartRef.current;
+      if (activeStart == null) {
         return;
       }
-      const elapsed = performance.now() - timerStartRef.current;
+      const elapsed = performance.now() - activeStart;
       setTimerText(formatTimerTimestamp(elapsed));
       frameRef.current = window.requestAnimationFrame(tick);
     }
@@ -515,7 +619,7 @@ export function useTrainingState(
         frameRef.current = null;
       }
     };
-  }, [timerState]);
+  }, [options.timeAttack, timerState]);
 
   useEffect(() => {
     if (fixTimeoutRef.current !== null) {
@@ -581,6 +685,13 @@ export function useTrainingState(
     setPracticeCounts({});
   }
 
+  function incrementPracticeCount(scopeId: string) {
+    setPracticeCounts((current) => ({
+      ...current,
+      [scopeId]: (current[scopeId] || 0) + 1,
+    }));
+  }
+
   function selectQueueHead(nextCase: CaseCardData | null) {
     setCurrentCase(nextCase);
     if (nextCase) {
@@ -589,6 +700,13 @@ export function useTrainingState(
         setDisplayAlg(nextCase.algorithm);
       }
     }
+  }
+
+  function getCaseStatsScopeId(nextCase: CaseCardData | null) {
+    if (options.timeAttack && nextCase) {
+      return getTimeAttackStatsScopeId();
+    }
+    return nextCase?.id;
   }
 
   function switchToNextAlgorithm() {
@@ -615,6 +733,23 @@ export function useTrainingState(
     selectQueueHead(selectedQueueRef.current[0] ?? currentCaseRef.current);
   }
 
+  function advanceTimeAttackQueue() {
+    flashKeyRef.current += 1;
+    setFlashRequest({ key: flashKeyRef.current, color: 'green', durationMs: 200 });
+
+    selectedQueueRef.current.shift();
+    const nextCase = selectedQueueRef.current[0] ?? null;
+    if (!nextCase) {
+      syncTimeAttackProgress(false, timeAttackTotalCasesRef.current, timeAttackTotalCasesRef.current);
+      return null;
+    }
+
+    const currentCaseNumber = timeAttackTotalCasesRef.current - selectedQueueRef.current.length + 1;
+    syncTimeAttackProgress(true, currentCaseNumber, timeAttackTotalCasesRef.current);
+    selectQueueHead(nextCase);
+    return nextCase;
+  }
+
   function insertSelectedCase(nextCase: CaseCardData) {
     if (selectedQueueRef.current.some((entry) => entry.id === nextCase.id)) {
       return;
@@ -631,7 +766,10 @@ export function useTrainingState(
     const queueHead = nextCase ?? selectedQueueRef.current[0] ?? null;
     selectQueueHead(queueHead);
     if (queueHead) {
-      void trainCurrent(undefined, { algorithm: queueHead.algorithm, statsScopeId: queueHead.id });
+      void trainCurrent(undefined, {
+        algorithm: queueHead.algorithm,
+        statsScopeId: getCaseStatsScopeId(queueHead),
+      });
     }
   }
 
@@ -686,12 +824,24 @@ export function useTrainingState(
 
     if (state === 'RUNNING') {
       solutionMovesRef.current = [];
-      timerStartRef.current = performance.now();
+      const now = performance.now();
+      timerStartRef.current = now;
+      if (options.timeAttack && timeAttackTotalCasesRef.current > 0) {
+        if (timeAttackSessionStartRef.current == null) {
+          timeAttackSessionStartRef.current = now;
+        }
+        setTimeAttackProgress((current) => ({
+          ...current,
+          active: true,
+        }));
+      }
       return;
     }
 
     if (state === 'STOPPED' && timerStartRef.current != null) {
-      const elapsed = performance.now() - timerStartRef.current;
+      const elapsed = options.timeAttack && timeAttackSessionStartRef.current != null
+        ? performance.now() - timeAttackSessionStartRef.current
+        : performance.now() - timerStartRef.current;
       setTimerText(formatTimerTimestamp(elapsed));
     }
   }
@@ -706,6 +856,7 @@ export function useTrainingState(
   function enterInputMode(algorithm = algInput || displayAlg) {
     clearProgressState();
     clearStatsIdentity();
+    clearTimeAttackSession();
     initialPatternRef.current = null;
     setInputMode(true);
     setScrambleMode(false);
@@ -777,22 +928,38 @@ export function useTrainingState(
     setDisplayAlg(prepared.displayAlgorithm);
     setInputMode(false);
     setScrambleMode(false);
-    setTimerState('READY');
+    setTimerState(trainOptions?.startTimerImmediately ? 'RUNNING' : 'READY');
     setVisualResetKey((v) => v + 1);
   }
 
   useEffect(() => {
     const nextSelectedIds = selectedCases.map((selectedCase) => selectedCase.id);
-    if (arraysEqual(previousSelectedIdsRef.current, nextSelectedIds)) {
+    const timeAttackChanged = previousTimeAttackRef.current !== options.timeAttack;
+    const randomOrderChanged = previousRandomOrderRef.current !== options.randomOrder;
+    const prioritizeSlowChanged = previousPrioritizeSlowCasesRef.current !== options.prioritizeSlowCases;
+    const selectionModeChanged = previousSelectionChangeModeRef.current !== options.selectionChangeMode;
+
+    if (
+      arraysEqual(previousSelectedIdsRef.current, nextSelectedIds)
+      && !timeAttackChanged
+      && !randomOrderChanged
+      && !prioritizeSlowChanged
+      && !selectionModeChanged
+    ) {
       return;
     }
 
     const previousSelectedIds = previousSelectedIdsRef.current;
     previousSelectedIdsRef.current = nextSelectedIds;
+    previousTimeAttackRef.current = options.timeAttack;
+    previousRandomOrderRef.current = options.randomOrder;
+    previousPrioritizeSlowCasesRef.current = options.prioritizeSlowCases;
+    previousSelectionChangeModeRef.current = options.selectionChangeMode;
 
     if (selectedCases.length === 0) {
       selectedQueueRef.current = [];
       selectedQueueCopyRef.current = [];
+      clearTimeAttackSession();
       setCurrentCase(null);
       setInputMode(true);
       setScrambleMode(false);
@@ -803,6 +970,21 @@ export function useTrainingState(
       clearStatsIdentity();
       initialPatternRef.current = null;
       clearProgressState();
+      return;
+    }
+
+    if (options.timeAttack) {
+      clearTimeAttackSession();
+      resetTimeAttackQueue();
+      retrainQueueHead(selectedQueueRef.current[0] ?? null);
+      return;
+    }
+
+    if (timeAttackChanged || randomOrderChanged || prioritizeSlowChanged || selectionModeChanged) {
+      clearTimeAttackSession();
+      selectedQueueRef.current = buildQueue(selectedCases, options.prioritizeSlowCases);
+      selectedQueueCopyRef.current = [];
+      retrainQueueHead(selectedQueueRef.current[0] ?? null);
       return;
     }
 
@@ -859,10 +1041,11 @@ export function useTrainingState(
     selectedQueueRef.current = buildQueue(selectedCases, options.prioritizeSlowCases);
     selectedQueueCopyRef.current = [];
     retrainQueueHead(selectedQueueRef.current[0] ?? null);
-  }, [options.prioritizeSlowCases, options.selectionChangeMode, selectedCases]);
+  }, [options.prioritizeSlowCases, options.randomOrder, options.selectionChangeMode, options.timeAttack, selectedCases]);
 
   function stopAndRecordSolve(timeMs: number) {
     const algId = originalAlgIdRef.current || 'default-alg-id';
+    const completedCaseId = currentCaseRef.current?.id;
     let finalTime = Math.round(timeMs);
 
     if (options.smartcubeConnected && solutionMovesRef.current.length > 0) {
@@ -873,11 +1056,49 @@ export function useTrainingState(
       }
     }
 
-    const lastTimes = getLastTimes(algId);
-    const nextTimes = [...lastTimes, finalTime];
-    if (nextTimes.length > 100) {
-      nextTimes.shift();
+    if (options.timeAttack) {
+      timeAttackCaseTimesRef.current = [...timeAttackCaseTimesRef.current, finalTime];
+      if (completedCaseId) {
+        incrementPracticeCount(completedCaseId);
+      }
+      isKeyboardTimerActiveRef.current = false;
+
+      const nextInitialPattern = patternStatesRef.current.at(-1) ?? initialPatternRef.current;
+      const nextCase = advanceTimeAttackQueue();
+      if (nextCase) {
+        void trainCurrent(nextInitialPattern, {
+          algorithm: nextCase.algorithm,
+          statsScopeId: getTimeAttackStatsScopeId(),
+          startTimerImmediately: true,
+        });
+        return;
+      }
+
+      const totalWallTime = timeAttackSessionStartRef.current == null
+        ? finalTime
+        : Math.round(performance.now() - timeAttackSessionStartRef.current);
+      const nextTimes = appendLimitedTime(totalWallTime, getLastTimes(algId));
+      setLastTimes(algId, nextTimes);
+      setTimeAttackLastRuns(algId, appendLimitedTime(
+        { wallMs: totalWallTime, caseTimes: timeAttackCaseTimesRef.current },
+        getTimeAttackLastRuns(algId),
+      ));
+
+      const currentBest = getBestTime(algId);
+      if (currentBest == null || totalWallTime < currentBest) {
+        setBestTime(algId, totalWallTime);
+      }
+
+      incrementPracticeCount(algId);
+      const totalTimeText = formatTimerTimestamp(totalWallTime);
+      setTimerText(totalTimeText);
+      setTimerStateInternal('STOPPED');
+      prepareNextTimeAttack(totalTimeText);
+      return;
     }
+
+    const lastTimes = getLastTimes(algId);
+    const nextTimes = appendLimitedTime(finalTime, lastTimes);
     setLastTimes(algId, nextTimes);
 
     const currentBest = getBestTime(algId);
@@ -885,10 +1106,7 @@ export function useTrainingState(
       setBestTime(algId, finalTime);
     }
 
-    setPracticeCounts((current) => ({
-      ...current,
-      [algId]: (current[algId] || 0) + 1,
-    }));
+    incrementPracticeCount(algId);
     setTimerText(formatTimerTimestamp(finalTime));
     setTimerStateInternal('STOPPED');
     isKeyboardTimerActiveRef.current = false;
@@ -907,6 +1125,10 @@ export function useTrainingState(
 
   function abortRunningAttempt() {
     if (timerState !== 'RUNNING') {
+      return;
+    }
+    if (options.timeAttack) {
+      prepareNextTimeAttack();
       return;
     }
     timerStartRef.current = null;
@@ -1019,7 +1241,7 @@ export function useTrainingState(
         setCurrentMoveIndex(0);
         stopAndRecordSolve(getElapsedMs());
 
-        if (options.smartcubeConnected) {
+        if (options.smartcubeConnected && !options.timeAttack) {
           switchToNextAlgorithm();
           const nextCase = selectedQueueRef.current[0] ?? null;
           if (nextCase) {
@@ -1076,6 +1298,7 @@ export function useTrainingState(
   function resetDrill() {
     clearProgressState();
     clearStatsIdentity();
+    clearTimeAttackSession();
     initialPatternRef.current = null;
     setInputMode(true);
     setScrambleMode(false);
@@ -1116,7 +1339,7 @@ export function useTrainingState(
     algInput,
     displayAlg,
     currentCase,
-    currentAlgName: currentCase?.name ?? '',
+    currentAlgName: options.timeAttack ? 'Time Attack' : currentCase?.name ?? '',
     selectedCases,
     stats,
     statsAlgId,
@@ -1127,6 +1350,10 @@ export function useTrainingState(
     failedCounts,
     practiceCounts,
     flashRequest,
+    timeAttackMode: options.timeAttack,
+    timeAttackActive: timeAttackProgress.active,
+    timeAttackCurrentCaseNumber: timeAttackProgress.currentCaseNumber,
+    timeAttackTotalCases: timeAttackProgress.totalCases,
     setAlgInput: stableSetAlgInput,
     clearFailedCounts: stableClearFailedCounts,
     enterInputMode: stableEnterInputMode,
@@ -1153,6 +1380,7 @@ export function useTrainingState(
     flashRequest,
     helpTone,
     inputMode,
+    options.timeAttack,
     practiceCounts,
     scrambleMode,
     selectedCases,
@@ -1175,6 +1403,9 @@ export function useTrainingState(
     statsAlgId,
     timerState,
     timerText,
+    timeAttackProgress.active,
+    timeAttackProgress.currentCaseNumber,
+    timeAttackProgress.totalCases,
     visualResetKey,
   ]);
 }

@@ -24,12 +24,14 @@ export interface CaseLibraryState {
   selectionChangeMode: 'bulk' | 'manual';
   selectAllCases: boolean;
   selectLearningCases: boolean;
+  selectLearnedCases: boolean;
   setSelectedCategory: (category: string) => void;
   toggleSubset: (subset: string, checked: boolean) => void;
   toggleAllSubsets: (checked: boolean) => void;
   toggleCaseSelection: (algId: string, checked: boolean) => void;
   setSelectAllCases: (checked: boolean) => void;
   setSelectLearningCases: (checked: boolean) => void;
+  setSelectLearnedCases: (checked: boolean) => void;
   cycleCaseLearnedState: (algId: string) => void;
   reloadSavedAlgorithms: () => void;
 }
@@ -40,10 +42,10 @@ export function useCaseLibrary(): CaseLibraryState {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubsets, setSelectedSubsets] = useState<string[]>([]);
   const [selectedCaseIds, setSelectedCaseIds] = useState<string[]>([]);
-  const [autoApplySelectionMode, setAutoApplySelectionMode] = useState<'all' | 'learning' | null>(null);
   const [selectionChangeMode, setSelectionChangeMode] = useState<'bulk' | 'manual'>('bulk');
   const [selectAllCases, setSelectAllCasesState] = useState(true);
   const [selectLearningCases, setSelectLearningCasesState] = useState(false);
+  const [selectLearnedCases, setSelectLearnedCasesState] = useState(false);
   const [learnedRefreshToken, setLearnedRefreshToken] = useState(0);
   const previousCategoryRef = useRef('');
 
@@ -53,7 +55,6 @@ export function useCaseLibrary(): CaseLibraryState {
 
     setSavedAlgorithms(saved);
     setSelectedCaseIds([]);
-    setAutoApplySelectionMode(null);
     setSelectionChangeMode('bulk');
     setSelectedCategory((current) => (current && saved[current] ? current : initialCategory));
     setSelectedSubsets((current) => {
@@ -123,26 +124,30 @@ export function useCaseLibrary(): CaseLibraryState {
   );
 
   useEffect(() => {
-    if (autoApplySelectionMode === 'learning') {
+    if (selectAllCases) {
       setSelectedCaseIds(
-        caseCards.filter((card) => card.learned === 1).map((card) => card.id),
+        caseCards.map((card) => card.id),
       );
-      setAutoApplySelectionMode(null);
       return;
     }
 
-    if (autoApplySelectionMode === 'all') {
-      setSelectedCaseIds(caseCards.map((card) => card.id));
-      setAutoApplySelectionMode(null);
+    if (selectLearningCases || selectLearnedCases) {
+      setSelectedCaseIds(
+        caseCards
+          .filter((card) => (
+            (selectLearningCases && card.learned === 1)
+            || (selectLearnedCases && card.learned === 2)
+          ))
+          .map((card) => card.id),
+      );
       return;
     }
 
     setSelectedCaseIds((current) => current.filter((algId) => caseCards.some((card) => card.id === algId)));
-  }, [autoApplySelectionMode, caseCards]);
+  }, [caseCards, selectAllCases, selectLearnedCases, selectLearningCases]);
 
   const toggleSubset = useCallback((subset: string, checked: boolean) => {
     setSelectedCaseIds([]);
-    setAutoApplySelectionMode(selectLearningCases ? 'learning' : selectAllCases ? 'all' : null);
     setSelectionChangeMode('bulk');
     setSelectedSubsets((current) => {
       if (checked) {
@@ -150,18 +155,13 @@ export function useCaseLibrary(): CaseLibraryState {
       }
       return current.filter((entry) => entry !== subset);
     });
-  }, [selectAllCases, selectLearningCases]);
+  }, []);
 
   const toggleAllSubsets = useCallback((checked: boolean) => {
     setSelectedCaseIds([]);
-    setAutoApplySelectionMode(
-      checked && (selectLearningCases || selectAllCases)
-        ? (selectLearningCases ? 'learning' : 'all')
-        : null,
-    );
     setSelectionChangeMode('bulk');
     setSelectedSubsets(checked ? subsets : []);
-  }, [selectAllCases, selectLearningCases, subsets]);
+  }, [subsets]);
 
   const toggleCaseSelection = useCallback((algId: string, checked: boolean) => {
     setSelectionChangeMode('manual');
@@ -178,9 +178,8 @@ export function useCaseLibrary(): CaseLibraryState {
     setSelectAllCasesState(checked);
     if (checked) {
       setSelectLearningCasesState(false);
-      setAutoApplySelectionMode('all');
+      setSelectLearnedCasesState(false);
     } else {
-      setAutoApplySelectionMode(null);
       setSelectedCaseIds([]);
     }
   }, []);
@@ -190,10 +189,14 @@ export function useCaseLibrary(): CaseLibraryState {
     setSelectLearningCasesState(checked);
     if (checked) {
       setSelectAllCasesState(false);
-      setAutoApplySelectionMode('learning');
-    } else {
-      setAutoApplySelectionMode(null);
-      setSelectedCaseIds([]);
+    }
+  }, []);
+
+  const setSelectLearnedCases = useCallback((checked: boolean) => {
+    setSelectionChangeMode('bulk');
+    setSelectLearnedCasesState(checked);
+    if (checked) {
+      setSelectAllCasesState(false);
     }
   }, []);
 
@@ -204,7 +207,6 @@ export function useCaseLibrary(): CaseLibraryState {
 
   const handleSetSelectedCategory = useCallback((category: string) => {
     setSelectedCaseIds([]);
-    setAutoApplySelectionMode(null);
     setSelectionChangeMode('bulk');
     setSelectedCategory(category);
   }, []);
@@ -221,12 +223,14 @@ export function useCaseLibrary(): CaseLibraryState {
     selectionChangeMode,
     selectAllCases,
     selectLearningCases,
+    selectLearnedCases,
     setSelectedCategory: handleSetSelectedCategory,
     toggleSubset,
     toggleAllSubsets,
     toggleCaseSelection,
     setSelectAllCases,
     setSelectLearningCases,
+    setSelectLearnedCases,
     cycleCaseLearnedState,
     reloadSavedAlgorithms,
   }), [
@@ -238,12 +242,14 @@ export function useCaseLibrary(): CaseLibraryState {
     reloadSavedAlgorithms,
     savedAlgorithms,
     selectAllCases,
+    selectLearnedCases,
     selectLearningCases,
     selectedCaseIds,
     selectedCategory,
     selectedSubsets,
     selectionChangeMode,
     setSelectAllCases,
+    setSelectLearnedCases,
     setSelectLearningCases,
     subsets,
     toggleAllSubsets,

@@ -516,6 +516,34 @@ html.dark .primary-button:disabled {
   width: 100%;
 }
 
+.timer-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.time-attack-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #93c5fd;
+  border-radius: 0.5rem;
+  background: #eff6ff;
+  color: #1d4ed8;
+  text-align: center;
+}
+
+.time-attack-banner-title {
+  font-weight: 600;
+}
+
+.time-attack-banner-progress {
+  font-size: 0.875rem;
+}
+
 .timer-display {
   border: 1px solid #9ca3af;
   border-radius: 0.5rem;
@@ -548,6 +576,12 @@ html.dark .primary-button:disabled {
 html.dark .timer-display {
   border-color: #374151;
   color: #ffffff;
+}
+
+html.dark .time-attack-banner {
+  border-color: #1d4ed8;
+  background: rgb(30 58 138 / 0.3);
+  color: #bfdbfe;
 }
 
 /* Keep the horizontal control row so round buttons align with the input and alg display. */

@@ -44,6 +44,12 @@ export const STORAGE_KEYS = {
 export const DEFAULT_ALG_ID = 'default-alg-id';
 export const CASE_SCOPE_PREFIX = 'case:';
 export const GLOBAL_SCOPE_PREFIX = 'global:';
+export const TIME_ATTACK_SCOPE_PREFIX = 'time-attack:';
+
+export interface TimeAttackRunRecord {
+  wallMs: number;
+  caseTimes: number[];
+}
 
 const LS_MIGRATION_DONE_KEY = 'lsMigrationDone';
 const LS_MIGRATION_DONE_AT_KEY = 'lsMigrationDoneAt';
@@ -119,6 +125,22 @@ export function createGlobalScopeId(algorithm: string) {
   return `${GLOBAL_SCOPE_PREFIX}${getAlgorithmId(algorithm)}`;
 }
 
+export function createTimeAttackScopeId(category: string, selectedCaseIds: string[]) {
+  const selectionKey = [...new Set(selectedCaseIds)]
+    .sort()
+    .join('|');
+  return `${TIME_ATTACK_SCOPE_PREFIX}${encodeURIComponent(category)}:${encodeURIComponent(selectionKey)}`;
+}
+
+export function isTimeAttackScopeId(scopeId: string) {
+  return scopeId.startsWith(TIME_ATTACK_SCOPE_PREFIX);
+}
+
+export function isPersistentStatsScopeId(scopeId: string) {
+  const parsed = parseScopeId(scopeId);
+  return parsed.kind === 'global' || parsed.kind === 'time-attack';
+}
+
 function parseScopeId(scopeId: string) {
   if (scopeId.startsWith(CASE_SCOPE_PREFIX)) {
     const withoutPrefix = scopeId.slice(CASE_SCOPE_PREFIX.length);
@@ -140,6 +162,17 @@ function parseScopeId(scopeId: string) {
     };
   }
 
+  if (scopeId.startsWith(TIME_ATTACK_SCOPE_PREFIX)) {
+    const withoutPrefix = scopeId.slice(TIME_ATTACK_SCOPE_PREFIX.length);
+    const [encodedCategory = '', encodedSelection = ''] = withoutPrefix.split(':');
+    return {
+      kind: 'time-attack' as const,
+      category: decodeURIComponent(encodedCategory),
+      subset: decodeURIComponent(encodedSelection),
+      algId: scopeId,
+    };
+  }
+
   return {
     kind: 'legacy' as const,
     category: '',
@@ -156,6 +189,7 @@ function createEmptyStatsRecord(scopeId: string): ScopedStatsRecord {
     subset: parsed.subset,
     algId: parsed.algId,
     lastTimes: [],
+    timeAttackLastRuns: [],
     best: null,
     learned: 0,
   };
@@ -166,6 +200,16 @@ function normalizeStatsRecord(record: ScopedStatsRecord): ScopedStatsRecord {
   const lastTimes = Array.isArray(record.lastTimes)
     ? record.lastTimes.map((value) => Number(value)).filter(Number.isFinite)
     : [];
+  const timeAttackLastRuns = Array.isArray(record.timeAttackLastRuns)
+    ? record.timeAttackLastRuns
+      .map((run) => ({
+        wallMs: Number(run?.wallMs),
+        caseTimes: Array.isArray(run?.caseTimes)
+          ? run.caseTimes.map((value) => Number(value)).filter(Number.isFinite)
+          : [],
+      }))
+      .filter((run) => Number.isFinite(run.wallMs))
+    : [];
   const best = record.best == null || !Number.isFinite(Number(record.best)) ? null : Number(record.best);
   const learned = Number.isFinite(Number(record.learned)) ? Number(record.learned) : 0;
 
@@ -175,6 +219,7 @@ function normalizeStatsRecord(record: ScopedStatsRecord): ScopedStatsRecord {
     subset: record.subset || parsed.subset,
     algId: record.algId || parsed.algId,
     lastTimes,
+    timeAttackLastRuns,
     best,
     learned,
   };
@@ -278,8 +323,7 @@ function pruneOrphanStatsRecords(savedAlgorithms: SavedAlgorithms) {
   const deletedScopeIds: string[] = [];
 
   for (const scopeId of Array.from(statsCache.keys())) {
-    const parsed = parseScopeId(scopeId);
-    if (parsed.kind === 'global') {
+    if (isPersistentStatsScopeId(scopeId)) {
       continue;
     }
 
@@ -647,6 +691,27 @@ export function getBestTime(scopeId: string): number | null {
   return getStatsRecord(scopeId).best;
 }
 
+export function getTimeAttackLastRuns(scopeId: string): TimeAttackRunRecord[] {
+  return getStatsRecord(scopeId).timeAttackLastRuns?.map((run) => ({
+    wallMs: run.wallMs,
+    caseTimes: [...run.caseTimes],
+  })) ?? [];
+}
+
+export function setTimeAttackLastRuns(scopeId: string, values: TimeAttackRunRecord[]) {
+  setStatsRecord(scopeId, {
+    ...getStatsRecord(scopeId),
+    timeAttackLastRuns: values.map((run) => ({
+      wallMs: Number(run.wallMs),
+      caseTimes: run.caseTimes.map((value) => Number(value)).filter(Number.isFinite),
+    })).filter((run) => Number.isFinite(run.wallMs)),
+  });
+
+  void enqueueWrite(async () => {
+    await persistStatsRecord(scopeId);
+  });
+}
+
 export function setBestTime(scopeId: string, value: number) {
   setStatsRecord(scopeId, {
     ...getStatsRecord(scopeId),
@@ -686,6 +751,7 @@ export function removeAlgorithmTimesStorage(scopeId: string) {
     ...record,
     best: null,
     lastTimes: [],
+    timeAttackLastRuns: [],
   });
 
   void enqueueWrite(async () => {
