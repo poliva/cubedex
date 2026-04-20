@@ -1,5 +1,5 @@
 import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { CaseCardData } from '../lib/legacy-algorithms';
+import type { CaseCardData } from '../lib/case-cards';
 import { CaseCard } from '../components/CaseCard';
 
 function VirtualizedCaseGrid({ cards }: { cards: CaseCardData[] }) {

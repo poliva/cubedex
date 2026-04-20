@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './pwa-register';
 import { App } from './App';
 import './styles/index.css';
-import { migrateLastFiveTimesToLastTimes } from './lib/legacy-storage';
+import { migrateLastFiveTimesToLastTimes } from './lib/storage';
 
 migrateLastFiveTimesToLastTimes();
 

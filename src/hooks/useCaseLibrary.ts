@@ -5,15 +5,15 @@ import {
   getCaseCards,
   getSubsetsForCategory,
   type CaseCardData,
-} from '../lib/legacy-algorithms';
+} from '../lib/case-cards';
 import {
   getSavedAlgorithms,
   initializeDefaultAlgorithms,
   migrateLastFiveTimesToLastTimes,
   type SavedAlgorithms,
-} from '../lib/legacy-storage';
+} from '../lib/storage';
 
-export interface LegacyBootstrapState {
+export interface CaseLibraryState {
   isReady: boolean;
   savedAlgorithms: SavedAlgorithms;
   categories: string[];
@@ -35,7 +35,7 @@ export interface LegacyBootstrapState {
   reloadSavedAlgorithms: () => void;
 }
 
-export function useLegacyBootstrap(): LegacyBootstrapState {
+export function useCaseLibrary(): CaseLibraryState {
   const [isReady, setIsReady] = useState(false);
   const [savedAlgorithms, setSavedAlgorithms] = useState<SavedAlgorithms>({});
   const [selectedCategory, setSelectedCategory] = useState('');

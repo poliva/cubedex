@@ -1,14 +1,14 @@
 import { memo } from 'react';
-import type { LegacyManagementState } from '../hooks/useLegacyManagement';
+import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
 
 export const NewAlgView = memo(function NewAlgView({
   visible,
-  management,
+  algorithmActions,
   onSave,
   onCancel,
 }: {
   visible: boolean;
-  management: LegacyManagementState;
+  algorithmActions: AlgorithmImportExportState;
   onSave: () => void;
   onCancel: () => void;
 }) {
@@ -21,8 +21,8 @@ export const NewAlgView = memo(function NewAlgView({
           type="text"
           placeholder="Category name"
           className="text-input"
-          value={management.categoryInput}
-          onChange={(event) => management.setCategoryInput(event.target.value)}
+          value={algorithmActions.categoryInput}
+          onChange={(event) => algorithmActions.setCategoryInput(event.target.value)}
         />
         <label htmlFor="subset-input" className="form-label">Subset:</label>
         <input
@@ -30,8 +30,8 @@ export const NewAlgView = memo(function NewAlgView({
           type="text"
           placeholder="Subset name"
           className="text-input"
-          value={management.subsetInput}
-          onChange={(event) => management.setSubsetInput(event.target.value)}
+          value={algorithmActions.subsetInput}
+          onChange={(event) => algorithmActions.setSubsetInput(event.target.value)}
         />
         <label htmlFor="alg-name-input" className="form-label">Name:</label>
         <input
@@ -39,8 +39,8 @@ export const NewAlgView = memo(function NewAlgView({
           type="text"
           placeholder="Case name"
           className="text-input"
-          value={management.algNameInput}
-          onChange={(event) => management.setAlgNameInput(event.target.value)}
+          value={algorithmActions.algNameInput}
+          onChange={(event) => algorithmActions.setAlgNameInput(event.target.value)}
         />
       </div>
       <div className="save-panel-actions">
@@ -61,11 +61,11 @@ export const NewAlgView = memo(function NewAlgView({
           Cancel
         </button>
       </div>
-      <div id="save-error" className={`${management.saveError ? 'status-panel status-error' : 'hidden status-panel status-error'}`}>
-        {management.saveError}
+      <div id="save-error" className={`${algorithmActions.saveError ? 'status-panel status-error' : 'hidden status-panel status-error'}`}>
+        {algorithmActions.saveError}
       </div>
-      <div id="save-success" className={`${management.saveSuccess ? 'status-panel status-success' : 'hidden status-panel status-success'}`}>
-        {management.saveSuccess}
+      <div id="save-success" className={`${algorithmActions.saveSuccess ? 'status-panel status-success' : 'hidden status-panel status-success'}`}>
+        {algorithmActions.saveSuccess}
       </div>
     </div>
   );

@@ -1,9 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
 import type { KPattern } from 'cubing/kpuzzle';
-import type { CaseCardData } from '../lib/legacy-algorithms';
+import type { CaseCardData } from '../lib/case-cards';
 import { solvedPattern } from '../lib/cube-utils';
-import { getScrambleToSolution } from '../lib/legacy-scramble';
-import { prepareTrainingAlgorithm } from '../lib/legacy-auf';
+import { getScrambleToSolution } from '../lib/scramble';
+import { prepareTrainingAlgorithm } from '../lib/auf';
 
 export interface ScrambleState {
   scrambleMode: boolean;

@@ -9,12 +9,12 @@ import {
   bestTimeString,
   makeTimeParts,
   type CaseCardData,
-} from '../lib/legacy-algorithms';
-import { countMovesETM } from '../lib/legacy-charts';
-import { prepareTrainingAlgorithm } from '../lib/legacy-auf';
+} from '../lib/case-cards';
+import { countMovesETM } from '../lib/charts';
+import { prepareTrainingAlgorithm } from '../lib/auf';
 import { solvedPattern } from '../lib/cube-utils';
-import { fixOrientation } from '../lib/legacy-scramble';
-import { getInverseMove, getOppositeMove, sanitizeMove, trailingWholeCubeRotationMoveCount } from '../lib/legacy-training';
+import { fixOrientation } from '../lib/scramble';
+import { getInverseMove, getOppositeMove, sanitizeMove, trailingWholeCubeRotationMoveCount } from '../lib/move-helpers';
 import {
   algToId,
   expandNotation,
@@ -22,7 +22,7 @@ import {
   getLastTimes,
   setBestTime,
   setLastTimes,
-} from '../lib/legacy-storage';
+} from '../lib/storage';
 import { FACES, IDENTITY, SLICE_ROTATION, composePerm, invertPerm, type Face, type FacePerm } from '../lib/smartcube-parity';
 import { useStableCallback } from './useStableCallback';
 

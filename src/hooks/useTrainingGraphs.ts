@@ -1,10 +1,14 @@
 import { useEffect } from 'react';
-import type { CaseCardData } from '../lib/legacy-algorithms';
-import { createStatsGraph, createTimeGraph } from '../lib/legacy-charts';
-import { averageOfFiveTimeNumber } from '../lib/legacy-algorithms';
-import { algToId, getLastTimes } from '../lib/legacy-storage';
+import type { CaseCardData } from '../lib/case-cards';
+import { createStatsGraph, createTimeGraph } from '../lib/charts';
+import { algToId, getLastTimes } from '../lib/storage';
 
-export function useLegacyCharts(currentCase: CaseCardData | null, displayAlg: string, statsAlgId: string, refreshToken: number | string = 0) {
+export function useTrainingGraphs(
+  currentCase: CaseCardData | null,
+  displayAlg: string,
+  statsAlgId: string,
+  refreshToken: number | string = 0,
+) {
   useEffect(() => {
     const timeCanvas = document.getElementById('timeGraph') as HTMLCanvasElement | null;
     const statsCanvas = document.getElementById('statsGraph') as HTMLCanvasElement | null;
@@ -21,7 +25,5 @@ export function useLegacyCharts(currentCase: CaseCardData | null, displayAlg: st
 
     createTimeGraph(timeCanvas, lastTimes.slice(-5));
     createStatsGraph(statsCanvas, lastTimes);
-
-    void averageOfFiveTimeNumber(algId);
   }, [currentCase, displayAlg, refreshToken, statsAlgId]);
 }

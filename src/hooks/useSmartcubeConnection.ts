@@ -13,7 +13,7 @@ import {
   type SmartCubeMoveEvent,
 } from 'smartcube-web-bluetooth';
 import { faceletsToPattern, patternToFacelets, solvedPattern } from '../lib/cube-utils';
-import { readOption, writeOption } from '../lib/legacy-storage';
+import { readOption, writeOption } from '../lib/storage';
 import {
   getSliceForPair,
   IDENTITY,
@@ -414,7 +414,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       // Store in ref so consumers (e.g. cube renderer) can read without rerendering App.
       cubeQuaternionRef.current = next;
 
-      // Keep legacy state updated, but throttle to reduce whole-app rerenders.
+      // Keep the persisted option state in sync, but throttle to reduce whole-app rerenders.
       const now2 = Date.now();
       if (now2 - cubeQuaternionRefMirrorThrottleRef.current > 250) {
         cubeQuaternionRefMirrorThrottleRef.current = now2;

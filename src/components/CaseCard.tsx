@@ -1,7 +1,7 @@
 import { memo, type CSSProperties } from 'react';
-import type { CaseCardData } from '../lib/legacy-algorithms';
-import { averageTimeString, bestTimeString } from '../lib/legacy-algorithms';
-import { getLegacyStickering } from '../lib/legacy-stickering';
+import type { CaseCardData } from '../lib/case-cards';
+import { averageTimeString, bestTimeString } from '../lib/case-cards';
+import { getStickeringForCategory } from '../lib/stickering';
 import {
   BookClosedGreenIcon,
   BookClosedOrangeIcon,
@@ -26,7 +26,7 @@ function CaseCardComponent({ card, index, style }: CaseCardProps) {
   const successCount = Math.max(0, practiceCount - Math.min(failedCount, practiceCount));
   const isLL = card.category.toLowerCase().includes('ll');
   const visualization = isLL ? 'experimental-2D-LL' : '3D';
-  const stickering = getLegacyStickering(card.category, fullStickering);
+  const stickering = getStickeringForCategory(card.category, fullStickering);
 
   const wrapperClass = `case-wrapper ${
     failedCount

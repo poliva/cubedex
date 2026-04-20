@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { readOption, writeOption } from '../lib/legacy-storage';
+import { readOption, writeOption } from '../lib/storage';
 
-export interface LegacyOptionsState {
+export interface AppSettingsState {
   darkMode: boolean;
   showAlgName: boolean;
   alwaysScrambleTo: boolean;
@@ -46,7 +46,7 @@ function detectInitialDarkMode() {
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
-export function useLegacyOptions(): LegacyOptionsState {
+export function useAppSettings(): AppSettingsState {
   const [darkMode, setDarkModeState] = useState(detectInitialDarkMode);
   const [showAlgName, setShowAlgNameState] = useState(readOption('showAlgName') !== 'false');
   const [alwaysScrambleTo, setAlwaysScrambleToState] = useState(readOption('alwaysScrambleTo') === 'true');

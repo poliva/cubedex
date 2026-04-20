@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
-import { expandNotation, exportAlgorithms, importAlgorithmsFromJson, saveAlgorithm } from '../lib/legacy-storage';
+import { expandNotation, exportAlgorithms, importAlgorithmsFromJson, saveAlgorithm } from '../lib/storage';
 
-export interface LegacyManagementState {
+export interface AlgorithmImportExportState {
   categoryInput: string;
   subsetInput: string;
   algNameInput: string;
@@ -17,7 +17,7 @@ export interface LegacyManagementState {
   importFromFile: (file: File) => Promise<boolean>;
 }
 
-export function useLegacyManagement(onStorageChanged?: () => void): LegacyManagementState {
+export function useAlgorithmImportExport(onStorageChanged?: () => void): AlgorithmImportExportState {
   const [categoryInput, setCategoryInput] = useState('');
   const [subsetInput, setSubsetInput] = useState('');
   const [algNameInput, setAlgNameInput] = useState('');

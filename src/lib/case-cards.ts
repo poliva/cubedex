@@ -8,7 +8,7 @@ import {
   type SavedAlgorithm,
   type SavedAlgorithms,
   type SavedSubset,
-} from './legacy-storage';
+} from './storage';
 
 export interface CaseCardData {
   id: string;

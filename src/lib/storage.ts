@@ -10,9 +10,9 @@ export interface SavedSubset {
 
 export type SavedAlgorithms = Record<string, SavedSubset[]>;
 
-export const LEGACY_STORAGE_KEYS = {
+export const STORAGE_KEYS = {
   savedAlgorithms: 'savedAlgorithms',
-  legacySavedAlgs: 'savedAlgs',
+  savedAlgorithmsV1: 'savedAlgs',
   visualization: 'visualization',
   hintFacelets: 'hintFacelets',
   fullStickering: 'fullStickering',
@@ -49,7 +49,7 @@ export function expandNotation(input: string): string {
 }
 
 export function algToId(alg: string): string {
-  return alg?.trim().replace(/\s+/g, '-').replace(/[']/g, 'p').replace(/[(]/g, 'o').replace(/[)]/g, 'c');
+  return alg?.trim().replace(/\s+/g, '-').replace(/[']/g, 'p').replace(/[(/]/g, 'o').replace(/[)]/g, 'c');
 }
 
 export function createAlgStorageKey(prefix: 'Best' | 'LastTimes' | 'Learned', algId: string) {
@@ -74,11 +74,11 @@ export function writeJsonStorage<T>(key: string, value: T) {
 }
 
 export function getSavedAlgorithms(): SavedAlgorithms {
-  return readJsonStorage<SavedAlgorithms>(LEGACY_STORAGE_KEYS.savedAlgorithms, {});
+  return readJsonStorage<SavedAlgorithms>(STORAGE_KEYS.savedAlgorithms, {});
 }
 
 export function setSavedAlgorithms(savedAlgorithms: SavedAlgorithms) {
-  writeJsonStorage(LEGACY_STORAGE_KEYS.savedAlgorithms, savedAlgorithms);
+  writeJsonStorage(STORAGE_KEYS.savedAlgorithms, savedAlgorithms);
 }
 
 export function migrateLastFiveTimesToLastTimes() {
@@ -95,7 +95,7 @@ export function migrateLastFiveTimesToLastTimes() {
 export function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) {
   migrateLastFiveTimesToLastTimes();
 
-  if (!window.localStorage.getItem(LEGACY_STORAGE_KEYS.savedAlgorithms)) {
+  if (!window.localStorage.getItem(STORAGE_KEYS.savedAlgorithms)) {
     setSavedAlgorithms(defaultAlgs);
   } else {
     const savedAlgorithms = getSavedAlgorithms();
@@ -127,33 +127,33 @@ export function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) {
     setSavedAlgorithms(savedAlgorithms);
   }
 
-  if (window.localStorage.getItem(LEGACY_STORAGE_KEYS.legacySavedAlgs)) {
-    const legacySavedAlgs = readJsonStorage<Record<string, SavedAlgorithm[]>>(
-      LEGACY_STORAGE_KEYS.legacySavedAlgs,
+  if (window.localStorage.getItem(STORAGE_KEYS.savedAlgorithmsV1)) {
+    const savedAlgorithmsV1 = readJsonStorage<Record<string, SavedAlgorithm[]>>(
+      STORAGE_KEYS.savedAlgorithmsV1,
       {},
     );
 
-    for (const category of Object.keys(legacySavedAlgs)) {
-      legacySavedAlgs[category] = [{ subset: 'All', algorithms: legacySavedAlgs[category] } as never];
+    for (const category of Object.keys(savedAlgorithmsV1)) {
+      savedAlgorithmsV1[category] = [{ subset: 'All', algorithms: savedAlgorithmsV1[category] } as never];
     }
 
     const savedAlgorithms = getSavedAlgorithms();
-    for (const category of Object.keys(legacySavedAlgs)) {
-      savedAlgorithms[`old-${category}`] = legacySavedAlgs[category] as unknown as SavedSubset[];
+    for (const category of Object.keys(savedAlgorithmsV1)) {
+      savedAlgorithms[`old-${category}`] = savedAlgorithmsV1[category] as unknown as SavedSubset[];
     }
 
     setSavedAlgorithms(savedAlgorithms);
-    window.localStorage.removeItem(LEGACY_STORAGE_KEYS.legacySavedAlgs);
+    window.localStorage.removeItem(STORAGE_KEYS.savedAlgorithmsV1);
 
     return {
-      migratedLegacySavedAlgs: true,
+      migratedSavedAlgorithmsV1: true,
       alertMessage:
         'Algorithms have been migrated to a new format that includes subsets.\nYour old categories which did not include subsets have been prefixed with "old-".',
     };
   }
 
   return {
-    migratedLegacySavedAlgs: false,
+    migratedSavedAlgorithmsV1: false,
     alertMessage: null,
   };
 }
@@ -225,12 +225,12 @@ export function importAlgorithmsFromJson(json: string) {
   return importedAlgs;
 }
 
-export function readOption(key: keyof typeof LEGACY_STORAGE_KEYS) {
-  return window.localStorage.getItem(LEGACY_STORAGE_KEYS[key]);
+export function readOption(key: keyof typeof STORAGE_KEYS) {
+  return window.localStorage.getItem(STORAGE_KEYS[key]);
 }
 
-export function writeOption(key: keyof typeof LEGACY_STORAGE_KEYS, value: string) {
-  window.localStorage.setItem(LEGACY_STORAGE_KEYS[key], value);
+export function writeOption(key: keyof typeof STORAGE_KEYS, value: string) {
+  window.localStorage.setItem(STORAGE_KEYS[key], value);
 }
 
 export function getLastTimes(algId: string): number[] {

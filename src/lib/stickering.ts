@@ -30,7 +30,7 @@ const VALID_STICKERING = [
   'EO',
 ] as const;
 
-export function getLegacyStickering(category: string, fullStickeringEnabled: boolean): string {
+export function getStickeringForCategory(category: string, fullStickeringEnabled: boolean): string {
   if (fullStickeringEnabled) {
     return 'full';
   }

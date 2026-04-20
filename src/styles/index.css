@@ -1,12 +1,12 @@
 :root {
   --border-color: #e5e7eb;
-  /* Legacy #alg-bar max-w-[1125px]. #alg-stats outer uses the same cap so graph+metrics track the bar width. */
+  /* Match the original #alg-bar max width so graph and metrics stay aligned. */
   --practice-alg-track-max: 1125px;
 }
 
 /*
- * Sans stack + preflight-style html defaults (cubedex-legacy Tailwind style.css).
- * Omit font-synthesis/text-rendering/font-smoothing tweaks — legacy bundle has none and they change weight/edges.
+ * Sans stack + preflight-style html defaults from the original static app stylesheet.
+ * Omit font-synthesis/text-rendering/font-smoothing tweaks because they change weight/edges.
  */
 html {
   line-height: 1.5;
@@ -47,7 +47,7 @@ body {
   background-color: inherit;
 }
 
-/* Legacy body: font-sans leading-relaxed text-sm sm:text-base (line-height from leading-relaxed = 1.625) */
+/* Body matches the original font/line-height rhythm. */
 body {
   min-width: 360px;
   min-height: 100vh;
@@ -231,7 +231,7 @@ html.dark .menu-item.selected {
   min-width: 0;
 }
 
-/* Legacy #container: grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2 mb-3 items-center justify-center */
+/* Main container follows the original responsive three-column layout. */
 .top-grid-shell {
   position: relative;
   display: grid;
@@ -281,13 +281,13 @@ html.dark .menu-item.selected {
   flex-direction: column;
 }
 
-/* Legacy #left-side: items-center + min-w-[240px] — min(100%,240px) avoids 3-col track overflow at ~640px */
+/* Left column keeps the original min width without overflowing the middle breakpoint. */
 .left-column {
   align-items: center;
   min-width: min(100%, 240px);
 }
 
-/* Legacy #right-side: items-center sm:items-end */
+/* Right column aligns with the original stacked-to-end behavior. */
 .right-column {
   align-items: center;
 }
@@ -318,7 +318,7 @@ html.dark .shell-card {
   padding: 0.5rem;
 }
 
-/* Stats/graph strip: no card chrome (legacy #left-side-inner is plain content) */
+/* Stats/graph strip stays unframed to match the original plain-content layout. */
 #left-side-inner.shell-card {
   background: transparent;
   border: none;
@@ -550,7 +550,7 @@ html.dark .timer-display {
   color: #ffffff;
 }
 
-/* Legacy: flex row, no items-center — round buttons use mt-2 to align with input / alg-display */
+/* Keep the horizontal control row so round buttons align with the input and alg display. */
 .alg-bar {
   display: flex;
   flex-direction: row;
@@ -641,7 +641,7 @@ html.dark .number-input {
   padding: 0.75rem 1rem;
 }
 
-/* Legacy alg-input: p-4 mb-4 — fixed single-line height (matches alg-display min-height) */
+/* Keep the algorithm input at the same fixed single-line height as the display. */
 .alg-input {
   box-sizing: border-box;
   padding: 1rem;
@@ -704,7 +704,7 @@ html.dark .text-input::placeholder {
   opacity: 1;
 }
 
-/* Legacy #alg-display-container: relative w-full (mask absolute top-0 right-0) */
+/* Display container stays relative so the mask can anchor top-right. */
 .alg-display-container {
   position: relative;
   flex: 1;
@@ -713,7 +713,7 @@ html.dark .text-input::placeholder {
   margin: 0;
 }
 
-/* Legacy inner flex justify-end; only holds the absolutely positioned mask */
+/* Inner wrapper only exists to right-align the absolutely positioned mask. */
 .alg-display-mask-row {
   display: flex;
   justify-content: flex-end;
@@ -743,7 +743,7 @@ html.dark .text-input::placeholder {
   height: 1.5rem;
 }
 
-/* Legacy #alg-display: p-4 mb-4 — min-height matches alg-input; sm+ keeps one line + horizontal scroll */
+/* Algorithm display matches the input height and keeps a single scrollable row on wider screens. */
 .alg-display {
   box-sizing: border-box;
   padding: 1rem;
@@ -787,7 +787,7 @@ html.dark .text-input::placeholder {
   }
 }
 
-/* Current / next move highlight (cubedex-legacy tailwind.css .circle) */
+/* Current / next move highlight from the original static app. */
 .circle {
   display: inline-flex;
   align-items: center;
@@ -846,7 +846,7 @@ html.dark .info-inline {
   background: #f9fafb;
 }
 
-/* Legacy dark: dark:border-red-400 / dark:border-green-400 on #alg-fix / #alg-scramble. */
+/* Dark-mode fix/scramble border accents. */
 html.dark .status-panel {
   border-color: #374151;
   background: #374151;
@@ -884,9 +884,9 @@ html.dark .status-success {
   padding: 1rem;
 }
 
-/* Legacy #alg-stats has no outer padding — spacing comes from inner #stats-container / metrics */
+/* Stats shell has no outer padding; spacing comes from the inner containers. */
 
-/* Legacy #help: mt-8 sm:mt-5 md:mt-0 */
+/* Help panel spacing matches the original responsive offsets. */
 .help-panel.shell-card {
   margin-top: 2rem;
 }
@@ -935,7 +935,7 @@ html.dark .status-success {
   margin: 1rem 0 0.5rem;
 }
 
-/* Legacy labels use normal weight (e.g. Category:, Cube Visualization Mode:) */
+/* Form labels intentionally keep normal font weight. */
 .input-label {
   display: block;
   font-weight: 400;
@@ -995,7 +995,7 @@ html.dark .subpanel {
   text-align: center;
 }
 
-/* Legacy #save-container: flex-col gap-4 text-sm sm:text-base */
+/* Save panel keeps the original vertical spacing and text sizing. */
 .save-panel {
   display: flex;
   flex-direction: column;
@@ -1021,7 +1021,7 @@ html.dark .subpanel {
   max-width: 100%;
 }
 
-/* Legacy #confirm-save / #cancel-save: bg-blue-500 hover:bg-blue-700 py-2 px-4 rounded-lg font-bold text-sm sm:text-base */
+/* Save panel buttons match the original size and emphasis. */
 .save-panel-button {
   flex: 0 0 auto;
   width: auto;
@@ -1060,7 +1060,7 @@ html.dark .save-panel-button:disabled {
   align-items: center;
 }
 
-/* Legacy #info is a flat grid on the page background (no outer shell-card) */
+/* Device info stays as a flat grid on the page background. */
 .info-panel.shell-card {
   background: transparent;
   border: none;
@@ -1088,7 +1088,7 @@ html.dark .info-panel .form-label {
   white-space: nowrap;
 }
 
-/* Legacy layout: flex-col lg:flex-row; outer width matches #alg-bar via --practice-alg-track-max */
+/* Practice layout switches from stacked to side-by-side at large screens. */
 .stats-panel {
   display: flex;
   flex-direction: column;
@@ -1112,7 +1112,7 @@ html.dark .stats-panel.shell-card {
   border-color: #374151;
 }
 
-/* Legacy #stats-container: pl-2 pr-2 pt-2 sm:p-4 (top/left/right) lg:pt-4 lg:pl-4 lg:pr-0 lg:pb-4 min-h max-h max-w flex-grow */
+/* Stats container spacing follows the original responsive padding rules. */
 .stats-graph-container {
   flex: 1 1 auto;
   width: 100%;
@@ -1131,7 +1131,7 @@ html.dark .stats-panel.shell-card {
 }
 
 @media (min-width: 1024px) {
-  /* Drop legacy max-w-[750px] here so the graph column flex-grows; otherwise ~1125px panel leaves a gap right of metrics */
+  /* Drop the old 750px cap here so the graph column can fully flex-grow. */
   .stats-graph-container {
     display: flex;
     flex-direction: column;
@@ -1142,7 +1142,7 @@ html.dark .stats-panel.shell-card {
   }
 }
 
-/* Legacy inner wrapper: h-[300px] sm:h-[350px] md:h-[450px] lg:h-full lg:w-full max-w-[90vw] relative mx-auto my-auto */
+/* Graph inner wrapper preserves the original responsive height steps. */
 .stats-graph-shell {
   position: relative;
   box-sizing: border-box;
@@ -1181,7 +1181,7 @@ html.dark .stats-panel.shell-card {
   height: 100%;
 }
 
-/* Legacy #metrics-container: min-w-[250px] lg:min-w-[290px] lg:max-w-[290px] */
+/* Metrics column keeps a fixed readable width at large breakpoints. */
 .metrics-container {
   width: 100%;
   min-width: min(100%, 250px);
@@ -1197,7 +1197,7 @@ html.dark .stats-panel.shell-card {
   }
 }
 
-/* Legacy #alg-name-display2: text-base md:text-lg lg:text-2xl pt-2 lg:pt-4 px-4 pb-1 lg:max-w-[280px] */
+/* Secondary algorithm name display follows the original responsive type scale. */
 .metrics-title {
   text-align: center;
   font-size: 1rem;
@@ -1222,7 +1222,7 @@ html.dark .stats-panel.shell-card {
   }
 }
 
-/* Legacy #stats-grid: flex-col sm:flex-row lg:flex-col justify-normal sm:justify-center lg:justify-normal */
+/* Stats grid changes direction with the same breakpoint behavior as before. */
 .metrics-grid {
   display: flex;
   flex-direction: column;
@@ -1245,7 +1245,7 @@ html.dark .stats-panel.shell-card {
   }
 }
 
-/* Legacy metric boxes: p-1 m-1 sm:p-4 lg:p-8 sm:m-4 lg:m-8 min-w-[154px] text-base md:text-lg lg:text-2xl */
+/* Metric cards keep the original spacing and minimum width. */
 .metric-box {
   display: flex;
   align-items: center;
@@ -1336,7 +1336,7 @@ html.dark .selector-card .select-input {
   max-width: 100%;
 }
 
-/* Legacy options inner grid: lg:max-w-[500px] xl:max-w-[750px] */
+/* Options panel inner grid keeps the same large-screen width caps. */
 @media (min-width: 1024px) {
   .selector-options-card {
     max-width: 500px;
@@ -1378,7 +1378,7 @@ html.dark .toggle-grid {
   color: #ffffff;
 }
 
-.toggle-grid .legacy-switch {
+.toggle-grid .toggle-switch {
   margin-bottom: 0;
   max-width: 250px;
 }
@@ -1659,8 +1659,8 @@ html.dark .case-metric {
   background: #f87171;
 }
 
-/* Legacy-style switch (matches cubedex-legacy index.html + tailwind.css) */
-.legacy-switch {
+/* Shared toggle switch styling from the original static app. */
+.toggle-switch {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -1669,7 +1669,7 @@ html.dark .case-metric {
   max-width: 250px;
 }
 
-.legacy-switch-track {
+.toggle-switch-track {
   width: 2.75rem;
   height: 1.5rem;
   flex-shrink: 0;
@@ -1678,7 +1678,7 @@ html.dark .case-metric {
   box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
 }
 
-.legacy-switch-dot {
+.toggle-switch-dot {
   position: absolute;
   left: 0.25rem;
   top: 50%;
@@ -1691,51 +1691,51 @@ html.dark .case-metric {
   transition: transform 0.2s ease-in-out;
 }
 
-.legacy-switch input.sr-only:checked + .legacy-switch-track {
+.toggle-switch input.sr-only:checked + .toggle-switch-track {
   background-color: #3b82f6;
 }
 
-.legacy-switch input.sr-only:checked + .legacy-switch-track + .legacy-switch-dot {
+.toggle-switch input.sr-only:checked + .toggle-switch-track + .toggle-switch-dot {
   transform: translate(1.25rem, -50%);
 }
 
-.legacy-switch input.sr-only:disabled + .legacy-switch-track {
+.toggle-switch input.sr-only:disabled + .toggle-switch-track {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.legacy-switch input.sr-only:disabled ~ .legacy-switch-label {
+.toggle-switch input.sr-only:disabled ~ .toggle-switch-label {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.legacy-switch-label {
+.toggle-switch-label {
   margin-left: 0.5rem;
   font-size: 0.875rem;
   color: #111827;
 }
 
-html.dark .legacy-switch-label {
+html.dark .toggle-switch-label {
   color: #ffffff;
 }
 
 @media (min-width: 640px) {
-  .legacy-switch-label {
+  .toggle-switch-label {
     font-size: 1rem;
   }
 }
 
-.options-panel .legacy-switch,
-#device-options-container .legacy-switch {
+.options-panel .toggle-switch,
+#device-options-container .toggle-switch {
   max-width: none;
 }
 
-.legacy-switch--inline {
+.toggle-switch--inline {
   margin-bottom: 0;
   max-width: none;
 }
 
-.legacy-switch--indented {
+.toggle-switch--indented {
   margin-left: 1.5rem;
 }
 
@@ -1788,7 +1788,7 @@ html.dark .subset-label-row input[type='checkbox'].subset-checkbox {
   outline-offset: 2px;
 }
 
-/* Legacy stacks the hint under the switch (flex-col + ml-6 mt-1 on hint) */
+/* White-bottom hint stays stacked under the switch. */
 .white-bottom-group {
   display: flex;
   flex-direction: column;
@@ -1796,7 +1796,7 @@ html.dark .subset-label-row input[type='checkbox'].subset-checkbox {
   margin-bottom: 1rem;
 }
 
-.white-bottom-group .legacy-switch {
+.white-bottom-group .toggle-switch {
   margin-bottom: 0;
 }
 
@@ -1820,7 +1820,7 @@ html.dark .subset-label-row input[type='checkbox'].subset-checkbox {
   gap: 1rem;
 }
 
-/* Options screen: match cubedex-legacy #options-container (flex-col gap-2 p-4 rounded-lg shadow-md text-sm sm:text-base) */
+/* Options screen keeps the original panel spacing and sizing. */
 #options-container.options-panel {
   gap: 0.5rem;
   border-radius: 0.5rem;
@@ -1866,11 +1866,11 @@ html.dark .subset-label-row input[type='checkbox'].subset-checkbox {
   font-size: inherit;
 }
 
-.options-toggle-row .legacy-switch {
+.options-toggle-row .toggle-switch {
   margin-bottom: 0;
 }
 
-#options-container .legacy-switch-label {
+#options-container .toggle-switch-label {
   font-size: inherit;
 }
 
@@ -1923,7 +1923,7 @@ html.dark .options-cube-size-label {
   font-size: 0.875rem;
 }
 
-#device-options-container .device-ble-toggle-row .legacy-switch {
+#device-options-container .device-ble-toggle-row .toggle-switch {
   margin-bottom: 0;
 }
 
@@ -1993,7 +1993,7 @@ html.dark .footer {
   margin-bottom: 0;
 }
 
-/* Legacy column order below sm: left order-2 sm:order-1, cube order-3 sm:order-2, right order-1 sm:order-3 */
+/* Below `sm`, the three practice columns keep the original reordered stacking. */
 @media (max-width: 639px) {
   .left-column {
     order: 2;
@@ -2074,7 +2074,7 @@ html.dark .footer {
   }
 
   /* Subset/toggle grids: single column on narrow viewports. Omit .alg-cases-grid so it can follow
-     legacy steps: 1 col → 2 @640px → 3 @768px → … (otherwise ≤767px stayed 1 col and jumped to 3). */
+     the original 1 col → 2 @640px → 3 @768px progression instead of jumping straight to 3. */
   .subset-grid,
   .toggle-grid {
     grid-template-columns: 1fr;

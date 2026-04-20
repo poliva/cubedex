@@ -1,12 +1,12 @@
 import { Fragment, memo, useState } from 'react';
-import type { LegacyBootstrapState } from '../hooks/useLegacyBootstrap';
-import type { LegacyOptionsState } from '../hooks/useLegacyOptions';
+import type { CaseLibraryState } from '../hooks/useCaseLibrary';
+import type { AppSettingsState } from '../hooks/useAppSettings';
 import type { PracticeTogglesState } from '../hooks/usePracticeToggles';
 import type { TrainingState } from '../hooks/useTrainingState';
 import type { ScrambleState } from '../hooks/useScrambleState';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
-import type { LegacyManagementState } from '../hooks/useLegacyManagement';
-import { LegacySwitch } from '../components/LegacySwitch';
+import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
+import { ToggleSwitch } from '../components/ToggleSwitch';
 import {
   AlgHelpInfoIcon,
   BluetoothIcon,
@@ -14,9 +14,9 @@ import {
   ScatterIcon,
   StopIcon,
 } from '../components/Icons';
-import { averageOfFiveTimeNumber, makeTimeParts } from '../lib/legacy-algorithms';
-import { getBestTime } from '../lib/legacy-storage';
-import { patternToPlayerAlg } from '../lib/legacy-scramble';
+import { averageOfFiveTimeNumber, makeTimeParts } from '../lib/case-cards';
+import { getBestTime } from '../lib/storage';
+import { patternToPlayerAlg } from '../lib/scramble';
 import { CaseGrid } from './CaseGrid';
 import { MainCubeArea } from './MainCubeArea';
 import { MoveListPanel } from './MoveListPanel';
@@ -38,11 +38,11 @@ export const PracticeView = memo(function PracticeView({
   practiceVisible,
   options,
   practiceToggles,
-  bootstrap,
+  caseLibrary,
   training,
   scramble,
   smartcube,
-  management,
+  algorithmActions,
   showAlgEditor,
   onAlgEditorSave,
   onAlgEditorCancel,
@@ -73,13 +73,13 @@ export const PracticeView = memo(function PracticeView({
 }: {
   topVisible: boolean;
   practiceVisible: boolean;
-  options: LegacyOptionsState;
+  options: AppSettingsState;
   practiceToggles: PracticeTogglesState;
-  bootstrap: LegacyBootstrapState;
+  caseLibrary: CaseLibraryState;
   training: TrainingState;
   scramble: ScrambleState;
   smartcube: SmartcubeConnectionState;
-  management: LegacyManagementState;
+  algorithmActions: AlgorithmImportExportState;
   showAlgEditor: boolean;
   onAlgEditorSave: () => void;
   onAlgEditorCancel: () => void;
@@ -121,7 +121,7 @@ export const PracticeView = memo(function PracticeView({
     toggleAllSubsets,
     setSelectAllCases,
     setSelectLearningCases,
-  } = bootstrap;
+  } = caseLibrary;
   const [orientationResetState, setOrientationResetState] = useState<{ token: number; alg: string | null }>({
     token: 0,
     alg: null,
@@ -431,7 +431,7 @@ export const PracticeView = memo(function PracticeView({
 
         <NewAlgView
           visible={showAlgEditor}
-          management={management}
+          algorithmActions={algorithmActions}
           onSave={onAlgEditorSave}
           onCancel={onAlgEditorCancel}
         />
@@ -496,7 +496,7 @@ export const PracticeView = memo(function PracticeView({
           <div id="options-selector" className="selector-options-card">
             <p className="input-label">Options:</p>
             <div className="toggle-grid">
-              <LegacySwitch
+              <ToggleSwitch
                 id="select-all-toggle"
                 checked={selectAllCases}
                 onChange={(checked) => {
@@ -508,7 +508,7 @@ export const PracticeView = memo(function PracticeView({
                 }}
                 label="Select All"
               />
-              <LegacySwitch
+              <ToggleSwitch
                 id="select-learning-toggle"
                 checked={selectLearningCases}
                 onChange={(checked) => {
@@ -520,25 +520,25 @@ export const PracticeView = memo(function PracticeView({
                 }}
                 label="Select Learning"
               />
-              <LegacySwitch
+              <ToggleSwitch
                 id="random-auf-toggle"
                 checked={practiceToggles.randomizeAUF}
                 onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
                 label="Random AUF"
               />
-              <LegacySwitch
+              <ToggleSwitch
                 id="random-order-toggle"
                 checked={practiceToggles.randomOrder}
                 onChange={(checked) => practiceToggles.setRandomOrder(checked)}
                 label="Random Order"
               />
-              <LegacySwitch
+              <ToggleSwitch
                 id="prioritize-slow-toggle"
                 checked={practiceToggles.prioritizeSlowCases}
                 onChange={(checked) => practiceToggles.setPrioritizeSlowCases(checked)}
                 label="Slow Cases First"
               />
-              <LegacySwitch
+              <ToggleSwitch
                 id="prioritize-failed-toggle"
                 checked={practiceToggles.prioritizeFailedCases}
                 onChange={(checked) => practiceToggles.setPrioritizeFailedCases(checked)}
@@ -590,9 +590,9 @@ export const PracticeView = memo(function PracticeView({
         <CaseGrid caseCards={caseCards} />
 
         <div className="delete-mode-container">
-          <LegacySwitch
+          <ToggleSwitch
             id="delete-mode-toggle"
-            className="legacy-switch--inline"
+            className="toggle-switch--inline"
             checked={deleteMode}
             onChange={(checked) => {
               setDeleteMode(checked);

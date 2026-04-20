@@ -1,4 +1,4 @@
-/** SVGs copied from cubedex-legacy/index.html menu buttons */
+/** SVGs copied from the original static HTML menu buttons. */
 
 export function MenuPracticeIcon() {
   return (

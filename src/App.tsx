@@ -10,18 +10,18 @@ import {
 import { Alg } from 'cubing/alg';
 import { cube3x3x3 } from 'cubing/puzzles';
 import { caseCardStore, setCaseCardActions } from './state/caseCardStore';
-import { useLegacyBootstrap } from './hooks/useLegacyBootstrap';
+import { useCaseLibrary } from './hooks/useCaseLibrary';
 import { useTrainingState } from './hooks/useTrainingState';
-import { useLegacyOptions } from './hooks/useLegacyOptions';
+import { useAppSettings } from './hooks/useAppSettings';
 import { useScrambleState } from './hooks/useScrambleState';
 import { useSmartcubeConnection } from './hooks/useSmartcubeConnection';
-import { useLegacyManagement } from './hooks/useLegacyManagement';
-import { getLegacyStickering } from './lib/legacy-stickering';
-import { deleteAlgorithm, getBestTime, getSavedAlgorithms, removeAlgorithmTimesStorage } from './lib/legacy-storage';
+import { useAlgorithmImportExport } from './hooks/useAlgorithmImportExport';
+import { getStickeringForCategory } from './lib/stickering';
+import { deleteAlgorithm, getBestTime, getSavedAlgorithms, removeAlgorithmTimesStorage } from './lib/storage';
 import { usePracticeToggles } from './hooks/usePracticeToggles';
-import { useLegacyCharts } from './hooks/useLegacyCharts';
-import { averageOfFiveTimeNumber } from './lib/legacy-algorithms';
-import { patternToPlayerAlg } from './lib/legacy-scramble';
+import { useTrainingGraphs } from './hooks/useTrainingGraphs';
+import { averageOfFiveTimeNumber } from './lib/case-cards';
+import { patternToPlayerAlg } from './lib/scramble';
 import {
   HamburgerIcon,
 } from './components/Icons';
@@ -68,7 +68,7 @@ export function App() {
   const flashingIndicatorTimeoutRef = useRef<number | null>(null);
   const [isFlashingIndicatorVisible, setIsFlashingIndicatorVisible] = useState(false);
   const [flashingIndicatorColor, setFlashingIndicatorColor] = useState<'gray' | 'red' | 'green'>('gray');
-  const bootstrap = useLegacyBootstrap();
+  const caseLibrary = useCaseLibrary();
   const {
     isReady,
     selectedCategory,
@@ -79,8 +79,8 @@ export function App() {
     toggleCaseSelection,
     cycleCaseLearnedState,
     reloadSavedAlgorithms,
-  } = bootstrap;
-  const options = useLegacyOptions();
+  } = caseLibrary;
+  const options = useAppSettings();
   const practiceToggles = usePracticeToggles();
   const selectedCases = useMemo(
     () => selectedCaseIds
@@ -100,10 +100,10 @@ export function App() {
     statsRefreshToken,
   });
   const scramble = useScrambleState();
-  const management = useLegacyManagement(reloadSavedAlgorithms);
+  const algorithmActions = useAlgorithmImportExport(reloadSavedAlgorithms);
   const selectedStickering = mainCubeStickeringDeferred && !options.fullStickering
     ? 'full'
-    : getLegacyStickering(selectedCategory || 'PLL', options.fullStickering);
+    : getStickeringForCategory(selectedCategory || 'PLL', options.fullStickering);
   const optionsVisible = activeView === 'options';
   const helpVisible = activeView === 'help';
   const newAlgVisible = activeView === 'new-alg';
@@ -187,7 +187,7 @@ export function App() {
   const smartcubeAppendMoveKey = smartcube.lastProcessedMove?.key;
   const smartcubeAppendMove = smartcube.lastProcessedMove?.visualMove;
   const activeStatsSolveCount = training.practiceCounts[training.statsAlgId] ?? 0;
-  useLegacyCharts(
+  useTrainingGraphs(
     training.currentCase,
     training.displayAlg || training.algInput,
     training.statsAlgId,
@@ -519,8 +519,8 @@ export function App() {
     if (view === 'new-alg') {
       training.enterInputMode(training.algInput || training.displayAlg);
       scramble.clearScramble();
-      management.clearForm();
-      management.clearMessages();
+      algorithmActions.clearForm();
+      algorithmActions.clearMessages();
     }
 
     if (view === 'practice') {
@@ -536,7 +536,7 @@ export function App() {
       lastProcessedScrambleMoveRef.current = '';
     }
   }, [
-    management.clearMessages,
+    algorithmActions.clearMessages,
     options.alwaysScrambleTo,
     scramble.clearScramble,
     scramble.scrambleMode,
@@ -629,10 +629,10 @@ export function App() {
     }
 
     if (training.currentCase) {
-      management.setCategoryInput(training.currentCase.category);
-      management.setSubsetInput(training.currentCase.subset);
-      management.setAlgNameInput(training.currentCase.name);
-      management.clearMessages();
+      algorithmActions.setCategoryInput(training.currentCase.category);
+      algorithmActions.setSubsetInput(training.currentCase.subset);
+      algorithmActions.setAlgNameInput(training.currentCase.name);
+      algorithmActions.clearMessages();
     }
 
     if (hideAlgEditorTimeoutRef.current != null) {
@@ -645,7 +645,7 @@ export function App() {
       document.getElementById('alg-input')?.focus();
     });
   }, [
-    management,
+    algorithmActions,
     training.algInput,
     training.currentCase,
     training.displayAlg,
@@ -653,8 +653,8 @@ export function App() {
   ]);
 
   const handleNewAlgSave = useCallback(() => {
-    const nextCategory = management.categoryInput.trim();
-    if (management.submitSave(training.displayAlg || training.algInput) && nextCategory) {
+    const nextCategory = algorithmActions.categoryInput.trim();
+    if (algorithmActions.submitSave(training.displayAlg || training.algInput) && nextCategory) {
       training.clearFailedCounts();
       setStatsRefreshToken((value) => value + 1);
       setAcknowledgedDisconnectToken(smartcube.disconnectToken);
@@ -662,8 +662,8 @@ export function App() {
       setMainCubeStickeringDeferred(false);
     }
   }, [
-    management.categoryInput,
-    management.submitSave,
+    algorithmActions.categoryInput,
+    algorithmActions.submitSave,
     setSelectedCategory,
     smartcube.disconnectToken,
     training.algInput,
@@ -672,7 +672,7 @@ export function App() {
   ]);
 
   const handleNewAlgCancel = useCallback(() => {
-    management.clearMessages();
+    algorithmActions.clearMessages();
     setAcknowledgedDisconnectToken(smartcube.disconnectToken);
     if (hideAlgEditorTimeoutRef.current != null) {
       window.clearTimeout(hideAlgEditorTimeoutRef.current);
@@ -682,15 +682,15 @@ export function App() {
     setActiveView('practice');
     void training.trainCurrent(smartcube.currentPattern);
   }, [
-    management.clearMessages,
+    algorithmActions.clearMessages,
     smartcube.currentPattern,
     smartcube.disconnectToken,
     training.trainCurrent,
   ]);
 
   const handleInlineAlgSave = useCallback(() => {
-    const nextCategory = management.categoryInput.trim();
-    const ok = management.submitSave(training.algInput);
+    const nextCategory = algorithmActions.categoryInput.trim();
+    const ok = algorithmActions.submitSave(training.algInput);
     if (ok && nextCategory) {
       training.clearFailedCounts();
       setStatsRefreshToken((value) => value + 1);
@@ -709,8 +709,8 @@ export function App() {
       }, 3100);
     }
   }, [
-    management.submitSave,
-    management.categoryInput,
+    algorithmActions.submitSave,
+    algorithmActions.categoryInput,
     setSelectedCategory,
     smartcube.currentPattern,
     smartcube.disconnectToken,
@@ -720,7 +720,7 @@ export function App() {
   ]);
 
   const handleInlineAlgCancel = useCallback(() => {
-    management.clearMessages();
+    algorithmActions.clearMessages();
     setAcknowledgedDisconnectToken(smartcube.disconnectToken);
     if (hideAlgEditorTimeoutRef.current != null) {
       window.clearTimeout(hideAlgEditorTimeoutRef.current);
@@ -729,7 +729,7 @@ export function App() {
     setAlgEditorVisible(false);
     void training.trainCurrent(smartcube.currentPattern);
   }, [
-    management.clearMessages,
+    algorithmActions.clearMessages,
     smartcube.currentPattern,
     smartcube.disconnectToken,
     training.trainCurrent,
@@ -738,7 +738,7 @@ export function App() {
   const handleImportFileChange = useCallback<ChangeEventHandler<HTMLInputElement>>((event) => {
     const file = event.target.files?.[0];
     if (file) {
-      void management.importFromFile(file).then((imported) => {
+      void algorithmActions.importFromFile(file).then((imported) => {
         if (imported) {
           training.clearFailedCounts();
           const firstCategory = Object.keys(getSavedAlgorithms())[0] ?? '';
@@ -748,7 +748,7 @@ export function App() {
       });
     }
     event.currentTarget.value = '';
-  }, [management.importFromFile, setSelectedCategory, training.clearFailedCounts]);
+  }, [algorithmActions.importFromFile, setSelectedCategory, training.clearFailedCounts]);
 
   return (
     <div className="app-shell">
@@ -808,17 +808,17 @@ export function App() {
         </div>
 
         <div id="app" className="app-content">
-          {!isReady ? <div className="footer">Loading legacy data…</div> : null}
+          {!isReady ? <div className="footer">Loading saved data…</div> : null}
           <PracticeView
             topVisible={activeView === 'practice' || activeView === 'new-alg'}
             practiceVisible={activeView === 'practice'}
             options={options}
             practiceToggles={practiceToggles}
-            bootstrap={bootstrap}
+            caseLibrary={caseLibrary}
             training={training}
             scramble={scramble}
             smartcube={smartcube}
-            management={management}
+            algorithmActions={algorithmActions}
             showAlgEditor={algEditorVisible}
             onAlgEditorSave={newAlgVisible ? handleNewAlgSave : handleInlineAlgSave}
             onAlgEditorCancel={newAlgVisible ? handleNewAlgCancel : handleInlineAlgCancel}
@@ -865,7 +865,7 @@ export function App() {
               setInfoVisible={setInfoVisible}
               options={options}
               smartcube={smartcube}
-              management={management}
+              algorithmActions={algorithmActions}
             />
           ) : null}
         </div>

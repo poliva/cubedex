@@ -1,7 +1,7 @@
 import { memo } from 'react';
-import type { LegacyManagementState } from '../hooks/useLegacyManagement';
-import type { LegacyOptionsState } from '../hooks/useLegacyOptions';
-import { LegacySwitch } from '../components/LegacySwitch';
+import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
+import type { AppSettingsState } from '../hooks/useAppSettings';
+import { ToggleSwitch } from '../components/ToggleSwitch';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
 
 export const OptionsView = memo(function OptionsView({
@@ -10,14 +10,14 @@ export const OptionsView = memo(function OptionsView({
   setInfoVisible,
   options,
   smartcube,
-  management,
+  algorithmActions,
 }: {
   visible: boolean;
   infoVisible: boolean;
   setInfoVisible: (value: boolean | ((prev: boolean) => boolean)) => void;
-  options: LegacyOptionsState;
+  options: AppSettingsState;
   smartcube: SmartcubeConnectionState;
-  management: LegacyManagementState;
+  algorithmActions: AlgorithmImportExportState;
 }) {
   return (
     <>
@@ -55,7 +55,7 @@ export const OptionsView = memo(function OptionsView({
         <div id="alg-options-container" className="options-section">
           <p className="options-section-title">Algorithms Options:</p>
           <div className="button-row options-button-row">
-            <button id="export-algs" className="primary-button" type="button" onClick={() => management.exportAll()}>
+            <button id="export-algs" className="primary-button" type="button" onClick={() => algorithmActions.exportAll()}>
               Export Algs
             </button>
             <button
@@ -103,7 +103,7 @@ export const OptionsView = memo(function OptionsView({
             </button>
           </div>
           <div className="device-ble-toggle-row">
-            <LegacySwitch
+            <ToggleSwitch
               id="smartcube-show-all-ble-toggle"
               checked={smartcube.showAllBluetoothDevices}
               onChange={(checked) => smartcube.setShowAllBluetoothDevices(checked)}
@@ -113,7 +113,7 @@ export const OptionsView = memo(function OptionsView({
         </div>
 
         <div className="options-toggle-row">
-          <LegacySwitch
+          <ToggleSwitch
             id="dark-mode-toggle"
             checked={options.darkMode}
             onChange={(checked) => options.setDarkMode(checked)}
@@ -121,7 +121,7 @@ export const OptionsView = memo(function OptionsView({
           />
         </div>
         <div className="options-toggle-row">
-          <LegacySwitch
+          <ToggleSwitch
             id="gyroscope-toggle"
             checked={smartcube.connected && !smartcube.gyroSupported ? false : options.gyroscope}
             disabled={smartcube.gyroscopeToggleDisabled}
@@ -130,7 +130,7 @@ export const OptionsView = memo(function OptionsView({
           />
         </div>
         <div className="options-toggle-row">
-          <LegacySwitch
+          <ToggleSwitch
             id="control-panel-toggle"
             checked={options.controlPanel === 'bottom-row'}
             onChange={(checked) => options.setControlPanel(checked ? 'bottom-row' : 'none')}
@@ -138,7 +138,7 @@ export const OptionsView = memo(function OptionsView({
           />
         </div>
         <div className="options-toggle-row">
-          <LegacySwitch
+          <ToggleSwitch
             id="hintFacelets-toggle"
             checked={options.hintFacelets === 'floating'}
             onChange={(checked) => options.setHintFacelets(checked ? 'floating' : 'none')}
@@ -146,7 +146,7 @@ export const OptionsView = memo(function OptionsView({
           />
         </div>
         <div className="options-toggle-row">
-          <LegacySwitch
+          <ToggleSwitch
             id="full-stickering-toggle"
             checked={options.fullStickering}
             onChange={(checked) => options.setFullStickering(checked)}
@@ -155,9 +155,9 @@ export const OptionsView = memo(function OptionsView({
         </div>
 
         <div className="white-bottom-group">
-          <LegacySwitch
+          <ToggleSwitch
             id="white-on-bottom-toggle"
-            className="legacy-switch--indented"
+            className="toggle-switch--indented"
             checked={options.whiteOnBottom}
             disabled={!options.fullStickering}
             onChange={(checked) => options.setWhiteOnBottom(checked)}
@@ -169,7 +169,7 @@ export const OptionsView = memo(function OptionsView({
         </div>
 
         <div className="options-toggle-row">
-          <LegacySwitch
+          <ToggleSwitch
             id="flashing-indicator-toggle"
             checked={options.flashingIndicatorEnabled}
             onChange={(checked) => options.setFlashingIndicatorEnabled(checked)}
@@ -177,7 +177,7 @@ export const OptionsView = memo(function OptionsView({
           />
         </div>
         <div className="options-toggle-row">
-          <LegacySwitch
+          <ToggleSwitch
             id="show-alg-name-toggle"
             checked={options.showAlgName}
             onChange={(checked) => options.setShowAlgName(checked)}
@@ -185,7 +185,7 @@ export const OptionsView = memo(function OptionsView({
           />
         </div>
         <div className="options-toggle-row">
-          <LegacySwitch
+          <ToggleSwitch
             id="always-scramble-to-toggle"
             checked={options.alwaysScrambleTo}
             onChange={(checked) => options.setAlwaysScrambleTo(checked)}

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-type LegacySwitchProps = {
+type ToggleSwitchProps = {
   id: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
@@ -10,7 +10,7 @@ type LegacySwitchProps = {
   labelClassName?: string;
 };
 
-export function LegacySwitch({
+export function ToggleSwitch({
   id,
   checked,
   onChange,
@@ -18,9 +18,9 @@ export function LegacySwitch({
   label,
   className = '',
   labelClassName = '',
-}: LegacySwitchProps) {
+}: ToggleSwitchProps) {
   return (
-    <label htmlFor={id} className={`legacy-switch ${className}`.trim()}>
+    <label htmlFor={id} className={`toggle-switch ${className}`.trim()}>
       <input
         type="checkbox"
         id={id}
@@ -29,9 +29,9 @@ export function LegacySwitch({
         disabled={disabled}
         onChange={(event) => onChange(event.target.checked)}
       />
-      <div className="legacy-switch-track" aria-hidden />
-      <div className="legacy-switch-dot dot" aria-hidden />
-      <span className={`legacy-switch-label ${labelClassName}`.trim()}>{label}</span>
+      <div className="toggle-switch-track" aria-hidden />
+      <div className="toggle-switch-dot dot" aria-hidden />
+      <span className={`toggle-switch-label ${labelClassName}`.trim()}>{label}</span>
     </label>
   );
 }

@@ -3,7 +3,7 @@ import { KPattern } from 'cubing/kpuzzle';
 import { cube3x3x3 } from 'cubing/puzzles';
 import min2phase from './min2phase/min2phase';
 import { faceletsToPattern, patternToFacelets } from './cube-utils';
-import { expandNotation } from './legacy-storage';
+import { expandNotation } from './storage';
 
 const SOLVED_STATE = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB';
 
