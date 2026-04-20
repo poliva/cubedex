@@ -176,6 +176,8 @@ describe('useTrainingState time attack counts', () => {
       expect(result.current.practiceCounts['case-1']).toBe(1);
       expect(result.current.currentCase?.id).toBe('case-2');
     });
+    expect(getLastTimes('case-1')).toEqual([1200]);
+    expect(getBestTime('case-1')).toBe(1200);
 
     act(() => {
       result.current.stopAndRecordSolve(2300);
@@ -185,6 +187,8 @@ describe('useTrainingState time attack counts', () => {
       expect(result.current.practiceCounts['case-2']).toBe(1);
       expect(result.current.practiceCounts[scopeId]).toBe(1);
     });
+    expect(getLastTimes('case-2')).toEqual([2300]);
+    expect(getBestTime('case-2')).toBe(2300);
 
     const recordedWallTimes = getLastTimes(scopeId);
     expect(recordedWallTimes).toHaveLength(1);

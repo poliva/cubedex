@@ -188,6 +188,10 @@ export function App() {
   const smartcubeAppendMoveKey = smartcube.lastProcessedMove?.key;
   const smartcubeAppendMove = smartcube.lastProcessedMove?.visualMove;
   const activeStatsSolveCount = training.practiceCounts[training.statsAlgId] ?? 0;
+  const selectedCaseSolveCount = selectedCases.reduce(
+    (sum, selectedCase) => sum + (training.practiceCounts[selectedCase.id] ?? 0),
+    0,
+  );
   useTrainingGraphs(
     training.currentCase,
     training.displayAlg || training.algInput,
@@ -231,7 +235,7 @@ export function App() {
       ao5Times[card.id] = averageOfFiveTimeNumber(card.id);
     }
     caseCardStore.setState({ bestTimes, ao5Times });
-  }, [activeStatsSolveCount, caseCards, statsRefreshToken]);
+  }, [activeStatsSolveCount, caseCards, selectedCaseSolveCount, statsRefreshToken]);
 
   // Keep action wrappers pointing at the latest closures.
   useEffect(() => {

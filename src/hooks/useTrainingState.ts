@@ -692,6 +692,16 @@ export function useTrainingState(
     }));
   }
 
+  function persistSolveTime(scopeId: string, timeMs: number) {
+    const nextTimes = appendLimitedTime(timeMs, getLastTimes(scopeId));
+    setLastTimes(scopeId, nextTimes);
+
+    const currentBest = getBestTime(scopeId);
+    if (currentBest == null || timeMs < currentBest) {
+      setBestTime(scopeId, timeMs);
+    }
+  }
+
   function selectQueueHead(nextCase: CaseCardData | null) {
     setCurrentCase(nextCase);
     if (nextCase) {
@@ -1059,6 +1069,7 @@ export function useTrainingState(
     if (options.timeAttack) {
       timeAttackCaseTimesRef.current = [...timeAttackCaseTimesRef.current, finalTime];
       if (completedCaseId) {
+        persistSolveTime(completedCaseId, finalTime);
         incrementPracticeCount(completedCaseId);
       }
       isKeyboardTimerActiveRef.current = false;
@@ -1077,17 +1088,11 @@ export function useTrainingState(
       const totalWallTime = timeAttackSessionStartRef.current == null
         ? finalTime
         : Math.round(performance.now() - timeAttackSessionStartRef.current);
-      const nextTimes = appendLimitedTime(totalWallTime, getLastTimes(algId));
-      setLastTimes(algId, nextTimes);
+      persistSolveTime(algId, totalWallTime);
       setTimeAttackLastRuns(algId, appendLimitedTime(
         { wallMs: totalWallTime, caseTimes: timeAttackCaseTimesRef.current },
         getTimeAttackLastRuns(algId),
       ));
-
-      const currentBest = getBestTime(algId);
-      if (currentBest == null || totalWallTime < currentBest) {
-        setBestTime(algId, totalWallTime);
-      }
 
       incrementPracticeCount(algId);
       const totalTimeText = formatTimerTimestamp(totalWallTime);
@@ -1097,15 +1102,7 @@ export function useTrainingState(
       return;
     }
 
-    const lastTimes = getLastTimes(algId);
-    const nextTimes = appendLimitedTime(finalTime, lastTimes);
-    setLastTimes(algId, nextTimes);
-
-    const currentBest = getBestTime(algId);
-    if (currentBest == null || finalTime < currentBest) {
-      setBestTime(algId, finalTime);
-    }
-
+    persistSolveTime(algId, finalTime);
     incrementPracticeCount(algId);
     setTimerText(formatTimerTimestamp(finalTime));
     setTimerStateInternal('STOPPED');
