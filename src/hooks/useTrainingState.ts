@@ -572,7 +572,7 @@ export function useTrainingState(
     clearTimeAttackSession();
     resetTimeAttackQueue();
     if (totalTimeText == null) {
-      setTimerText('');
+      setTimerText('0:00.000');
     }
     const firstCase = selectedQueueRef.current[0] ?? null;
     selectQueueHead(firstCase);

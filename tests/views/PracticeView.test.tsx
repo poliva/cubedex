@@ -289,6 +289,24 @@ describe('PracticeView', () => {
     expect(props.training.trainCurrent).toHaveBeenCalled();
   });
 
+  it('stops time attack without retraining the interrupted case', async () => {
+    const user = userEvent.setup();
+    const base = makeProps();
+    const props = makeProps({
+      training: {
+        ...base.training,
+        timerState: 'RUNNING',
+        timeAttackMode: true,
+      },
+    });
+
+    render(<PracticeView {...props} />);
+    await user.click(screen.getByTitle('Train'));
+
+    expect(props.training.abortRunningAttempt).toHaveBeenCalled();
+    expect(props.training.trainCurrent).not.toHaveBeenCalled();
+  });
+
   it('starts scramble flow and prepares training after Scramble To succeeds', async () => {
     const user = userEvent.setup();
     const base = makeProps();

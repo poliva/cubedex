@@ -390,6 +390,9 @@ export const PracticeView = memo(function PracticeView({
 
               if (training.timerState === 'RUNNING') {
                 training.abortRunningAttempt();
+                if (training.timeAttackMode) {
+                  return;
+                }
               }
               void training.trainCurrent(smartcube.currentPattern);
             }}
