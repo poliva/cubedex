@@ -486,6 +486,7 @@ export function useTrainingState(
   const timerStartRef = useRef<number | null>(null);
   const frameRef = useRef<number | null>(null);
   const isKeyboardTimerActiveRef = useRef(false);
+  const ignoreNextSpaceKeyUpRef = useRef(false);
   const initialPatternRef = useRef<KPattern | null>(null);
   const patternStatesRef = useRef<KPattern[]>([]);
   // Hash of each pattern in `patternStatesRef` → index in that array.
@@ -1135,11 +1136,24 @@ export function useTrainingState(
     setTimerStateInternal('READY');
   }
 
+  function completeOrAbortRunningAttempt() {
+    if (timerState !== 'RUNNING') {
+      return;
+    }
+
+    if (!options.timeAttack && !options.smartcubeConnected) {
+      stopAndRecordSolve(getElapsedMs());
+      return;
+    }
+
+    abortRunningAttempt();
+  }
+
   function activateTimer() {
     if (timerState === 'STOPPED' || timerState === 'IDLE' || timerState === 'READY') {
       setTimerState('RUNNING');
     } else {
-      abortRunningAttempt();
+      completeOrAbortRunningAttempt();
     }
   }
 
@@ -1152,7 +1166,8 @@ export function useTrainingState(
       setTimerText('0:00.000');
       setTimerState('READY');
     } else if (timerState === 'RUNNING') {
-      abortRunningAttempt();
+      ignoreNextSpaceKeyUpRef.current = true;
+      completeOrAbortRunningAttempt();
     } else if (timerState === 'READY' && !isKeyboardTimerActiveRef.current) {
       setTimerText('0:00.000');
     }
@@ -1160,6 +1175,12 @@ export function useTrainingState(
 
   function handleSpaceKeyUp() {
     if (inputMode) {
+      return;
+    }
+
+    if (ignoreNextSpaceKeyUpRef.current) {
+      ignoreNextSpaceKeyUpRef.current = false;
+      isKeyboardTimerActiveRef.current = false;
       return;
     }
 
