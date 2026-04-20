@@ -55,7 +55,7 @@ export const OptionsView = memo(function OptionsView({
         <div id="alg-options-container" className="options-section">
           <p className="options-section-title">Algorithms Options:</p>
           <div className="button-row options-button-row">
-            <button id="export-algs" className="primary-button" type="button" onClick={() => algorithmActions.exportAll()}>
+            <button id="export-algs" className="primary-button" type="button" onClick={() => void algorithmActions.exportAll()}>
               Export Algs
             </button>
             <button
@@ -65,6 +65,23 @@ export const OptionsView = memo(function OptionsView({
               onClick={() => document.getElementById('import-file')?.click()}
             >
               Import Algs
+            </button>
+          </div>
+        </div>
+
+        <div id="backup-options-container" className="options-section">
+          <p className="options-section-title">Backup Options:</p>
+          <div className="button-row options-button-row">
+            <button id="export-backup" className="primary-button" type="button" onClick={() => void algorithmActions.exportBackup()}>
+              Export Backup
+            </button>
+            <button
+              id="import-backup"
+              className="primary-button"
+              type="button"
+              onClick={() => document.getElementById('import-backup-file')?.click()}
+            >
+              Import Backup
             </button>
           </div>
         </div>

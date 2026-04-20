@@ -1,5 +1,12 @@
 import { useCallback, useMemo, useState } from 'react';
-import { expandNotation, exportAlgorithms, importAlgorithmsFromJson, saveAlgorithm } from '../lib/storage';
+import {
+  expandNotation,
+  exportAlgorithms,
+  exportBackup,
+  importAlgorithmsFromJson,
+  importBackupFromJson,
+  saveAlgorithm,
+} from '../lib/storage';
 
 export interface AlgorithmImportExportState {
   categoryInput: string;
@@ -12,9 +19,11 @@ export interface AlgorithmImportExportState {
   setSubsetInput: (value: string) => void;
   setAlgNameInput: (value: string) => void;
   clearMessages: () => void;
-  submitSave: (algorithm: string) => boolean;
-  exportAll: () => void;
+  submitSave: (algorithm: string) => Promise<boolean>;
+  exportAll: () => Promise<void>;
   importFromFile: (file: File) => Promise<boolean>;
+  exportBackup: () => Promise<void>;
+  importBackupFromFile: (file: File) => Promise<boolean>;
 }
 
 export function useAlgorithmImportExport(onStorageChanged?: () => void): AlgorithmImportExportState {
@@ -39,7 +48,7 @@ export function useAlgorithmImportExport(onStorageChanged?: () => void): Algorit
     setAlgNameInput('');
   }, []);
 
-  const submitSave = useCallback((algorithm: string) => {
+  const submitSave = useCallback(async (algorithm: string) => {
     const category = categoryInput.trim();
     const subset = subsetInput.trim();
     const name = algNameInput.trim();
@@ -54,7 +63,7 @@ export function useAlgorithmImportExport(onStorageChanged?: () => void): Algorit
       return false;
     }
 
-    saveAlgorithm(category, subset, name, normalizedAlgorithm);
+    await saveAlgorithm(category, subset, name, normalizedAlgorithm);
     onStorageChanged?.();
     clearAlgNameOnly();
     setSaveError('');
@@ -65,14 +74,14 @@ export function useAlgorithmImportExport(onStorageChanged?: () => void): Algorit
     return true;
   }, [algNameInput, categoryInput, clearAlgNameOnly, onStorageChanged, subsetInput]);
 
-  const exportAll = useCallback(() => {
-    exportAlgorithms();
+  const exportAll = useCallback(async () => {
+    await exportAlgorithms();
   }, []);
 
   const importFromFile = useCallback(async (file: File) => {
     try {
       const text = await file.text();
-      importAlgorithmsFromJson(text);
+      await importAlgorithmsFromJson(text);
       onStorageChanged?.();
       setSaveError('');
       setSaveSuccess('');
@@ -82,6 +91,27 @@ export function useAlgorithmImportExport(onStorageChanged?: () => void): Algorit
       setSaveSuccess('');
       setSaveError('');
       window.alert('Failed to import algorithms. Please ensure the file is in the correct format.');
+      return false;
+    }
+  }, [onStorageChanged]);
+
+  const exportBackupFile = useCallback(async () => {
+    await exportBackup();
+  }, []);
+
+  const importBackupFromFile = useCallback(async (file: File) => {
+    try {
+      const text = await file.text();
+      await importBackupFromJson(text);
+      onStorageChanged?.();
+      setSaveError('');
+      setSaveSuccess('');
+      window.alert('Backup imported successfully.');
+      return true;
+    } catch {
+      setSaveSuccess('');
+      setSaveError('');
+      window.alert('Failed to import backup. Please ensure the file is in the correct format.');
       return false;
     }
   }, [onStorageChanged]);
@@ -100,13 +130,17 @@ export function useAlgorithmImportExport(onStorageChanged?: () => void): Algorit
     submitSave,
     exportAll,
     importFromFile,
+    exportBackup: exportBackupFile,
+    importBackupFromFile,
   }), [
     algNameInput,
     categoryInput,
     clearForm,
     clearMessages,
     exportAll,
+    exportBackupFile,
     importFromFile,
+    importBackupFromFile,
     saveError,
     saveSuccess,
     submitSave,

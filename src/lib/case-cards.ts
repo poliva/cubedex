@@ -1,7 +1,8 @@
 import {
-  algToId,
+  createScopeId,
   expandNotation,
   getBestTime,
+  getAlgorithmId,
   getLastTimes,
   getLearnedStatus,
   setLearnedStatus,
@@ -107,16 +108,16 @@ export function getCaseCards(
 
     for (const alg of subsetData.algorithms) {
       const normalizedAlgorithm = expandNotation(alg.algorithm);
-      const algId = algToId(normalizedAlgorithm) || 'default-alg-id';
+      const scopeId = createScopeId(category, subsetData.subset, getAlgorithmId(normalizedAlgorithm));
       result.push({
-        id: algId,
+        id: scopeId,
         name: alg.name,
         algorithm: normalizedAlgorithm,
         subset: subsetData.subset,
         category,
-        bestTime: getBestTime(algId),
-        ao5: averageOfFiveTimeNumber(algId),
-        learned: getLearnedStatus(algId),
+        bestTime: getBestTime(scopeId),
+        ao5: averageOfFiveTimeNumber(scopeId),
+        learned: getLearnedStatus(scopeId),
       });
     }
   }

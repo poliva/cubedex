@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import type { CaseCardData } from '../lib/case-cards';
 import { createStatsGraph, createTimeGraph } from '../lib/charts';
-import { algToId, getLastTimes } from '../lib/storage';
+import { getLastTimes } from '../lib/storage';
 
 export function useTrainingGraphs(
   currentCase: CaseCardData | null,
@@ -13,7 +13,7 @@ export function useTrainingGraphs(
     const timeCanvas = document.getElementById('timeGraph') as HTMLCanvasElement | null;
     const statsCanvas = document.getElementById('statsGraph') as HTMLCanvasElement | null;
 
-    const algId = statsAlgId || (currentCase ? algToId(currentCase.algorithm) || 'default-alg-id' : '');
+    const algId = statsAlgId || currentCase?.id || '';
 
     if (!algId) {
       createTimeGraph(timeCanvas, []);

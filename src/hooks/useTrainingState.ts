@@ -16,7 +16,7 @@ import { solvedPattern } from '../lib/cube-utils';
 import { fixOrientation } from '../lib/scramble';
 import { getInverseMove, getOppositeMove, sanitizeMove, trailingWholeCubeRotationMoveCount } from '../lib/move-helpers';
 import {
-  algToId,
+  createGlobalScopeId,
   expandNotation,
   getBestTime,
   getLastTimes,
@@ -84,6 +84,7 @@ export interface TrainingPracticeOptions {
 interface TrainCurrentOptions {
   algorithm?: string;
   preserveDisplayedAlgorithm?: boolean;
+  statsScopeId?: string;
 }
 
 export interface TrainingState {
@@ -630,7 +631,7 @@ export function useTrainingState(
     const queueHead = nextCase ?? selectedQueueRef.current[0] ?? null;
     selectQueueHead(queueHead);
     if (queueHead) {
-      void trainCurrent(undefined, { algorithm: queueHead.algorithm });
+      void trainCurrent(undefined, { algorithm: queueHead.algorithm, statsScopeId: queueHead.id });
     }
   }
 
@@ -748,7 +749,9 @@ export function useTrainingState(
     }
     initialPatternRef.current = basePattern;
     originalAlgTextRef.current = normalizedAlgorithm;
-    originalAlgIdRef.current = algToId(normalizedAlgorithm) || 'default-alg-id';
+    originalAlgIdRef.current = trainOptions?.statsScopeId
+      ?? currentCaseRef.current?.id
+      ?? createGlobalScopeId(normalizedAlgorithm);
 
     clearProgressState();
 
@@ -897,7 +900,7 @@ export function useTrainingState(
 
       const nextCase = selectedQueueRef.current[0] ?? null;
       if (nextCase) {
-        void trainCurrent(nextInitialPattern, { algorithm: nextCase.algorithm });
+        void trainCurrent(nextInitialPattern, { algorithm: nextCase.algorithm, statsScopeId: nextCase.id });
       }
     }
   }
@@ -1020,7 +1023,7 @@ export function useTrainingState(
           switchToNextAlgorithm();
           const nextCase = selectedQueueRef.current[0] ?? null;
           if (nextCase) {
-            void trainCurrent(completedPattern, { algorithm: nextCase.algorithm });
+            void trainCurrent(completedPattern, { algorithm: nextCase.algorithm, statsScopeId: nextCase.id });
           }
         }
         return true;

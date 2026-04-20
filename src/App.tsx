@@ -221,7 +221,7 @@ export function App() {
     caseCardStore.setState({ fullStickering: options.fullStickering });
   }, [options.fullStickering]);
 
-  // Refresh per-card best/ao5 from localStorage whenever solves may have changed.
+  // Refresh per-card best/ao5 from cached storage whenever solves may have changed.
   useEffect(() => {
     const bestTimes: Record<string, number | null> = {};
     const ao5Times: Record<string, number | null> = {};
@@ -489,6 +489,7 @@ export function App() {
         void training.trainCurrent(smartcube.currentPattern, {
           algorithm: scramble.targetAlgorithm,
           preserveDisplayedAlgorithm: true,
+          statsScopeId: training.currentCase?.id,
         });
       }
     });
@@ -594,15 +595,17 @@ export function App() {
       return;
     }
 
-    for (const selectedCase of selectedCases) {
-      deleteAlgorithm(selectedCategory, selectedCase.algorithm);
-    }
+    void (async () => {
+      for (const selectedCase of selectedCases) {
+        await deleteAlgorithm(selectedCategory, selectedCase.algorithm);
+      }
 
-    training.clearFailedCounts();
-    reloadSavedAlgorithms();
-    setDeleteMode(false);
-    setDeleteSuccessMessage('Algorithms deleted successfully');
-    setStatsRefreshToken((value) => value + 1);
+      training.clearFailedCounts();
+      reloadSavedAlgorithms();
+      setDeleteMode(false);
+      setDeleteSuccessMessage('Algorithms deleted successfully');
+      setStatsRefreshToken((value) => value + 1);
+    })();
   }, [reloadSavedAlgorithms, selectedCategory, selectedCases, training.clearFailedCounts]);
 
   const handleDeleteTimes = useCallback(() => {
@@ -654,16 +657,20 @@ export function App() {
 
   const handleNewAlgSave = useCallback(() => {
     const nextCategory = algorithmActions.categoryInput.trim();
-    if (algorithmActions.submitSave(training.displayAlg || training.algInput) && nextCategory) {
-      training.clearFailedCounts();
-      setStatsRefreshToken((value) => value + 1);
-      setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-      setSelectedCategory(nextCategory);
-      setMainCubeStickeringDeferred(false);
-    }
+    void algorithmActions.submitSave(training.displayAlg || training.algInput).then((saved) => {
+      if (saved && nextCategory) {
+        training.clearFailedCounts();
+        reloadSavedAlgorithms();
+        setStatsRefreshToken((value) => value + 1);
+        setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+        setSelectedCategory(nextCategory);
+        setMainCubeStickeringDeferred(false);
+      }
+    });
   }, [
     algorithmActions.categoryInput,
     algorithmActions.submitSave,
+    reloadSavedAlgorithms,
     setSelectedCategory,
     smartcube.disconnectToken,
     training.algInput,
@@ -690,27 +697,30 @@ export function App() {
 
   const handleInlineAlgSave = useCallback(() => {
     const nextCategory = algorithmActions.categoryInput.trim();
-    const ok = algorithmActions.submitSave(training.algInput);
-    if (ok && nextCategory) {
-      training.clearFailedCounts();
-      setStatsRefreshToken((value) => value + 1);
-      setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-      setSelectedCategory(nextCategory);
-      setMainCubeStickeringDeferred(false);
-    }
-    if (ok) {
-      void training.trainCurrent(smartcube.currentPattern);
-      if (hideAlgEditorTimeoutRef.current != null) {
-        window.clearTimeout(hideAlgEditorTimeoutRef.current);
+    void algorithmActions.submitSave(training.algInput).then((ok) => {
+      if (ok && nextCategory) {
+        training.clearFailedCounts();
+        reloadSavedAlgorithms();
+        setStatsRefreshToken((value) => value + 1);
+        setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+        setSelectedCategory(nextCategory);
+        setMainCubeStickeringDeferred(false);
       }
-      hideAlgEditorTimeoutRef.current = window.setTimeout(() => {
-        hideAlgEditorTimeoutRef.current = null;
-        setAlgEditorVisible(false);
-      }, 3100);
-    }
+      if (ok) {
+        void training.trainCurrent(smartcube.currentPattern);
+        if (hideAlgEditorTimeoutRef.current != null) {
+          window.clearTimeout(hideAlgEditorTimeoutRef.current);
+        }
+        hideAlgEditorTimeoutRef.current = window.setTimeout(() => {
+          hideAlgEditorTimeoutRef.current = null;
+          setAlgEditorVisible(false);
+        }, 3100);
+      }
+    });
   }, [
     algorithmActions.submitSave,
     algorithmActions.categoryInput,
+    reloadSavedAlgorithms,
     setSelectedCategory,
     smartcube.currentPattern,
     smartcube.disconnectToken,
@@ -741,6 +751,7 @@ export function App() {
       void algorithmActions.importFromFile(file).then((imported) => {
         if (imported) {
           training.clearFailedCounts();
+          reloadSavedAlgorithms();
           const firstCategory = Object.keys(getSavedAlgorithms())[0] ?? '';
           setSelectedCategory(firstCategory);
           setStatsRefreshToken((value) => value + 1);
@@ -748,7 +759,23 @@ export function App() {
       });
     }
     event.currentTarget.value = '';
-  }, [algorithmActions.importFromFile, setSelectedCategory, training.clearFailedCounts]);
+  }, [algorithmActions.importFromFile, reloadSavedAlgorithms, setSelectedCategory, training.clearFailedCounts]);
+
+  const handleBackupImportFileChange = useCallback<ChangeEventHandler<HTMLInputElement>>((event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      void algorithmActions.importBackupFromFile(file).then((imported) => {
+        if (imported) {
+          training.clearFailedCounts();
+          reloadSavedAlgorithms();
+          const firstCategory = Object.keys(getSavedAlgorithms())[0] ?? '';
+          setSelectedCategory(firstCategory);
+          setStatsRefreshToken((value) => value + 1);
+        }
+      });
+    }
+    event.currentTarget.value = '';
+  }, [algorithmActions.importBackupFromFile, reloadSavedAlgorithms, setSelectedCategory, training.clearFailedCounts]);
 
   return (
     <div className="app-shell">
@@ -856,7 +883,8 @@ export function App() {
             />
           ) : null}
 
-          <ImportFileInput onChange={handleImportFileChange} />
+          <ImportFileInput id="import-file" onChange={handleImportFileChange} />
+          <ImportFileInput id="import-backup-file" onChange={handleBackupImportFileChange} />
 
           {optionsMounted ? (
             <OptionsView

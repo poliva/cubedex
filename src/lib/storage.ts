@@ -1,3 +1,16 @@
+import {
+  BACKUP_FORMAT_VERSION,
+  type CubedexBackupFile,
+  type ScopedStatsRecord,
+  getMetaValue,
+  loadAllStatsFromDb,
+  loadSavedAlgorithmsFromDb,
+  openCubedexDatabase,
+  replaceLibraryAndStatsInDb,
+  saveStatsRecordToDb,
+  deleteStatsRecordsFromDb,
+} from './idb-storage';
+
 export interface SavedAlgorithm {
   name: string;
   algorithm: string;
@@ -28,6 +41,19 @@ export const STORAGE_KEYS = {
   smartcubeDeviceSelection: 'smartcubeDeviceSelection',
 } as const;
 
+export const DEFAULT_ALG_ID = 'default-alg-id';
+export const CASE_SCOPE_PREFIX = 'case:';
+export const GLOBAL_SCOPE_PREFIX = 'global:';
+
+const LS_MIGRATION_DONE_KEY = 'lsMigrationDone';
+const LS_MIGRATION_DONE_AT_KEY = 'lsMigrationDoneAt';
+
+let savedAlgorithmsCache: SavedAlgorithms = {};
+let statsCache = new Map<string, ScopedStatsRecord>();
+let storageReady = false;
+let initializePromise: Promise<{ migratedSavedAlgorithmsV1: boolean; alertMessage: string | null }> | null = null;
+let writeQueue: Promise<void> = Promise.resolve();
+
 export function expandNotation(input: string): string {
   let output = input
     .replace(/["´`'\u2018\u2019]/g, "'")
@@ -52,8 +78,24 @@ export function algToId(alg: string): string {
   return alg?.trim().replace(/\s+/g, '-').replace(/[']/g, 'p').replace(/[(/]/g, 'o').replace(/[)]/g, 'c');
 }
 
+export function getAlgorithmId(algorithm: string) {
+  return algToId(expandNotation(algorithm)) || DEFAULT_ALG_ID;
+}
+
 export function createAlgStorageKey(prefix: 'Best' | 'LastTimes' | 'Learned', algId: string) {
   return `${prefix}-${algId}`;
+}
+
+function cloneSavedAlgorithms(savedAlgorithms: SavedAlgorithms): SavedAlgorithms {
+  return Object.fromEntries(
+    Object.entries(savedAlgorithms).map(([category, subsets]) => [
+      category,
+      subsets.map((subset) => ({
+        subset: subset.subset,
+        algorithms: subset.algorithms.map((algorithm) => ({ ...algorithm })),
+      })),
+    ]),
+  );
 }
 
 export function readJsonStorage<T>(key: string, fallback: T): T {
@@ -69,40 +111,199 @@ export function readJsonStorage<T>(key: string, fallback: T): T {
   }
 }
 
-export function writeJsonStorage<T>(key: string, value: T) {
-  window.localStorage.setItem(key, JSON.stringify(value));
+export function createScopeId(category: string, subset: string, algId: string) {
+  return `${CASE_SCOPE_PREFIX}${encodeURIComponent(category)}:${encodeURIComponent(subset)}:${algId || DEFAULT_ALG_ID}`;
 }
 
-export function getSavedAlgorithms(): SavedAlgorithms {
-  return readJsonStorage<SavedAlgorithms>(STORAGE_KEYS.savedAlgorithms, {});
+export function createGlobalScopeId(algorithm: string) {
+  return `${GLOBAL_SCOPE_PREFIX}${getAlgorithmId(algorithm)}`;
 }
 
-export function setSavedAlgorithms(savedAlgorithms: SavedAlgorithms) {
-  writeJsonStorage(STORAGE_KEYS.savedAlgorithms, savedAlgorithms);
+function parseScopeId(scopeId: string) {
+  if (scopeId.startsWith(CASE_SCOPE_PREFIX)) {
+    const withoutPrefix = scopeId.slice(CASE_SCOPE_PREFIX.length);
+    const [encodedCategory = '', encodedSubset = '', algId = DEFAULT_ALG_ID] = withoutPrefix.split(':');
+    return {
+      kind: 'case' as const,
+      category: decodeURIComponent(encodedCategory),
+      subset: decodeURIComponent(encodedSubset),
+      algId: algId || DEFAULT_ALG_ID,
+    };
+  }
+
+  if (scopeId.startsWith(GLOBAL_SCOPE_PREFIX)) {
+    return {
+      kind: 'global' as const,
+      category: '',
+      subset: '',
+      algId: scopeId.slice(GLOBAL_SCOPE_PREFIX.length) || DEFAULT_ALG_ID,
+    };
+  }
+
+  return {
+    kind: 'legacy' as const,
+    category: '',
+    subset: '',
+    algId: scopeId || DEFAULT_ALG_ID,
+  };
 }
 
-export function migrateLastFiveTimesToLastTimes() {
-  for (let index = 0; index < window.localStorage.length; index += 1) {
-    const key = window.localStorage.key(index);
-    if (key && key.startsWith('LastFiveTimes-')) {
-      const nextKey = key.replace('LastFiveTimes-', 'LastTimes-');
-      window.localStorage.setItem(nextKey, window.localStorage.getItem(key) ?? '');
-      window.localStorage.removeItem(key);
-    }
+function createEmptyStatsRecord(scopeId: string): ScopedStatsRecord {
+  const parsed = parseScopeId(scopeId);
+  return {
+    scopeId,
+    category: parsed.category,
+    subset: parsed.subset,
+    algId: parsed.algId,
+    lastTimes: [],
+    best: null,
+    learned: 0,
+  };
+}
+
+function normalizeStatsRecord(record: ScopedStatsRecord): ScopedStatsRecord {
+  const parsed = parseScopeId(record.scopeId);
+  const lastTimes = Array.isArray(record.lastTimes)
+    ? record.lastTimes.map((value) => Number(value)).filter(Number.isFinite)
+    : [];
+  const best = record.best == null || !Number.isFinite(Number(record.best)) ? null : Number(record.best);
+  const learned = Number.isFinite(Number(record.learned)) ? Number(record.learned) : 0;
+
+  return {
+    scopeId: record.scopeId,
+    category: record.category || parsed.category,
+    subset: record.subset || parsed.subset,
+    algId: record.algId || parsed.algId,
+    lastTimes,
+    best,
+    learned,
+  };
+}
+
+function getStatsRecord(scopeId: string) {
+  return statsCache.get(scopeId) ?? createEmptyStatsRecord(scopeId);
+}
+
+function setStatsRecord(scopeId: string, record: ScopedStatsRecord) {
+  statsCache.set(scopeId, normalizeStatsRecord(record));
+}
+
+function snapshotStatsRecords() {
+  return Array.from(statsCache.values()).map((record) => normalizeStatsRecord(record));
+}
+
+function loadStatsCache(statsRecords: ScopedStatsRecord[]) {
+  statsCache = new Map(statsRecords.map((record) => [record.scopeId, normalizeStatsRecord(record)]));
+}
+
+function enqueueWrite(task: () => Promise<void>) {
+  const nextTask = writeQueue.then(task, task);
+  writeQueue = nextTask.catch(() => undefined);
+  return nextTask;
+}
+
+async function ensureStorageReady() {
+  if (initializePromise) {
+    await initializePromise;
+  }
+
+  if (!storageReady) {
+    throw new Error('Storage has not been initialized');
   }
 }
 
-export function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) {
-  migrateLastFiveTimesToLastTimes();
+function downloadJson(filename: string, value: unknown) {
+  const blob = new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function getLegacyStatsKeyInfo(key: string) {
+  if (key.startsWith('Best-')) {
+    return { prefix: 'Best' as const, algId: key.slice('Best-'.length) };
+  }
+  if (key.startsWith('LastTimes-')) {
+    return { prefix: 'LastTimes' as const, algId: key.slice('LastTimes-'.length) };
+  }
+  if (key.startsWith('Learned-')) {
+    return { prefix: 'Learned' as const, algId: key.slice('Learned-'.length) };
+  }
+  return null;
+}
+
+function removeLegacyStorageKeys() {
+  const keysToDelete: string[] = [];
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index);
+    if (!key) {
+      continue;
+    }
+
+    if (
+      key === STORAGE_KEYS.savedAlgorithms
+      || key === STORAGE_KEYS.savedAlgorithmsV1
+      || key.startsWith('Best-')
+      || key.startsWith('LastTimes-')
+      || key.startsWith('Learned-')
+    ) {
+      keysToDelete.push(key);
+    }
+  }
+
+  for (const key of keysToDelete) {
+    window.localStorage.removeItem(key);
+  }
+}
+
+function buildScopeIdsFromLibrary(savedAlgorithms: SavedAlgorithms) {
+  const scopeIds = new Set<string>();
+
+  for (const [category, subsets] of Object.entries(savedAlgorithms)) {
+    for (const subset of subsets) {
+      for (const algorithm of subset.algorithms) {
+        scopeIds.add(createScopeId(category, subset.subset, getAlgorithmId(algorithm.algorithm)));
+      }
+    }
+  }
+
+  return scopeIds;
+}
+
+function pruneOrphanStatsRecords(savedAlgorithms: SavedAlgorithms) {
+  const validScopeIds = buildScopeIdsFromLibrary(savedAlgorithms);
+  const deletedScopeIds: string[] = [];
+
+  for (const scopeId of Array.from(statsCache.keys())) {
+    const parsed = parseScopeId(scopeId);
+    if (parsed.kind === 'global') {
+      continue;
+    }
+
+    if (!validScopeIds.has(scopeId)) {
+      statsCache.delete(scopeId);
+      deletedScopeIds.push(scopeId);
+    }
+  }
+
+  return deletedScopeIds;
+}
+
+function buildLegacySavedAlgorithms(defaultAlgs: SavedAlgorithms) {
+  let savedAlgorithms = readJsonStorage<SavedAlgorithms>(STORAGE_KEYS.savedAlgorithms, {});
+  let migratedSavedAlgorithmsV1 = false;
+  let alertMessage: string | null = null;
 
   if (!window.localStorage.getItem(STORAGE_KEYS.savedAlgorithms)) {
-    setSavedAlgorithms(defaultAlgs);
+    savedAlgorithms = cloneSavedAlgorithms(defaultAlgs);
   } else {
-    const savedAlgorithms = getSavedAlgorithms();
-
+    savedAlgorithms = cloneSavedAlgorithms(savedAlgorithms);
     for (const category of Object.keys(defaultAlgs)) {
       if (!savedAlgorithms[category]) {
-        savedAlgorithms[category] = defaultAlgs[category];
+        savedAlgorithms[category] = cloneSavedAlgorithms({ [category]: defaultAlgs[category] })[category];
       }
     }
 
@@ -116,15 +317,13 @@ export function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) {
         ?.algorithms.find((algorithm) => algorithm.name === 'ZBLS-9');
 
       if (
-        zbls1Algorithm &&
-        zbls9Algorithm &&
-        zbls1Algorithm.algorithm === zbls9Algorithm.algorithm
+        zbls1Algorithm
+        && zbls9Algorithm
+        && zbls1Algorithm.algorithm === zbls9Algorithm.algorithm
       ) {
-        savedAlgorithms.ZBLS = defaultAlgs.ZBLS;
+        savedAlgorithms.ZBLS = cloneSavedAlgorithms({ ZBLS: defaultAlgs.ZBLS }).ZBLS;
       }
     }
-
-    setSavedAlgorithms(savedAlgorithms);
   }
 
   if (window.localStorage.getItem(STORAGE_KEYS.savedAlgorithmsV1)) {
@@ -134,33 +333,167 @@ export function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) {
     );
 
     for (const category of Object.keys(savedAlgorithmsV1)) {
-      savedAlgorithmsV1[category] = [{ subset: 'All', algorithms: savedAlgorithmsV1[category] } as never];
+      savedAlgorithms[`old-${category}`] = [{ subset: 'All', algorithms: savedAlgorithmsV1[category] }];
     }
 
-    const savedAlgorithms = getSavedAlgorithms();
-    for (const category of Object.keys(savedAlgorithmsV1)) {
-      savedAlgorithms[`old-${category}`] = savedAlgorithmsV1[category] as unknown as SavedSubset[];
-    }
-
-    setSavedAlgorithms(savedAlgorithms);
-    window.localStorage.removeItem(STORAGE_KEYS.savedAlgorithmsV1);
-
-    return {
-      migratedSavedAlgorithmsV1: true,
-      alertMessage:
-        'Algorithms have been migrated to a new format that includes subsets.\nYour old categories which did not include subsets have been prefixed with "old-".',
-    };
+    migratedSavedAlgorithmsV1 = true;
+    alertMessage =
+      'Algorithms have been migrated to a new format that includes subsets.\nYour old categories which did not include subsets have been prefixed with "old-".';
   }
 
   return {
-    migratedSavedAlgorithmsV1: false,
-    alertMessage: null,
+    migratedSavedAlgorithmsV1,
+    alertMessage,
+    savedAlgorithms,
   };
 }
 
-export function saveAlgorithm(category: string, subset: string, name: string, algorithm: string) {
-  const savedAlgorithms = getSavedAlgorithms();
+function buildMigratedStatsRecords(savedAlgorithms: SavedAlgorithms) {
+  const legacyLastTimes = new Map<string, number[]>();
+  const legacyBestTimes = new Map<string, number | null>();
+  const legacyLearned = new Map<string, number>();
 
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index);
+    if (!key) {
+      continue;
+    }
+
+    const info = getLegacyStatsKeyInfo(key);
+    if (!info) {
+      continue;
+    }
+
+    const rawValue = window.localStorage.getItem(key);
+    if (info.prefix === 'LastTimes') {
+      const times = rawValue
+        ? rawValue.split(',').map((part) => Number(part.trim())).filter(Number.isFinite)
+        : [];
+      legacyLastTimes.set(info.algId, times);
+    } else if (info.prefix === 'Best') {
+      const best = rawValue == null || rawValue === '' ? null : Number(rawValue);
+      legacyBestTimes.set(info.algId, best != null && Number.isFinite(best) ? best : null);
+    } else if (info.prefix === 'Learned') {
+      const learned = rawValue == null || rawValue === '' ? 0 : Number(rawValue);
+      legacyLearned.set(info.algId, Number.isFinite(learned) ? learned : 0);
+    }
+  }
+
+  const records: ScopedStatsRecord[] = [];
+  for (const [category, subsets] of Object.entries(savedAlgorithms)) {
+    for (const subset of subsets) {
+      for (const algorithm of subset.algorithms) {
+        const algId = getAlgorithmId(algorithm.algorithm);
+        const scopeId = createScopeId(category, subset.subset, algId);
+        records.push({
+          scopeId,
+          category,
+          subset: subset.subset,
+          algId,
+          lastTimes: [...(legacyLastTimes.get(algId) ?? [])],
+          best: legacyBestTimes.get(algId) ?? null,
+          learned: legacyLearned.get(algId) ?? 0,
+        });
+      }
+    }
+  }
+
+  return records;
+}
+
+export function migrateLastFiveTimesToLastTimes() {
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index);
+    if (key && key.startsWith('LastFiveTimes-')) {
+      const nextKey = key.replace('LastFiveTimes-', 'LastTimes-');
+      window.localStorage.setItem(nextKey, window.localStorage.getItem(key) ?? '');
+      window.localStorage.removeItem(key);
+    }
+  }
+}
+
+export async function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) {
+  if (!initializePromise) {
+    initializePromise = (async () => {
+      const database = await openCubedexDatabase();
+      const migrated = await getMetaValue<boolean>(database, LS_MIGRATION_DONE_KEY);
+
+      if (!migrated) {
+        migrateLastFiveTimesToLastTimes();
+        const legacyState = buildLegacySavedAlgorithms(defaultAlgs);
+        const nextSavedAlgorithms = cloneSavedAlgorithms(legacyState.savedAlgorithms);
+        const nextStats = buildMigratedStatsRecords(nextSavedAlgorithms);
+
+        savedAlgorithmsCache = nextSavedAlgorithms;
+        loadStatsCache(nextStats);
+
+        await replaceLibraryAndStatsInDb(database, nextSavedAlgorithms, nextStats, [
+          { key: LS_MIGRATION_DONE_KEY, value: true },
+          { key: LS_MIGRATION_DONE_AT_KEY, value: new Date().toISOString() },
+        ]);
+
+        removeLegacyStorageKeys();
+        storageReady = true;
+
+        return {
+          migratedSavedAlgorithmsV1: legacyState.migratedSavedAlgorithmsV1,
+          alertMessage: legacyState.alertMessage,
+        };
+      }
+
+      const savedAlgorithmsFromDb = await loadSavedAlgorithmsFromDb(database);
+      savedAlgorithmsCache = cloneSavedAlgorithms(savedAlgorithmsFromDb ?? defaultAlgs);
+
+      const statsRecords = await loadAllStatsFromDb(database);
+      loadStatsCache(statsRecords);
+      pruneOrphanStatsRecords(savedAlgorithmsCache);
+      await replaceLibraryAndStatsInDb(database, savedAlgorithmsCache, snapshotStatsRecords());
+      storageReady = true;
+
+      return {
+        migratedSavedAlgorithmsV1: false,
+        alertMessage: null,
+      };
+    })();
+  }
+
+  return initializePromise;
+}
+
+export function getSavedAlgorithms(): SavedAlgorithms {
+  return cloneSavedAlgorithms(savedAlgorithmsCache);
+}
+
+async function persistFullState() {
+  await ensureStorageReady();
+  const database = await openCubedexDatabase();
+  await replaceLibraryAndStatsInDb(database, savedAlgorithmsCache, snapshotStatsRecords());
+}
+
+async function persistStatsRecord(scopeId: string) {
+  await ensureStorageReady();
+  const database = await openCubedexDatabase();
+  const record = statsCache.get(scopeId);
+  if (!record) {
+    await deleteStatsRecordsFromDb(database, [scopeId]);
+    return;
+  }
+
+  await saveStatsRecordToDb(database, record);
+}
+
+export async function setSavedAlgorithms(savedAlgorithms: SavedAlgorithms) {
+  savedAlgorithmsCache = cloneSavedAlgorithms(savedAlgorithms);
+  pruneOrphanStatsRecords(savedAlgorithmsCache);
+  await enqueueWrite(async () => {
+    await persistFullState();
+  });
+}
+
+export async function saveAlgorithm(category: string, subset: string, name: string, algorithm: string) {
+  await ensureStorageReady();
+
+  const savedAlgorithms = getSavedAlgorithms();
   if (!savedAlgorithms[category]) {
     savedAlgorithms[category] = [];
   }
@@ -180,10 +513,19 @@ export function saveAlgorithm(category: string, subset: string, name: string, al
     });
   }
 
-  setSavedAlgorithms(savedAlgorithms);
+  savedAlgorithmsCache = savedAlgorithms;
+  pruneOrphanStatsRecords(savedAlgorithmsCache);
+
+  await enqueueWrite(async () => {
+    await persistFullState();
+  });
 }
 
-export function deleteAlgorithm(category: string, algorithm: string) {
+export async function deleteAlgorithm(category: string, algorithm: string) {
+  await ensureStorageReady();
+
+  const normalizedAlgorithm = expandNotation(algorithm);
+  const normalizedAlgId = algToId(normalizedAlgorithm) || DEFAULT_ALG_ID;
   const savedAlgorithms = getSavedAlgorithms();
 
   if (!savedAlgorithms[category]) {
@@ -194,7 +536,7 @@ export function deleteAlgorithm(category: string, algorithm: string) {
     .map((subset) => ({
       subset: subset.subset,
       algorithms: subset.algorithms.filter(
-        (entry) => expandNotation(entry.algorithm) !== expandNotation(algorithm),
+        (entry) => expandNotation(entry.algorithm) !== normalizedAlgorithm,
       ),
     }))
     .filter((subset) => subset.algorithms.length > 0);
@@ -203,26 +545,79 @@ export function deleteAlgorithm(category: string, algorithm: string) {
     delete savedAlgorithms[category];
   }
 
-  removeAlgorithmStorage(algToId(algorithm));
-  setSavedAlgorithms(savedAlgorithms);
+  for (const [scopeId, record] of Array.from(statsCache.entries())) {
+    if (record.category === category && record.algId === normalizedAlgId) {
+      statsCache.delete(scopeId);
+    }
+  }
+
+  savedAlgorithmsCache = savedAlgorithms;
+  pruneOrphanStatsRecords(savedAlgorithmsCache);
+
+  await enqueueWrite(async () => {
+    await persistFullState();
+  });
 }
 
-export function exportAlgorithms() {
-  const savedAlgorithms = getSavedAlgorithms();
-  const exportData = JSON.stringify(savedAlgorithms, null, 2);
-  const blob = new Blob([exportData], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'cubedex_algorithms.json';
-  link.click();
-  URL.revokeObjectURL(url);
+export async function exportAlgorithms() {
+  await ensureStorageReady();
+  downloadJson('cubedex_algorithms.json', savedAlgorithmsCache);
 }
 
-export function importAlgorithmsFromJson(json: string) {
-  const importedAlgs = JSON.parse(json) as SavedAlgorithms;
-  setSavedAlgorithms(importedAlgs);
-  return importedAlgs;
+function parseSavedAlgorithms(json: string) {
+  return JSON.parse(json) as SavedAlgorithms;
+}
+
+export async function importAlgorithmsFromJson(json: string) {
+  await ensureStorageReady();
+  const importedAlgs = parseSavedAlgorithms(json);
+  savedAlgorithmsCache = cloneSavedAlgorithms(importedAlgs);
+  pruneOrphanStatsRecords(savedAlgorithmsCache);
+
+  await enqueueWrite(async () => {
+    await persistFullState();
+  });
+
+  return getSavedAlgorithms();
+}
+
+export async function exportBackup() {
+  await ensureStorageReady();
+  const backup: CubedexBackupFile = {
+    backupFormatVersion: BACKUP_FORMAT_VERSION,
+    exportedAt: new Date().toISOString(),
+    algorithms: cloneSavedAlgorithms(savedAlgorithmsCache),
+    stats: snapshotStatsRecords(),
+  };
+  downloadJson('cubedex_backup.json', backup);
+}
+
+function parseBackup(json: string) {
+  const backup = JSON.parse(json) as CubedexBackupFile;
+  if (backup.backupFormatVersion !== BACKUP_FORMAT_VERSION) {
+    throw new Error('Unsupported backup format version');
+  }
+  if (!backup.algorithms || !Array.isArray(backup.stats)) {
+    throw new Error('Invalid backup format');
+  }
+  return backup;
+}
+
+export async function importBackupFromJson(json: string) {
+  await ensureStorageReady();
+  const backup = parseBackup(json);
+  savedAlgorithmsCache = cloneSavedAlgorithms(backup.algorithms);
+  loadStatsCache(backup.stats);
+  pruneOrphanStatsRecords(savedAlgorithmsCache);
+
+  await enqueueWrite(async () => {
+    await persistFullState();
+  });
+
+  return {
+    savedAlgorithms: getSavedAlgorithms(),
+    stats: snapshotStatsRecords(),
+  };
 }
 
 export function readOption(key: keyof typeof STORAGE_KEYS) {
@@ -233,40 +628,67 @@ export function writeOption(key: keyof typeof STORAGE_KEYS, value: string) {
   window.localStorage.setItem(STORAGE_KEYS[key], value);
 }
 
-export function getLastTimes(algId: string): number[] {
-  const value = window.localStorage.getItem(createAlgStorageKey('LastTimes', algId));
-  return value ? value.split(',').map((part) => Number(part.trim())).filter(Number.isFinite) : [];
+export function getLastTimes(scopeId: string): number[] {
+  return [...getStatsRecord(scopeId).lastTimes];
 }
 
-export function setLastTimes(algId: string, values: number[]) {
-  window.localStorage.setItem(createAlgStorageKey('LastTimes', algId), values.join(','));
+export function setLastTimes(scopeId: string, values: number[]) {
+  setStatsRecord(scopeId, {
+    ...getStatsRecord(scopeId),
+    lastTimes: values.filter(Number.isFinite),
+  });
+
+  void enqueueWrite(async () => {
+    await persistStatsRecord(scopeId);
+  });
 }
 
-export function getBestTime(algId: string): number | null {
-  const value = window.localStorage.getItem(createAlgStorageKey('Best', algId));
-  return value ? Number(value) : null;
+export function getBestTime(scopeId: string): number | null {
+  return getStatsRecord(scopeId).best;
 }
 
-export function setBestTime(algId: string, value: number) {
-  window.localStorage.setItem(createAlgStorageKey('Best', algId), String(value));
+export function setBestTime(scopeId: string, value: number) {
+  setStatsRecord(scopeId, {
+    ...getStatsRecord(scopeId),
+    best: value,
+  });
+
+  void enqueueWrite(async () => {
+    await persistStatsRecord(scopeId);
+  });
 }
 
-export function getLearnedStatus(algId: string): number {
-  const value = window.localStorage.getItem(createAlgStorageKey('Learned', algId));
-  return value ? Number(value) : 0;
+export function getLearnedStatus(scopeId: string): number {
+  return getStatsRecord(scopeId).learned;
 }
 
-export function setLearnedStatus(algId: string, value: number) {
-  window.localStorage.setItem(createAlgStorageKey('Learned', algId), String(value));
+export function setLearnedStatus(scopeId: string, value: number) {
+  setStatsRecord(scopeId, {
+    ...getStatsRecord(scopeId),
+    learned: value,
+  });
+
+  void enqueueWrite(async () => {
+    await persistStatsRecord(scopeId);
+  });
 }
 
-export function removeAlgorithmStorage(algId: string) {
-  window.localStorage.removeItem(createAlgStorageKey('Best', algId));
-  window.localStorage.removeItem(createAlgStorageKey('LastTimes', algId));
-  window.localStorage.removeItem(createAlgStorageKey('Learned', algId));
+export function removeAlgorithmStorage(scopeId: string) {
+  statsCache.delete(scopeId);
+  void enqueueWrite(async () => {
+    await persistStatsRecord(scopeId);
+  });
 }
 
-export function removeAlgorithmTimesStorage(algId: string) {
-  window.localStorage.removeItem(createAlgStorageKey('Best', algId));
-  window.localStorage.removeItem(createAlgStorageKey('LastTimes', algId));
+export function removeAlgorithmTimesStorage(scopeId: string) {
+  const record = getStatsRecord(scopeId);
+  setStatsRecord(scopeId, {
+    ...record,
+    best: null,
+    lastTimes: [],
+  });
+
+  void enqueueWrite(async () => {
+    await persistStatsRecord(scopeId);
+  });
 }

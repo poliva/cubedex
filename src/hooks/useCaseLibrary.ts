@@ -9,7 +9,6 @@ import {
 import {
   getSavedAlgorithms,
   initializeDefaultAlgorithms,
-  migrateLastFiveTimesToLastTimes,
   type SavedAlgorithms,
 } from '../lib/storage';
 
@@ -66,14 +65,30 @@ export function useCaseLibrary(): CaseLibraryState {
   }, [selectedCategory]);
 
   useEffect(() => {
-    migrateLastFiveTimesToLastTimes();
-    const result = initializeDefaultAlgorithms(defaultAlgs as SavedAlgorithms);
-    if (result.alertMessage) {
-      window.alert(result.alertMessage);
-    }
+    let active = true;
 
-    reloadSavedAlgorithms();
-    setIsReady(true);
+    void initializeDefaultAlgorithms(defaultAlgs as SavedAlgorithms).then((result) => {
+      if (!active) {
+        return;
+      }
+
+      if (result.alertMessage) {
+        window.alert(result.alertMessage);
+      }
+
+      reloadSavedAlgorithms();
+      setIsReady(true);
+    }).catch((error) => {
+      console.error(error);
+      if (active) {
+        window.alert('Failed to initialize persistent storage.');
+        setIsReady(true);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const categories = useMemo(() => Object.keys(savedAlgorithms), [savedAlgorithms]);
