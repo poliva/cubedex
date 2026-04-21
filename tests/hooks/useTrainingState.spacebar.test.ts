@@ -1,14 +1,22 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TrainingPracticeOptions } from '../../src/hooks/useTrainingState';
+import {
+  buildAttemptSummary,
+  createPattern,
+  getAttemptHistoryEntries,
+  getReviewHistoryEntries,
+  getSolveHistoryEntries,
+  resetMockState,
+  selectedCases,
+} from './useTrainingStateTestUtils';
 
 const mockState = vi.hoisted(() => ({
   patterns: {} as Record<string, any>,
-  lastTimes: new Map<string, number[]>(),
-  solveHistory: new Map<string, Array<{ executionMs: number; recognitionMs: number | null; totalMs: number }>>(),
-  reviewHistory: new Map<string, Array<any>>(),
+  attemptHistory: new Map<string, Array<any>>(),
   bestTimes: new Map<string, number | null>(),
   srsStates: new Map<string, any>(),
+  timeAttackRuns: new Map<string, Array<{ wallMs: number; caseTimes: number[] }>>(),
 }));
 
 vi.mock('cubing/alg', () => ({
@@ -54,87 +62,30 @@ vi.mock('../../src/lib/storage', async () => {
   return {
     ...actual,
     getBestTime: vi.fn((id: string) => mockState.bestTimes.get(id) ?? null),
-    getLastTimes: vi.fn((id: string) => mockState.lastTimes.get(id) ?? []),
-    getReviewHistory: vi.fn((id: string) => mockState.reviewHistory.get(id) ?? []),
-    getSolveHistory: vi.fn((id: string) => mockState.solveHistory.get(id) ?? []),
+    getAttemptHistory: vi.fn((id: string) => getAttemptHistoryEntries(mockState, id)),
+    getAttemptHistorySummary: vi.fn((id: string) => buildAttemptSummary(mockState, id)),
+    getLastTimes: vi.fn((id: string) => buildAttemptSummary(mockState, id).executionTimes),
+    getReviewHistory: vi.fn((id: string) => getReviewHistoryEntries(mockState, id)),
+    getSolveHistory: vi.fn((id: string) => getSolveHistoryEntries(mockState, id)),
     getSrsState: vi.fn((id: string) => mockState.srsStates.get(id) ?? null),
+    getTimeAttackLastRuns: vi.fn((id: string) => mockState.timeAttackRuns.get(id) ?? []),
     setBestTime: vi.fn((id: string, value: number) => {
       mockState.bestTimes.set(id, value);
     }),
-    setLastTimes: vi.fn((id: string, values: number[]) => {
-      mockState.lastTimes.set(id, values);
-    }),
-    setSolveHistory: vi.fn((id: string, values: Array<{ executionMs: number; recognitionMs: number | null; totalMs: number }>) => {
-      mockState.solveHistory.set(id, values);
-      mockState.lastTimes.set(id, values.map((entry) => entry.executionMs));
-    }),
-    setReviewHistory: vi.fn((id: string, values: Array<any>) => {
-      mockState.reviewHistory.set(id, values);
+    setAttemptHistory: vi.fn((id: string, values: Array<any>) => {
+      mockState.attemptHistory.set(id, [...values]);
     }),
     setSrsState: vi.fn((id: string, value: any) => {
       mockState.srsStates.set(id, value);
     }),
-    getTimeAttackLastRuns: vi.fn(() => []),
-    setTimeAttackLastRuns: vi.fn(),
+    setTimeAttackLastRuns: vi.fn((id: string, values: Array<{ wallMs: number; caseTimes: number[] }>) => {
+      mockState.timeAttackRuns.set(id, values);
+    }),
   };
 });
 
 import { useTrainingState } from '../../src/hooks/useTrainingState';
 import { getBestTime, getLastTimes, getSolveHistory } from '../../src/lib/storage';
-
-function createPattern(key: string) {
-  return {
-    key,
-    patternData: {
-      EDGES: { pieces: [key.length], orientation: [0] },
-      CORNERS: { pieces: [key.length], orientation: [0] },
-      CENTERS: { pieces: [0], orientation: [0] },
-    },
-    applyMove: vi.fn((move: string) => {
-      const nextPattern = mockState.patterns[`${key}:${move}`];
-      if (!nextPattern) {
-        throw new Error(`Missing mock pattern for ${key}:${move}`);
-      }
-      return nextPattern;
-    }),
-    isIdentical(other: { key?: string } | null | undefined) {
-      return other?.key === key;
-    },
-  };
-}
-
-const selectedCases = [
-  {
-    id: 'case-1',
-    name: 'Aa',
-    algorithm: 'R',
-    subset: 'A',
-    category: 'PLL',
-    learned: 0,
-    manualLearned: 0,
-    reviewCount: 0,
-    smartReviewDueAt: null,
-    smartReviewDue: true,
-    smartReviewUrgency: 0,
-    bestTime: null,
-    ao5: null,
-  },
-  {
-    id: 'case-2',
-    name: 'Ab',
-    algorithm: 'R',
-    subset: 'A',
-    category: 'PLL',
-    learned: 0,
-    manualLearned: 0,
-    reviewCount: 0,
-    smartReviewDueAt: null,
-    smartReviewDue: true,
-    smartReviewUrgency: 1,
-    bestTime: null,
-    ao5: null,
-  },
-];
 
 const defaultOptions: TrainingPracticeOptions = {
   selectionChangeMode: 'bulk',
@@ -159,17 +110,12 @@ function renderTrainingState(optionOverrides: Partial<TrainingPracticeOptions> =
 
 describe('useTrainingState spacebar timer flow', () => {
   beforeEach(() => {
-    mockState.patterns = {};
-    mockState.lastTimes.clear();
-    mockState.solveHistory.clear();
-    mockState.reviewHistory.clear();
-    mockState.bestTimes.clear();
-    mockState.srsStates.clear();
+    resetMockState(mockState);
 
-    mockState.patterns.solved = createPattern('solved');
-    mockState.patterns['solved:R'] = createPattern('solved:R');
-    mockState.patterns['solved:R:R'] = createPattern('solved:R:R');
-    mockState.patterns['solved:R:R:R'] = createPattern('solved:R:R:R');
+    mockState.patterns.solved = createPattern(mockState, 'solved');
+    mockState.patterns['solved:R'] = createPattern(mockState, 'solved:R');
+    mockState.patterns['solved:R:R'] = createPattern(mockState, 'solved:R:R');
+    mockState.patterns['solved:R:R:R'] = createPattern(mockState, 'solved:R:R:R');
   });
 
   it('stops, records, and advances dumb-cube solves without auto-starting the next case on keyup', async () => {
@@ -385,10 +331,19 @@ describe('useTrainingState spacebar timer flow', () => {
     vi.spyOn(performance, 'now').mockImplementation(() => Date.now());
 
     try {
-      mockState.solveHistory.set('case-2', [
-        { executionMs: 1000, recognitionMs: null, totalMs: 1000 },
+      mockState.attemptHistory.set('case-2', [
+        {
+          recordedAt: 1,
+          mode: 'timer',
+          executionMs: 1000,
+          recognitionMs: null,
+          totalMs: 1000,
+          hadMistake: false,
+          aborted: false,
+          timerOnly: true,
+          grade: null,
+        },
       ]);
-      mockState.lastTimes.set('case-2', [1000]);
       mockState.bestTimes.set('case-2', 1000);
 
       const { result } = renderTrainingState({ countdownMode: true });

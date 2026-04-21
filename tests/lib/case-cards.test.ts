@@ -4,10 +4,9 @@ vi.mock('../../src/lib/storage', async () => {
   const actual = await vi.importActual<typeof import('../../src/lib/storage')>('../../src/lib/storage');
   return {
     ...actual,
-    getLastTimes: vi.fn(),
+    getAttemptHistorySummary: vi.fn(),
     getBestTime: vi.fn(),
     getLearnedStatus: vi.fn(),
-    getReviewHistory: vi.fn(),
     getSrsState: vi.fn(),
     setLearnedStatus: vi.fn(),
   };
@@ -26,29 +25,26 @@ import {
   makeTimeParts,
 } from '../../src/lib/case-cards';
 import {
+  getAttemptHistorySummary,
   createScopeId,
   getBestTime,
-  getLastTimes,
   getLearnedStatus,
-  getReviewHistory,
   getSrsState,
   setLearnedStatus,
   type SavedAlgorithms,
 } from '../../src/lib/storage';
 
-const mockedGetLastTimes = vi.mocked(getLastTimes);
+const mockedGetAttemptHistorySummary = vi.mocked(getAttemptHistorySummary);
 const mockedGetBestTime = vi.mocked(getBestTime);
 const mockedGetLearnedStatus = vi.mocked(getLearnedStatus);
-const mockedGetReviewHistory = vi.mocked(getReviewHistory);
 const mockedGetSrsState = vi.mocked(getSrsState);
 const mockedSetLearnedStatus = vi.mocked(setLearnedStatus);
 
 describe('case card helpers', () => {
   beforeEach(() => {
-    mockedGetLastTimes.mockReset();
+    mockedGetAttemptHistorySummary.mockReset();
     mockedGetBestTime.mockReset();
     mockedGetLearnedStatus.mockReset();
-    mockedGetReviewHistory.mockReset();
     mockedGetSrsState.mockReset();
     mockedSetLearnedStatus.mockReset();
   });
@@ -66,7 +62,12 @@ describe('case card helpers', () => {
   });
 
   it('computes an average of five by trimming the fastest and slowest times', () => {
-    mockedGetLastTimes.mockReturnValue([1_100, 1_300, 1_200, 1_500, 1_000]);
+    mockedGetAttemptHistorySummary.mockReturnValue({
+      attemptHistory: [],
+      solveHistory: [],
+      reviewHistory: [],
+      executionTimes: [1_100, 1_300, 1_200, 1_500, 1_000],
+    });
 
     expect(averageOfFiveTimeNumber('case:pll')).toBe(1_200);
   });
@@ -99,9 +100,13 @@ describe('case card helpers', () => {
     };
 
     mockedGetBestTime.mockReturnValue(2_345);
-    mockedGetLastTimes.mockReturnValue([2_000, 2_100, 2_200, 2_300, 2_400]);
+    mockedGetAttemptHistorySummary.mockReturnValue({
+      attemptHistory: [],
+      solveHistory: [],
+      reviewHistory: [],
+      executionTimes: [2_000, 2_100, 2_200, 2_300, 2_400],
+    });
     mockedGetLearnedStatus.mockReturnValue(2);
-    mockedGetReviewHistory.mockReturnValue([]);
     mockedGetSrsState.mockReturnValue(null);
 
     const cards = getCaseCards(savedAlgorithms, 'PLL', ['A']);
@@ -136,20 +141,24 @@ describe('case card helpers', () => {
     };
 
     mockedGetBestTime.mockReturnValue(null);
-    mockedGetLastTimes.mockReturnValue([]);
+    mockedGetAttemptHistorySummary.mockReturnValue({
+      attemptHistory: [],
+      solveHistory: [],
+      reviewHistory: Array.from({ length: 12 }, (_, index) => ({
+        reviewedAt: index + 1,
+        grade: index === 0 ? 'again' : 'good',
+        mode: 'timer',
+        executionMs: 1000,
+        recognitionMs: null,
+        totalMs: 1000,
+        hadMistake: false,
+        aborted: false,
+        timerOnly: true,
+      })),
+      executionTimes: [],
+    });
     mockedGetLearnedStatus.mockReturnValue(0);
     mockedGetSrsState.mockReturnValue({ dueAt: 1234, stabilityDays: 2, difficulty: 5, reps: 1, lapses: 0, lastReviewedAt: 1000, lastGrade: 'good' });
-    mockedGetReviewHistory.mockReturnValue(Array.from({ length: 12 }, (_, index) => ({
-      reviewedAt: index + 1,
-      grade: index === 0 ? 'again' : 'good',
-      mode: 'timer',
-      executionMs: 1000,
-      recognitionMs: null,
-      totalMs: 1000,
-      hadMistake: false,
-      aborted: false,
-      timerOnly: true,
-    })));
 
     const cards = getCaseCards(savedAlgorithms, 'PLL', ['A'], { autoUpdateLearningState: true, now: 2000 });
 

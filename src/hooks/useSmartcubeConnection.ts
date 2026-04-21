@@ -56,7 +56,7 @@ function handleVisibilityChange() {
   }
 }
 
-export interface SmartcubeDeviceInfo {
+interface SmartcubeDeviceInfo {
   deviceName: string;
   deviceMAC: string;
   deviceProtocol: string;
@@ -71,7 +71,7 @@ export interface SmartcubeDeviceInfo {
   velocity: string;
 }
 
-export interface SmartcubeBatteryState {
+interface SmartcubeBatteryState {
   level: number | null;
   color: 'green' | 'yellow' | 'orange' | 'red' | 'default';
 }
@@ -83,7 +83,7 @@ export interface SmartcubeQuaternion {
   w: number;
 }
 
-export interface SmartcubeProcessedMove {
+interface SmartcubeProcessedMove {
   key: string;
   move: string;
   rawMoves: Array<{

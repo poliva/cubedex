@@ -1,11 +1,10 @@
 import {
+  getAttemptHistorySummary,
   createScopeId,
   expandNotation,
   getBestTime,
   getAlgorithmId,
-  getLastTimes,
   getLearnedStatus,
-  getReviewHistory,
   getSrsState,
   setLearnedStatus,
   type SavedAlgorithm,
@@ -48,6 +47,16 @@ function formatTimeWithOptionalMinutes(time: number) {
   return `${minutesPart}${seconds}.${parts.milliseconds.toString(10).padStart(3, '0')}`;
 }
 
+export function historyTimeString(time: number | null): string {
+  if (!time) {
+    return '-';
+  }
+
+  const parts = makeTimeParts(time);
+  const minutesPart = parts.minutes > 0 ? `${parts.minutes}:` : '';
+  return `${minutesPart}${parts.seconds.toString(10).padStart(2, '0')}.${parts.milliseconds.toString(10).padStart(3, '0')}`;
+}
+
 export function bestTimeString(time: number | null): string {
   if (!time) {
     return '-';
@@ -65,12 +74,12 @@ export function averageTimeString(time: number | null): string {
 }
 
 export function averageOfFiveTimeNumber(algId: string): number | null {
-  const lastTimes = getLastTimes(algId);
-  if (lastTimes.length < 5) {
+  const { executionTimes } = getAttemptHistorySummary(algId);
+  if (executionTimes.length < 5) {
     return null;
   }
 
-  const lastTimesTrimmed = lastTimes.slice(-5).sort((a, b) => a - b).slice(1, 4);
+  const lastTimesTrimmed = executionTimes.slice(-5).sort((a, b) => a - b).slice(1, 4);
   return lastTimesTrimmed.reduce((sum, time) => sum + time, 0) / 3;
 }
 
@@ -130,8 +139,12 @@ export function getCaseCards(
       const normalizedAlgorithm = expandNotation(alg.algorithm);
       const scopeId = createScopeId(category, subsetData.subset, getAlgorithmId(normalizedAlgorithm));
       const manualLearned = getLearnedStatus(scopeId);
-      const reviewHistory = getReviewHistory(scopeId);
+      const { reviewHistory, executionTimes } = getAttemptHistorySummary(scopeId);
       const srsState = getSrsState(scopeId);
+      const ao5 = executionTimes.length < 5
+        ? null
+        : executionTimes.slice(-5).sort((left, right) => left - right).slice(1, 4)
+          .reduce((sum, time) => sum + time, 0) / 3;
       result.push({
         id: scopeId,
         name: alg.name,
@@ -139,7 +152,7 @@ export function getCaseCards(
         subset: subsetData.subset,
         category,
         bestTime: getBestTime(scopeId),
-        ao5: averageOfFiveTimeNumber(scopeId),
+        ao5,
         learned: options.autoUpdateLearningState ? deriveAutoLearnedStatus(reviewHistory) : manualLearned,
         manualLearned,
         reviewCount: reviewHistory.length,

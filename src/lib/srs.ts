@@ -1,3 +1,5 @@
+import { normalizeNullableNumber } from './normalize';
+
 export type ReviewGrade = 'again' | 'hard' | 'good' | 'easy';
 
 export type ReviewMode = 'timer' | 'smartcube' | 'time-attack';
@@ -36,10 +38,10 @@ export interface ReviewGradeInput {
   timerOnly: boolean;
 }
 
-export const DAY_MS = 24 * 60 * 60 * 1000;
-export const AUTO_LEARNING_MIN_REVIEWS = 5;
-export const AUTO_LEARNING_WINDOW = 12;
-export const AUTO_LEARNING_MIN_SUCCESSES = 11;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const AUTO_LEARNING_MIN_REVIEWS = 5;
+const AUTO_LEARNING_WINDOW = 12;
+const AUTO_LEARNING_MIN_SUCCESSES = 11;
 
 const DEFAULT_DIFFICULTY = 5;
 const REVIEW_BASELINE_SAMPLE_SIZE = 8;
@@ -51,11 +53,6 @@ function clamp(value: number, min: number, max: number) {
 
 function meanRevertDifficulty(value: number) {
   return clamp(DEFAULT_DIFFICULTY + 0.8 * (value - DEFAULT_DIFFICULTY), 1, 10);
-}
-
-function normalizeNullableNumber(value: unknown) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : null;
 }
 
 export function normalizeReviewEntry(entry: Partial<CaseReviewEntry> | null | undefined): CaseReviewEntry | null {

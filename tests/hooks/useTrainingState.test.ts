@@ -1,12 +1,19 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { cubeTimestampLinearFit } from 'smartcube-web-bluetooth';
+import {
+  buildAttemptSummary,
+  createPattern,
+  getAttemptHistoryEntries,
+  getReviewHistoryEntries,
+  getSolveHistoryEntries,
+  resetMockState,
+  selectedCases,
+} from './useTrainingStateTestUtils';
 
 const mockState = vi.hoisted(() => ({
   patterns: {} as Record<string, any>,
-  lastTimes: new Map<string, number[]>(),
-  solveHistory: new Map<string, Array<{ executionMs: number; recognitionMs: number | null; totalMs: number }>>(),
-  reviewHistory: new Map<string, Array<any>>(),
+  attemptHistory: new Map<string, Array<any>>(),
   bestTimes: new Map<string, number | null>(),
   srsStates: new Map<string, any>(),
   timeAttackRuns: new Map<string, Array<{ wallMs: number; caseTimes: number[] }>>(),
@@ -55,23 +62,18 @@ vi.mock('../../src/lib/storage', async () => {
   return {
     ...actual,
     getBestTime: vi.fn((id: string) => mockState.bestTimes.get(id) ?? null),
-    getLastTimes: vi.fn((id: string) => mockState.lastTimes.get(id) ?? []),
-    getReviewHistory: vi.fn((id: string) => mockState.reviewHistory.get(id) ?? []),
-    getSolveHistory: vi.fn((id: string) => mockState.solveHistory.get(id) ?? []),
+    getAttemptHistory: vi.fn((id: string) => getAttemptHistoryEntries(mockState, id)),
+    getAttemptHistorySummary: vi.fn((id: string) => buildAttemptSummary(mockState, id)),
+    getLastTimes: vi.fn((id: string) => buildAttemptSummary(mockState, id).executionTimes),
+    getReviewHistory: vi.fn((id: string) => getReviewHistoryEntries(mockState, id)),
+    getSolveHistory: vi.fn((id: string) => getSolveHistoryEntries(mockState, id)),
     getSrsState: vi.fn((id: string) => mockState.srsStates.get(id) ?? null),
     getTimeAttackLastRuns: vi.fn((id: string) => mockState.timeAttackRuns.get(id) ?? []),
     setBestTime: vi.fn((id: string, value: number) => {
       mockState.bestTimes.set(id, value);
     }),
-    setLastTimes: vi.fn((id: string, values: number[]) => {
-      mockState.lastTimes.set(id, values);
-    }),
-    setSolveHistory: vi.fn((id: string, values: Array<{ executionMs: number; recognitionMs: number | null; totalMs: number }>) => {
-      mockState.solveHistory.set(id, values);
-      mockState.lastTimes.set(id, values.map((entry) => entry.executionMs));
-    }),
-    setReviewHistory: vi.fn((id: string, values: Array<any>) => {
-      mockState.reviewHistory.set(id, values);
+    setAttemptHistory: vi.fn((id: string, values: Array<any>) => {
+      mockState.attemptHistory.set(id, [...values]);
     }),
     setSrsState: vi.fn((id: string, value: any) => {
       mockState.srsStates.set(id, value);
@@ -89,63 +91,10 @@ import {
   getLastTimes,
   getReviewHistory,
   getSolveHistory,
+  getAttemptHistory,
   getSrsState,
   getTimeAttackLastRuns,
 } from '../../src/lib/storage';
-
-function createPattern(key: string) {
-  return {
-    key,
-    patternData: {
-      EDGES: { pieces: [key.length], orientation: [0] },
-      CORNERS: { pieces: [key.length], orientation: [0] },
-      CENTERS: { pieces: [0], orientation: [0] },
-    },
-    applyMove: vi.fn((move: string) => {
-      const nextPattern = mockState.patterns[`${key}:${move}`];
-      if (!nextPattern) {
-        throw new Error(`Missing mock pattern for ${key}:${move}`);
-      }
-      return nextPattern;
-    }),
-    isIdentical(other: { key?: string } | null | undefined) {
-      return other?.key === key;
-    },
-  };
-}
-
-const selectedCases = [
-  {
-    id: 'case-1',
-    name: 'Aa',
-    algorithm: 'R',
-    subset: 'A',
-    category: 'PLL',
-    learned: 0,
-    manualLearned: 0,
-    reviewCount: 0,
-    smartReviewDueAt: null,
-    smartReviewDue: true,
-    smartReviewUrgency: 0,
-    bestTime: null,
-    ao5: null,
-  },
-  {
-    id: 'case-2',
-    name: 'Ab',
-    algorithm: 'R',
-    subset: 'A',
-    category: 'PLL',
-    learned: 0,
-    manualLearned: 0,
-    reviewCount: 0,
-    smartReviewDueAt: null,
-    smartReviewDue: true,
-    smartReviewUrgency: 1,
-    bestTime: null,
-    ao5: null,
-  },
-];
 
 function renderTrainingState() {
   return renderHook(() => useTrainingState(selectedCases, 'PLL', {
@@ -165,13 +114,7 @@ function renderTrainingState() {
 
 describe('useTrainingState time attack counts', () => {
   beforeEach(() => {
-    mockState.patterns = {};
-    mockState.lastTimes.clear();
-    mockState.solveHistory.clear();
-    mockState.reviewHistory.clear();
-    mockState.bestTimes.clear();
-    mockState.srsStates.clear();
-    mockState.timeAttackRuns.clear();
+    resetMockState(mockState);
 
     const patternKeys = [
       'solved',
@@ -184,7 +127,7 @@ describe('useTrainingState time attack counts', () => {
       'solved:R:R:R:R:R:R',
     ];
     for (const key of patternKeys) {
-      mockState.patterns[key] = createPattern(key);
+      mockState.patterns[key] = createPattern(mockState, key);
     }
   });
 
@@ -431,6 +374,87 @@ describe('useTrainingState time attack counts', () => {
       reps: 1,
       lastGrade: 'good',
     });
+  });
+
+  it('records aborted attempts in review history without affecting solve stats or best time', async () => {
+    let now = 1000;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+
+    const { result } = renderHook(() => useTrainingState(selectedCases, 'PLL', {
+      selectionChangeMode: 'bulk',
+      countdownMode: false,
+      randomizeAUF: false,
+      randomOrder: false,
+      timeAttack: false,
+      prioritizeSlowCases: false,
+      prioritizeFailedCases: false,
+      smartReviewScheduling: false,
+      smartcubeConnected: false,
+      currentPattern: null,
+      statsRefreshToken: 0,
+    }));
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+      expect(result.current.timerState).toBe('READY');
+    });
+
+    act(() => {
+      result.current.handleSpaceKeyDown();
+      result.current.handleSpaceKeyUp();
+    });
+    now = 1600;
+    act(() => {
+      result.current.abortRunningAttempt();
+    });
+
+    expect(getAttemptHistory('case-1')).toHaveLength(1);
+    expect(getSolveHistory('case-1')).toEqual([]);
+    expect(getBestTime('case-1')).toBeNull();
+    expect(result.current.practiceCounts['case-1'] ?? 0).toBe(0);
+    expect(getReviewHistory('case-1')).toEqual([
+      expect.objectContaining({
+        grade: 'again',
+        aborted: true,
+        executionMs: 600,
+      }),
+    ]);
+  });
+
+  it('keeps time-attack aborts out of solve-derived selectors while recording the review', async () => {
+    let now = 1000;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+
+    const { result } = renderTrainingState();
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+      expect(result.current.timerState).toBe('READY');
+    });
+
+    act(() => {
+      result.current.handleSpaceKeyDown();
+      result.current.handleSpaceKeyUp();
+    });
+    now = 1450;
+    act(() => {
+      result.current.abortRunningAttempt();
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+    });
+
+    expect(getSolveHistory('case-1')).toEqual([]);
+    expect(getBestTime('case-1')).toBeNull();
+    expect(getTimeAttackLastRuns(createTimeAttackScopeId('PLL', selectedCases.map((selectedCase) => selectedCase.id)))).toEqual([]);
+    expect(getReviewHistory('case-1')).toEqual([
+      expect.objectContaining({
+        grade: 'again',
+        aborted: true,
+        executionMs: 450,
+      }),
+    ]);
   });
 
   it('orders smart order cases within the selected set by urgency, review count, and name', async () => {

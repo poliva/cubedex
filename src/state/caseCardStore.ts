@@ -43,13 +43,6 @@ export function setCaseCardActions(actions: CaseCardActions): void {
   currentActions = actions;
 }
 
-export function caseCardAction<K extends keyof CaseCardActions>(
-  key: K,
-): CaseCardActions[K] {
-  return ((...args: unknown[]) =>
-    (currentActions[key] as (...a: unknown[]) => unknown)(...args)) as CaseCardActions[K];
-}
-
 // Stable bound wrappers — these references never change, so CaseCard's
 // React.memo is not invalidated.
 export const stableActions: CaseCardActions = {

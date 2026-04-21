@@ -3,10 +3,12 @@ import { Alg } from 'cubing/alg';
 import type { KPattern } from 'cubing/kpuzzle';
 import { cube3x3x3 } from 'cubing/puzzles';
 import { cubeTimestampLinearFit } from 'smartcube-web-bluetooth';
+import type { AttemptHistoryEntry } from '../lib/idb-storage';
 import {
   averageOfFiveTimeNumber,
   averageTimeString,
   bestTimeString,
+  historyTimeString,
   makeTimeParts,
   type CaseCardData,
 } from '../lib/case-cards';
@@ -20,24 +22,24 @@ import {
   createTimeAttackScopeId,
   createGlobalScopeId,
   expandNotation,
+  getAttemptHistory,
+  getAttemptHistorySummary,
   getBestTime,
   getReviewHistory,
-  getSolveHistory,
   getSrsState,
   getTimeAttackLastRuns,
   setBestTime,
-  setReviewHistory,
-  setSolveHistory,
+  setAttemptHistory,
   setSrsState,
   setTimeAttackLastRuns,
 } from '../lib/storage';
-import { createReviewEntry, deriveAutoLearnedStatus, updateSrsState } from '../lib/srs';
+import { createReviewEntry, updateSrsState } from '../lib/srs';
 import { FACES, IDENTITY, SLICE_ROTATION, composePerm, invertPerm, type Face, type FacePerm } from '../lib/smartcube-parity';
 import { useStableCallback } from './useStableCallback';
 
 export type TimerState = 'IDLE' | 'READY' | 'RUNNING' | 'STOPPED';
 
-export interface TrainingTimeEntry {
+interface TrainingTimeEntry {
   value: number;
   label: string;
   isPb: boolean;
@@ -66,7 +68,7 @@ export interface TrainingDisplayMove {
 
 type DisplayColor = 'default' | 'green' | 'red' | 'blue' | 'next';
 
-export interface SmartcubeMoveRecord {
+interface SmartcubeMoveRecord {
   face: number;
   direction: number;
   move: string;
@@ -75,7 +77,7 @@ export interface SmartcubeMoveRecord {
   isBugged?: boolean;
 }
 
-export interface TrainingFlashRequest {
+interface TrainingFlashRequest {
   key: number;
   color: 'gray' | 'red' | 'green';
   durationMs: number;
@@ -154,12 +156,6 @@ function formatTimerTimestamp(timestamp: number) {
   return `${t.minutes}:${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}`;
 }
 
-function formatHistoryTimestamp(timestamp: number) {
-  const t = makeTimeParts(timestamp);
-  const minutesPart = t.minutes > 0 ? `${t.minutes}:` : '';
-  return `${minutesPart}${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}`;
-}
-
 function averageFromValues(values: number[]) {
   if (values.length === 0) {
     return null;
@@ -188,10 +184,9 @@ function buildStats(
     };
   }
 
-  const solveHistory = getSolveHistory(algId);
-  const lastTimes = solveHistory.map((entry) => entry.executionMs);
+  const { solveHistory, executionTimes } = getAttemptHistorySummary(algId);
   const bestTime = getBestTime(algId);
-  const averageExecution = averageFromValues(lastTimes);
+  const averageExecution = averageFromValues(executionTimes);
   const averageRecognition = averageFromValues(
     solveHistory
       .map((entry) => entry.recognitionMs)
@@ -205,8 +200,8 @@ function buildStats(
   const averageTps = averageExecution && averageExecution > 0 && moveCount > 0
     ? (moveCount / (averageExecution / 1000)).toFixed(2)
     : '-';
-  const historyCount = lastTimes.length;
-  const derivedPracticeCount = lastTimes.length;
+  const historyCount = executionTimes.length;
+  const derivedPracticeCount = executionTimes.length;
 
   return {
     best: bestTimeString(bestTime),
@@ -218,9 +213,9 @@ function buildStats(
     singlePb: bestTimeString(bestTime),
     practiceCount: derivedPracticeCount,
     hasHistory: historyCount > 0,
-    lastFive: lastTimes.slice(-5).map((time, index, times) => ({
+    lastFive: executionTimes.slice(-5).map((time, index, times) => ({
       value: time,
-      label: `Time ${derivedPracticeCount < 5 ? index + 1 : derivedPracticeCount - times.length + index + 1}: ${formatHistoryTimestamp(time)}`,
+      label: `Time ${derivedPracticeCount < 5 ? index + 1 : derivedPracticeCount - times.length + index + 1}: ${historyTimeString(time)}`,
       isPb: bestTime === time,
     })),
   };
@@ -832,23 +827,64 @@ export function useTrainingState(
     };
   }
 
-  function persistSolveResult(scopeId: string, executionMs: number) {
-    const nextHistory = appendLimitedTime(buildSolveHistoryEntry(executionMs), getSolveHistory(scopeId));
-    setSolveHistory(scopeId, nextHistory);
+  function appendAttempt(scopeId: string, attempt: AttemptHistoryEntry) {
+    const nextHistory = appendLimitedTime(attempt, getAttemptHistory(scopeId));
+    setAttemptHistory(scopeId, nextHistory);
+  }
+
+  function buildAttemptFromReview(review: ReturnType<typeof createReviewEntry>): AttemptHistoryEntry {
+    return {
+      recordedAt: review.reviewedAt,
+      mode: review.mode,
+      executionMs: review.executionMs,
+      recognitionMs: review.recognitionMs,
+      totalMs: review.totalMs,
+      hadMistake: review.hadMistake,
+      aborted: review.aborted,
+      timerOnly: review.timerOnly,
+      grade: review.grade,
+    };
+  }
+
+  function persistCompletedAttempt(scopeId: string, executionMs: number) {
+    const reviewHistory = getReviewHistory(scopeId);
+    const previousSrsState = getSrsState(scopeId);
+    const solveHistoryEntry = buildSolveHistoryEntry(executionMs);
+    const review = createReviewEntry({
+      history: reviewHistory,
+      reviewedAt: Date.now(),
+      mode: options.timeAttack ? 'time-attack' : options.smartcubeConnected ? 'smartcube' : 'timer',
+      executionMs: solveHistoryEntry.executionMs,
+      recognitionMs: solveHistoryEntry.recognitionMs,
+      totalMs: solveHistoryEntry.totalMs,
+      hadMistake: hasFailedCurrentCaseRef.current,
+      aborted: false,
+      timerOnly: !options.smartcubeConnected,
+    });
+    const nextSrsState = updateSrsState(previousSrsState, review);
+    appendAttempt(scopeId, buildAttemptFromReview(review));
 
     const currentBest = getBestTime(scopeId);
     if (currentBest == null || executionMs < currentBest) {
       setBestTime(scopeId, executionMs);
     }
+
+    setSrsState(scopeId, nextSrsState);
+    options.onReviewRecorded?.();
   }
 
   function persistExecutionOnlyResult(scopeId: string, executionMs: number) {
-    const nextHistory = appendLimitedTime({
+    appendAttempt(scopeId, {
+      recordedAt: Date.now(),
+      mode: 'time-attack',
       executionMs,
       recognitionMs: null,
       totalMs: executionMs,
-    }, getSolveHistory(scopeId));
-    setSolveHistory(scopeId, nextHistory);
+      hadMistake: false,
+      aborted: false,
+      timerOnly: true,
+      grade: null,
+    });
 
     const currentBest = getBestTime(scopeId);
     if (currentBest == null || executionMs < currentBest) {
@@ -856,7 +892,7 @@ export function useTrainingState(
     }
   }
 
-  function persistCaseReview(scopeId: string, executionMs: number | null, aborted: boolean) {
+  function persistAbortedAttempt(scopeId: string, executionMs: number | null) {
     const reviewHistory = getReviewHistory(scopeId);
     const previousSrsState = getSrsState(scopeId);
     const recognitionMs = buildRecognitionMs();
@@ -871,28 +907,12 @@ export function useTrainingState(
       recognitionMs,
       totalMs,
       hadMistake: hasFailedCurrentCaseRef.current,
-      aborted,
+      aborted: true,
       timerOnly: !options.smartcubeConnected,
     });
-    const nextReviewHistory = appendLimitedTime(review, reviewHistory);
     const nextSrsState = updateSrsState(previousSrsState, review);
-    setReviewHistory(scopeId, nextReviewHistory);
+    appendAttempt(scopeId, buildAttemptFromReview(review));
     setSrsState(scopeId, nextSrsState);
-    if (options.smartReviewScheduling) {
-      const autoLearnedStatus = deriveAutoLearnedStatus(nextReviewHistory);
-      /*
-      console.log('[smart-review]', {
-        caseName: currentCaseRef.current?.name ?? '',
-        grade: review.grade,
-        review,
-        historyLength: nextReviewHistory.length,
-        autoLearnedStatus,
-        previousSrsState,
-        nextSrsState,
-        smartReviewDueNow: nextSrsState.dueAt != null ? nextSrsState.dueAt <= Date.now() : true,
-      });
-      */
-    }
     options.onReviewRecorded?.();
   }
 
@@ -1313,8 +1333,7 @@ export function useTrainingState(
     if (options.timeAttack) {
       timeAttackCaseTimesRef.current = [...timeAttackCaseTimesRef.current, finalTime];
       if (completedCaseId) {
-        persistSolveResult(completedCaseId, finalTime);
-        persistCaseReview(completedCaseId, finalTime, false);
+        persistCompletedAttempt(completedCaseId, finalTime);
         incrementPracticeCount(completedCaseId);
       }
       isKeyboardTimerActiveRef.current = false;
@@ -1348,8 +1367,7 @@ export function useTrainingState(
       return;
     }
 
-    persistSolveResult(algId, finalTime);
-    persistCaseReview(algId, finalTime, false);
+    persistCompletedAttempt(algId, finalTime);
     incrementPracticeCount(algId);
     setTimerText(formatTimerTimestamp(finalTime));
     setTimerStateInternal('STOPPED');
@@ -1378,13 +1396,13 @@ export function useTrainingState(
     const elapsedMs = Math.round(getElapsedMs());
     if (options.timeAttack) {
       if (currentCaseRef.current?.id) {
-        persistCaseReview(currentCaseRef.current.id, elapsedMs, true);
+        persistAbortedAttempt(currentCaseRef.current.id, elapsedMs);
       }
       prepareNextTimeAttack();
       return;
     }
     if (originalAlgIdRef.current) {
-      persistCaseReview(originalAlgIdRef.current, elapsedMs, true);
+      persistAbortedAttempt(originalAlgIdRef.current, elapsedMs);
     }
     timerStartRef.current = null;
     isKeyboardTimerActiveRef.current = false;

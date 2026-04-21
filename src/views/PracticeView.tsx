@@ -14,7 +14,7 @@ import {
   ScatterIcon,
   StopIcon,
 } from '../components/Icons';
-import { averageOfFiveTimeNumber, makeTimeParts } from '../lib/case-cards';
+import { averageOfFiveTimeNumber, historyTimeString } from '../lib/case-cards';
 import { getBestTime } from '../lib/storage';
 import { patternToPlayerAlg } from '../lib/scramble';
 import { CaseGrid } from './CaseGrid';
@@ -22,16 +22,6 @@ import { MainCubeArea } from './MainCubeArea';
 import { MoveListPanel } from './MoveListPanel';
 import { StatsPanel } from './StatsPanel';
 import { NewAlgView } from './NewAlgView';
-
-function formatHistoryMetric(time: number | null) {
-  if (!time) {
-    return '-';
-  }
-
-  const parts = makeTimeParts(time);
-  const minutesPart = parts.minutes > 0 ? `${parts.minutes}:` : '';
-  return `${minutesPart}${parts.seconds.toString(10).padStart(2, '0')}.${parts.milliseconds.toString(10).padStart(3, '0')}`;
-}
 
 export const PracticeView = memo(function PracticeView({
   topVisible,
@@ -217,9 +207,9 @@ export const PracticeView = memo(function PracticeView({
                     </Fragment>
                   ))}
                   <div className="times-grid-label times-grid-emphasis">Ao5:</div>
-                  <div className="times-grid-value times-grid-emphasis">{formatHistoryMetric(averageOfFiveTimeNumber(training.statsAlgId))}</div>
+                  <div className="times-grid-value times-grid-emphasis">{historyTimeString(averageOfFiveTimeNumber(training.statsAlgId))}</div>
                   <div className="times-grid-label">Best:</div>
-                  <div className="times-grid-value">{formatHistoryMetric(getBestTime(training.statsAlgId))}</div>
+                  <div className="times-grid-value">{historyTimeString(getBestTime(training.statsAlgId))}</div>
                 </div>
               </div>
               <div id="graph-display" className={`${showTimesInsteadOfGraph ? 'hidden graph-display' : 'graph-display'}`}>

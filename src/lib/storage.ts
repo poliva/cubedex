@@ -1,5 +1,6 @@
 import {
   BACKUP_FORMAT_VERSION,
+  type AttemptHistoryEntry,
   type CubedexBackupFile,
   type ScopedStatsRecord,
   type SolveHistoryEntry,
@@ -11,7 +12,15 @@ import {
   saveStatsRecordToDb,
   deleteStatsRecordsFromDb,
 } from './idb-storage';
-import { type CaseReviewEntry, type CaseSrsState, normalizeReviewHistory, normalizeSrsState } from './srs';
+import {
+  type CaseReviewEntry,
+  type CaseSrsState,
+  type ReviewGrade,
+  type ReviewMode,
+  normalizeReviewHistory,
+  normalizeSrsState,
+} from './srs';
+import { normalizeNullableNumber } from './normalize';
 
 export interface SavedAlgorithm {
   name: string;
@@ -53,6 +62,27 @@ export const TIME_ATTACK_SCOPE_PREFIX = 'time-attack:';
 export interface TimeAttackRunRecord {
   wallMs: number;
   caseTimes: number[];
+}
+
+export interface AttemptHistorySummary {
+  attemptHistory: AttemptHistoryEntry[];
+  solveHistory: SolveHistoryEntry[];
+  reviewHistory: CaseReviewEntry[];
+  executionTimes: number[];
+}
+
+function cloneAttemptHistoryEntry(entry: AttemptHistoryEntry): AttemptHistoryEntry {
+  return {
+    recordedAt: entry.recordedAt,
+    mode: entry.mode,
+    executionMs: entry.executionMs,
+    recognitionMs: entry.recognitionMs,
+    totalMs: entry.totalMs,
+    hadMistake: entry.hadMistake,
+    aborted: entry.aborted,
+    timerOnly: entry.timerOnly,
+    grade: entry.grade,
+  };
 }
 
 function cloneSolveHistoryEntry(entry: SolveHistoryEntry): SolveHistoryEntry {
@@ -105,11 +135,191 @@ function normalizeSolveHistory(entries: unknown, legacyLastTimes: number[]): Sol
   return legacyLastTimes.map((time) => createSolveHistoryEntry(time));
 }
 
+function createAttemptHistoryEntry({
+  recordedAt,
+  mode = 'timer',
+  executionMs = null,
+  recognitionMs = null,
+  totalMs,
+  hadMistake = false,
+  aborted = false,
+  timerOnly = true,
+  grade = null,
+}: {
+  recordedAt: number;
+  mode?: ReviewMode;
+  executionMs?: number | null;
+  recognitionMs?: number | null;
+  totalMs?: number | null;
+  hadMistake?: boolean;
+  aborted?: boolean;
+  timerOnly?: boolean;
+  grade?: ReviewGrade | null;
+}): AttemptHistoryEntry {
+  const normalizedRecordedAt = Number(recordedAt);
+  const normalizedExecution = normalizeNullableNumber(executionMs);
+  const normalizedRecognition = normalizeNullableNumber(recognitionMs);
+  const normalizedTotal = totalMs == null
+    ? normalizedExecution == null
+      ? normalizedRecognition
+      : normalizedExecution + (normalizedRecognition ?? 0)
+    : normalizeNullableNumber(totalMs);
+
+  return {
+    recordedAt: normalizedRecordedAt,
+    mode,
+    executionMs: normalizedExecution,
+    recognitionMs: normalizedRecognition,
+    totalMs: normalizedTotal,
+    hadMistake,
+    aborted,
+    timerOnly,
+    grade,
+  };
+}
+
+function attemptToSolveHistoryEntry(entry: AttemptHistoryEntry): SolveHistoryEntry | null {
+  if (entry.aborted || entry.executionMs == null || !Number.isFinite(entry.executionMs)) {
+    return null;
+  }
+
+  return createSolveHistoryEntry(
+    entry.executionMs,
+    entry.recognitionMs,
+    entry.totalMs ?? entry.executionMs + (entry.recognitionMs ?? 0),
+  );
+}
+
+function attemptToReviewHistoryEntry(entry: AttemptHistoryEntry): CaseReviewEntry | null {
+  if (entry.grade == null) {
+    return null;
+  }
+
+  return {
+    reviewedAt: entry.recordedAt,
+    grade: entry.grade,
+    mode: entry.mode,
+    executionMs: entry.executionMs,
+    recognitionMs: entry.recognitionMs,
+    totalMs: entry.totalMs,
+    hadMistake: entry.hadMistake,
+    aborted: entry.aborted,
+    timerOnly: entry.timerOnly,
+  };
+}
+
+function buildAttemptSummary(attemptHistory: AttemptHistoryEntry[]): AttemptHistorySummary {
+  const solveHistory = attemptHistory
+    .map(attemptToSolveHistoryEntry)
+    .filter((entry): entry is SolveHistoryEntry => entry != null);
+  const reviewHistory = attemptHistory
+    .map(attemptToReviewHistoryEntry)
+    .filter((entry): entry is CaseReviewEntry => entry != null);
+
+  return {
+    attemptHistory,
+    solveHistory,
+    reviewHistory,
+    executionTimes: solveHistory.map((entry) => entry.executionMs),
+  };
+}
+
+function buildLegacyAttemptHistory(record: ScopedStatsRecord) {
+  const legacyLastTimes = Array.isArray((record as ScopedStatsRecord & { lastTimes?: unknown[] }).lastTimes)
+    ? (record as ScopedStatsRecord & { lastTimes?: unknown[] }).lastTimes?.map((value) => Number(value)).filter(Number.isFinite) ?? []
+    : [];
+  const legacySolveHistory = normalizeSolveHistory(
+    (record as ScopedStatsRecord & { solveHistory?: unknown }).solveHistory,
+    legacyLastTimes,
+  );
+  const legacyReviewHistory = normalizeReviewHistory((record as ScopedStatsRecord & { reviewHistory?: unknown }).reviewHistory);
+
+  if (legacyReviewHistory.length > 0) {
+    const reviewAttempts = legacyReviewHistory.map((review) => createAttemptHistoryEntry({
+      recordedAt: review.reviewedAt,
+      mode: review.mode,
+      executionMs: review.executionMs,
+      recognitionMs: review.recognitionMs,
+      totalMs: review.totalMs,
+      hadMistake: review.hadMistake,
+      aborted: review.aborted,
+      timerOnly: review.timerOnly,
+      grade: review.grade,
+    }));
+    const completedReviewCount = reviewAttempts.filter((entry) => !entry.aborted && entry.executionMs != null).length;
+    const leadingLegacySolves = legacySolveHistory.slice(0, Math.max(0, legacySolveHistory.length - completedReviewCount));
+    const firstReviewAt = reviewAttempts[0]?.recordedAt ?? 0;
+    const leadingAttempts = leadingLegacySolves.map((entry, index) => createAttemptHistoryEntry({
+      recordedAt: firstReviewAt - leadingLegacySolves.length + index,
+      executionMs: entry.executionMs,
+      recognitionMs: entry.recognitionMs,
+      totalMs: entry.totalMs,
+      timerOnly: true,
+      grade: null,
+    }));
+    return [...leadingAttempts, ...reviewAttempts];
+  }
+
+  return legacySolveHistory.map((entry, index) => createAttemptHistoryEntry({
+    recordedAt: index + 1,
+    executionMs: entry.executionMs,
+    recognitionMs: entry.recognitionMs,
+    totalMs: entry.totalMs,
+    timerOnly: true,
+    grade: null,
+  }));
+}
+
+function normalizeAttemptHistory(record: ScopedStatsRecord): AttemptHistoryEntry[] {
+  const hasLegacyHistory = Array.isArray((record as ScopedStatsRecord & { lastTimes?: unknown[] }).lastTimes)
+    || Array.isArray((record as ScopedStatsRecord & { solveHistory?: unknown[] }).solveHistory)
+    || Array.isArray((record as ScopedStatsRecord & { reviewHistory?: unknown[] }).reviewHistory);
+  const rawAttempts = (record as ScopedStatsRecord & { attemptHistory?: unknown }).attemptHistory;
+
+  if (Array.isArray(rawAttempts)) {
+    const normalizedAttempts = rawAttempts
+      .map((entry) => {
+        const recordedAt = Number((entry as AttemptHistoryEntry | undefined)?.recordedAt);
+        if (!Number.isFinite(recordedAt)) {
+          return null;
+        }
+
+        const mode = (entry as AttemptHistoryEntry | undefined)?.mode;
+        const normalizedMode: ReviewMode = mode === 'smartcube' || mode === 'time-attack' ? mode : 'timer';
+        const grade = (entry as AttemptHistoryEntry | undefined)?.grade;
+        const normalizedGrade: ReviewGrade | null = grade === 'again' || grade === 'hard' || grade === 'good' || grade === 'easy'
+          ? grade
+          : null;
+
+        return createAttemptHistoryEntry({
+          recordedAt,
+          mode: normalizedMode,
+          executionMs: (entry as AttemptHistoryEntry | undefined)?.executionMs,
+          recognitionMs: (entry as AttemptHistoryEntry | undefined)?.recognitionMs,
+          totalMs: (entry as AttemptHistoryEntry | undefined)?.totalMs,
+          hadMistake: (entry as AttemptHistoryEntry | undefined)?.hadMistake === true,
+          aborted: (entry as AttemptHistoryEntry | undefined)?.aborted === true,
+          timerOnly: (entry as AttemptHistoryEntry | undefined)?.timerOnly === true,
+          grade: normalizedGrade,
+        });
+      })
+      .filter((entry): entry is AttemptHistoryEntry => entry != null)
+      .sort((left, right) => left.recordedAt - right.recordedAt);
+
+    if (normalizedAttempts.length > 0 || !hasLegacyHistory) {
+      return normalizedAttempts;
+    }
+  }
+
+  return buildLegacyAttemptHistory(record);
+}
+
 const LS_MIGRATION_DONE_KEY = 'lsMigrationDone';
 const LS_MIGRATION_DONE_AT_KEY = 'lsMigrationDoneAt';
 
 let savedAlgorithmsCache: SavedAlgorithms = {};
 let statsCache = new Map<string, ScopedStatsRecord>();
+let attemptSummaryCache = new Map<string, AttemptHistorySummary>();
 let storageReady = false;
 let initializePromise: Promise<{ migratedSavedAlgorithmsV1: boolean; alertMessage: string | null }> | null = null;
 let writeQueue: Promise<void> = Promise.resolve();
@@ -142,10 +352,6 @@ export function getAlgorithmId(algorithm: string) {
   return algToId(expandNotation(algorithm)) || DEFAULT_ALG_ID;
 }
 
-export function createAlgStorageKey(prefix: 'Best' | 'LastTimes' | 'Learned', algId: string) {
-  return `${prefix}-${algId}`;
-}
-
 function cloneSavedAlgorithms(savedAlgorithms: SavedAlgorithms): SavedAlgorithms {
   return Object.fromEntries(
     Object.entries(savedAlgorithms).map(([category, subsets]) => [
@@ -158,7 +364,7 @@ function cloneSavedAlgorithms(savedAlgorithms: SavedAlgorithms): SavedAlgorithms
   );
 }
 
-export function readJsonStorage<T>(key: string, fallback: T): T {
+function readJsonStorage<T>(key: string, fallback: T): T {
   const raw = window.localStorage.getItem(key);
   if (!raw) {
     return fallback;
@@ -190,7 +396,7 @@ export function isTimeAttackScopeId(scopeId: string) {
   return scopeId.startsWith(TIME_ATTACK_SCOPE_PREFIX);
 }
 
-export function isPersistentStatsScopeId(scopeId: string) {
+function isPersistentStatsScopeId(scopeId: string) {
   const parsed = parseScopeId(scopeId);
   return parsed.kind === 'global' || parsed.kind === 'time-attack';
 }
@@ -242,9 +448,7 @@ function createEmptyStatsRecord(scopeId: string): ScopedStatsRecord {
     category: parsed.category,
     subset: parsed.subset,
     algId: parsed.algId,
-    lastTimes: [],
-    solveHistory: [],
-    reviewHistory: [],
+    attemptHistory: [],
     srs: null,
     timeAttackLastRuns: [],
     best: null,
@@ -254,13 +458,8 @@ function createEmptyStatsRecord(scopeId: string): ScopedStatsRecord {
 
 function normalizeStatsRecord(record: ScopedStatsRecord): ScopedStatsRecord {
   const parsed = parseScopeId(record.scopeId);
-  const legacyLastTimes = Array.isArray(record.lastTimes)
-    ? record.lastTimes.map((value) => Number(value)).filter(Number.isFinite)
-    : [];
-  const solveHistory = normalizeSolveHistory(record.solveHistory, legacyLastTimes);
-  const reviewHistory = normalizeReviewHistory(record.reviewHistory);
+  const attemptHistory = normalizeAttemptHistory(record);
   const srs = normalizeSrsState(record.srs);
-  const lastTimes = solveHistory.map((entry) => entry.executionMs);
   const timeAttackLastRuns = Array.isArray(record.timeAttackLastRuns)
     ? record.timeAttackLastRuns
       .map((run) => ({
@@ -279,9 +478,7 @@ function normalizeStatsRecord(record: ScopedStatsRecord): ScopedStatsRecord {
     category: record.category || parsed.category,
     subset: record.subset || parsed.subset,
     algId: record.algId || parsed.algId,
-    lastTimes,
-    solveHistory,
-    reviewHistory,
+    attemptHistory,
     srs,
     timeAttackLastRuns,
     best,
@@ -295,6 +492,7 @@ function getStatsRecord(scopeId: string) {
 
 function setStatsRecord(scopeId: string, record: ScopedStatsRecord) {
   statsCache.set(scopeId, normalizeStatsRecord(record));
+  attemptSummaryCache.delete(scopeId);
 }
 
 function snapshotStatsRecords() {
@@ -303,6 +501,7 @@ function snapshotStatsRecords() {
 
 function loadStatsCache(statsRecords: ScopedStatsRecord[]) {
   statsCache = new Map(statsRecords.map((record) => [record.scopeId, normalizeStatsRecord(record)]));
+  attemptSummaryCache = new Map();
 }
 
 function enqueueWrite(task: () => Promise<void>) {
@@ -393,6 +592,7 @@ function pruneOrphanStatsRecords(savedAlgorithms: SavedAlgorithms) {
 
     if (!validScopeIds.has(scopeId)) {
       statsCache.delete(scopeId);
+      attemptSummaryCache.delete(scopeId);
       deletedScopeIds.push(scopeId);
     }
   }
@@ -498,8 +698,14 @@ function buildMigratedStatsRecords(savedAlgorithms: SavedAlgorithms) {
           category,
           subset: subset.subset,
           algId,
-          lastTimes: [...(legacyLastTimes.get(algId) ?? [])],
-          solveHistory: [...(legacyLastTimes.get(algId) ?? [])].map((time) => createSolveHistoryEntry(time)),
+          attemptHistory: [...(legacyLastTimes.get(algId) ?? [])].map((time, index) => createAttemptHistoryEntry({
+            recordedAt: index + 1,
+            executionMs: time,
+            recognitionMs: null,
+            totalMs: time,
+            timerOnly: true,
+            grade: null,
+          })),
           best: legacyBestTimes.get(algId) ?? null,
           learned: legacyLearned.get(algId) ?? 0,
         });
@@ -657,6 +863,7 @@ export async function deleteAlgorithm(category: string, algorithm: string) {
   for (const [scopeId, record] of Array.from(statsCache.entries())) {
     if (record.category === category && record.algId === normalizedAlgId) {
       statsCache.delete(scopeId);
+      attemptSummaryCache.delete(scopeId);
     }
   }
 
@@ -741,18 +948,35 @@ export function writeOption(key: keyof typeof STORAGE_KEYS, value: string) {
   window.localStorage.setItem(STORAGE_KEYS[key], value);
 }
 
-export function getLastTimes(scopeId: string): number[] {
-  return [...getStatsRecord(scopeId).lastTimes];
+function getAttemptHistorySummaryData(scopeId: string) {
+  const cached = attemptSummaryCache.get(scopeId);
+  if (cached) {
+    return cached;
+  }
+
+  const summary = buildAttemptSummary(getStatsRecord(scopeId).attemptHistory ?? []);
+  attemptSummaryCache.set(scopeId, summary);
+  return summary;
 }
 
-export function setLastTimes(scopeId: string, values: number[]) {
-  const solveHistory = values
-    .filter(Number.isFinite)
-    .map((value) => createSolveHistoryEntry(value));
+export function getAttemptHistory(scopeId: string): AttemptHistoryEntry[] {
+  return getAttemptHistorySummaryData(scopeId).attemptHistory.map(cloneAttemptHistoryEntry);
+}
+
+export function getAttemptHistorySummary(scopeId: string): AttemptHistorySummary {
+  const summary = getAttemptHistorySummaryData(scopeId);
+  return {
+    attemptHistory: summary.attemptHistory.map(cloneAttemptHistoryEntry),
+    solveHistory: summary.solveHistory.map(cloneSolveHistoryEntry),
+    reviewHistory: summary.reviewHistory.map((entry) => ({ ...entry })),
+    executionTimes: [...summary.executionTimes],
+  };
+}
+
+export function setAttemptHistory(scopeId: string, values: AttemptHistoryEntry[]) {
   setStatsRecord(scopeId, {
     ...getStatsRecord(scopeId),
-    lastTimes: solveHistory.map((entry) => entry.executionMs),
-    solveHistory,
+    attemptHistory: normalizeAttemptHistory({ ...getStatsRecord(scopeId), attemptHistory: values }),
   });
 
   void enqueueWrite(async () => {
@@ -760,37 +984,56 @@ export function setLastTimes(scopeId: string, values: number[]) {
   });
 }
 
+export function getLastTimes(scopeId: string): number[] {
+  return [...getAttemptHistorySummaryData(scopeId).executionTimes];
+}
+
+export function setLastTimes(scopeId: string, values: number[]) {
+  setAttemptHistory(scopeId, values
+    .filter(Number.isFinite)
+    .map((value, index) => createAttemptHistoryEntry({
+      recordedAt: index + 1,
+      executionMs: value,
+      recognitionMs: null,
+      totalMs: value,
+      timerOnly: true,
+      grade: null,
+    })));
+}
+
 export function getSolveHistory(scopeId: string): SolveHistoryEntry[] {
-  return (getStatsRecord(scopeId).solveHistory ?? []).map(cloneSolveHistoryEntry);
+  return getAttemptHistorySummaryData(scopeId).solveHistory.map(cloneSolveHistoryEntry);
 }
 
 export function setSolveHistory(scopeId: string, values: SolveHistoryEntry[]) {
   const solveHistory = normalizeSolveHistory(values, []);
-  setStatsRecord(scopeId, {
-    ...getStatsRecord(scopeId),
-    lastTimes: solveHistory.map((entry) => entry.executionMs),
-    solveHistory,
-  });
-
-  void enqueueWrite(async () => {
-    await persistStatsRecord(scopeId);
-  });
+  setAttemptHistory(scopeId, solveHistory.map((entry, index) => createAttemptHistoryEntry({
+    recordedAt: index + 1,
+    executionMs: entry.executionMs,
+    recognitionMs: entry.recognitionMs,
+    totalMs: entry.totalMs,
+    timerOnly: true,
+    grade: null,
+  })));
 }
 
 export function getReviewHistory(scopeId: string): CaseReviewEntry[] {
-  return normalizeReviewHistory(getStatsRecord(scopeId).reviewHistory);
+  return getAttemptHistorySummaryData(scopeId).reviewHistory.map((entry) => ({ ...entry }));
 }
 
 export function setReviewHistory(scopeId: string, values: CaseReviewEntry[]) {
   const reviewHistory = normalizeReviewHistory(values);
-  setStatsRecord(scopeId, {
-    ...getStatsRecord(scopeId),
-    reviewHistory,
-  });
-
-  void enqueueWrite(async () => {
-    await persistStatsRecord(scopeId);
-  });
+  setAttemptHistory(scopeId, reviewHistory.map((entry) => createAttemptHistoryEntry({
+    recordedAt: entry.reviewedAt,
+    mode: entry.mode,
+    executionMs: entry.executionMs,
+    recognitionMs: entry.recognitionMs,
+    totalMs: entry.totalMs,
+    hadMistake: entry.hadMistake,
+    aborted: entry.aborted,
+    timerOnly: entry.timerOnly,
+    grade: entry.grade,
+  })));
 }
 
 export function getSrsState(scopeId: string): CaseSrsState | null {
@@ -859,21 +1102,12 @@ export function setLearnedStatus(scopeId: string, value: number) {
   });
 }
 
-export function removeAlgorithmStorage(scopeId: string) {
-  statsCache.delete(scopeId);
-  void enqueueWrite(async () => {
-    await persistStatsRecord(scopeId);
-  });
-}
-
 export function removeAlgorithmTimesStorage(scopeId: string) {
   const record = getStatsRecord(scopeId);
   setStatsRecord(scopeId, {
     ...record,
     best: null,
-    lastTimes: [],
-    solveHistory: [],
-    reviewHistory: [],
+    attemptHistory: [],
     srs: null,
     timeAttackLastRuns: [],
   });

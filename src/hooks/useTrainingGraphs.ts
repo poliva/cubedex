@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import type { CaseCardData } from '../lib/case-cards';
 import { createStatsGraph, createTimeGraph } from '../lib/charts';
-import { getLastTimes, getSolveHistory } from '../lib/storage';
+import { getAttemptHistorySummary } from '../lib/storage';
 
 export function useTrainingGraphs(
   currentCase: CaseCardData | null,
@@ -21,10 +21,9 @@ export function useTrainingGraphs(
       return;
     }
 
-    const lastTimes = getLastTimes(algId);
-    const solveHistory = getSolveHistory(algId);
+    const { executionTimes, solveHistory } = getAttemptHistorySummary(algId);
 
-    createTimeGraph(timeCanvas, lastTimes.slice(-5));
+    createTimeGraph(timeCanvas, executionTimes.slice(-5));
     createStatsGraph(statsCanvas, solveHistory);
   }, [currentCase, displayAlg, refreshToken, statsAlgId]);
 }
