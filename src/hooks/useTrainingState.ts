@@ -261,7 +261,7 @@ function buildSmartReviewQueue(selectedCases: CaseCardData[]) {
     return shuffleCases(selectedCases);
   }
 
-  return [...selectedCases].sort((left, right) => {
+  const sortBySmartReviewPriority = (left: CaseCardData, right: CaseCardData) => {
     if (left.smartReviewUrgency !== right.smartReviewUrgency) {
       return left.smartReviewUrgency - right.smartReviewUrgency;
     }
@@ -269,7 +269,22 @@ function buildSmartReviewQueue(selectedCases: CaseCardData[]) {
       return left.reviewCount - right.reviewCount;
     }
     return left.name.localeCompare(right.name);
-  });
+  };
+
+  const seenDueCases = selectedCases
+    .filter((selectedCase) => selectedCase.reviewCount > 0 && selectedCase.smartReviewDue)
+    .sort(sortBySmartReviewPriority);
+  const unseenDueCases = shuffleCases(
+    selectedCases.filter((selectedCase) => selectedCase.reviewCount === 0 && selectedCase.smartReviewDue),
+  );
+  const seenUpcomingCases = selectedCases
+    .filter((selectedCase) => selectedCase.reviewCount > 0 && !selectedCase.smartReviewDue)
+    .sort(sortBySmartReviewPriority);
+  const unseenUpcomingCases = shuffleCases(
+    selectedCases.filter((selectedCase) => selectedCase.reviewCount === 0 && !selectedCase.smartReviewDue),
+  );
+
+  return [...seenDueCases, ...unseenDueCases, ...seenUpcomingCases, ...unseenUpcomingCases];
 }
 
 function buildQueue(selectedCases: CaseCardData[], prioritizeSlowCases: boolean, smartReviewScheduling: boolean) {

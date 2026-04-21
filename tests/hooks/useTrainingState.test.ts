@@ -536,6 +536,58 @@ describe('useTrainingState time attack counts', () => {
     });
   });
 
+  it('randomizes never-practiced cases under smart order', async () => {
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
+    const newCases = [
+      {
+        ...selectedCases[0],
+        id: 'case-1',
+        name: 'Aa',
+        smartReviewDue: true,
+        smartReviewUrgency: Number.NEGATIVE_INFINITY,
+        reviewCount: 0,
+      },
+      {
+        ...selectedCases[1],
+        id: 'case-2',
+        name: 'Bb',
+        smartReviewDue: true,
+        smartReviewUrgency: Number.NEGATIVE_INFINITY,
+        reviewCount: 0,
+      },
+      {
+        ...selectedCases[1],
+        id: 'case-3',
+        name: 'Cc',
+        smartReviewDue: true,
+        smartReviewUrgency: Number.NEGATIVE_INFINITY,
+        reviewCount: 0,
+      },
+    ];
+
+    try {
+      const { result } = renderHook(() => useTrainingState(newCases, 'PLL', {
+        selectionChangeMode: 'bulk',
+        countdownMode: false,
+        randomizeAUF: false,
+        randomOrder: false,
+        timeAttack: false,
+        prioritizeSlowCases: false,
+        prioritizeFailedCases: false,
+        smartReviewScheduling: true,
+        smartcubeConnected: false,
+        currentPattern: null,
+        statsRefreshToken: 0,
+      }));
+
+      await waitFor(() => {
+        expect(result.current.currentCase?.id).toBe('case-2');
+      });
+    } finally {
+      randomSpy.mockRestore();
+    }
+  });
+
   it('randomizes smart order when no selected case is due', async () => {
     const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
     const nonDueCases = [
