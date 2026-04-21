@@ -12,6 +12,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     showAlgName: true,
     countdownMode: false,
     alwaysScrambleTo: false,
+    autoUpdateLearningState: false,
     visualization: 'PG3D',
     backview: 'none',
     hintFacelets: 'none',
@@ -25,6 +26,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     setShowAlgName: vi.fn(),
     setCountdownMode: vi.fn(),
     setAlwaysScrambleTo: vi.fn(),
+    setAutoUpdateLearningState: vi.fn(),
     setVisualization: vi.fn(),
     setBackview: vi.fn(),
     setHintFacelets: vi.fn(),
@@ -196,5 +198,24 @@ describe('OptionsView', () => {
 
     await user.click(screen.getByLabelText('Countdown Mode'));
     expect(options.setCountdownMode).toHaveBeenCalledWith(true);
+  });
+
+  it('forwards auto learning state toggle changes', async () => {
+    const user = userEvent.setup();
+    const options = createOptions({ autoUpdateLearningState: false });
+
+    render(
+      <OptionsView
+        visible
+        infoVisible={false}
+        setInfoVisible={vi.fn()}
+        options={options}
+        smartcube={createSmartcube()}
+        algorithmActions={createAlgorithmActions()}
+      />,
+    );
+
+    await user.click(screen.getByLabelText('Auto-update learning state'));
+    expect(options.setAutoUpdateLearningState).toHaveBeenCalledWith(true);
   });
 });

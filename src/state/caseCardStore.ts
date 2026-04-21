@@ -7,6 +7,7 @@ export interface CaseCardStoreState {
   ao5Times: Record<string, number | null>;
   selectedCaseIds: string[];
   fullStickering: boolean;
+  autoUpdateLearningState: boolean;
 }
 
 const initial: CaseCardStoreState = {
@@ -16,6 +17,7 @@ const initial: CaseCardStoreState = {
   ao5Times: {},
   selectedCaseIds: [],
   fullStickering: false,
+  autoUpdateLearningState: false,
 };
 
 export const caseCardStore = createStore<CaseCardStoreState>(initial);
@@ -82,4 +84,8 @@ export function useCaseCardSlice(id: string): CaseCardSlice {
 
 export function useFullStickering(): boolean {
   return useStoreSelector(caseCardStore, (s) => s.fullStickering);
+}
+
+export function useAutoUpdateLearningState(): boolean {
+  return useStoreSelector(caseCardStore, (s) => s.autoUpdateLearningState);
 }

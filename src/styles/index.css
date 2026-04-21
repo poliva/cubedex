@@ -1636,6 +1636,10 @@ html.dark .case-alt-light {
   padding: 0;
 }
 
+.bookmark-button[aria-disabled="true"] {
+  cursor: default;
+}
+
 .case-card-body {
   display: block;
   cursor: pointer;

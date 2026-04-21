@@ -6,7 +6,9 @@ const mockState = vi.hoisted(() => ({
   patterns: {} as Record<string, any>,
   lastTimes: new Map<string, number[]>(),
   solveHistory: new Map<string, Array<{ executionMs: number; recognitionMs: number | null; totalMs: number }>>(),
+  reviewHistory: new Map<string, Array<any>>(),
   bestTimes: new Map<string, number | null>(),
+  srsStates: new Map<string, any>(),
   timeAttackRuns: new Map<string, Array<{ wallMs: number; caseTimes: number[] }>>(),
 }));
 
@@ -54,7 +56,9 @@ vi.mock('../../src/lib/storage', async () => {
     ...actual,
     getBestTime: vi.fn((id: string) => mockState.bestTimes.get(id) ?? null),
     getLastTimes: vi.fn((id: string) => mockState.lastTimes.get(id) ?? []),
+    getReviewHistory: vi.fn((id: string) => mockState.reviewHistory.get(id) ?? []),
     getSolveHistory: vi.fn((id: string) => mockState.solveHistory.get(id) ?? []),
+    getSrsState: vi.fn((id: string) => mockState.srsStates.get(id) ?? null),
     getTimeAttackLastRuns: vi.fn((id: string) => mockState.timeAttackRuns.get(id) ?? []),
     setBestTime: vi.fn((id: string, value: number) => {
       mockState.bestTimes.set(id, value);
@@ -65,6 +69,12 @@ vi.mock('../../src/lib/storage', async () => {
     setSolveHistory: vi.fn((id: string, values: Array<{ executionMs: number; recognitionMs: number | null; totalMs: number }>) => {
       mockState.solveHistory.set(id, values);
       mockState.lastTimes.set(id, values.map((entry) => entry.executionMs));
+    }),
+    setReviewHistory: vi.fn((id: string, values: Array<any>) => {
+      mockState.reviewHistory.set(id, values);
+    }),
+    setSrsState: vi.fn((id: string, value: any) => {
+      mockState.srsStates.set(id, value);
     }),
     setTimeAttackLastRuns: vi.fn((id: string, values: Array<{ wallMs: number; caseTimes: number[] }>) => {
       mockState.timeAttackRuns.set(id, values);
@@ -77,7 +87,9 @@ import {
   createTimeAttackScopeId,
   getBestTime,
   getLastTimes,
+  getReviewHistory,
   getSolveHistory,
+  getSrsState,
   getTimeAttackLastRuns,
 } from '../../src/lib/storage';
 
@@ -110,6 +122,11 @@ const selectedCases = [
     subset: 'A',
     category: 'PLL',
     learned: 0,
+    manualLearned: 0,
+    reviewCount: 0,
+    smartReviewDueAt: null,
+    smartReviewDue: true,
+    smartReviewUrgency: 0,
     bestTime: null,
     ao5: null,
   },
@@ -120,6 +137,11 @@ const selectedCases = [
     subset: 'A',
     category: 'PLL',
     learned: 0,
+    manualLearned: 0,
+    reviewCount: 0,
+    smartReviewDueAt: null,
+    smartReviewDue: true,
+    smartReviewUrgency: 1,
     bestTime: null,
     ao5: null,
   },
@@ -134,6 +156,7 @@ function renderTrainingState() {
     timeAttack: true,
     prioritizeSlowCases: false,
     prioritizeFailedCases: false,
+    smartReviewScheduling: false,
     smartcubeConnected: false,
     currentPattern: null,
     statsRefreshToken: 0,
@@ -145,14 +168,24 @@ describe('useTrainingState time attack counts', () => {
     mockState.patterns = {};
     mockState.lastTimes.clear();
     mockState.solveHistory.clear();
+    mockState.reviewHistory.clear();
     mockState.bestTimes.clear();
+    mockState.srsStates.clear();
     mockState.timeAttackRuns.clear();
 
-    mockState.patterns.solved = createPattern('solved');
-    mockState.patterns['solved:R'] = createPattern('solved:R');
-    mockState.patterns['solved:R:U'] = createPattern('solved:R:U');
-    mockState.patterns['solved:R:R'] = createPattern('solved:R:R');
-    mockState.patterns['solved:R:R:R'] = createPattern('solved:R:R:R');
+    const patternKeys = [
+      'solved',
+      'solved:R',
+      'solved:R:U',
+      'solved:R:R',
+      'solved:R:R:R',
+      'solved:R:R:R:R',
+      'solved:R:R:R:R:R',
+      'solved:R:R:R:R:R:R',
+    ];
+    for (const key of patternKeys) {
+      mockState.patterns[key] = createPattern(key);
+    }
   });
 
   it('keeps failed time-attack counts keyed by the current case', async () => {
@@ -233,6 +266,7 @@ describe('useTrainingState time attack counts', () => {
       timeAttack: false,
       prioritizeSlowCases: false,
       prioritizeFailedCases: false,
+      smartReviewScheduling: false,
       smartcubeConnected: true,
       currentPattern: null,
       statsRefreshToken: 0,
@@ -289,6 +323,7 @@ describe('useTrainingState time attack counts', () => {
         timeAttack: false,
         prioritizeSlowCases: false,
         prioritizeFailedCases: false,
+        smartReviewScheduling: false,
         smartcubeConnected: true,
         currentPattern: null,
         statsRefreshToken: 0,
@@ -348,6 +383,7 @@ describe('useTrainingState time attack counts', () => {
       timeAttack: true,
       prioritizeSlowCases: false,
       prioritizeFailedCases: false,
+      smartReviewScheduling: false,
       smartcubeConnected: false,
       currentPattern: null,
       statsRefreshToken: 0,
@@ -358,5 +394,159 @@ describe('useTrainingState time attack counts', () => {
       expect(result.current.countdownActive).toBe(false);
       expect(result.current.timerState).toBe('READY');
     });
+  });
+
+  it('records review history and SRS state for successful solves', async () => {
+    const { result } = renderHook(() => useTrainingState(selectedCases, 'PLL', {
+      selectionChangeMode: 'bulk',
+      countdownMode: false,
+      randomizeAUF: false,
+      randomOrder: false,
+      timeAttack: false,
+      prioritizeSlowCases: false,
+      prioritizeFailedCases: false,
+      smartReviewScheduling: false,
+      smartcubeConnected: false,
+      currentPattern: null,
+      statsRefreshToken: 0,
+    }));
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+    });
+
+    act(() => {
+      result.current.stopAndRecordSolve(1200);
+    });
+
+    expect(getReviewHistory('case-1')).toHaveLength(1);
+    expect(getReviewHistory('case-1')[0]).toMatchObject({
+      grade: 'good',
+      mode: 'timer',
+      aborted: false,
+      hadMistake: false,
+      executionMs: 1200,
+    });
+    expect(getSrsState('case-1')).toMatchObject({
+      reps: 1,
+      lastGrade: 'good',
+    });
+  });
+
+  it('orders smart order cases within the selected set by urgency, review count, and name', async () => {
+    const orderedCases = [
+      {
+        ...selectedCases[1],
+        id: 'case-4',
+        name: 'Later',
+        smartReviewDue: false,
+        smartReviewUrgency: 100,
+        reviewCount: 0,
+      },
+      {
+        ...selectedCases[1],
+        id: 'case-3',
+        name: 'Soon',
+        smartReviewDue: true,
+        smartReviewUrgency: 5,
+        reviewCount: 0,
+      },
+      {
+        ...selectedCases[1],
+        id: 'case-2',
+        name: 'Bb',
+        smartReviewDue: true,
+        smartReviewUrgency: 0,
+        reviewCount: 2,
+      },
+      {
+        ...selectedCases[0],
+        id: 'case-1',
+        name: 'Aa',
+        smartReviewDue: true,
+        smartReviewUrgency: 0,
+        reviewCount: 2,
+      },
+    ];
+
+    const { result } = renderHook(() => useTrainingState(orderedCases, 'PLL', {
+      selectionChangeMode: 'bulk',
+      countdownMode: false,
+      randomizeAUF: false,
+      randomOrder: false,
+      timeAttack: false,
+      prioritizeSlowCases: false,
+      prioritizeFailedCases: false,
+      smartReviewScheduling: true,
+      smartcubeConnected: false,
+      currentPattern: null,
+      statsRefreshToken: 0,
+    }));
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+    });
+
+    act(() => {
+      result.current.stopAndRecordSolve(1000);
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-2');
+    });
+
+    act(() => {
+      result.current.stopAndRecordSolve(1100);
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-3');
+    });
+
+    act(() => {
+      result.current.stopAndRecordSolve(1200);
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-4');
+    });
+  });
+
+  it('randomizes smart order when no selected case is due', async () => {
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
+    const nonDueCases = [
+      {
+        ...selectedCases[0],
+        smartReviewDue: false,
+        smartReviewUrgency: 10_000,
+      },
+      {
+        ...selectedCases[1],
+        smartReviewDue: false,
+        smartReviewUrgency: 20_000,
+      },
+    ];
+
+    try {
+      const { result } = renderHook(() => useTrainingState(nonDueCases, 'PLL', {
+        selectionChangeMode: 'bulk',
+        countdownMode: false,
+        randomizeAUF: false,
+        randomOrder: false,
+        timeAttack: false,
+        prioritizeSlowCases: false,
+        prioritizeFailedCases: false,
+        smartReviewScheduling: true,
+        smartcubeConnected: false,
+        currentPattern: null,
+        statsRefreshToken: 0,
+      }));
+
+      await waitFor(() => {
+        expect(result.current.currentCase?.id).toBe('case-2');
+      });
+    } finally {
+      randomSpy.mockRestore();
+    }
   });
 });

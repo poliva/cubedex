@@ -560,22 +560,31 @@ export const PracticeView = memo(function PracticeView({
                 label="Select Learned"
               />
               <ToggleSwitch
-                id="random-auf-toggle"
-                checked={practiceToggles.randomizeAUF}
-                onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
-                label="Random AUF"
+                id="smart-review-scheduling-toggle"
+                checked={practiceToggles.smartReviewScheduling}
+                disabled={practiceToggles.timeAttack}
+                onChange={(checked) => practiceToggles.setSmartReviewScheduling(checked)}
+                label="Smart Order"
               />
               <ToggleSwitch
                 id="random-order-toggle"
                 checked={practiceToggles.randomOrder}
+                disabled={practiceToggles.smartReviewScheduling}
                 onChange={(checked) => practiceToggles.setRandomOrder(checked)}
                 label="Random Order"
               />
               <ToggleSwitch
                 id="prioritize-slow-toggle"
                 checked={practiceToggles.prioritizeSlowCases}
+                disabled={practiceToggles.smartReviewScheduling}
                 onChange={(checked) => practiceToggles.setPrioritizeSlowCases(checked)}
                 label="Slow Cases First"
+              />
+              <ToggleSwitch
+                id="random-auf-toggle"
+                checked={practiceToggles.randomizeAUF}
+                onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
+                label="Random AUF"
               />
               <ToggleSwitch
                 id="prioritize-failed-toggle"

@@ -11,6 +11,7 @@ import {
   saveStatsRecordToDb,
   deleteStatsRecordsFromDb,
 } from './idb-storage';
+import { type CaseReviewEntry, type CaseSrsState, normalizeReviewHistory, normalizeSrsState } from './srs';
 
 export interface SavedAlgorithm {
   name: string;
@@ -41,6 +42,7 @@ export const STORAGE_KEYS = {
   cubeSizePx: 'cubeSizePx',
   theme: 'theme',
   smartcubeDeviceSelection: 'smartcubeDeviceSelection',
+  autoUpdateLearningState: 'autoUpdateLearningState',
 } as const;
 
 export const DEFAULT_ALG_ID = 'default-alg-id';
@@ -242,6 +244,8 @@ function createEmptyStatsRecord(scopeId: string): ScopedStatsRecord {
     algId: parsed.algId,
     lastTimes: [],
     solveHistory: [],
+    reviewHistory: [],
+    srs: null,
     timeAttackLastRuns: [],
     best: null,
     learned: 0,
@@ -254,6 +258,8 @@ function normalizeStatsRecord(record: ScopedStatsRecord): ScopedStatsRecord {
     ? record.lastTimes.map((value) => Number(value)).filter(Number.isFinite)
     : [];
   const solveHistory = normalizeSolveHistory(record.solveHistory, legacyLastTimes);
+  const reviewHistory = normalizeReviewHistory(record.reviewHistory);
+  const srs = normalizeSrsState(record.srs);
   const lastTimes = solveHistory.map((entry) => entry.executionMs);
   const timeAttackLastRuns = Array.isArray(record.timeAttackLastRuns)
     ? record.timeAttackLastRuns
@@ -275,6 +281,8 @@ function normalizeStatsRecord(record: ScopedStatsRecord): ScopedStatsRecord {
     algId: record.algId || parsed.algId,
     lastTimes,
     solveHistory,
+    reviewHistory,
+    srs,
     timeAttackLastRuns,
     best,
     learned,
@@ -695,7 +703,11 @@ export async function exportBackup() {
 
 function parseBackup(json: string) {
   const backup = JSON.parse(json) as CubedexBackupFile;
-  if (backup.backupFormatVersion !== BACKUP_FORMAT_VERSION) {
+  if (
+    !Number.isFinite(Number(backup.backupFormatVersion))
+    || backup.backupFormatVersion < 1
+    || backup.backupFormatVersion > BACKUP_FORMAT_VERSION
+  ) {
     throw new Error('Unsupported backup format version');
   }
   if (!backup.algorithms || !Array.isArray(backup.stats)) {
@@ -758,6 +770,37 @@ export function setSolveHistory(scopeId: string, values: SolveHistoryEntry[]) {
     ...getStatsRecord(scopeId),
     lastTimes: solveHistory.map((entry) => entry.executionMs),
     solveHistory,
+  });
+
+  void enqueueWrite(async () => {
+    await persistStatsRecord(scopeId);
+  });
+}
+
+export function getReviewHistory(scopeId: string): CaseReviewEntry[] {
+  return normalizeReviewHistory(getStatsRecord(scopeId).reviewHistory);
+}
+
+export function setReviewHistory(scopeId: string, values: CaseReviewEntry[]) {
+  const reviewHistory = normalizeReviewHistory(values);
+  setStatsRecord(scopeId, {
+    ...getStatsRecord(scopeId),
+    reviewHistory,
+  });
+
+  void enqueueWrite(async () => {
+    await persistStatsRecord(scopeId);
+  });
+}
+
+export function getSrsState(scopeId: string): CaseSrsState | null {
+  return normalizeSrsState(getStatsRecord(scopeId).srs);
+}
+
+export function setSrsState(scopeId: string, value: CaseSrsState | null) {
+  setStatsRecord(scopeId, {
+    ...getStatsRecord(scopeId),
+    srs: normalizeSrsState(value),
   });
 
   void enqueueWrite(async () => {
@@ -830,6 +873,8 @@ export function removeAlgorithmTimesStorage(scopeId: string) {
     best: null,
     lastTimes: [],
     solveHistory: [],
+    reviewHistory: [],
+    srs: null,
     timeAttackLastRuns: [],
   });
 

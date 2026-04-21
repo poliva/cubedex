@@ -7,6 +7,8 @@ vi.mock('../../src/lib/storage', async () => {
     getLastTimes: vi.fn(),
     getBestTime: vi.fn(),
     getLearnedStatus: vi.fn(),
+    getReviewHistory: vi.fn(),
+    getSrsState: vi.fn(),
     setLearnedStatus: vi.fn(),
   };
 });
@@ -28,6 +30,8 @@ import {
   getBestTime,
   getLastTimes,
   getLearnedStatus,
+  getReviewHistory,
+  getSrsState,
   setLearnedStatus,
   type SavedAlgorithms,
 } from '../../src/lib/storage';
@@ -35,6 +39,8 @@ import {
 const mockedGetLastTimes = vi.mocked(getLastTimes);
 const mockedGetBestTime = vi.mocked(getBestTime);
 const mockedGetLearnedStatus = vi.mocked(getLearnedStatus);
+const mockedGetReviewHistory = vi.mocked(getReviewHistory);
+const mockedGetSrsState = vi.mocked(getSrsState);
 const mockedSetLearnedStatus = vi.mocked(setLearnedStatus);
 
 describe('case card helpers', () => {
@@ -42,6 +48,8 @@ describe('case card helpers', () => {
     mockedGetLastTimes.mockReset();
     mockedGetBestTime.mockReset();
     mockedGetLearnedStatus.mockReset();
+    mockedGetReviewHistory.mockReset();
+    mockedGetSrsState.mockReset();
     mockedSetLearnedStatus.mockReset();
   });
 
@@ -93,6 +101,8 @@ describe('case card helpers', () => {
     mockedGetBestTime.mockReturnValue(2_345);
     mockedGetLastTimes.mockReturnValue([2_000, 2_100, 2_200, 2_300, 2_400]);
     mockedGetLearnedStatus.mockReturnValue(2);
+    mockedGetReviewHistory.mockReturnValue([]);
+    mockedGetSrsState.mockReturnValue(null);
 
     const cards = getCaseCards(savedAlgorithms, 'PLL', ['A']);
 
@@ -106,8 +116,50 @@ describe('case card helpers', () => {
         bestTime: 2_345,
         ao5: 2_200,
         learned: 2,
+        manualLearned: 2,
+        reviewCount: 0,
+        smartReviewDueAt: null,
+        smartReviewDue: true,
+        smartReviewUrgency: Number.NEGATIVE_INFINITY,
       },
     ]);
+  });
+
+  it('derives automatic learned status from review history when enabled', () => {
+    const savedAlgorithms: SavedAlgorithms = {
+      PLL: [
+        {
+          subset: 'A',
+          algorithms: [{ name: 'Aa', algorithm: "RUR'U'" }],
+        },
+      ],
+    };
+
+    mockedGetBestTime.mockReturnValue(null);
+    mockedGetLastTimes.mockReturnValue([]);
+    mockedGetLearnedStatus.mockReturnValue(0);
+    mockedGetSrsState.mockReturnValue({ dueAt: 1234, stabilityDays: 2, difficulty: 5, reps: 1, lapses: 0, lastReviewedAt: 1000, lastGrade: 'good' });
+    mockedGetReviewHistory.mockReturnValue(Array.from({ length: 12 }, (_, index) => ({
+      reviewedAt: index + 1,
+      grade: index === 0 ? 'again' : 'good',
+      mode: 'timer',
+      executionMs: 1000,
+      recognitionMs: null,
+      totalMs: 1000,
+      hadMistake: false,
+      aborted: false,
+      timerOnly: true,
+    })));
+
+    const cards = getCaseCards(savedAlgorithms, 'PLL', ['A'], { autoUpdateLearningState: true, now: 2000 });
+
+    expect(cards[0]).toMatchObject({
+      learned: 2,
+      manualLearned: 0,
+      reviewCount: 12,
+      smartReviewDueAt: 1234,
+      smartReviewDue: true,
+    });
   });
 
   it('returns subset and algorithm copies without mutating the source library', () => {

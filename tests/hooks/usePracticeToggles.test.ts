@@ -17,6 +17,7 @@ describe('usePracticeToggles', () => {
 
     expect(result.current.randomOrder).toBe(true);
     expect(result.current.prioritizeSlowCases).toBe(false);
+    expect(result.current.smartReviewScheduling).toBe(false);
   });
 
   it('turns random order off when slow cases are enabled', () => {
@@ -33,6 +34,32 @@ describe('usePracticeToggles', () => {
 
     expect(result.current.prioritizeSlowCases).toBe(true);
     expect(result.current.randomOrder).toBe(false);
+  });
+
+  it('turns random order and slow cases off when smart order is enabled', () => {
+    const { result } = renderHook(() => usePracticeToggles());
+
+    act(() => {
+      result.current.setRandomOrder(true);
+      result.current.setPrioritizeSlowCases(true);
+      result.current.setSmartReviewScheduling(true);
+    });
+
+    expect(result.current.smartReviewScheduling).toBe(true);
+    expect(result.current.randomOrder).toBe(false);
+    expect(result.current.prioritizeSlowCases).toBe(false);
+  });
+
+  it('turns smart order off when time attack is enabled', () => {
+    const { result } = renderHook(() => usePracticeToggles());
+
+    act(() => {
+      result.current.setSmartReviewScheduling(true);
+      result.current.setTimeAttack(true);
+    });
+
+    expect(result.current.timeAttack).toBe(true);
+    expect(result.current.smartReviewScheduling).toBe(false);
   });
 
   it('updates the independent toggles directly', () => {

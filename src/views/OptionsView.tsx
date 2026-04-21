@@ -217,6 +217,14 @@ export const OptionsView = memo(function OptionsView({
             label='Always Keep "Scramble To" Enabled'
           />
         </div>
+        <div className="options-toggle-row">
+          <ToggleSwitch
+            id="auto-learning-state-toggle"
+            checked={options.autoUpdateLearningState}
+            onChange={(checked) => options.setAutoUpdateLearningState(checked)}
+            label="Auto-update learning state"
+          />
+        </div>
 
         <div id="visualization-container">
           <label htmlFor="visualization-select" className="options-viz-label">Cube Visualization Mode:</label>

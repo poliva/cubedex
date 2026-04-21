@@ -1,3 +1,4 @@
+import type { CaseReviewEntry, CaseSrsState } from './srs';
 import type { SavedAlgorithms } from './storage';
 
 export interface SolveHistoryEntry {
@@ -13,6 +14,8 @@ export interface ScopedStatsRecord {
   algId: string;
   lastTimes: number[];
   solveHistory?: SolveHistoryEntry[];
+  reviewHistory?: CaseReviewEntry[];
+  srs?: CaseSrsState | null;
   timeAttackLastRuns?: {
     wallMs: number;
     caseTimes: number[];
@@ -29,7 +32,7 @@ export interface CubedexBackupFile {
 }
 
 export const IDB_SCHEMA_VERSION = 1;
-export const BACKUP_FORMAT_VERSION = 1;
+export const BACKUP_FORMAT_VERSION = 2;
 
 const DB_NAME = 'cubedex';
 const META_STORE = 'meta';

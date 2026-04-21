@@ -5,11 +5,14 @@ import {
   getAlgorithmId,
   getLastTimes,
   getLearnedStatus,
+  getReviewHistory,
+  getSrsState,
   setLearnedStatus,
   type SavedAlgorithm,
   type SavedAlgorithms,
   type SavedSubset,
 } from './storage';
+import { deriveAutoLearnedStatus, getCaseUrgency, isCaseDue } from './srs';
 
 export interface CaseCardData {
   id: string;
@@ -20,6 +23,11 @@ export interface CaseCardData {
   bestTime: number | null;
   ao5: number | null;
   learned: number;
+  manualLearned: number;
+  reviewCount: number;
+  smartReviewDueAt: number | null;
+  smartReviewDue: boolean;
+  smartReviewUrgency: number;
 }
 
 export function makeTimeParts(time: number) {
@@ -100,6 +108,10 @@ export function getCaseCards(
   savedAlgorithms: SavedAlgorithms,
   category: string,
   checkedSubsets: string[],
+  options: {
+    autoUpdateLearningState?: boolean;
+    now?: number;
+  } = {},
 ): CaseCardData[] {
   if (!category || !savedAlgorithms[category]) {
     return [];
@@ -107,6 +119,7 @@ export function getCaseCards(
 
   const result: CaseCardData[] = [];
   const checkedSubsetSet = new Set(checkedSubsets);
+  const now = options.now ?? Date.now();
 
   for (const subsetData of savedAlgorithms[category]) {
     if (!checkedSubsetSet.has(subsetData.subset)) {
@@ -116,6 +129,9 @@ export function getCaseCards(
     for (const alg of subsetData.algorithms) {
       const normalizedAlgorithm = expandNotation(alg.algorithm);
       const scopeId = createScopeId(category, subsetData.subset, getAlgorithmId(normalizedAlgorithm));
+      const manualLearned = getLearnedStatus(scopeId);
+      const reviewHistory = getReviewHistory(scopeId);
+      const srsState = getSrsState(scopeId);
       result.push({
         id: scopeId,
         name: alg.name,
@@ -124,7 +140,12 @@ export function getCaseCards(
         category,
         bestTime: getBestTime(scopeId),
         ao5: averageOfFiveTimeNumber(scopeId),
-        learned: getLearnedStatus(scopeId),
+        learned: options.autoUpdateLearningState ? deriveAutoLearnedStatus(reviewHistory) : manualLearned,
+        manualLearned,
+        reviewCount: reviewHistory.length,
+        smartReviewDueAt: srsState?.dueAt ?? null,
+        smartReviewDue: isCaseDue(srsState, now),
+        smartReviewUrgency: getCaseUrgency(srsState, now),
       });
     }
   }

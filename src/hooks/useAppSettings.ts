@@ -6,6 +6,7 @@ export interface AppSettingsState {
   showAlgName: boolean;
   countdownMode: boolean;
   alwaysScrambleTo: boolean;
+  autoUpdateLearningState: boolean;
   visualization: string;
   backview: string;
   hintFacelets: string;
@@ -19,6 +20,7 @@ export interface AppSettingsState {
   setShowAlgName: (value: boolean) => void;
   setCountdownMode: (value: boolean) => void;
   setAlwaysScrambleTo: (value: boolean) => void;
+  setAutoUpdateLearningState: (value: boolean) => void;
   setVisualization: (value: string) => void;
   setBackview: (value: string) => void;
   setHintFacelets: (value: string) => void;
@@ -53,6 +55,9 @@ export function useAppSettings(): AppSettingsState {
   const [showAlgName, setShowAlgNameState] = useState(readOption('showAlgName') !== 'false');
   const [countdownMode, setCountdownModeState] = useState(readOption('countdownMode') === 'true');
   const [alwaysScrambleTo, setAlwaysScrambleToState] = useState(readOption('alwaysScrambleTo') === 'true');
+  const [autoUpdateLearningState, setAutoUpdateLearningStateState] = useState(
+    readOption('autoUpdateLearningState') === 'true',
+  );
   const [visualization, setVisualizationState] = useState(readOption('visualization') || 'PG3D');
   const [backview, setBackviewState] = useState(readOption('backview') || 'none');
   const [hintFacelets, setHintFaceletsState] = useState(readOption('hintFacelets') || 'none');
@@ -83,6 +88,10 @@ export function useAppSettings(): AppSettingsState {
   useEffect(() => {
     writeOption('alwaysScrambleTo', String(alwaysScrambleTo));
   }, [alwaysScrambleTo]);
+
+  useEffect(() => {
+    writeOption('autoUpdateLearningState', String(autoUpdateLearningState));
+  }, [autoUpdateLearningState]);
 
   useEffect(() => {
     writeOption('visualization', visualization);
@@ -132,6 +141,7 @@ export function useAppSettings(): AppSettingsState {
     showAlgName,
     countdownMode,
     alwaysScrambleTo,
+    autoUpdateLearningState,
     visualization,
     backview,
     hintFacelets,
@@ -145,6 +155,7 @@ export function useAppSettings(): AppSettingsState {
     setShowAlgName: setShowAlgNameState,
     setCountdownMode: setCountdownModeState,
     setAlwaysScrambleTo: setAlwaysScrambleToState,
+    setAutoUpdateLearningState: setAutoUpdateLearningStateState,
     setVisualization: setVisualizationState,
     setBackview: setBackviewState,
     setHintFacelets: setHintFaceletsState,
@@ -156,6 +167,7 @@ export function useAppSettings(): AppSettingsState {
     setCubeSizePx,
   }), [
     alwaysScrambleTo,
+    autoUpdateLearningState,
     backview,
     countdownMode,
     controlPanel,

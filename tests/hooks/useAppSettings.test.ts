@@ -86,4 +86,19 @@ describe('useAppSettings', () => {
       expect(localStorage.getItem('countdownMode')).toBe('true');
     });
   });
+
+  it('defaults auto learning state off and persists changes', async () => {
+    const { result } = renderHook(() => useAppSettings());
+
+    expect(result.current.autoUpdateLearningState).toBe(false);
+
+    act(() => {
+      result.current.setAutoUpdateLearningState(true);
+    });
+
+    await waitFor(() => {
+      expect(result.current.autoUpdateLearningState).toBe(true);
+      expect(localStorage.getItem('autoUpdateLearningState')).toBe('true');
+    });
+  });
 });

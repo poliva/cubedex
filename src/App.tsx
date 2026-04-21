@@ -54,6 +54,7 @@ export function App() {
   const [scrambleStartAlg, setScrambleStartAlg] = useState('');
   const [acknowledgedDisconnectToken, setAcknowledgedDisconnectToken] = useState(0);
   const [statsRefreshToken, setStatsRefreshToken] = useState(0);
+  const [reviewRefreshToken, setReviewRefreshToken] = useState(0);
   const [algEditorVisible, setAlgEditorVisible] = useState(false);
   const hideAlgEditorTimeoutRef = useRef<number | null>(null);
   const menuToggleRef = useRef<HTMLButtonElement | null>(null);
@@ -68,7 +69,13 @@ export function App() {
   const flashingIndicatorTimeoutRef = useRef<number | null>(null);
   const [isFlashingIndicatorVisible, setIsFlashingIndicatorVisible] = useState(false);
   const [flashingIndicatorColor, setFlashingIndicatorColor] = useState<'gray' | 'red' | 'green'>('gray');
-  const caseLibrary = useCaseLibrary();
+  const options = useAppSettings();
+  const practiceToggles = usePracticeToggles();
+  const caseLibrary = useCaseLibrary({
+    autoUpdateLearningState: options.autoUpdateLearningState,
+    smartReviewScheduling: practiceToggles.smartReviewScheduling,
+    reviewRefreshToken,
+  });
   const {
     isReady,
     selectedCategory,
@@ -80,8 +87,6 @@ export function App() {
     cycleCaseLearnedState,
     reloadSavedAlgorithms,
   } = caseLibrary;
-  const options = useAppSettings();
-  const practiceToggles = usePracticeToggles();
   const selectedCases = useMemo(
     () => selectedCaseIds
       .map((selectedCaseId) => caseCards.find((card) => card.id === selectedCaseId) ?? null)
@@ -97,9 +102,11 @@ export function App() {
     timeAttack: practiceToggles.timeAttack,
     prioritizeSlowCases: practiceToggles.prioritizeSlowCases,
     prioritizeFailedCases: practiceToggles.prioritizeFailedCases,
+    smartReviewScheduling: practiceToggles.smartReviewScheduling,
     smartcubeConnected: smartcube.connected,
     currentPattern: smartcube.currentPattern,
     statsRefreshToken,
+    onReviewRecorded: () => setReviewRefreshToken((value) => value + 1),
   });
   const scramble = useScrambleState();
   const algorithmActions = useAlgorithmImportExport(reloadSavedAlgorithms);
@@ -226,6 +233,10 @@ export function App() {
   useEffect(() => {
     caseCardStore.setState({ fullStickering: options.fullStickering });
   }, [options.fullStickering]);
+
+  useEffect(() => {
+    caseCardStore.setState({ autoUpdateLearningState: options.autoUpdateLearningState });
+  }, [options.autoUpdateLearningState]);
 
   // Refresh per-card best/ao5 from cached storage whenever solves may have changed.
   useEffect(() => {

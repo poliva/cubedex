@@ -10,6 +10,7 @@ import {
 import { CaseCardPreview } from './CaseCardPreview';
 import {
   stableActions,
+  useAutoUpdateLearningState,
   useCaseCardSlice,
   useFullStickering,
 } from '../state/caseCardStore';
@@ -23,6 +24,7 @@ interface CaseCardProps {
 function CaseCardComponent({ card, index, style }: CaseCardProps) {
   const { practiceCount, failedCount, bestTime, ao5, selected } = useCaseCardSlice(card.id);
   const fullStickering = useFullStickering();
+  const autoUpdateLearningState = useAutoUpdateLearningState();
   const successCount = Math.max(0, practiceCount - Math.min(failedCount, practiceCount));
   const isLL = card.category.toLowerCase().includes('ll');
   const visualization = isLL ? 'experimental-2D-LL' : '3D';
@@ -54,10 +56,16 @@ function CaseCardComponent({ card, index, style }: CaseCardProps) {
         <button
           id={`bookmark-${card.id}`}
           data-value={card.learned}
-          title="Learning status"
+          title={autoUpdateLearningState ? 'Learning status is managed automatically' : 'Learning status'}
           className="bookmark-button"
           type="button"
-          onClick={() => stableActions.cycleCaseLearnedState(card.id)}
+          aria-disabled={autoUpdateLearningState}
+          onClick={() => {
+            if (autoUpdateLearningState) {
+              return;
+            }
+            stableActions.cycleCaseLearnedState(card.id);
+          }}
         >
           <span aria-hidden="true">
             {card.learned === 2 ? (

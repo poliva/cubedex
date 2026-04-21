@@ -6,11 +6,13 @@ export interface PracticeTogglesState {
   timeAttack: boolean;
   prioritizeSlowCases: boolean;
   prioritizeFailedCases: boolean;
+  smartReviewScheduling: boolean;
   setRandomizeAUF: (value: boolean) => void;
   setRandomOrder: (value: boolean) => void;
   setTimeAttack: (value: boolean) => void;
   setPrioritizeSlowCases: (value: boolean) => void;
   setPrioritizeFailedCases: (value: boolean) => void;
+  setSmartReviewScheduling: (value: boolean) => void;
 }
 
 export function usePracticeToggles(): PracticeTogglesState {
@@ -19,6 +21,7 @@ export function usePracticeToggles(): PracticeTogglesState {
   const [timeAttack, setTimeAttackState] = useState(false);
   const [prioritizeSlowCases, setPrioritizeSlowCasesState] = useState(false);
   const [prioritizeFailedCases, setPrioritizeFailedCasesState] = useState(false);
+  const [smartReviewScheduling, setSmartReviewSchedulingState] = useState(false);
 
   const setRandomizeAUF = useCallback((value: boolean) => {
     setRandomizeAUFState(value);
@@ -28,22 +31,36 @@ export function usePracticeToggles(): PracticeTogglesState {
     setRandomOrderState(value);
     if (value) {
       setPrioritizeSlowCasesState(false);
+      setSmartReviewSchedulingState(false);
     }
   }, []);
 
   const setTimeAttack = useCallback((value: boolean) => {
     setTimeAttackState(value);
+    if (value) {
+      setSmartReviewSchedulingState(false);
+    }
   }, []);
 
   const setPrioritizeSlowCases = useCallback((value: boolean) => {
     setPrioritizeSlowCasesState(value);
     if (value) {
       setRandomOrderState(false);
+      setSmartReviewSchedulingState(false);
     }
   }, []);
 
   const setPrioritizeFailedCases = useCallback((value: boolean) => {
     setPrioritizeFailedCasesState(value);
+  }, []);
+
+  const setSmartReviewScheduling = useCallback((value: boolean) => {
+    setSmartReviewSchedulingState(value);
+    if (value) {
+      setRandomOrderState(false);
+      setPrioritizeSlowCasesState(false);
+      setTimeAttackState(false);
+    }
   }, []);
 
   return useMemo(() => ({
@@ -52,21 +69,25 @@ export function usePracticeToggles(): PracticeTogglesState {
     timeAttack,
     prioritizeSlowCases,
     prioritizeFailedCases,
+    smartReviewScheduling,
     setRandomizeAUF,
     setRandomOrder,
     setTimeAttack,
     setPrioritizeSlowCases,
     setPrioritizeFailedCases,
+    setSmartReviewScheduling,
   }), [
     prioritizeFailedCases,
     prioritizeSlowCases,
     randomOrder,
     randomizeAUF,
-    setTimeAttack,
     setPrioritizeFailedCases,
     setPrioritizeSlowCases,
     setRandomOrder,
     setRandomizeAUF,
+    setSmartReviewScheduling,
+    setTimeAttack,
+    smartReviewScheduling,
     timeAttack,
   ]);
 }

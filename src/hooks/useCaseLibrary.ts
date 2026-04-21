@@ -36,7 +36,13 @@ export interface CaseLibraryState {
   reloadSavedAlgorithms: () => void;
 }
 
-export function useCaseLibrary(): CaseLibraryState {
+export interface CaseLibraryOptions {
+  autoUpdateLearningState?: boolean;
+  smartReviewScheduling?: boolean;
+  reviewRefreshToken?: number;
+}
+
+export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibraryState {
   const [isReady, setIsReady] = useState(false);
   const [savedAlgorithms, setSavedAlgorithms] = useState<SavedAlgorithms>({});
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -119,11 +125,27 @@ export function useCaseLibrary(): CaseLibraryState {
   }, [savedAlgorithms, selectedCategory]);
 
   const caseCards = useMemo(
-    () => getCaseCards(savedAlgorithms, selectedCategory, selectedSubsets),
-    [savedAlgorithms, selectedCategory, selectedSubsets, learnedRefreshToken],
+    () => getCaseCards(savedAlgorithms, selectedCategory, selectedSubsets, {
+      autoUpdateLearningState: options.autoUpdateLearningState,
+    }),
+    [
+      options.autoUpdateLearningState,
+      options.reviewRefreshToken,
+      savedAlgorithms,
+      selectedCategory,
+      selectedSubsets,
+      learnedRefreshToken,
+    ],
   );
 
   useEffect(() => {
+    const filteredCards = (selectLearningCases || selectLearnedCases)
+      ? caseCards.filter((card) => (
+        (selectLearningCases && card.learned === 1)
+        || (selectLearnedCases && card.learned === 2)
+      ))
+      : caseCards;
+
     if (selectAllCases) {
       setSelectedCaseIds(
         caseCards.map((card) => card.id),
@@ -132,19 +154,17 @@ export function useCaseLibrary(): CaseLibraryState {
     }
 
     if (selectLearningCases || selectLearnedCases) {
-      setSelectedCaseIds(
-        caseCards
-          .filter((card) => (
-            (selectLearningCases && card.learned === 1)
-            || (selectLearnedCases && card.learned === 2)
-          ))
-          .map((card) => card.id),
-      );
+      setSelectedCaseIds(filteredCards.map((card) => card.id));
       return;
     }
 
     setSelectedCaseIds((current) => current.filter((algId) => caseCards.some((card) => card.id === algId)));
-  }, [caseCards, selectAllCases, selectLearnedCases, selectLearningCases]);
+  }, [
+    caseCards,
+    selectAllCases,
+    selectLearnedCases,
+    selectLearningCases,
+  ]);
 
   const toggleSubset = useCallback((subset: string, checked: boolean) => {
     setSelectedCaseIds([]);

@@ -21,12 +21,17 @@ import {
   createGlobalScopeId,
   expandNotation,
   getBestTime,
+  getReviewHistory,
   getSolveHistory,
+  getSrsState,
   getTimeAttackLastRuns,
   setBestTime,
+  setReviewHistory,
   setSolveHistory,
+  setSrsState,
   setTimeAttackLastRuns,
 } from '../lib/storage';
+import { createReviewEntry, deriveAutoLearnedStatus, updateSrsState } from '../lib/srs';
 import { FACES, IDENTITY, SLICE_ROTATION, composePerm, invertPerm, type Face, type FacePerm } from '../lib/smartcube-parity';
 import { useStableCallback } from './useStableCallback';
 
@@ -84,9 +89,11 @@ export interface TrainingPracticeOptions {
   timeAttack: boolean;
   prioritizeSlowCases: boolean;
   prioritizeFailedCases: boolean;
+  smartReviewScheduling: boolean;
   smartcubeConnected: boolean;
   currentPattern?: KPattern | null;
   statsRefreshToken?: number;
+  onReviewRecorded?: () => void;
 }
 
 interface TrainCurrentOptions {
@@ -254,7 +261,27 @@ function insertSlowCase(queue: CaseCardData[], nextCase: CaseCardData) {
   }
 }
 
-function buildQueue(selectedCases: CaseCardData[], prioritizeSlowCases: boolean) {
+function buildSmartReviewQueue(selectedCases: CaseCardData[]) {
+  if (!selectedCases.some((selectedCase) => selectedCase.smartReviewDue)) {
+    return shuffleCases(selectedCases);
+  }
+
+  return [...selectedCases].sort((left, right) => {
+    if (left.smartReviewUrgency !== right.smartReviewUrgency) {
+      return left.smartReviewUrgency - right.smartReviewUrgency;
+    }
+    if (left.reviewCount !== right.reviewCount) {
+      return left.reviewCount - right.reviewCount;
+    }
+    return left.name.localeCompare(right.name);
+  });
+}
+
+function buildQueue(selectedCases: CaseCardData[], prioritizeSlowCases: boolean, smartReviewScheduling: boolean) {
+  if (smartReviewScheduling) {
+    return buildSmartReviewQueue(selectedCases);
+  }
+
   const queue: CaseCardData[] = [];
   for (const selectedCase of selectedCases) {
     if (prioritizeSlowCases) {
@@ -536,6 +563,7 @@ export function useTrainingState(
   const previousTimeAttackRef = useRef(options.timeAttack);
   const previousRandomOrderRef = useRef(options.randomOrder);
   const previousPrioritizeSlowCasesRef = useRef(options.prioritizeSlowCases);
+  const previousSmartReviewSchedulingRef = useRef(options.smartReviewScheduling);
   const previousSelectionChangeModeRef = useRef(options.selectionChangeMode);
   const keepInitialStateRef = useRef(false);
   const timeAttackSessionStartRef = useRef<number | null>(null);
@@ -628,7 +656,7 @@ export function useTrainingState(
   }
 
   function buildSelectedQueueState(cases: CaseCardData[]) {
-    const nextQueue = buildQueue(cases, options.prioritizeSlowCases);
+    const nextQueue = buildQueue(cases, options.prioritizeSlowCases, options.smartReviewScheduling);
     if (options.timeAttack && options.randomOrder) {
       return shuffleCases(nextQueue);
     }
@@ -780,7 +808,7 @@ export function useTrainingState(
     }));
   }
 
-  function buildSolveHistoryEntry(executionMs: number) {
+  function buildRecognitionMs() {
     const caseShownAt = caseShownAtRef.current;
     const firstActionAt = firstActionAtRef.current;
     const rawRecognitionMs = shouldTrackRecognitionRef.current
@@ -789,9 +817,13 @@ export function useTrainingState(
       && firstActionAt >= caseShownAt
       ? Math.round(firstActionAt - caseShownAt)
       : null;
-    const recognitionMs = rawRecognitionMs != null && rawRecognitionMs <= MAX_RECOGNITION_MS
+    return rawRecognitionMs != null && rawRecognitionMs <= MAX_RECOGNITION_MS
       ? rawRecognitionMs
       : null;
+  }
+
+  function buildSolveHistoryEntry(executionMs: number) {
+    const recognitionMs = buildRecognitionMs();
 
     return {
       executionMs,
@@ -824,6 +856,46 @@ export function useTrainingState(
     }
   }
 
+  function persistCaseReview(scopeId: string, executionMs: number | null, aborted: boolean) {
+    const reviewHistory = getReviewHistory(scopeId);
+    const previousSrsState = getSrsState(scopeId);
+    const recognitionMs = buildRecognitionMs();
+    const totalMs = executionMs == null
+      ? (recognitionMs ?? null)
+      : executionMs + (recognitionMs ?? 0);
+    const review = createReviewEntry({
+      history: reviewHistory,
+      reviewedAt: Date.now(),
+      mode: options.timeAttack ? 'time-attack' : options.smartcubeConnected ? 'smartcube' : 'timer',
+      executionMs,
+      recognitionMs,
+      totalMs,
+      hadMistake: hasFailedCurrentCaseRef.current,
+      aborted,
+      timerOnly: !options.smartcubeConnected,
+    });
+    const nextReviewHistory = appendLimitedTime(review, reviewHistory);
+    const nextSrsState = updateSrsState(previousSrsState, review);
+    setReviewHistory(scopeId, nextReviewHistory);
+    setSrsState(scopeId, nextSrsState);
+    if (options.smartReviewScheduling) {
+      const autoLearnedStatus = deriveAutoLearnedStatus(nextReviewHistory);
+      /*
+      console.log('[smart-review]', {
+        caseName: currentCaseRef.current?.name ?? '',
+        grade: review.grade,
+        review,
+        historyLength: nextReviewHistory.length,
+        autoLearnedStatus,
+        previousSrsState,
+        nextSrsState,
+        smartReviewDueNow: nextSrsState.dueAt != null ? nextSrsState.dueAt <= Date.now() : true,
+      });
+      */
+    }
+    options.onReviewRecorded?.();
+  }
+
   function selectQueueHead(nextCase: CaseCardData | null) {
     setCurrentCase(nextCase);
     if (nextCase) {
@@ -850,8 +922,12 @@ export function useTrainingState(
       if (selectedQueueRef.current.length === 0) {
         selectedQueueRef.current = [...selectedQueueCopyRef.current];
         selectedQueueCopyRef.current = [];
-        if (options.prioritizeSlowCases) {
-          selectedQueueRef.current = buildQueue(selectedQueueRef.current, true);
+        if (options.prioritizeSlowCases || options.smartReviewScheduling) {
+          selectedQueueRef.current = buildQueue(
+            selectedQueueRef.current,
+            options.prioritizeSlowCases,
+            options.smartReviewScheduling,
+          );
         }
       }
       if (options.randomOrder) {
@@ -887,7 +963,9 @@ export function useTrainingState(
       return;
     }
 
-    if (options.prioritizeSlowCases) {
+    if (options.smartReviewScheduling) {
+      selectedQueueRef.current = buildSmartReviewQueue([...selectedQueueRef.current, nextCase]);
+    } else if (options.prioritizeSlowCases) {
       insertSlowCase(selectedQueueRef.current, nextCase);
     } else {
       selectedQueueRef.current.push(nextCase);
@@ -1102,6 +1180,7 @@ export function useTrainingState(
     const timeAttackChanged = previousTimeAttackRef.current !== options.timeAttack;
     const randomOrderChanged = previousRandomOrderRef.current !== options.randomOrder;
     const prioritizeSlowChanged = previousPrioritizeSlowCasesRef.current !== options.prioritizeSlowCases;
+    const smartReviewSchedulingChanged = previousSmartReviewSchedulingRef.current !== options.smartReviewScheduling;
     const selectionModeChanged = previousSelectionChangeModeRef.current !== options.selectionChangeMode;
 
     if (
@@ -1109,6 +1188,7 @@ export function useTrainingState(
       && !timeAttackChanged
       && !randomOrderChanged
       && !prioritizeSlowChanged
+      && !smartReviewSchedulingChanged
       && !selectionModeChanged
     ) {
       return;
@@ -1119,6 +1199,7 @@ export function useTrainingState(
     previousTimeAttackRef.current = options.timeAttack;
     previousRandomOrderRef.current = options.randomOrder;
     previousPrioritizeSlowCasesRef.current = options.prioritizeSlowCases;
+    previousSmartReviewSchedulingRef.current = options.smartReviewScheduling;
     previousSelectionChangeModeRef.current = options.selectionChangeMode;
 
     if (selectedCases.length === 0) {
@@ -1146,16 +1227,16 @@ export function useTrainingState(
       return;
     }
 
-    if (timeAttackChanged || randomOrderChanged || prioritizeSlowChanged || selectionModeChanged) {
+    if (timeAttackChanged || randomOrderChanged || prioritizeSlowChanged || smartReviewSchedulingChanged || selectionModeChanged) {
       clearTimeAttackSession();
-      selectedQueueRef.current = buildQueue(selectedCases, options.prioritizeSlowCases);
+      selectedQueueRef.current = buildQueue(selectedCases, options.prioritizeSlowCases, options.smartReviewScheduling);
       selectedQueueCopyRef.current = [];
       retrainQueueHead(selectedQueueRef.current[0] ?? null);
       return;
     }
 
     if (previousSelectedIds.length === 0 || options.selectionChangeMode === 'bulk') {
-      const newQueue = buildQueue(selectedCases, options.prioritizeSlowCases);
+      const newQueue = buildQueue(selectedCases, options.prioritizeSlowCases, options.smartReviewScheduling);
       const existingCopyIds = new Set(newQueue.map((c) => c.id));
       const retainedCopy = selectedQueueCopyRef.current.filter((c) => existingCopyIds.has(c.id));
       selectedQueueRef.current = newQueue;
@@ -1204,10 +1285,17 @@ export function useTrainingState(
       return;
     }
 
-    selectedQueueRef.current = buildQueue(selectedCases, options.prioritizeSlowCases);
+    selectedQueueRef.current = buildQueue(selectedCases, options.prioritizeSlowCases, options.smartReviewScheduling);
     selectedQueueCopyRef.current = [];
     retrainQueueHead(selectedQueueRef.current[0] ?? null);
-  }, [options.prioritizeSlowCases, options.randomOrder, options.selectionChangeMode, options.timeAttack, selectedCases]);
+  }, [
+    options.prioritizeSlowCases,
+    options.randomOrder,
+    options.selectionChangeMode,
+    options.smartReviewScheduling,
+    options.timeAttack,
+    selectedCases,
+  ]);
 
   function stopAndRecordSolve(timeMs: number) {
     const algId = originalAlgIdRef.current || 'default-alg-id';
@@ -1226,6 +1314,7 @@ export function useTrainingState(
       timeAttackCaseTimesRef.current = [...timeAttackCaseTimesRef.current, finalTime];
       if (completedCaseId) {
         persistSolveResult(completedCaseId, finalTime);
+        persistCaseReview(completedCaseId, finalTime, false);
         incrementPracticeCount(completedCaseId);
       }
       isKeyboardTimerActiveRef.current = false;
@@ -1260,6 +1349,7 @@ export function useTrainingState(
     }
 
     persistSolveResult(algId, finalTime);
+    persistCaseReview(algId, finalTime, false);
     incrementPracticeCount(algId);
     setTimerText(formatTimerTimestamp(finalTime));
     setTimerStateInternal('STOPPED');
@@ -1285,9 +1375,16 @@ export function useTrainingState(
     if (timerState !== 'RUNNING') {
       return;
     }
+    const elapsedMs = Math.round(getElapsedMs());
     if (options.timeAttack) {
+      if (currentCaseRef.current?.id) {
+        persistCaseReview(currentCaseRef.current.id, elapsedMs, true);
+      }
       prepareNextTimeAttack();
       return;
+    }
+    if (originalAlgIdRef.current) {
+      persistCaseReview(originalAlgIdRef.current, elapsedMs, true);
     }
     timerStartRef.current = null;
     isKeyboardTimerActiveRef.current = false;

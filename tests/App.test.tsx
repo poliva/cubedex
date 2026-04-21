@@ -12,6 +12,11 @@ const mockState = vi.hoisted(() => {
     bestTime: null,
     ao5: null,
     learned: 0,
+    manualLearned: 0,
+    reviewCount: 0,
+    smartReviewDueAt: null,
+    smartReviewDue: true,
+    smartReviewUrgency: 0,
   };
 
   return {
@@ -139,6 +144,7 @@ vi.mock('../src/hooks/useAppSettings', () => ({
     showAlgName: true,
     countdownMode: false,
     alwaysScrambleTo: false,
+    autoUpdateLearningState: false,
     visualization: 'PG3D',
     backview: 'none',
     hintFacelets: 'none',
@@ -149,6 +155,7 @@ vi.mock('../src/hooks/useAppSettings', () => ({
     setShowAlgName: vi.fn(),
     setCountdownMode: vi.fn(),
     setAlwaysScrambleTo: vi.fn(),
+    setAutoUpdateLearningState: vi.fn(),
     setVisualization: vi.fn(),
     setBackview: vi.fn(),
     setHintFacelets: vi.fn(),
@@ -168,11 +175,13 @@ vi.mock('../src/hooks/usePracticeToggles', () => ({
     timeAttack: true,
     prioritizeSlowCases: false,
     prioritizeFailedCases: false,
+    smartReviewScheduling: false,
     setRandomizeAUF: vi.fn(),
     setRandomOrder: vi.fn(),
     setTimeAttack: vi.fn(),
     setPrioritizeSlowCases: vi.fn(),
     setPrioritizeFailedCases: vi.fn(),
+    setSmartReviewScheduling: vi.fn(),
   })),
 }));
 

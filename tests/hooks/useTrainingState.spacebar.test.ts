@@ -6,7 +6,9 @@ const mockState = vi.hoisted(() => ({
   patterns: {} as Record<string, any>,
   lastTimes: new Map<string, number[]>(),
   solveHistory: new Map<string, Array<{ executionMs: number; recognitionMs: number | null; totalMs: number }>>(),
+  reviewHistory: new Map<string, Array<any>>(),
   bestTimes: new Map<string, number | null>(),
+  srsStates: new Map<string, any>(),
 }));
 
 vi.mock('cubing/alg', () => ({
@@ -53,7 +55,9 @@ vi.mock('../../src/lib/storage', async () => {
     ...actual,
     getBestTime: vi.fn((id: string) => mockState.bestTimes.get(id) ?? null),
     getLastTimes: vi.fn((id: string) => mockState.lastTimes.get(id) ?? []),
+    getReviewHistory: vi.fn((id: string) => mockState.reviewHistory.get(id) ?? []),
     getSolveHistory: vi.fn((id: string) => mockState.solveHistory.get(id) ?? []),
+    getSrsState: vi.fn((id: string) => mockState.srsStates.get(id) ?? null),
     setBestTime: vi.fn((id: string, value: number) => {
       mockState.bestTimes.set(id, value);
     }),
@@ -63,6 +67,12 @@ vi.mock('../../src/lib/storage', async () => {
     setSolveHistory: vi.fn((id: string, values: Array<{ executionMs: number; recognitionMs: number | null; totalMs: number }>) => {
       mockState.solveHistory.set(id, values);
       mockState.lastTimes.set(id, values.map((entry) => entry.executionMs));
+    }),
+    setReviewHistory: vi.fn((id: string, values: Array<any>) => {
+      mockState.reviewHistory.set(id, values);
+    }),
+    setSrsState: vi.fn((id: string, value: any) => {
+      mockState.srsStates.set(id, value);
     }),
     getTimeAttackLastRuns: vi.fn(() => []),
     setTimeAttackLastRuns: vi.fn(),
@@ -101,6 +111,11 @@ const selectedCases = [
     subset: 'A',
     category: 'PLL',
     learned: 0,
+    manualLearned: 0,
+    reviewCount: 0,
+    smartReviewDueAt: null,
+    smartReviewDue: true,
+    smartReviewUrgency: 0,
     bestTime: null,
     ao5: null,
   },
@@ -111,6 +126,11 @@ const selectedCases = [
     subset: 'A',
     category: 'PLL',
     learned: 0,
+    manualLearned: 0,
+    reviewCount: 0,
+    smartReviewDueAt: null,
+    smartReviewDue: true,
+    smartReviewUrgency: 1,
     bestTime: null,
     ao5: null,
   },
@@ -124,6 +144,7 @@ const defaultOptions: TrainingPracticeOptions = {
   timeAttack: false,
   prioritizeSlowCases: false,
   prioritizeFailedCases: false,
+  smartReviewScheduling: false,
   smartcubeConnected: false,
   currentPattern: null,
   statsRefreshToken: 0,
@@ -141,7 +162,9 @@ describe('useTrainingState spacebar timer flow', () => {
     mockState.patterns = {};
     mockState.lastTimes.clear();
     mockState.solveHistory.clear();
+    mockState.reviewHistory.clear();
     mockState.bestTimes.clear();
+    mockState.srsStates.clear();
 
     mockState.patterns.solved = createPattern('solved');
     mockState.patterns['solved:R'] = createPattern('solved:R');

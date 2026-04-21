@@ -30,6 +30,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       showAlgName: true,
       countdownMode: false,
       alwaysScrambleTo: false,
+      autoUpdateLearningState: false,
       visualization: 'PG3D',
       backview: 'none',
       hintFacelets: 'none',
@@ -43,6 +44,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       setShowAlgName: vi.fn(),
       setCountdownMode: vi.fn(),
       setAlwaysScrambleTo: vi.fn(),
+      setAutoUpdateLearningState: vi.fn(),
       setVisualization: vi.fn(),
       setBackview: vi.fn(),
       setHintFacelets: vi.fn(),
@@ -59,11 +61,13 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       timeAttack: false,
       prioritizeSlowCases: false,
       prioritizeFailedCases: false,
+      smartReviewScheduling: false,
       setRandomizeAUF: vi.fn(),
       setRandomOrder: vi.fn(),
       setTimeAttack: vi.fn(),
       setPrioritizeSlowCases: vi.fn(),
       setPrioritizeFailedCases: vi.fn(),
+      setSmartReviewScheduling: vi.fn(),
     },
     caseLibrary: {
       isReady: true,
@@ -107,6 +111,11 @@ function makeProps(overrides: Record<string, unknown> = {}) {
         bestTime: null,
         ao5: null,
         learned: 0,
+        manualLearned: 0,
+        reviewCount: 0,
+        smartReviewDueAt: null,
+        smartReviewDue: true,
+        smartReviewUrgency: 0,
       },
       currentAlgName: 'Aa',
       selectedCases: [],
@@ -376,6 +385,36 @@ describe('PracticeView', () => {
 
     expect(screen.getByText('Complete all cases continuously')).toBeInTheDocument();
     expect(screen.getByText('Case 3 of 12')).toBeInTheDocument();
+  });
+
+  it('disables conflicting order toggles when smart order or time attack is active', async () => {
+    const user = userEvent.setup();
+    const base = makeProps();
+    const props = makeProps({
+      practiceToggles: {
+        ...base.practiceToggles,
+        smartReviewScheduling: true,
+        timeAttack: false,
+      },
+    });
+
+    const { rerender } = render(<PracticeView {...props} />);
+
+    expect(screen.getByLabelText('Random Order')).toBeDisabled();
+    expect(screen.getByLabelText('Slow Cases First')).toBeDisabled();
+
+    await user.click(screen.getByLabelText('Smart Order'));
+    expect(props.practiceToggles.setSmartReviewScheduling).toHaveBeenCalledWith(false);
+
+    rerender(<PracticeView {...makeProps({
+      practiceToggles: {
+        ...base.practiceToggles,
+        smartReviewScheduling: false,
+        timeAttack: true,
+      },
+    })} />);
+
+    expect(screen.getByLabelText('Smart Order')).toBeDisabled();
   });
 
   it('renders Select Learned after Select Learning and keeps Time Attack last', () => {

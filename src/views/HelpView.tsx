@@ -50,13 +50,14 @@ export const HelpView = memo(function HelpView({
             <p className="section-title">Customize your practice drills:</p>
             <ul className="help-list">
               <li>📂 Pick a category, choose subsets, and select the cases you want to work on.</li>
-              <li>🔖 Mark the algs you're learning or have already learned. You can use the <strong>Select Learning</strong> option to filter algs by learning status.</li>
+              <li>🔖 Mark the algs you're learning or have already learned, or let <strong>Auto-update learning state</strong> manage that status for you. You can use <strong>Select Learning</strong> to filter algs by learning status.</li>
               <li>🔀 Try <strong>Random AUF</strong> to practice with random orientations. For 2-sided recognition, turn off the Gyroscope Orientation and Mirror Sticker hints in Options, letting you view only two sides of the cube. For sets like PLL or ZBLL, you'll also get random post-AUFs to sharpen your AUF prediction.</li>
               <li>🎲 Enable <strong>Random Order</strong> to mix up the algorithms.</li>
               <li>🐌 Turn on <strong>Slow Cases First</strong> to improve these slow algorithms.</li>
+              <li>🧠 Enable <strong>Smart Order</strong> to focus on the cases that are most due for review (Anki-style spaced repetition).</li>
               <li>🎯 Activate <strong>Prioritize Failed Cases</strong> to focus on the algorithms you find most challenging.</li>
               <li>📝 Want to change the algorithm for one or more cases? Click on the algorithm to edit it. You can also <strong>Export Algs</strong> in Options, modify the algorithm in the JSON file, then import it back.</li>
-              <li>⏳ Training for PLL Time Attack? Create a new category and add all your PLL algorithms in sequence for a timed practice session.</li>
+              <li>⏳ Turn on <strong>Time Attack</strong> to run all currently selected cases as one continuous session.</li>
             </ul>
           </div>
         </>
@@ -74,12 +75,13 @@ export const HelpView = memo(function HelpView({
           <p className="section-title">Customize your practice drills:</p>
           <ul className="help-list">
             <li>📂 Pick a category, choose subsets, and select the cases you want to work on.</li>
-            <li>🔖 Mark the algs you're learning or have already learned. You can use the <strong>Select Learning</strong> option to filter algs by learning status.</li>
+            <li>🔖 Mark the algs you're learning or have already learned, or let <strong>Auto-update learning state</strong> manage that status for you. You can use <strong>Select Learning</strong> to filter algs by learning status.</li>
             <li>🔀 Try <strong>Random AUF</strong> to practice with random orientations. For 2-sided recognition, turn off Mirror Sticker hints in Options, letting you view only two sides of the cube.</li>
             <li>🎲 Enable <strong>Random Order</strong> to mix up the algorithms.</li>
             <li>🐌 Turn on <strong>Slow Cases First</strong> to improve these slow algorithms.</li>
+            <li>🧠 Enable <strong>Smart Order</strong> to focus on the cases that are most due for review (Anki-style spaced repetition).</li>
             <li>📝 Want to change the algorithm for one or more cases? Click on the algorithm to edit it. You can also <strong>Export Algs</strong> in Options, modify the algorithm in the JSON file, then import it back.</li>
-            <li>⏳ Training for PLL Time Attack? Create a new category and add all your PLL algorithms in sequence for a timed practice session.</li>
+            <li>⏳ Turn on <strong>Time Attack</strong> to run all currently selected cases as one continuous session.</li>
           </ul>
         </div>
       )}

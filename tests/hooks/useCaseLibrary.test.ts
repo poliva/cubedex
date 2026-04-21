@@ -11,6 +11,11 @@ const sampleSavedAlgorithms = {
 
 const initializeDefaultAlgorithms = vi.fn(() => Promise.resolve({ alertMessage: '' }));
 const getSavedAlgorithms = vi.fn(() => sampleSavedAlgorithms);
+const mockCards = [
+  { id: 'case-1', learned: 0, subset: 'A', smartReviewDue: false },
+  { id: 'case-2', learned: 1, subset: 'A', smartReviewDue: true },
+  { id: 'case-3', learned: 2, subset: 'B', smartReviewDue: false },
+];
 
 vi.mock('../../src/data/defaultAlgs.json', () => ({
   default: sampleSavedAlgorithms,
@@ -28,14 +33,9 @@ vi.mock('../../src/lib/case-cards', () => ({
     return [...new Set(entries.map((entry) => entry.subset))].map((subset) => ({ subset }));
   }),
   getCaseCards: vi.fn((_savedAlgorithms: unknown, _selectedCategory: string, selectedSubsets: string[]) => {
-    const cards = [
-      { id: 'case-1', learned: 0, subset: 'A' },
-      { id: 'case-2', learned: 1, subset: 'A' },
-      { id: 'case-3', learned: 2, subset: 'B' },
-    ];
     return selectedSubsets.length === 0
-      ? cards
-      : cards.filter((card) => selectedSubsets.includes(card.subset));
+      ? mockCards
+      : mockCards.filter((card) => selectedSubsets.includes(card.subset));
   }),
 }));
 
@@ -45,6 +45,9 @@ describe('useCaseLibrary', () => {
   beforeEach(() => {
     initializeDefaultAlgorithms.mockClear();
     getSavedAlgorithms.mockClear();
+    mockCards[0].learned = 0;
+    mockCards[1].learned = 1;
+    mockCards[2].learned = 2;
   });
 
   it('allows learning and learned filters to stay enabled together', async () => {
@@ -100,6 +103,74 @@ describe('useCaseLibrary', () => {
       expect(result.current.selectLearningCases).toBe(false);
       expect(result.current.selectLearnedCases).toBe(true);
       expect(result.current.selectedCaseIds).toEqual(['case-3']);
+    });
+  });
+
+  it('keeps the current filtered selection when smart scheduling is enabled', async () => {
+    const { result } = renderHook(() => useCaseLibrary({ smartReviewScheduling: true }));
+
+    await waitFor(() => {
+      expect(result.current.isReady).toBe(true);
+    });
+
+    act(() => {
+      result.current.toggleSubset('A', true);
+    });
+
+    await waitFor(() => {
+      expect(result.current.selectedCaseIds).toEqual(['case-1', 'case-2']);
+    });
+  });
+
+  it('allows manual case toggles while smart scheduling is enabled', async () => {
+    const { result } = renderHook(() => useCaseLibrary({ smartReviewScheduling: true }));
+
+    await waitFor(() => {
+      expect(result.current.isReady).toBe(true);
+    });
+
+    act(() => {
+      result.current.setSelectAllCases(false);
+    });
+
+    await waitFor(() => {
+      expect(result.current.selectedCaseIds).toEqual([]);
+    });
+
+    act(() => {
+      result.current.toggleCaseSelection('case-2', true);
+    });
+
+    await waitFor(() => {
+      expect(result.current.selectionChangeMode).toBe('manual');
+      expect(result.current.selectedCaseIds).toEqual(['case-2']);
+    });
+
+    act(() => {
+      result.current.toggleCaseSelection('case-2', false);
+    });
+
+    await waitFor(() => {
+      expect(result.current.selectedCaseIds).toEqual([]);
+    });
+  });
+
+  it('recomputes case card learned states when review refresh token changes', async () => {
+    const { result, rerender } = renderHook(
+      ({ reviewRefreshToken }) => useCaseLibrary({ autoUpdateLearningState: true, reviewRefreshToken }),
+      { initialProps: { reviewRefreshToken: 0 } },
+    );
+
+    await waitFor(() => {
+      expect(result.current.isReady).toBe(true);
+      expect(result.current.caseCards.find((card) => card.id === 'case-2')?.learned).toBe(1);
+    });
+
+    mockCards[1].learned = 2;
+    rerender({ reviewRefreshToken: 1 });
+
+    await waitFor(() => {
+      expect(result.current.caseCards.find((card) => card.id === 'case-2')?.learned).toBe(2);
     });
   });
 });
