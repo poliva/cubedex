@@ -118,6 +118,7 @@ const selectedCases = [
 
 const defaultOptions: TrainingPracticeOptions = {
   selectionChangeMode: 'bulk',
+  countdownMode: false,
   randomizeAUF: false,
   randomOrder: false,
   timeAttack: false,
@@ -266,5 +267,142 @@ describe('useTrainingState spacebar timer flow', () => {
         { executionMs: 750, recognitionMs: null, totalMs: 750 },
       ]);
     });
+  });
+
+  it('ignores keyboard and touch activation during countdown and starts recognition after reveal', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(1000));
+    vi.spyOn(performance, 'now').mockImplementation(() => Date.now());
+
+    try {
+      const { result } = renderTrainingState({ countdownMode: true });
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      expect(result.current.currentCase?.id).toBe('case-1');
+      expect(result.current.countdownActive).toBe(true);
+      expect(result.current.countdownValue).toBe(3);
+      expect(result.current.timerState).toBe('IDLE');
+
+      act(() => {
+        result.current.handleSpaceKeyDown();
+        result.current.handleSpaceKeyUp();
+        result.current.activateTimer();
+      });
+
+      expect(result.current.timerState).toBe('IDLE');
+
+      await act(async () => {
+        vi.advanceTimersByTime(3000);
+      });
+
+      expect(result.current.countdownActive).toBe(false);
+      expect(result.current.timerState).toBe('READY');
+
+      act(() => {
+        result.current.stopAndRecordSolve(900);
+      });
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      expect(result.current.currentCase?.id).toBe('case-2');
+      expect(result.current.countdownActive).toBe(true);
+      expect(result.current.timerState).toBe('IDLE');
+
+      act(() => {
+        vi.advanceTimersByTime(1000);
+        result.current.handleSpaceKeyDown();
+        result.current.handleSpaceKeyUp();
+        result.current.activateTimer();
+      });
+
+      expect(result.current.timerState).toBe('IDLE');
+
+      await act(async () => {
+        vi.advanceTimersByTime(2000);
+      });
+
+      expect(result.current.countdownActive).toBe(false);
+      expect(result.current.timerState).toBe('READY');
+
+      act(() => {
+        vi.advanceTimersByTime(800);
+        result.current.handleSpaceKeyDown();
+        result.current.handleSpaceKeyUp();
+      });
+
+      act(() => {
+        vi.advanceTimersByTime(750);
+      });
+
+      await act(async () => {
+        result.current.handleSpaceKeyDown();
+        await Promise.resolve();
+        result.current.handleSpaceKeyUp();
+      });
+
+      await act(async () => {
+        await Promise.resolve();
+      });
+      expect(getSolveHistory('case-2')).toEqual([
+        { executionMs: 750, recognitionMs: 800, totalMs: 1550 },
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps Average TPS available while the countdown is visible for the next case', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(1000));
+    vi.spyOn(performance, 'now').mockImplementation(() => Date.now());
+
+    try {
+      mockState.solveHistory.set('case-2', [
+        { executionMs: 1000, recognitionMs: null, totalMs: 1000 },
+      ]);
+      mockState.lastTimes.set('case-2', [1000]);
+      mockState.bestTimes.set('case-2', 1000);
+
+      const { result } = renderTrainingState({ countdownMode: true });
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+        vi.advanceTimersByTime(3000);
+      });
+
+      expect(result.current.timerState).toBe('READY');
+
+      act(() => {
+        result.current.handleSpaceKeyDown();
+        result.current.handleSpaceKeyUp();
+      });
+
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+
+      await act(async () => {
+        result.current.handleSpaceKeyDown();
+        await Promise.resolve();
+        result.current.handleSpaceKeyUp();
+      });
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+
+      expect(result.current.currentCase?.id).toBe('case-2');
+      expect(result.current.countdownActive).toBe(true);
+      expect(result.current.stats.averageTps).toBe('1.00');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

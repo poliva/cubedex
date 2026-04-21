@@ -36,6 +36,7 @@ export const STORAGE_KEYS = {
   controlPanel: 'control-panel',
   flashingIndicatorEnabled: 'flashingIndicatorEnabled',
   showAlgName: 'showAlgName',
+  countdownMode: 'countdownMode',
   alwaysScrambleTo: 'alwaysScrambleTo',
   cubeSizePx: 'cubeSizePx',
   theme: 'theme',
@@ -694,7 +695,7 @@ export async function exportBackup() {
 
 function parseBackup(json: string) {
   const backup = JSON.parse(json) as CubedexBackupFile;
-  if (backup.backupFormatVersion !== 1 && backup.backupFormatVersion !== BACKUP_FORMAT_VERSION) {
+  if (backup.backupFormatVersion !== BACKUP_FORMAT_VERSION) {
     throw new Error('Unsupported backup format version');
   }
   if (!backup.algorithms || !Array.isArray(backup.stats)) {

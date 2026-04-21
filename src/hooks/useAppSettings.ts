@@ -4,6 +4,7 @@ import { readOption, writeOption } from '../lib/storage';
 export interface AppSettingsState {
   darkMode: boolean;
   showAlgName: boolean;
+  countdownMode: boolean;
   alwaysScrambleTo: boolean;
   visualization: string;
   backview: string;
@@ -16,6 +17,7 @@ export interface AppSettingsState {
   cubeSizePx: number;
   setDarkMode: (value: boolean) => void;
   setShowAlgName: (value: boolean) => void;
+  setCountdownMode: (value: boolean) => void;
   setAlwaysScrambleTo: (value: boolean) => void;
   setVisualization: (value: string) => void;
   setBackview: (value: string) => void;
@@ -49,6 +51,7 @@ function detectInitialDarkMode() {
 export function useAppSettings(): AppSettingsState {
   const [darkMode, setDarkModeState] = useState(detectInitialDarkMode);
   const [showAlgName, setShowAlgNameState] = useState(readOption('showAlgName') !== 'false');
+  const [countdownMode, setCountdownModeState] = useState(readOption('countdownMode') === 'true');
   const [alwaysScrambleTo, setAlwaysScrambleToState] = useState(readOption('alwaysScrambleTo') === 'true');
   const [visualization, setVisualizationState] = useState(readOption('visualization') || 'PG3D');
   const [backview, setBackviewState] = useState(readOption('backview') || 'none');
@@ -72,6 +75,10 @@ export function useAppSettings(): AppSettingsState {
   useEffect(() => {
     writeOption('showAlgName', String(showAlgName));
   }, [showAlgName]);
+
+  useEffect(() => {
+    writeOption('countdownMode', String(countdownMode));
+  }, [countdownMode]);
 
   useEffect(() => {
     writeOption('alwaysScrambleTo', String(alwaysScrambleTo));
@@ -123,6 +130,7 @@ export function useAppSettings(): AppSettingsState {
   return useMemo(() => ({
     darkMode,
     showAlgName,
+    countdownMode,
     alwaysScrambleTo,
     visualization,
     backview,
@@ -135,6 +143,7 @@ export function useAppSettings(): AppSettingsState {
     cubeSizePx,
     setDarkMode: setDarkModeState,
     setShowAlgName: setShowAlgNameState,
+    setCountdownMode: setCountdownModeState,
     setAlwaysScrambleTo: setAlwaysScrambleToState,
     setVisualization: setVisualizationState,
     setBackview: setBackviewState,
@@ -148,6 +157,7 @@ export function useAppSettings(): AppSettingsState {
   }), [
     alwaysScrambleTo,
     backview,
+    countdownMode,
     controlPanel,
     cubeSizePx,
     darkMode,

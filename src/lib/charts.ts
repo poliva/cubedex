@@ -237,7 +237,7 @@ export function createStatsGraph(canvas: HTMLCanvasElement | null, solveHistory:
           borderColor: 'rgba(153, 102, 255, 1)',
           borderWidth: 1,
           fill: false,
-          spanGaps: false,
+          spanGaps: true,
         },
       ],
     },

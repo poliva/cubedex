@@ -203,6 +203,14 @@ export const OptionsView = memo(function OptionsView({
         </div>
         <div className="options-toggle-row">
           <ToggleSwitch
+            id="countdown-mode-toggle"
+            checked={options.countdownMode}
+            onChange={(checked) => options.setCountdownMode(checked)}
+            label="Countdown Mode"
+          />
+        </div>
+        <div className="options-toggle-row">
+          <ToggleSwitch
             id="always-scramble-to-toggle"
             checked={options.alwaysScrambleTo}
             onChange={(checked) => options.setAlwaysScrambleTo(checked)}

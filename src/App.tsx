@@ -91,6 +91,7 @@ export function App() {
   const smartcube = useSmartcubeConnection(options.gyroscope);
   const training = useTrainingState(selectedCases, selectedCategory, {
     selectionChangeMode,
+    countdownMode: options.countdownMode,
     randomizeAUF: practiceToggles.randomizeAUF,
     randomOrder: practiceToggles.randomOrder,
     timeAttack: practiceToggles.timeAttack,
@@ -571,7 +572,7 @@ export function App() {
   }, []);
 
   const handleTimerActivation = useCallback(() => {
-    if (smartcube.connected || training.inputMode) {
+    if (smartcube.connected || training.inputMode || training.countdownActive) {
       return;
     }
 
@@ -589,6 +590,7 @@ export function App() {
     showFlashingIndicator,
     smartcube.connected,
     training.activateTimer,
+    training.countdownActive,
     training.inputMode,
     training.timerState,
   ]);

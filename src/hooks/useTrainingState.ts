@@ -78,6 +78,7 @@ export interface TrainingFlashRequest {
 
 export interface TrainingPracticeOptions {
   selectionChangeMode: 'bulk' | 'manual';
+  countdownMode: boolean;
   randomizeAUF: boolean;
   randomOrder: boolean;
   timeAttack: boolean;
@@ -101,6 +102,8 @@ export interface TrainingState {
   scrambleMode: boolean;
   timerState: TimerState;
   timerText: string;
+  countdownActive: boolean;
+  countdownValue: number | null;
   visualResetKey: number;
   algInput: string;
   displayAlg: string;
@@ -159,7 +162,7 @@ function averageFromValues(values: number[]) {
 
 function buildStats(
   algId: string,
-  displayAlg: string,
+  statsAlgorithm: string,
   _practiceCount: number,
   selectedCases: CaseCardData[] = [],
 ) : TrainingStats {
@@ -191,7 +194,7 @@ function buildStats(
   const isTimeAttackStats = algId.startsWith(TIME_ATTACK_SCOPE_PREFIX);
   const moveCount = isTimeAttackStats
     ? selectedCases.reduce((sum, currentCase) => sum + countMovesETM(currentCase.algorithm), 0)
-    : (displayAlg ? countMovesETM(displayAlg) : 0);
+    : (statsAlgorithm ? countMovesETM(statsAlgorithm) : 0);
   const averageTps = averageExecution && averageExecution > 0 && moveCount > 0
     ? (moveCount / (averageExecution / 1000)).toFixed(2)
     : '-';
@@ -487,6 +490,7 @@ export function useTrainingState(
   const [scrambleMode, setScrambleMode] = useState(false);
   const [timerState, setTimerStateInternal] = useState<TimerState>('IDLE');
   const [timerText, setTimerText] = useState('');
+  const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const [visualResetKey, setVisualResetKey] = useState(0);
   const [algInput, setAlgInputState] = useState('');
   const [displayAlg, setDisplayAlg] = useState('');
@@ -506,6 +510,8 @@ export function useTrainingState(
 
   const timerStartRef = useRef<number | null>(null);
   const frameRef = useRef<number | null>(null);
+  const countdownTimeoutRef = useRef<number | null>(null);
+  const countdownGenerationRef = useRef(0);
   const isKeyboardTimerActiveRef = useRef(false);
   const ignoreNextSpaceKeyUpRef = useRef(false);
   const initialPatternRef = useRef<KPattern | null>(null);
@@ -540,6 +546,8 @@ export function useTrainingState(
   const shouldTrackRecognitionRef = useRef(false);
 
   currentCaseRef.current = currentCase;
+  const countdownActive = countdownValue != null;
+  const countdownEnabled = options.countdownMode && !options.timeAttack;
 
   const displayState = useMemo(
     () => buildDisplayState(displayAlg, currentMoveIndex, badMoves, options.randomizeAUF),
@@ -548,7 +556,12 @@ export function useTrainingState(
 
   const statsAlgId = originalAlgIdRef.current;
   const stats = useMemo(
-    () => buildStats(statsAlgId, displayAlg, practiceCounts[statsAlgId] || 0, selectedCases),
+    () => buildStats(
+      statsAlgId,
+      originalAlgTextRef.current || displayAlg,
+      practiceCounts[statsAlgId] || 0,
+      selectedCases,
+    ),
     [displayAlg, failedCounts, options.statsRefreshToken, practiceCounts, selectedCases, statsAlgId, timerState],
   );
 
@@ -576,6 +589,42 @@ export function useTrainingState(
         totalCases: timeAttackTotalCasesRef.current,
       }));
     }
+  }
+
+  function cancelCountdown() {
+    countdownGenerationRef.current += 1;
+    if (countdownTimeoutRef.current !== null) {
+      window.clearTimeout(countdownTimeoutRef.current);
+      countdownTimeoutRef.current = null;
+    }
+    setCountdownValue(null);
+  }
+
+  function startCountdown(onComplete: () => void) {
+    const generation = countdownGenerationRef.current + 1;
+    countdownGenerationRef.current = generation;
+    setCountdownValue(3);
+
+    const step = (value: number) => {
+      countdownTimeoutRef.current = window.setTimeout(() => {
+        if (countdownGenerationRef.current !== generation) {
+          return;
+        }
+
+        if (value === 1) {
+          countdownTimeoutRef.current = null;
+          setCountdownValue(null);
+          onComplete();
+          return;
+        }
+
+        const nextValue = value - 1;
+        setCountdownValue(nextValue);
+        step(nextValue);
+      }, 1000);
+    };
+
+    step(3);
   }
 
   function buildSelectedQueueState(cases: CaseCardData[]) {
@@ -645,6 +694,20 @@ export function useTrainingState(
       }
     };
   }, [options.timeAttack, timerState]);
+
+  useEffect(() => {
+    if (options.timeAttack) {
+      cancelCountdown();
+    }
+  }, [options.timeAttack]);
+
+  useEffect(() => {
+    return () => {
+      if (countdownTimeoutRef.current !== null) {
+        window.clearTimeout(countdownTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (fixTimeoutRef.current !== null) {
@@ -892,9 +955,7 @@ export function useTrainingState(
 
     if (state === 'READY') {
       timerStartRef.current = null;
-      if (timerText === '') {
-        setTimerText('0:00.000');
-      }
+      setTimerText('0:00.000');
       return;
     }
 
@@ -933,6 +994,7 @@ export function useTrainingState(
   }
 
   function enterInputMode(algorithm = algInput || displayAlg) {
+    cancelCountdown();
     clearProgressState();
     clearRecognitionTracking();
     clearStatsIdentity();
@@ -945,9 +1007,24 @@ export function useTrainingState(
     setAlgInputState(expandNotation(algorithm.trim()));
   }
 
+  function revealTrainingCase(displayAlgorithm: string, normalizedAlgorithm: string, trainOptions?: TrainCurrentOptions) {
+    setAlgInputState(normalizedAlgorithm);
+    setDisplayAlg(displayAlgorithm);
+    setInputMode(false);
+    setScrambleMode(false);
+    caseShownAtRef.current = performance.now();
+    firstActionAtRef.current = !options.smartcubeConnected && trainOptions?.startTimerImmediately
+      ? caseShownAtRef.current
+      : null;
+    shouldTrackRecognitionRef.current = trainOptions?.trackRecognition ?? false;
+    setTimerState(trainOptions?.startTimerImmediately ? 'RUNNING' : 'READY');
+    setVisualResetKey((v) => v + 1);
+  }
+
   async function trainCurrent(initialPattern?: KPattern | null, trainOptions?: TrainCurrentOptions) {
     const rawAlgorithm = trainOptions?.algorithm ?? algInput;
     const normalizedAlgorithm = expandNotation(rawAlgorithm.trim());
+    cancelCountdown();
     if (!normalizedAlgorithm) {
       setInputMode(true);
       clearStatsIdentity();
@@ -987,6 +1064,8 @@ export function useTrainingState(
 
     clearProgressState();
     clearRecognitionTracking();
+    setInputMode(false);
+    setScrambleMode(false);
 
     expectedMovesRef.current = prepared.moves.map(sanitizeMove);
     let previousPattern = basePattern;
@@ -1006,17 +1085,16 @@ export function useTrainingState(
       }
     }
 
-    setAlgInputState(normalizedAlgorithm);
-    setDisplayAlg(prepared.displayAlgorithm);
-    setInputMode(false);
-    setScrambleMode(false);
-    caseShownAtRef.current = performance.now();
-    firstActionAtRef.current = !options.smartcubeConnected && trainOptions?.startTimerImmediately
-      ? caseShownAtRef.current
-      : null;
-    shouldTrackRecognitionRef.current = trainOptions?.trackRecognition ?? false;
-    setTimerState(trainOptions?.startTimerImmediately ? 'RUNNING' : 'READY');
-    setVisualResetKey((v) => v + 1);
+    if (countdownEnabled) {
+      setDisplayAlg('');
+      setTimerState('IDLE');
+      startCountdown(() => {
+        revealTrainingCase(prepared.displayAlgorithm, normalizedAlgorithm, trainOptions);
+      });
+      return;
+    }
+
+    revealTrainingCase(prepared.displayAlgorithm, normalizedAlgorithm, trainOptions);
   }
 
   useEffect(() => {
@@ -1044,6 +1122,7 @@ export function useTrainingState(
     previousSelectionChangeModeRef.current = options.selectionChangeMode;
 
     if (selectedCases.length === 0) {
+      cancelCountdown();
       selectedQueueRef.current = [];
       selectedQueueCopyRef.current = [];
       clearTimeAttackSession();
@@ -1231,6 +1310,9 @@ export function useTrainingState(
   }
 
   function activateTimer() {
+    if (countdownActive) {
+      return;
+    }
     if (timerState === 'STOPPED' || timerState === 'IDLE' || timerState === 'READY') {
       setTimerState('RUNNING');
     } else {
@@ -1239,7 +1321,7 @@ export function useTrainingState(
   }
 
   function handleSpaceKeyDown() {
-    if (inputMode) {
+    if (inputMode || countdownActive) {
       return;
     }
 
@@ -1255,7 +1337,7 @@ export function useTrainingState(
   }
 
   function handleSpaceKeyUp() {
-    if (inputMode) {
+    if (inputMode || countdownActive) {
       return;
     }
 
@@ -1274,7 +1356,7 @@ export function useTrainingState(
   }
 
   function handleSmartcubeMove(currentPattern: KPattern, move: string, rawMoves?: SmartcubeMoveRecord[], isBugged = false) {
-    if (inputMode || scrambleMode || patternStatesRef.current.length === 0) {
+    if (inputMode || scrambleMode || countdownActive || patternStatesRef.current.length === 0) {
       return false;
     }
 
@@ -1400,12 +1482,14 @@ export function useTrainingState(
   }
 
   function prepareForScramble() {
+    cancelCountdown();
     clearProgressState();
     clearRecognitionTracking();
     setScrambleMode(true);
   }
 
   function resetDrill() {
+    cancelCountdown();
     clearProgressState();
     clearRecognitionTracking();
     clearStatsIdentity();
@@ -1446,6 +1530,8 @@ export function useTrainingState(
     scrambleMode,
     timerState,
     timerText,
+    countdownActive,
+    countdownValue,
     visualResetKey,
     algInput,
     displayAlg,
@@ -1491,6 +1577,8 @@ export function useTrainingState(
     flashRequest,
     helpTone,
     inputMode,
+    countdownActive,
+    countdownValue,
     options.timeAttack,
     practiceCounts,
     scrambleMode,

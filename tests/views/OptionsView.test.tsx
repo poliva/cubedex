@@ -10,6 +10,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
   return {
     darkMode: false,
     showAlgName: true,
+    countdownMode: false,
     alwaysScrambleTo: false,
     visualization: 'PG3D',
     backview: 'none',
@@ -22,6 +23,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     cubeSizePx: 400,
     setDarkMode: vi.fn(),
     setShowAlgName: vi.fn(),
+    setCountdownMode: vi.fn(),
     setAlwaysScrambleTo: vi.fn(),
     setVisualization: vi.fn(),
     setBackview: vi.fn(),
@@ -175,5 +177,24 @@ describe('OptionsView', () => {
 
     fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '480' } });
     expect(options.setCubeSizePx).toHaveBeenCalledWith(480);
+  });
+
+  it('forwards countdown mode toggle changes', async () => {
+    const user = userEvent.setup();
+    const options = createOptions({ countdownMode: false });
+
+    render(
+      <OptionsView
+        visible
+        infoVisible={false}
+        setInfoVisible={vi.fn()}
+        options={options}
+        smartcube={createSmartcube()}
+        algorithmActions={createAlgorithmActions()}
+      />,
+    );
+
+    await user.click(screen.getByLabelText('Countdown Mode'));
+    expect(options.setCountdownMode).toHaveBeenCalledWith(true);
   });
 });

@@ -28,6 +28,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
     options: {
       darkMode: false,
       showAlgName: true,
+      countdownMode: false,
       alwaysScrambleTo: false,
       visualization: 'PG3D',
       backview: 'none',
@@ -40,6 +41,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       cubeSizePx: 420,
       setDarkMode: vi.fn(),
       setShowAlgName: vi.fn(),
+      setCountdownMode: vi.fn(),
       setAlwaysScrambleTo: vi.fn(),
       setVisualization: vi.fn(),
       setBackview: vi.fn(),
@@ -91,6 +93,8 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       scrambleMode: false,
       timerState: 'IDLE',
       timerText: '0.000',
+      countdownActive: false,
+      countdownValue: null,
       visualResetKey: 1,
       algInput: '',
       displayAlg: "R U R'",
@@ -259,6 +263,23 @@ describe('PracticeView', () => {
     expect(
       screen.getByRole('button', { name: 'Reset gyroscope orientation for the virtual cube' }),
     ).toHaveClass('hidden');
+  });
+
+  it('shows a countdown overlay and hides the cube content while countdown mode is active', () => {
+    const base = makeProps();
+    const props = makeProps({
+      training: {
+        ...base.training,
+        countdownActive: true,
+        countdownValue: 3,
+      },
+    });
+
+    render(<PracticeView {...props} />);
+
+    expect(screen.getByLabelText('Countdown 3')).toHaveTextContent('3');
+    expect(screen.getByTestId('main-cube-area').parentElement).toHaveClass('cube-area-content--hidden');
+    expect(document.getElementById('alg-name-display')).toHaveTextContent('');
   });
 
   it('clears scramble mode on Train when alwaysScrambleTo is disabled', async () => {

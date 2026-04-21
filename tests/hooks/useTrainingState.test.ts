@@ -128,6 +128,7 @@ const selectedCases = [
 function renderTrainingState() {
   return renderHook(() => useTrainingState(selectedCases, 'PLL', {
     selectionChangeMode: 'bulk',
+    countdownMode: false,
     randomizeAUF: false,
     randomOrder: false,
     timeAttack: true,
@@ -226,6 +227,7 @@ describe('useTrainingState time attack counts', () => {
 
     const { result } = renderHook(() => useTrainingState(selectedCases, 'PLL', {
       selectionChangeMode: 'bulk',
+      countdownMode: false,
       randomizeAUF: false,
       randomOrder: false,
       timeAttack: false,
@@ -270,6 +272,91 @@ describe('useTrainingState time attack counts', () => {
       expect(getSolveHistory('case-2')).toEqual([
         { executionMs: 700, recognitionMs: 500, totalMs: 1200 },
       ]);
+    });
+  });
+
+  it('ignores smartcube moves while the countdown is visible', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(1000));
+    vi.spyOn(performance, 'now').mockImplementation(() => Date.now());
+
+    try {
+      const { result } = renderHook(() => useTrainingState(selectedCases, 'PLL', {
+        selectionChangeMode: 'bulk',
+        countdownMode: true,
+        randomizeAUF: false,
+        randomOrder: false,
+        timeAttack: false,
+        prioritizeSlowCases: false,
+        prioritizeFailedCases: false,
+        smartcubeConnected: true,
+        currentPattern: null,
+        statsRefreshToken: 0,
+      }));
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      expect(result.current.currentCase?.id).toBe('case-1');
+      expect(result.current.countdownActive).toBe(true);
+      expect(result.current.timerState).toBe('IDLE');
+
+      act(() => {
+        const handled = result.current.handleSmartcubeMove(
+          mockState.patterns['solved:R'],
+          'R',
+          [{ face: 0, direction: 1, move: 'R', localTimestamp: 1500, cubeTimestamp: 500 }],
+        );
+        expect(handled).toBe(false);
+      });
+
+      expect(getSolveHistory('case-1')).toEqual([]);
+      expect(result.current.currentCase?.id).toBe('case-1');
+
+      await act(async () => {
+        vi.advanceTimersByTime(3000);
+      });
+
+      expect(result.current.countdownActive).toBe(false);
+      expect(result.current.timerState).toBe('READY');
+
+      act(() => {
+        result.current.handleSmartcubeMove(
+          mockState.patterns['solved:R'],
+          'R',
+          [{ face: 0, direction: 1, move: 'R', localTimestamp: 4200, cubeTimestamp: 700 }],
+        );
+      });
+
+      await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      expect(result.current.currentCase?.id).toBe('case-2');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('skips countdown when time attack is enabled even if countdown mode is on', async () => {
+    const { result } = renderHook(() => useTrainingState(selectedCases, 'PLL', {
+      selectionChangeMode: 'bulk',
+      countdownMode: true,
+      randomizeAUF: false,
+      randomOrder: false,
+      timeAttack: true,
+      prioritizeSlowCases: false,
+      prioritizeFailedCases: false,
+      smartcubeConnected: false,
+      currentPattern: null,
+      statsRefreshToken: 0,
+    }));
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+      expect(result.current.countdownActive).toBe(false);
+      expect(result.current.timerState).toBe('READY');
     });
   });
 });

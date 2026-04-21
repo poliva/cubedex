@@ -71,4 +71,19 @@ describe('useAppSettings', () => {
     expect(result.current.hintFacelets).toBe('floating');
     expect(result.current.controlPanel).toBe('bottom-row');
   });
+
+  it('defaults countdown mode off and persists changes', async () => {
+    const { result } = renderHook(() => useAppSettings());
+
+    expect(result.current.countdownMode).toBe(false);
+
+    act(() => {
+      result.current.setCountdownMode(true);
+    });
+
+    await waitFor(() => {
+      expect(result.current.countdownMode).toBe(true);
+      expect(localStorage.getItem('countdownMode')).toBe('true');
+    });
+  });
 });

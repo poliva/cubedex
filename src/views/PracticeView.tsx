@@ -197,7 +197,7 @@ export const PracticeView = memo(function PracticeView({
                   className="alg-name-display"
                   onClick={() => setShowTimesInsteadOfGraph((value) => !value)}
                 >
-                  {options.showAlgName ? training.currentAlgName : ''}
+                  {options.showAlgName && !training.countdownActive ? training.currentAlgName : ''}
                 </p>
               </div>
               <div
@@ -243,23 +243,33 @@ export const PracticeView = memo(function PracticeView({
               overflow: 'visible',
             }}
           >
-            <MainCubeArea
-              alg={mainCubeAlg}
-              sizePx={options.cubeSizePx}
-              visualization={options.visualization}
-              hintFacelets={options.hintFacelets}
-              controlPanel={options.controlPanel}
-              experimentalStickering={selectedStickering}
-              setupAlg={options.whiteOnBottom ? 'z2' : ''}
-              backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
-              resetToken={`${smartcube.connected}:${training.visualResetKey}`}
-              orientationResetToken={orientationResetState.token}
-              orientationResetAlg={orientationResetState.alg}
-              appendMoveKey={smartcubeAppendMoveKey}
-              appendMove={smartcubeAppendMove}
-              gyroscopeEnabled={options.gyroscope && smartcube.connected}
-              cubeQuaternionRef={smartcube.cubeQuaternionRef}
-            />
+            <div
+              className={training.countdownActive ? 'cube-area-content cube-area-content--hidden' : 'cube-area-content'}
+              aria-hidden={training.countdownActive}
+            >
+              <MainCubeArea
+                alg={mainCubeAlg}
+                sizePx={options.cubeSizePx}
+                visualization={options.visualization}
+                hintFacelets={options.hintFacelets}
+                controlPanel={options.controlPanel}
+                experimentalStickering={selectedStickering}
+                setupAlg={options.whiteOnBottom ? 'z2' : ''}
+                backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
+                resetToken={`${smartcube.connected}:${training.visualResetKey}`}
+                orientationResetToken={orientationResetState.token}
+                orientationResetAlg={orientationResetState.alg}
+                appendMoveKey={smartcubeAppendMoveKey}
+                appendMove={smartcubeAppendMove}
+                gyroscopeEnabled={options.gyroscope && smartcube.connected}
+                cubeQuaternionRef={smartcube.cubeQuaternionRef}
+              />
+            </div>
+            {training.countdownActive ? (
+              <div className="cube-countdown-overlay" aria-live="polite" aria-label={`Countdown ${training.countdownValue ?? ''}`}>
+                {training.countdownValue}
+              </div>
+            ) : null}
           </div>
 
           <div id="right-side" className="top-column right-column">
@@ -478,7 +488,7 @@ export const PracticeView = memo(function PracticeView({
 
       <StatsPanel
         visible={practiceVisible}
-        showAlgName={options.showAlgName}
+        showAlgName={options.showAlgName && !training.countdownActive}
         algName={training.currentAlgName}
         stats={training.stats}
       />
