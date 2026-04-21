@@ -1282,8 +1282,10 @@ html.dark .stats-panel.shell-card {
 /* Metric cards keep the original spacing and minimum width. */
 .metric-box {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.2rem;
   box-sizing: border-box;
   min-width: 154px;
   margin: 0.25rem;
@@ -1323,6 +1325,46 @@ html.dark .metric-box {
   border-color: #374151;
   background: #4b5563;
   color: #ffffff;
+}
+
+.metric-box-title {
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.metric-box--time {
+  align-items: stretch;
+  text-align: left;
+}
+
+@media (min-width: 1024px) {
+  .metric-box--time {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+
+.metric-time-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: min(100%, 160);
+  margin: 0 auto;
+}
+
+.metric-time-row--secondary {
+  font-size: 0.85em;
+}
+
+.metric-time-label,
+.metric-time-value {
+  display: inline-flex;
+}
+
+.metric-time-value {
+  font-variant-numeric: tabular-nums;
 }
 
 .control-row {

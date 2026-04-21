@@ -1,6 +1,7 @@
 import { Chart, registerables } from 'chart.js';
 import { Alg } from 'cubing/alg';
 import { experimentalCountMovesETM } from 'cubing/notation';
+import type { SolveHistoryEntry } from './idb-storage';
 
 Chart.register(...registerables);
 
@@ -18,6 +19,10 @@ function signatureOf(times: number[]): string {
   // Histories are capped to a small rolling window, so a full-value signature is
   // still cheap and avoids skipping redraws when only middle entries changed.
   return `${times.length}|${times.join(',')}`;
+}
+
+function signatureOfSolveHistory(entries: SolveHistoryEntry[]): string {
+  return `${entries.length}|${entries.map((entry) => `${entry.executionMs}:${entry.recognitionMs ?? 'null'}:${entry.totalMs}`).join(',')}`;
 }
 
 export function countMovesETM(alg: string): number {
@@ -122,12 +127,28 @@ function calculateTrimmedAverage(data: number[], windowSize: number, meanSize: n
   return averages;
 }
 
-export function createStatsGraph(canvas: HTMLCanvasElement | null, times: number[]) {
+export function buildStatsGraphSeries(solveHistory: SolveHistoryEntry[]) {
+  const labels = solveHistory.map((_, index) => `${index + 1}`);
+  const executionTimesInSeconds = solveHistory.map((entry) => entry.executionMs / 1000);
+  const recognitionTimesInSeconds = solveHistory.map((entry) => (
+    entry.recognitionMs == null ? null : entry.recognitionMs / 1000
+  ));
+
+  return {
+    labels,
+    executionTimesInSeconds,
+    recognitionTimesInSeconds,
+    ao5: calculateTrimmedAverage(executionTimesInSeconds, 5, 3),
+    ao12: calculateTrimmedAverage(executionTimesInSeconds, 12, 10),
+  };
+}
+
+export function createStatsGraph(canvas: HTMLCanvasElement | null, solveHistory: SolveHistoryEntry[]) {
   if (!canvas) {
     return;
   }
 
-  const sig = signatureOf(times);
+  const sig = signatureOfSolveHistory(solveHistory);
   if (statsChartSignature.get(canvas) === sig && statsChartByCanvas.get(canvas)) {
     return;
   }
@@ -138,7 +159,7 @@ export function createStatsGraph(canvas: HTMLCanvasElement | null, times: number
     return;
   }
 
-  if (times.length === 0) {
+  if (solveHistory.length === 0) {
     const existing = statsChartByCanvas.get(canvas);
     if (existing) {
       existing.data.labels = [];
@@ -150,9 +171,13 @@ export function createStatsGraph(canvas: HTMLCanvasElement | null, times: number
     return;
   }
 
-  const timesInSeconds = times.map((time) => time / 1000);
-  const ao5 = calculateTrimmedAverage(timesInSeconds, 5, 3);
-  const ao12 = calculateTrimmedAverage(timesInSeconds, 12, 10);
+  const {
+    labels,
+    executionTimesInSeconds,
+    recognitionTimesInSeconds,
+    ao5,
+    ao12,
+  } = buildStatsGraphSeries(solveHistory);
   const canvasHeight = canvas.clientHeight || canvas.getBoundingClientRect().height || 300;
   const gradient = context.createLinearGradient(0, 0, 0, canvasHeight);
   gradient.addColorStop(0, 'rgba(54, 162, 235, 0.6)');
@@ -160,17 +185,18 @@ export function createStatsGraph(canvas: HTMLCanvasElement | null, times: number
 
   const existing = statsChartByCanvas.get(canvas);
   if (existing) {
-    existing.data.labels = times.map((_, index) => `${index + 1}`);
+    existing.data.labels = labels;
     const datasets = existing.data.datasets as unknown as Array<{
       data: Array<number | null>;
       backgroundColor?: CanvasGradient | string;
     }>;
     if (datasets[0]) {
-      datasets[0].data = timesInSeconds;
+      datasets[0].data = executionTimesInSeconds;
       datasets[0].backgroundColor = gradient;
     }
     if (datasets[1]) datasets[1].data = ao5;
     if (datasets[2]) datasets[2].data = ao12;
+    if (datasets[3]) datasets[3].data = recognitionTimesInSeconds;
     existing.update('none');
     return;
   }
@@ -178,11 +204,11 @@ export function createStatsGraph(canvas: HTMLCanvasElement | null, times: number
   const createdStats = new Chart(canvas, {
     type: 'line',
     data: {
-      labels: times.map((_, index) => `${index + 1}`),
+      labels,
       datasets: [
         {
           label: 'Single',
-          data: timesInSeconds,
+          data: executionTimesInSeconds,
           backgroundColor: gradient,
           borderColor: 'rgba(54, 162, 235, 1)',
           borderWidth: 1,
@@ -203,6 +229,15 @@ export function createStatsGraph(canvas: HTMLCanvasElement | null, times: number
           borderColor: 'rgba(75, 192, 192, 1)',
           borderWidth: 1,
           fill: false,
+        },
+        {
+          label: 'Recognition',
+          data: recognitionTimesInSeconds,
+          backgroundColor: 'rgba(153, 102, 255, 1)',
+          borderColor: 'rgba(153, 102, 255, 1)',
+          borderWidth: 1,
+          fill: false,
+          spanGaps: false,
         },
       ],
     },

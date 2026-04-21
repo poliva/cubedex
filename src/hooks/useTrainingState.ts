@@ -21,10 +21,10 @@ import {
   createGlobalScopeId,
   expandNotation,
   getBestTime,
-  getLastTimes,
+  getSolveHistory,
   getTimeAttackLastRuns,
   setBestTime,
-  setLastTimes,
+  setSolveHistory,
   setTimeAttackLastRuns,
 } from '../lib/storage';
 import { FACES, IDENTITY, SLICE_ROTATION, composePerm, invertPerm, type Face, type FacePerm } from '../lib/smartcube-parity';
@@ -42,6 +42,8 @@ export interface TrainingStats {
   best: string;
   ao5: string;
   average: string;
+  avgExec: string;
+  avgRecog: string;
   averageTps: string;
   singlePb: string;
   practiceCount: number;
@@ -91,6 +93,7 @@ interface TrainCurrentOptions {
   preserveDisplayedAlgorithm?: boolean;
   statsScopeId?: string;
   startTimerImmediately?: boolean;
+  trackRecognition?: boolean;
 }
 
 export interface TrainingState {
@@ -134,6 +137,8 @@ export interface TrainingState {
   setKeepInitialState: (value: boolean) => void;
 }
 
+const MAX_RECOGNITION_MS = 15000;
+
 function formatTimerTimestamp(timestamp: number) {
   const t = makeTimeParts(timestamp);
   return `${t.minutes}:${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}`;
@@ -143,6 +148,13 @@ function formatHistoryTimestamp(timestamp: number) {
   const t = makeTimeParts(timestamp);
   const minutesPart = t.minutes > 0 ? `${t.minutes}:` : '';
   return `${minutesPart}${t.seconds.toString(10).padStart(2, '0')}.${t.milliseconds.toString(10).padStart(3, '0')}`;
+}
+
+function averageFromValues(values: number[]) {
+  if (values.length === 0) {
+    return null;
+  }
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
 function buildStats(
@@ -156,6 +168,8 @@ function buildStats(
       best: '-',
       ao5: '-',
       average: '-',
+      avgExec: '-',
+      avgRecog: '-',
       averageTps: '-',
       singlePb: '-',
       practiceCount: 0,
@@ -164,17 +178,22 @@ function buildStats(
     };
   }
 
-  const lastTimes = getLastTimes(algId);
+  const solveHistory = getSolveHistory(algId);
+  const lastTimes = solveHistory.map((entry) => entry.executionMs);
   const bestTime = getBestTime(algId);
-  const averageValue = lastTimes.length > 0
-    ? lastTimes.reduce((sum, time) => sum + time, 0) / lastTimes.length
-    : null;
+  const averageExecution = averageFromValues(lastTimes);
+  const averageRecognition = averageFromValues(
+    solveHistory
+      .map((entry) => entry.recognitionMs)
+      .filter((value): value is number => value != null),
+  );
+  const averageTotal = averageFromValues(solveHistory.map((entry) => entry.totalMs));
   const isTimeAttackStats = algId.startsWith(TIME_ATTACK_SCOPE_PREFIX);
   const moveCount = isTimeAttackStats
     ? selectedCases.reduce((sum, currentCase) => sum + countMovesETM(currentCase.algorithm), 0)
     : (displayAlg ? countMovesETM(displayAlg) : 0);
-  const averageTps = averageValue && averageValue > 0 && moveCount > 0
-    ? (moveCount / (averageValue / 1000)).toFixed(2)
+  const averageTps = averageExecution && averageExecution > 0 && moveCount > 0
+    ? (moveCount / (averageExecution / 1000)).toFixed(2)
     : '-';
   const historyCount = lastTimes.length;
   const derivedPracticeCount = lastTimes.length;
@@ -182,7 +201,9 @@ function buildStats(
   return {
     best: bestTimeString(bestTime),
     ao5: averageTimeString(averageOfFiveTimeNumber(algId)),
-    average: averageTimeString(averageValue),
+    average: averageTimeString(averageTotal),
+    avgExec: averageTimeString(averageExecution),
+    avgRecog: averageTimeString(averageRecognition),
     averageTps,
     singlePb: bestTimeString(bestTime),
     practiceCount: derivedPracticeCount,
@@ -514,6 +535,9 @@ export function useTrainingState(
   const timeAttackSessionStartRef = useRef<number | null>(null);
   const timeAttackCaseTimesRef = useRef<number[]>([]);
   const timeAttackTotalCasesRef = useRef(0);
+  const caseShownAtRef = useRef<number | null>(null);
+  const firstActionAtRef = useRef<number | null>(null);
+  const shouldTrackRecognitionRef = useRef(false);
 
   currentCaseRef.current = currentCase;
 
@@ -693,13 +717,47 @@ export function useTrainingState(
     }));
   }
 
-  function persistSolveTime(scopeId: string, timeMs: number) {
-    const nextTimes = appendLimitedTime(timeMs, getLastTimes(scopeId));
-    setLastTimes(scopeId, nextTimes);
+  function buildSolveHistoryEntry(executionMs: number) {
+    const caseShownAt = caseShownAtRef.current;
+    const firstActionAt = firstActionAtRef.current;
+    const rawRecognitionMs = shouldTrackRecognitionRef.current
+      && caseShownAt != null
+      && firstActionAt != null
+      && firstActionAt >= caseShownAt
+      ? Math.round(firstActionAt - caseShownAt)
+      : null;
+    const recognitionMs = rawRecognitionMs != null && rawRecognitionMs <= MAX_RECOGNITION_MS
+      ? rawRecognitionMs
+      : null;
+
+    return {
+      executionMs,
+      recognitionMs,
+      totalMs: executionMs + (recognitionMs ?? 0),
+    };
+  }
+
+  function persistSolveResult(scopeId: string, executionMs: number) {
+    const nextHistory = appendLimitedTime(buildSolveHistoryEntry(executionMs), getSolveHistory(scopeId));
+    setSolveHistory(scopeId, nextHistory);
 
     const currentBest = getBestTime(scopeId);
-    if (currentBest == null || timeMs < currentBest) {
-      setBestTime(scopeId, timeMs);
+    if (currentBest == null || executionMs < currentBest) {
+      setBestTime(scopeId, executionMs);
+    }
+  }
+
+  function persistExecutionOnlyResult(scopeId: string, executionMs: number) {
+    const nextHistory = appendLimitedTime({
+      executionMs,
+      recognitionMs: null,
+      totalMs: executionMs,
+    }, getSolveHistory(scopeId));
+    setSolveHistory(scopeId, nextHistory);
+
+    const currentBest = getBestTime(scopeId);
+    if (currentBest == null || executionMs < currentBest) {
+      setBestTime(scopeId, executionMs);
     }
   }
 
@@ -799,6 +857,12 @@ export function useTrainingState(
     hasFailedCurrentCaseRef.current = false;
   }
 
+  function clearRecognitionTracking() {
+    caseShownAtRef.current = null;
+    firstActionAtRef.current = null;
+    shouldTrackRecognitionRef.current = false;
+  }
+
   function resetAttemptStateKeepAlgorithm() {
     lastMovesRef.current = [];
     solutionMovesRef.current = [];
@@ -821,6 +885,7 @@ export function useTrainingState(
 
     if (state === 'IDLE') {
       timerStartRef.current = null;
+      clearRecognitionTracking();
       setTimerText('');
       return;
     }
@@ -837,6 +902,9 @@ export function useTrainingState(
       solutionMovesRef.current = [];
       const now = performance.now();
       timerStartRef.current = now;
+      if (!options.smartcubeConnected && firstActionAtRef.current == null) {
+        firstActionAtRef.current = now;
+      }
       if (options.timeAttack && timeAttackTotalCasesRef.current > 0) {
         if (timeAttackSessionStartRef.current == null) {
           timeAttackSessionStartRef.current = now;
@@ -866,6 +934,7 @@ export function useTrainingState(
 
   function enterInputMode(algorithm = algInput || displayAlg) {
     clearProgressState();
+    clearRecognitionTracking();
     clearStatsIdentity();
     clearTimeAttackSession();
     initialPatternRef.current = null;
@@ -885,6 +954,7 @@ export function useTrainingState(
       setTimerState('IDLE');
       setDisplayAlg('');
       clearProgressState();
+      clearRecognitionTracking();
       return;
     }
 
@@ -916,6 +986,7 @@ export function useTrainingState(
       ?? createGlobalScopeId(normalizedAlgorithm);
 
     clearProgressState();
+    clearRecognitionTracking();
 
     expectedMovesRef.current = prepared.moves.map(sanitizeMove);
     let previousPattern = basePattern;
@@ -939,6 +1010,11 @@ export function useTrainingState(
     setDisplayAlg(prepared.displayAlgorithm);
     setInputMode(false);
     setScrambleMode(false);
+    caseShownAtRef.current = performance.now();
+    firstActionAtRef.current = !options.smartcubeConnected && trainOptions?.startTimerImmediately
+      ? caseShownAtRef.current
+      : null;
+    shouldTrackRecognitionRef.current = trainOptions?.trackRecognition ?? false;
     setTimerState(trainOptions?.startTimerImmediately ? 'RUNNING' : 'READY');
     setVisualResetKey((v) => v + 1);
   }
@@ -1070,7 +1146,7 @@ export function useTrainingState(
     if (options.timeAttack) {
       timeAttackCaseTimesRef.current = [...timeAttackCaseTimesRef.current, finalTime];
       if (completedCaseId) {
-        persistSolveTime(completedCaseId, finalTime);
+        persistSolveResult(completedCaseId, finalTime);
         incrementPracticeCount(completedCaseId);
       }
       isKeyboardTimerActiveRef.current = false;
@@ -1082,6 +1158,7 @@ export function useTrainingState(
           algorithm: nextCase.algorithm,
           statsScopeId: getTimeAttackStatsScopeId(),
           startTimerImmediately: true,
+          trackRecognition: true,
         });
         return;
       }
@@ -1089,7 +1166,7 @@ export function useTrainingState(
       const totalWallTime = timeAttackSessionStartRef.current == null
         ? finalTime
         : Math.round(performance.now() - timeAttackSessionStartRef.current);
-      persistSolveTime(algId, totalWallTime);
+      persistExecutionOnlyResult(algId, totalWallTime);
       setTimeAttackLastRuns(algId, appendLimitedTime(
         { wallMs: totalWallTime, caseTimes: timeAttackCaseTimesRef.current },
         getTimeAttackLastRuns(algId),
@@ -1103,7 +1180,7 @@ export function useTrainingState(
       return;
     }
 
-    persistSolveTime(algId, finalTime);
+    persistSolveResult(algId, finalTime);
     incrementPracticeCount(algId);
     setTimerText(formatTimerTimestamp(finalTime));
     setTimerStateInternal('STOPPED');
@@ -1116,7 +1193,11 @@ export function useTrainingState(
 
       const nextCase = selectedQueueRef.current[0] ?? null;
       if (nextCase) {
-        void trainCurrent(nextInitialPattern, { algorithm: nextCase.algorithm, statsScopeId: nextCase.id });
+        void trainCurrent(nextInitialPattern, {
+          algorithm: nextCase.algorithm,
+          statsScopeId: nextCase.id,
+          trackRecognition: true,
+        });
       }
     }
   }
@@ -1201,13 +1282,20 @@ export function useTrainingState(
       return false;
     }
 
-    if (timerState === 'READY') {
-      setTimerState('RUNNING');
-    }
-
     const capturedMoves = rawMoves && rawMoves.length > 0
       ? rawMoves
       : [{ face: -1, direction: 0, move, localTimestamp: null, cubeTimestamp: null }];
+    if (firstActionAtRef.current == null && shouldTrackRecognitionRef.current) {
+      const firstLocalTimestamp = capturedMoves
+        .map((entry) => entry.localTimestamp)
+        .find((timestamp): timestamp is number => timestamp != null && Number.isFinite(timestamp));
+      if (firstLocalTimestamp != null) {
+        firstActionAtRef.current = firstLocalTimestamp;
+      }
+    }
+    if (timerState === 'READY') {
+      setTimerState('RUNNING');
+    }
     lastMovesRef.current = [
       ...lastMovesRef.current,
       ...capturedMoves.map((entry) => entry.move),
@@ -1253,7 +1341,6 @@ export function useTrainingState(
         && matchedIndex === lastLayerMoveIndex;
 
       if (matchedIndex === expectedMovesRef.current.length - 1 || finishedIncludingIgnoredRotations) {
-        clearProgressState();
         const completedPattern = patternAfterMove;
         initialPatternRef.current = completedPattern;
         setCurrentMoveIndex(0);
@@ -1263,7 +1350,11 @@ export function useTrainingState(
           switchToNextAlgorithm();
           const nextCase = selectedQueueRef.current[0] ?? null;
           if (nextCase) {
-            void trainCurrent(completedPattern, { algorithm: nextCase.algorithm, statsScopeId: nextCase.id });
+            void trainCurrent(completedPattern, {
+              algorithm: nextCase.algorithm,
+              statsScopeId: nextCase.id,
+              trackRecognition: true,
+            });
           }
         }
         return true;
@@ -1310,11 +1401,13 @@ export function useTrainingState(
 
   function prepareForScramble() {
     clearProgressState();
+    clearRecognitionTracking();
     setScrambleMode(true);
   }
 
   function resetDrill() {
     clearProgressState();
+    clearRecognitionTracking();
     clearStatsIdentity();
     clearTimeAttackSession();
     initialPatternRef.current = null;

@@ -110,6 +110,8 @@ function makeProps(overrides: Record<string, unknown> = {}) {
         best: '-',
         ao5: '-',
         average: '-',
+        avgExec: '-',
+        avgRecog: '-',
         averageTps: '-',
         singlePb: '-',
         practiceCount: 0,

@@ -1,11 +1,18 @@
 import type { SavedAlgorithms } from './storage';
 
+export interface SolveHistoryEntry {
+  executionMs: number;
+  recognitionMs: number | null;
+  totalMs: number;
+}
+
 export interface ScopedStatsRecord {
   scopeId: string;
   category: string;
   subset: string;
   algId: string;
   lastTimes: number[];
+  solveHistory?: SolveHistoryEntry[];
   timeAttackLastRuns?: {
     wallMs: number;
     caseTimes: number[];

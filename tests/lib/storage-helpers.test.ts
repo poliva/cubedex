@@ -11,8 +11,11 @@ import {
   getAlgorithmId,
   isPersistentStatsScopeId,
   isTimeAttackScopeId,
+  getSolveHistory,
   readJsonStorage,
   readOption,
+  setLastTimes,
+  setSolveHistory,
   writeOption,
 } from '../../src/lib/storage';
 
@@ -60,5 +63,28 @@ describe('storage helpers', () => {
     expect(localStorage.getItem(STORAGE_KEYS.theme)).toBe('dark');
     expect(readOption('theme')).toBe('dark');
     expect(readOption('controlPanel')).toBe('bottom-row');
+  });
+
+  it('backfills legacy lastTimes into solve history with null recognition', () => {
+    const scopeId = 'case:test:legacy';
+    setLastTimes(scopeId, [1200, 1500]);
+
+    expect(getSolveHistory(scopeId)).toEqual([
+      { executionMs: 1200, recognitionMs: null, totalMs: 1200 },
+      { executionMs: 1500, recognitionMs: null, totalMs: 1500 },
+    ]);
+  });
+
+  it('preserves recognition and total values in solve history records', () => {
+    const scopeId = 'case:test:recognition';
+    setSolveHistory(scopeId, [
+      { executionMs: 2100, recognitionMs: 400, totalMs: 2500 },
+      { executionMs: 1900, recognitionMs: null, totalMs: 1900 },
+    ]);
+
+    expect(getSolveHistory(scopeId)).toEqual([
+      { executionMs: 2100, recognitionMs: 400, totalMs: 2500 },
+      { executionMs: 1900, recognitionMs: null, totalMs: 1900 },
+    ]);
   });
 });

@@ -24,7 +24,17 @@ function StatsPanelComponent({
           {showAlgName ? algName : ''}
         </div>
         <div id="stats-grid" className="metrics-grid">
-          <div id="average-time-box" className="metric-box">Average Time<br />{stats.average}</div>
+          <div id="average-time-box" className="metric-box metric-box--time">
+            <div className="metric-box-title">Avgerage Time</div>
+            <div className="metric-time-row">
+              <span className="metric-time-label">Exec</span>
+              <span className="metric-time-value">{stats.avgExec}</span>
+            </div>
+            <div className="metric-time-row metric-time-row--secondary">
+              <span className="metric-time-label">Recog</span>
+              <span className="metric-time-value">{stats.avgRecog}</span>
+            </div>
+          </div>
           <div id="average-tps-box" className="metric-box">Average TPS<br />{stats.averageTps}</div>
           <div id="single-pb-box" className="metric-box">
             Single PB<br />

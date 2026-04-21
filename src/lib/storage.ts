@@ -2,6 +2,7 @@ import {
   BACKUP_FORMAT_VERSION,
   type CubedexBackupFile,
   type ScopedStatsRecord,
+  type SolveHistoryEntry,
   getMetaValue,
   loadAllStatsFromDb,
   loadSavedAlgorithmsFromDb,
@@ -49,6 +50,56 @@ export const TIME_ATTACK_SCOPE_PREFIX = 'time-attack:';
 export interface TimeAttackRunRecord {
   wallMs: number;
   caseTimes: number[];
+}
+
+function cloneSolveHistoryEntry(entry: SolveHistoryEntry): SolveHistoryEntry {
+  return {
+    executionMs: entry.executionMs,
+    recognitionMs: entry.recognitionMs,
+    totalMs: entry.totalMs,
+  };
+}
+
+function createSolveHistoryEntry(executionMs: number, recognitionMs: number | null = null, totalMs?: number): SolveHistoryEntry {
+  const normalizedExecution = Number(executionMs);
+  const normalizedRecognition = recognitionMs == null || !Number.isFinite(Number(recognitionMs))
+    ? null
+    : Number(recognitionMs);
+  const normalizedTotal = Number.isFinite(Number(totalMs))
+    ? Number(totalMs)
+    : normalizedExecution + (normalizedRecognition ?? 0);
+
+  return {
+    executionMs: normalizedExecution,
+    recognitionMs: normalizedRecognition,
+    totalMs: normalizedTotal,
+  };
+}
+
+function normalizeSolveHistory(entries: unknown, legacyLastTimes: number[]): SolveHistoryEntry[] {
+  if (Array.isArray(entries)) {
+    return entries
+      .map((entry) => {
+        const executionMs = Number((entry as SolveHistoryEntry | undefined)?.executionMs);
+        if (!Number.isFinite(executionMs)) {
+          return null;
+        }
+
+        const recognitionRaw = (entry as SolveHistoryEntry | undefined)?.recognitionMs;
+        const recognitionMs = recognitionRaw == null || !Number.isFinite(Number(recognitionRaw))
+          ? null
+          : Number(recognitionRaw);
+        const totalRaw = (entry as SolveHistoryEntry | undefined)?.totalMs;
+        const totalMs = Number.isFinite(Number(totalRaw))
+          ? Number(totalRaw)
+          : executionMs + (recognitionMs ?? 0);
+
+        return createSolveHistoryEntry(executionMs, recognitionMs, totalMs);
+      })
+      .filter((entry): entry is SolveHistoryEntry => entry != null);
+  }
+
+  return legacyLastTimes.map((time) => createSolveHistoryEntry(time));
 }
 
 const LS_MIGRATION_DONE_KEY = 'lsMigrationDone';
@@ -189,6 +240,7 @@ function createEmptyStatsRecord(scopeId: string): ScopedStatsRecord {
     subset: parsed.subset,
     algId: parsed.algId,
     lastTimes: [],
+    solveHistory: [],
     timeAttackLastRuns: [],
     best: null,
     learned: 0,
@@ -197,9 +249,11 @@ function createEmptyStatsRecord(scopeId: string): ScopedStatsRecord {
 
 function normalizeStatsRecord(record: ScopedStatsRecord): ScopedStatsRecord {
   const parsed = parseScopeId(record.scopeId);
-  const lastTimes = Array.isArray(record.lastTimes)
+  const legacyLastTimes = Array.isArray(record.lastTimes)
     ? record.lastTimes.map((value) => Number(value)).filter(Number.isFinite)
     : [];
+  const solveHistory = normalizeSolveHistory(record.solveHistory, legacyLastTimes);
+  const lastTimes = solveHistory.map((entry) => entry.executionMs);
   const timeAttackLastRuns = Array.isArray(record.timeAttackLastRuns)
     ? record.timeAttackLastRuns
       .map((run) => ({
@@ -219,6 +273,7 @@ function normalizeStatsRecord(record: ScopedStatsRecord): ScopedStatsRecord {
     subset: record.subset || parsed.subset,
     algId: record.algId || parsed.algId,
     lastTimes,
+    solveHistory,
     timeAttackLastRuns,
     best,
     learned,
@@ -435,6 +490,7 @@ function buildMigratedStatsRecords(savedAlgorithms: SavedAlgorithms) {
           subset: subset.subset,
           algId,
           lastTimes: [...(legacyLastTimes.get(algId) ?? [])],
+          solveHistory: [...(legacyLastTimes.get(algId) ?? [])].map((time) => createSolveHistoryEntry(time)),
           best: legacyBestTimes.get(algId) ?? null,
           learned: legacyLearned.get(algId) ?? 0,
         });
@@ -638,7 +694,7 @@ export async function exportBackup() {
 
 function parseBackup(json: string) {
   const backup = JSON.parse(json) as CubedexBackupFile;
-  if (backup.backupFormatVersion !== BACKUP_FORMAT_VERSION) {
+  if (backup.backupFormatVersion !== 1 && backup.backupFormatVersion !== BACKUP_FORMAT_VERSION) {
     throw new Error('Unsupported backup format version');
   }
   if (!backup.algorithms || !Array.isArray(backup.stats)) {
@@ -677,9 +733,30 @@ export function getLastTimes(scopeId: string): number[] {
 }
 
 export function setLastTimes(scopeId: string, values: number[]) {
+  const solveHistory = values
+    .filter(Number.isFinite)
+    .map((value) => createSolveHistoryEntry(value));
   setStatsRecord(scopeId, {
     ...getStatsRecord(scopeId),
-    lastTimes: values.filter(Number.isFinite),
+    lastTimes: solveHistory.map((entry) => entry.executionMs),
+    solveHistory,
+  });
+
+  void enqueueWrite(async () => {
+    await persistStatsRecord(scopeId);
+  });
+}
+
+export function getSolveHistory(scopeId: string): SolveHistoryEntry[] {
+  return (getStatsRecord(scopeId).solveHistory ?? []).map(cloneSolveHistoryEntry);
+}
+
+export function setSolveHistory(scopeId: string, values: SolveHistoryEntry[]) {
+  const solveHistory = normalizeSolveHistory(values, []);
+  setStatsRecord(scopeId, {
+    ...getStatsRecord(scopeId),
+    lastTimes: solveHistory.map((entry) => entry.executionMs),
+    solveHistory,
   });
 
   void enqueueWrite(async () => {
@@ -751,6 +828,7 @@ export function removeAlgorithmTimesStorage(scopeId: string) {
     ...record,
     best: null,
     lastTimes: [],
+    solveHistory: [],
     timeAttackLastRuns: [],
   });
 
