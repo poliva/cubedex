@@ -146,6 +146,24 @@ function renderSmartReviewState(cases: CaseCardData[]) {
   });
 }
 
+function renderSmartcubeSmartReviewState(cases: CaseCardData[]) {
+  return renderHook(({ currentCases }) => useTrainingState(currentCases, 'PLL', {
+    selectionChangeMode: 'bulk',
+    countdownMode: false,
+    randomizeAUF: false,
+    randomOrder: false,
+    timeAttack: false,
+    prioritizeSlowCases: false,
+    prioritizeFailedCases: false,
+    smartReviewScheduling: true,
+    smartcubeConnected: true,
+    currentPattern: null,
+    statsRefreshToken: 0,
+  }), {
+    initialProps: { currentCases: cases },
+  });
+}
+
 describe('useTrainingState time attack counts', () => {
   beforeEach(() => {
     resetMockState(mockState);
@@ -863,6 +881,53 @@ describe('useTrainingState time attack counts', () => {
 
     await waitFor(() => {
       expect(result.current.currentCase?.id).toBe('case-6');
+    });
+  });
+
+  it('repeats failed smart-order cases in the same pass for smartcube solves', async () => {
+    const cases = makeSmartReviewCases(6);
+    vi.mocked(cubeTimestampLinearFit).mockReturnValue([{ cubeTimestamp: 1000 }] as any);
+    const { result } = renderSmartcubeSmartReviewState(cases);
+    let patternKey = 'solved:R';
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+      expect(result.current.timerState).toBe('READY');
+    });
+
+    act(() => {
+      result.current.handleSmartcubeMove(mockState.patterns['solved:R:U'], 'U');
+    });
+
+    await waitFor(() => {
+      expect(result.current.failedCounts['case-1']).toBe(1);
+    });
+
+    act(() => {
+      result.current.handleSmartcubeMove(
+        mockState.patterns[patternKey],
+        'R',
+        [{ face: 0, direction: 1, move: 'R', localTimestamp: 1500, cubeTimestamp: 1000 }],
+      );
+    });
+
+    for (const expectedCaseId of ['case-2', 'case-3', 'case-4', 'case-5']) {
+      await waitFor(() => {
+        expect(result.current.currentCase?.id).toBe(expectedCaseId);
+      });
+
+      patternKey = `${patternKey}:R`;
+      act(() => {
+        result.current.handleSmartcubeMove(
+          mockState.patterns[patternKey],
+          'R',
+          [{ face: 0, direction: 1, move: 'R', localTimestamp: 1500, cubeTimestamp: 1000 }],
+        );
+      });
+    }
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
     });
   });
 

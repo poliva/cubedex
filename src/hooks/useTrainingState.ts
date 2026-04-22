@@ -154,7 +154,7 @@ export interface TrainingState {
   handleSpaceKeyDown: () => void;
   handleSpaceKeyUp: () => void;
   handleSmartcubeMove: (currentPattern: KPattern, move: string, rawMoves?: SmartcubeMoveRecord[], isBugged?: boolean) => boolean;
-  stopAndRecordSolve: (timeMs: number) => void;
+  stopAndRecordSolve: (timeMs: number) => CaseReviewEntry | null;
   abortRunningAttempt: () => void;
   getElapsedMs: () => number;
   prepareForScramble: () => void;
@@ -1533,7 +1533,7 @@ export function useTrainingState(
     selectedCases,
   ]);
 
-  function stopAndRecordSolve(timeMs: number) {
+  function stopAndRecordSolve(timeMs: number): CaseReviewEntry | null {
     const algId = originalAlgIdRef.current || 'default-alg-id';
     const completedCaseId = currentCaseRef.current?.id;
     let finalTime = Math.round(timeMs);
@@ -1563,7 +1563,7 @@ export function useTrainingState(
           startTimerImmediately: true,
           trackRecognition: true,
         });
-        return;
+        return null;
       }
 
       const totalWallTime = timeAttackSessionStartRef.current == null
@@ -1580,7 +1580,7 @@ export function useTrainingState(
       setTimerText(totalTimeText);
       setTimerStateInternal('STOPPED');
       prepareNextTimeAttack(totalTimeText);
-      return;
+      return null;
     }
 
     const review = persistCompletedAttempt(algId, finalTime);
@@ -1603,6 +1603,8 @@ export function useTrainingState(
         });
       }
     }
+
+    return review ?? null;
   }
 
   function abortRunningAttempt() {
@@ -1757,10 +1759,10 @@ export function useTrainingState(
         const completedPattern = patternAfterMove;
         initialPatternRef.current = completedPattern;
         setCurrentMoveIndex(0);
-        stopAndRecordSolve(getElapsedMs());
+        const review = stopAndRecordSolve(getElapsedMs());
 
         if (options.smartcubeConnected && !options.timeAttack) {
-          switchToNextAlgorithm();
+          switchToNextAlgorithm(review ?? undefined);
           const nextCase = selectedQueueRef.current[0] ?? null;
           if (nextCase) {
             void trainCurrent(completedPattern, {
