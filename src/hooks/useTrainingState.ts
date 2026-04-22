@@ -1384,6 +1384,7 @@ export function useTrainingState(
 
   useEffect(() => {
     const nextSelectedIds = selectedCases.map((selectedCase) => selectedCase.id);
+    const selectedIdsUnchanged = arraysEqual(previousSelectedIdsRef.current, nextSelectedIds);
     const timeAttackChanged = previousTimeAttackRef.current !== options.timeAttack;
     const randomOrderChanged = previousRandomOrderRef.current !== options.randomOrder;
     const prioritizeSlowChanged = previousPrioritizeSlowCasesRef.current !== options.prioritizeSlowCases;
@@ -1392,7 +1393,7 @@ export function useTrainingState(
     const reviewRefreshChanged = previousReviewRefreshTokenRef.current !== options.reviewRefreshToken;
 
     if (
-      arraysEqual(previousSelectedIdsRef.current, nextSelectedIds)
+      selectedIdsUnchanged
       && !timeAttackChanged
       && !randomOrderChanged
       && !prioritizeSlowChanged
@@ -1458,6 +1459,24 @@ export function useTrainingState(
     }
 
     if (reviewRefreshChanged) {
+      const selectedCaseMap = new Map(selectedCases.map((selectedCase) => [selectedCase.id, selectedCase]));
+      if (selectedIdsUnchanged) {
+        selectedQueueCopyRef.current = selectedQueueCopyRef.current
+          .map((entry) => selectedCaseMap.get(entry.id) ?? entry)
+          .filter((entry) => selectedCaseMap.has(entry.id));
+        const refreshedPendingQueue = selectedQueueRef.current
+          .map((entry) => selectedCaseMap.get(entry.id) ?? entry)
+          .filter((entry) => selectedCaseMap.has(entry.id));
+        if (options.smartReviewScheduling && refreshedPendingQueue.length > 1) {
+          selectedQueueRef.current = [
+            refreshedPendingQueue[0],
+            ...buildSmartReviewQueue(refreshedPendingQueue.slice(1)),
+          ];
+        } else {
+          selectedQueueRef.current = refreshedPendingQueue;
+        }
+        return;
+      }
       clearTimeAttackSession();
       selectedQueueRef.current = buildQueue(selectedCases, options.prioritizeSlowCases, options.smartReviewScheduling);
       selectedQueueCopyRef.current = [];

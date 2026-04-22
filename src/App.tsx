@@ -514,6 +514,7 @@ export function App() {
           algorithm: scramble.targetAlgorithm,
           preserveDisplayedAlgorithm: true,
           statsScopeId: training.timeAttackMode ? training.statsAlgId : training.currentCase?.id,
+          trackRecognition: true,
         });
       }
     });

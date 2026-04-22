@@ -301,6 +301,72 @@ describe('useTrainingState time attack counts', () => {
     });
   });
 
+  it('keeps smartcube recognition tracking after review refresh rerenders', async () => {
+    let now = 1000;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    vi.mocked(cubeTimestampLinearFit)
+      .mockReturnValueOnce([{ cubeTimestamp: 500 }] as any)
+      .mockReturnValueOnce([{ cubeTimestamp: 700 }] as any);
+
+    const { result, rerender } = renderHook(
+      ({ reviewRefreshToken }) => useTrainingState(selectedCases, 'PLL', {
+        selectionChangeMode: 'bulk',
+        countdownMode: false,
+        randomizeAUF: false,
+        randomOrder: false,
+        timeAttack: false,
+        prioritizeSlowCases: false,
+        prioritizeFailedCases: false,
+        smartReviewScheduling: false,
+        smartcubeConnected: true,
+        currentPattern: null,
+        statsRefreshToken: 0,
+        reviewRefreshToken,
+      }),
+      { initialProps: { reviewRefreshToken: 0 } },
+    );
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+      expect(result.current.timerState).toBe('READY');
+    });
+
+    now = 1300;
+    act(() => {
+      result.current.handleSmartcubeMove(
+        mockState.patterns['solved:R'],
+        'R',
+        [{ face: 0, direction: 1, move: 'R', localTimestamp: 1300, cubeTimestamp: 500 }],
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-2');
+    });
+
+    rerender({ reviewRefreshToken: 1 });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-2');
+      expect(result.current.timerState).toBe('READY');
+    });
+
+    now = 1800;
+    act(() => {
+      result.current.handleSmartcubeMove(
+        mockState.patterns['solved:R:R'],
+        'R',
+        [{ face: 0, direction: 1, move: 'R', localTimestamp: 1800, cubeTimestamp: 700 }],
+      );
+    });
+
+    await waitFor(() => {
+      expect(getSolveHistory('case-2')).toEqual([
+        { executionMs: 700, recognitionMs: 500, totalMs: 1200 },
+      ]);
+    });
+  });
+
   it('ignores smartcube moves while the countdown is visible', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(1000));
@@ -837,7 +903,7 @@ describe('useTrainingState time attack counts', () => {
     });
   });
 
-  it('rebuilds smart order when review metadata refreshes for the same selected ids', async () => {
+  it('rebuilds pending smart order when review metadata refreshes for the same selected ids', async () => {
     const initialCases = [
       {
         ...selectedCases[0],
@@ -857,6 +923,15 @@ describe('useTrainingState time attack counts', () => {
         smartReviewDue: false,
         smartReviewUrgency: 200,
       },
+      {
+        ...selectedCases[0],
+        id: 'case-3',
+        name: 'Ac',
+        reviewCount: 3,
+        smartReviewDueAt: 300,
+        smartReviewDue: false,
+        smartReviewUrgency: 300,
+      },
     ];
     const refreshedCases = [
       {
@@ -868,6 +943,13 @@ describe('useTrainingState time attack counts', () => {
       },
       {
         ...initialCases[1],
+        reviewCount: 0,
+        smartReviewDueAt: 250,
+        smartReviewDue: false,
+        smartReviewUrgency: 250,
+      },
+      {
+        ...initialCases[2],
         reviewCount: 0,
         smartReviewDueAt: 50,
         smartReviewDue: false,
@@ -882,6 +964,24 @@ describe('useTrainingState time attack counts', () => {
     });
 
     rerender({ currentCases: refreshedCases, currentReviewRefreshToken: 1 });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+    });
+
+    act(() => {
+      result.current.activateTimer();
+      result.current.stopAndRecordSolve(1000);
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-3');
+    });
+
+    act(() => {
+      result.current.activateTimer();
+      result.current.stopAndRecordSolve(1000);
+    });
 
     await waitFor(() => {
       expect(result.current.currentCase?.id).toBe('case-2');
