@@ -41,8 +41,8 @@ export interface CubedexBackupFile {
   stats: ScopedStatsRecord[];
 }
 
-export const IDB_SCHEMA_VERSION = 2;
-export const BACKUP_FORMAT_VERSION = 3;
+export const IDB_SCHEMA_VERSION = 1;
+export const BACKUP_FORMAT_VERSION = 1;
 
 const DB_NAME = 'cubedex';
 const META_STORE = 'meta';
