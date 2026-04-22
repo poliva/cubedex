@@ -41,6 +41,12 @@ import {
   type CaseSrsState,
   updateSrsState,
 } from '../lib/srs';
+import {
+  logReviewRecorded,
+  logSmartQueueRebuild,
+  logSmartQueueRetry,
+  logSmartQueueRetrySkipped,
+} from '../lib/training-debug';
 import { FACES, IDENTITY, SLICE_ROTATION, composePerm, invertPerm, type Face, type FacePerm } from '../lib/smartcube-parity';
 import { useStableCallback } from './useStableCallback';
 
@@ -354,6 +360,19 @@ function arraysEqual<T>(left: T[], right: T[]) {
   }
 
   return true;
+}
+
+function joinReadableList(items: string[]) {
+  if (items.length === 0) {
+    return '';
+  }
+  if (items.length === 1) {
+    return items[0];
+  }
+  if (items.length === 2) {
+    return `${items[0]} and ${items[1]}`;
+  }
+  return `${items.slice(0, -1).join(', ')}, and ${items.at(-1)}`;
 }
 
 function splitMoveToken(move: string) {
@@ -713,6 +732,25 @@ export function useTrainingState(
     smartReviewRetryCountsRef.current = {};
   }
 
+  function logCurrentSmartQueue(reason: string) {
+    if (!options.smartReviewScheduling || options.timeAttack) {
+      return;
+    }
+    logSmartQueueRebuild({
+      reason,
+      queue: selectedQueueRef.current,
+    });
+  }
+
+  function getSelectedCaseForLogging(scopeId: string) {
+    if (currentCaseRef.current?.id === scopeId) {
+      return currentCaseRef.current;
+    }
+    return selectedCaseStateRef.current.find((selectedCase) => selectedCase.id === scopeId)
+      ?? selectedCases.find((selectedCase) => selectedCase.id === scopeId)
+      ?? null;
+  }
+
   function rebuildQueueFromLatestSelectedCases() {
     selectedQueueRef.current = buildQueue(
       selectedCaseStateRef.current,
@@ -721,6 +759,7 @@ export function useTrainingState(
     );
     selectedQueueCopyRef.current = [];
     resetSmartReviewRetryState();
+    logCurrentSmartQueue('queue wrapped to a new pass');
   }
 
   function updateSelectedCaseState(scopeId: string, nextSrsState: CaseSrsState | null, review: CaseReviewEntry) {
@@ -748,22 +787,43 @@ export function useTrainingState(
       return;
     }
 
+    const nextCase = selectedCaseStateRef.current.find((entry) => entry.id === nextCaseId) ?? null;
     if (selectedQueueRef.current.some((entry) => entry.id === nextCaseId)) {
+      logSmartQueueRetrySkipped({
+        caseData: nextCase,
+        reason: 'it is already waiting in the queue',
+      });
       return;
     }
 
-    const nextCase = selectedCaseStateRef.current.find((entry) => entry.id === nextCaseId);
     if (!nextCase) {
+      logSmartQueueRetrySkipped({
+        caseData: null,
+        reason: 'it is no longer part of the selected set',
+      });
       return;
     }
 
     const retryCount = smartReviewRetryCountsRef.current[nextCaseId] ?? 0;
     if (retryCount >= SMART_REVIEW_MAX_REPEATS_PER_PASS) {
+      logSmartQueueRetrySkipped({
+        caseData: nextCase,
+        reason: 'the retry cap for this pass has already been reached',
+        retryCount,
+        maxRepeats: SMART_REVIEW_MAX_REPEATS_PER_PASS,
+      });
       return;
     }
 
     insertCaseWithGap(selectedQueueRef.current, nextCase, SMART_REVIEW_RETRY_GAP);
     smartReviewRetryCountsRef.current[nextCaseId] = retryCount + 1;
+    logSmartQueueRetry({
+      caseData: nextCase,
+      retryCount: retryCount + 1,
+      maxRepeats: SMART_REVIEW_MAX_REPEATS_PER_PASS,
+      gap: SMART_REVIEW_RETRY_GAP,
+      queue: selectedQueueRef.current,
+    });
   }
 
   function resetTimeAttackQueue() {
@@ -958,6 +1018,7 @@ export function useTrainingState(
   function persistCompletedAttempt(scopeId: string, executionMs: number) {
     const reviewHistory = getReviewHistory(scopeId);
     const previousSrsState = getSrsState(scopeId);
+    const caseData = getSelectedCaseForLogging(scopeId);
     const solveHistoryEntry = buildSolveHistoryEntry(executionMs);
     const review = createReviewEntry({
       history: reviewHistory,
@@ -974,12 +1035,20 @@ export function useTrainingState(
     appendAttempt(scopeId, buildAttemptFromReview(review));
 
     const currentBest = getBestTime(scopeId);
-    if (currentBest == null || executionMs < currentBest) {
+    const wasPersonalBest = currentBest == null || executionMs < currentBest;
+    if (wasPersonalBest) {
       setBestTime(scopeId, executionMs);
     }
 
     setSrsState(scopeId, nextSrsState);
     updateSelectedCaseState(scopeId, nextSrsState, review);
+    logReviewRecorded({
+      caseData,
+      review,
+      previousSrsState,
+      nextSrsState,
+      wasPersonalBest,
+    });
     options.onReviewRecorded?.();
     return review;
   }
@@ -1006,6 +1075,7 @@ export function useTrainingState(
   function persistAbortedAttempt(scopeId: string, executionMs: number | null) {
     const reviewHistory = getReviewHistory(scopeId);
     const previousSrsState = getSrsState(scopeId);
+    const caseData = getSelectedCaseForLogging(scopeId);
     const recognitionMs = buildRecognitionMs();
     const totalMs = executionMs == null
       ? (recognitionMs ?? null)
@@ -1025,6 +1095,13 @@ export function useTrainingState(
     appendAttempt(scopeId, buildAttemptFromReview(review));
     setSrsState(scopeId, nextSrsState);
     updateSelectedCaseState(scopeId, nextSrsState, review);
+    logReviewRecorded({
+      caseData,
+      review,
+      previousSrsState,
+      nextSrsState,
+      wasPersonalBest: false,
+    });
     options.onReviewRecorded?.();
     return review;
   }
@@ -1347,6 +1424,7 @@ export function useTrainingState(
       clearStatsIdentity();
       initialPatternRef.current = null;
       clearProgressState();
+      logCurrentSmartQueue('selected cases were cleared');
       return;
     }
 
@@ -1362,6 +1440,14 @@ export function useTrainingState(
       selectedQueueRef.current = buildQueue(selectedCases, options.prioritizeSlowCases, options.smartReviewScheduling);
       selectedQueueCopyRef.current = [];
       resetSmartReviewRetryState();
+      const changedOptions = [
+        timeAttackChanged ? 'time attack mode' : null,
+        randomOrderChanged ? 'random order' : null,
+        prioritizeSlowChanged ? 'prioritize slow cases' : null,
+        smartReviewSchedulingChanged ? 'smart review scheduling' : null,
+        selectionModeChanged ? 'selection change mode' : null,
+      ].filter((entry): entry is string => entry != null);
+      logCurrentSmartQueue(`practice options changed: ${joinReadableList(changedOptions) || 'settings updated'}`);
       retrainQueueHead(selectedQueueRef.current[0] ?? null);
       return;
     }
@@ -1373,6 +1459,7 @@ export function useTrainingState(
       selectedQueueRef.current = newQueue;
       selectedQueueCopyRef.current = retainedCopy;
       resetSmartReviewRetryState();
+      logCurrentSmartQueue(previousSelectedIds.length === 0 ? 'selected cases loaded' : 'selected cases changed in bulk');
       retrainQueueHead(selectedQueueRef.current[0] ?? null);
       return;
     }
@@ -1395,6 +1482,15 @@ export function useTrainingState(
         }
       }
 
+      const addedCaseNames = addedIds
+        .map((selectedId) => selectedCaseMap.get(selectedId)?.name)
+        .filter((name): name is string => Boolean(name));
+      logCurrentSmartQueue(
+        addedCaseNames.length === 1
+          ? `${addedCaseNames[0]} was added to the selected set`
+          : `${addedIds.length} cases were added to the selected set`,
+      );
+
       const nextHead = selectedQueueRef.current[0] ?? null;
       if (nextHead && nextHead.id !== previousHeadId) {
         retrainQueueHead(nextHead);
@@ -1407,6 +1503,11 @@ export function useTrainingState(
       selectedQueueRef.current = selectedQueueRef.current.filter((entry) => !removedIdSet.has(entry.id));
       selectedQueueCopyRef.current = selectedQueueCopyRef.current.filter((entry) => !removedIdSet.has(entry.id));
       resetSmartReviewRetryState();
+      logCurrentSmartQueue(
+        removedIds.length === 1
+          ? 'one case was removed from the selected set'
+          : `${removedIds.length} cases were removed from the selected set`,
+      );
 
       if (selectedQueueRef.current.length === 0) {
         resetDrill();
@@ -1421,6 +1522,7 @@ export function useTrainingState(
     selectedQueueRef.current = buildQueue(selectedCases, options.prioritizeSlowCases, options.smartReviewScheduling);
     selectedQueueCopyRef.current = [];
     resetSmartReviewRetryState();
+    logCurrentSmartQueue('selected cases changed in multiple ways, so the smart queue was rebuilt');
     retrainQueueHead(selectedQueueRef.current[0] ?? null);
   }, [
     options.prioritizeSlowCases,
