@@ -360,7 +360,7 @@ async function renderImagePreview(params: PreviewParams): Promise<Preview> {
   await awaitTwistyIntersectedCallback(player);
   player.experimentalStickering = params.stickering;
   player.experimentalSetupAnchor = params.setupAnchor ?? 'end';
-  player.experimentalSetupAlg = params.alg;
+  player.experimentalSetupAlg = Alg.fromString(params.alg).invert().toString();
   player.alg = '';
   await nextFrame();
   await nextFrame();
