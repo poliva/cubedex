@@ -115,4 +115,53 @@ describe('srs helpers', () => {
     expect(isCaseDue(null, 100)).toBe(true);
     expect(getCaseUrgency(null, 100)).toBe(Number.NEGATIVE_INFINITY);
   });
+
+  it('throttles upward interval growth for rapid repeated successful reviews', () => {
+    const firstState = updateSrsState(null, createReviewEntry({
+      history: [],
+      reviewedAt: 10_000,
+      mode: 'timer',
+      executionMs: 1_000,
+      recognitionMs: null,
+      totalMs: 1_000,
+      hadMistake: false,
+      aborted: false,
+      timerOnly: true,
+    }));
+    const secondState = updateSrsState(firstState, makeReview({
+      reviewedAt: 10_000 + 60_000,
+      grade: 'easy',
+    }));
+
+    expect(secondState.stabilityDays).toBe(firstState.stabilityDays);
+    expect(secondState.dueAt).toBe(firstState.dueAt);
+    expect(secondState.reps).toBe(2);
+    expect(secondState.lastReviewedAt).toBe(10_000 + 60_000);
+    expect(secondState.lastGrade).toBe('easy');
+  });
+
+  it('still applies rapid repeated again reviews immediately', () => {
+    const firstState = updateSrsState(null, createReviewEntry({
+      history: [],
+      reviewedAt: 10_000,
+      mode: 'timer',
+      executionMs: 1_000,
+      recognitionMs: null,
+      totalMs: 1_000,
+      hadMistake: false,
+      aborted: false,
+      timerOnly: true,
+    }));
+    const secondState = updateSrsState(firstState, makeReview({
+      reviewedAt: 10_000 + 60_000,
+      grade: 'again',
+      aborted: true,
+    }));
+
+    expect(secondState.stabilityDays).toBeLessThan(firstState.stabilityDays);
+    expect(secondState.lapses).toBe(firstState.lapses + 1);
+    expect(secondState.lastReviewedAt).toBe(10_000 + 60_000);
+    expect(secondState.lastGrade).toBe('again');
+    expect(secondState.dueAt).toBeGreaterThan(secondState.lastReviewedAt ?? 0);
+  });
 });

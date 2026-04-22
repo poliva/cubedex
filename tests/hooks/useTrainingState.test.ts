@@ -95,6 +95,7 @@ import {
   getSrsState,
   getTimeAttackLastRuns,
 } from '../../src/lib/storage';
+import type { CaseCardData } from '../../src/lib/case-cards';
 
 function renderTrainingState() {
   return renderHook(() => useTrainingState(selectedCases, 'PLL', {
@@ -112,20 +113,49 @@ function renderTrainingState() {
   }));
 }
 
+function makeSmartReviewCases(count: number, overrides: Partial<CaseCardData>[] = []) {
+  return Array.from({ length: count }, (_, index) => ({
+    ...selectedCases[index % selectedCases.length],
+    id: `case-${index + 1}`,
+    name: `Case ${index + 1}`,
+    subset: 'A',
+    category: 'PLL',
+    reviewCount: 2,
+    smartReviewDueAt: index,
+    smartReviewDue: true,
+    smartReviewUrgency: index,
+    ...overrides[index],
+  }));
+}
+
+function renderSmartReviewState(cases: CaseCardData[]) {
+  return renderHook(({ currentCases }) => useTrainingState(currentCases, 'PLL', {
+    selectionChangeMode: 'bulk',
+    countdownMode: false,
+    randomizeAUF: false,
+    randomOrder: false,
+    timeAttack: false,
+    prioritizeSlowCases: false,
+    prioritizeFailedCases: false,
+    smartReviewScheduling: true,
+    smartcubeConnected: false,
+    currentPattern: null,
+    statsRefreshToken: 0,
+  }), {
+    initialProps: { currentCases: cases },
+  });
+}
+
 describe('useTrainingState time attack counts', () => {
   beforeEach(() => {
     resetMockState(mockState);
 
-    const patternKeys = [
-      'solved',
-      'solved:R',
-      'solved:R:U',
-      'solved:R:R',
-      'solved:R:R:R',
-      'solved:R:R:R:R',
-      'solved:R:R:R:R:R',
-      'solved:R:R:R:R:R:R',
-    ];
+    const patternKeys = ['solved', 'solved:R:U'];
+    let repeatedR = 'solved';
+    for (let index = 0; index < 12; index += 1) {
+      repeatedR = `${repeatedR}:R`;
+      patternKeys.push(repeatedR);
+    }
     for (const key of patternKeys) {
       mockState.patterns[key] = createPattern(mockState, key);
     }
@@ -376,6 +406,78 @@ describe('useTrainingState time attack counts', () => {
     });
   });
 
+  it('keeps logging rapid repeated solves while throttling upward SRS growth', async () => {
+    const firstReviewedAt = 10_000;
+    const secondReviewedAt = firstReviewedAt + 60_000;
+    const initialDueAt = firstReviewedAt + 2 * 24 * 60 * 60 * 1000;
+    const dateNowSpy = vi.spyOn(Date, 'now').mockReturnValue(secondReviewedAt);
+
+    mockState.attemptHistory.set('case-1', [
+      {
+        recordedAt: firstReviewedAt,
+        mode: 'timer',
+        executionMs: 1300,
+        recognitionMs: null,
+        totalMs: 1300,
+        hadMistake: false,
+        aborted: false,
+        timerOnly: true,
+        grade: 'good',
+      },
+    ]);
+    mockState.bestTimes.set('case-1', 1300);
+    mockState.srsStates.set('case-1', {
+      dueAt: initialDueAt,
+      stabilityDays: 2,
+      difficulty: 5,
+      reps: 1,
+      lapses: 0,
+      lastReviewedAt: firstReviewedAt,
+      lastGrade: 'good',
+    });
+
+    try {
+      const { result } = renderHook(() => useTrainingState([selectedCases[0]], 'PLL', {
+        selectionChangeMode: 'bulk',
+        countdownMode: false,
+        randomizeAUF: false,
+        randomOrder: false,
+        timeAttack: false,
+        prioritizeSlowCases: false,
+        prioritizeFailedCases: false,
+        smartReviewScheduling: false,
+        smartcubeConnected: false,
+        currentPattern: null,
+        statsRefreshToken: 0,
+      }));
+
+      await waitFor(() => {
+        expect(result.current.currentCase?.id).toBe('case-1');
+      });
+
+      act(() => {
+        result.current.stopAndRecordSolve(1200);
+      });
+
+      expect(getAttemptHistory('case-1')).toHaveLength(2);
+      expect(getReviewHistory('case-1')).toHaveLength(2);
+      expect(getSolveHistory('case-1')).toEqual([
+        { executionMs: 1300, recognitionMs: null, totalMs: 1300 },
+        { executionMs: 1200, recognitionMs: null, totalMs: 1200 },
+      ]);
+      expect(getBestTime('case-1')).toBe(1200);
+      expect(getSrsState('case-1')).toMatchObject({
+        dueAt: initialDueAt,
+        stabilityDays: 2,
+        reps: 2,
+        lastReviewedAt: secondReviewedAt,
+        lastGrade: 'good',
+      });
+    } finally {
+      dateNowSpy.mockRestore();
+    }
+  });
+
   it('records aborted attempts in review history without affecting solve stats or best time', async () => {
     let now = 1000;
     vi.spyOn(performance, 'now').mockImplementation(() => now);
@@ -623,6 +725,156 @@ describe('useTrainingState time attack counts', () => {
       });
     } finally {
       randomSpy.mockRestore();
+    }
+  });
+
+  it('rebuilds smart order from refreshed case metadata when a pass wraps', async () => {
+    const initialCases = makeSmartReviewCases(3);
+    const refreshedCases = [
+      {
+        ...initialCases[0],
+        reviewCount: 3,
+        smartReviewDueAt: 50,
+        smartReviewDue: false,
+        smartReviewUrgency: 50,
+      },
+      {
+        ...initialCases[1],
+        reviewCount: 4,
+        smartReviewDueAt: 0,
+        smartReviewDue: true,
+        smartReviewUrgency: 0,
+      },
+      {
+        ...initialCases[2],
+        reviewCount: 3,
+        smartReviewDueAt: 100,
+        smartReviewDue: false,
+        smartReviewUrgency: 100,
+      },
+    ];
+
+    const { result, rerender } = renderSmartReviewState(initialCases);
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+    });
+
+    act(() => {
+      result.current.stopAndRecordSolve(1000);
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-2');
+    });
+
+    act(() => {
+      result.current.stopAndRecordSolve(1100);
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-3');
+    });
+
+    rerender({ currentCases: refreshedCases });
+
+    act(() => {
+      result.current.stopAndRecordSolve(1200);
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-2');
+    });
+  });
+
+  it('repeats failed smart-order cases once later in the same pass with spacing', async () => {
+    const cases = makeSmartReviewCases(7);
+    const { result } = renderSmartReviewState(cases);
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+    });
+
+    act(() => {
+      result.current.handleSmartcubeMove(mockState.patterns['solved:R:U'], 'U');
+    });
+
+    await waitFor(() => {
+      expect(result.current.failedCounts['case-1']).toBe(1);
+    });
+
+    act(() => {
+      result.current.stopAndRecordSolve(1000);
+    });
+
+    for (const expectedCaseId of ['case-2', 'case-3', 'case-4', 'case-5', 'case-6']) {
+      await waitFor(() => {
+        expect(result.current.currentCase?.id).toBe(expectedCaseId);
+      });
+
+      act(() => {
+        result.current.stopAndRecordSolve(1000);
+      });
+    }
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+    });
+
+    act(() => {
+      result.current.handleSmartcubeMove(mockState.patterns['solved:R:U'], 'U');
+    });
+
+    await waitFor(() => {
+      expect(result.current.failedCounts['case-1']).toBe(2);
+    });
+
+    act(() => {
+      result.current.stopAndRecordSolve(1000);
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-7');
+    });
+  });
+
+  it('does not repeat slow hard reviews in the same pass', async () => {
+    const cases = makeSmartReviewCases(7);
+    mockState.attemptHistory.set('case-1', Array.from({ length: 8 }, (_, index) => ({
+      recordedAt: index + 1,
+      mode: 'timer',
+      executionMs: 1000,
+      recognitionMs: null,
+      totalMs: 1000,
+      hadMistake: false,
+      aborted: false,
+      timerOnly: true,
+      grade: 'good',
+    })));
+
+    const { result } = renderSmartReviewState(cases);
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+    });
+
+    act(() => {
+      result.current.stopAndRecordSolve(2000);
+    });
+
+    await waitFor(() => {
+      expect(getReviewHistory('case-1').at(-1)).toEqual(expect.objectContaining({ grade: 'hard' }));
+      expect(result.current.currentCase?.id).toBe('case-2');
+    });
+
+    for (const expectedCaseId of ['case-3', 'case-4', 'case-5', 'case-6', 'case-7']) {
+      act(() => {
+        result.current.stopAndRecordSolve(1000);
+      });
+
+      await waitFor(() => {
+        expect(result.current.currentCase?.id).toBe(expectedCaseId);
+      });
     }
   });
 });
