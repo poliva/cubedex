@@ -56,7 +56,7 @@ export function useAppSettings(): AppSettingsState {
   const [countdownMode, setCountdownModeState] = useState(readOption('countdownMode') === 'true');
   const [alwaysScrambleTo, setAlwaysScrambleToState] = useState(readOption('alwaysScrambleTo') === 'true');
   const [autoUpdateLearningState, setAutoUpdateLearningStateState] = useState(
-    readOption('autoUpdateLearningState') === 'true',
+    readOption('autoUpdateLearningState') !== 'false',
   );
   const [visualization, setVisualizationState] = useState(readOption('visualization') || 'PG3D');
   const [backview, setBackviewState] = useState(readOption('backview') || 'none');

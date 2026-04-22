@@ -87,18 +87,18 @@ describe('useAppSettings', () => {
     });
   });
 
-  it('defaults auto learning state off and persists changes', async () => {
+  it('defaults auto learning state on and persists changes', async () => {
     const { result } = renderHook(() => useAppSettings());
 
-    expect(result.current.autoUpdateLearningState).toBe(false);
+    expect(result.current.autoUpdateLearningState).toBe(true);
 
     act(() => {
-      result.current.setAutoUpdateLearningState(true);
+      result.current.setAutoUpdateLearningState(false);
     });
 
     await waitFor(() => {
-      expect(result.current.autoUpdateLearningState).toBe(true);
-      expect(localStorage.getItem('autoUpdateLearningState')).toBe('true');
+      expect(result.current.autoUpdateLearningState).toBe(false);
+      expect(localStorage.getItem('autoUpdateLearningState')).toBe('false');
     });
   });
 });
