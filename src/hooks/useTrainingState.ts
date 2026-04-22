@@ -33,7 +33,14 @@ import {
   setSrsState,
   setTimeAttackLastRuns,
 } from '../lib/storage';
-import { createReviewEntry, updateSrsState } from '../lib/srs';
+import {
+  createReviewEntry,
+  getCaseUrgency,
+  isCaseDue,
+  type CaseReviewEntry,
+  type CaseSrsState,
+  updateSrsState,
+} from '../lib/srs';
 import { FACES, IDENTITY, SLICE_ROTATION, composePerm, invertPerm, type Face, type FacePerm } from '../lib/smartcube-parity';
 import { useStableCallback } from './useStableCallback';
 
@@ -150,6 +157,8 @@ export interface TrainingState {
 }
 
 const MAX_RECOGNITION_MS = 15000;
+const SMART_REVIEW_RETRY_GAP = 4;
+const SMART_REVIEW_MAX_REPEATS_PER_PASS = 2;
 
 function formatTimerTimestamp(timestamp: number) {
   const t = makeTimeParts(timestamp);
@@ -227,6 +236,10 @@ function appendLimitedTime<T>(value: T, values: T[]) {
     nextTimes.shift();
   }
   return nextTimes;
+}
+
+function cloneCaseCards(cases: CaseCardData[]) {
+  return cases.map((selectedCase) => ({ ...selectedCase }));
 }
 
 function insertSlowCase(queue: CaseCardData[], nextCase: CaseCardData) {
@@ -310,6 +323,11 @@ function shuffleCases(cases: CaseCardData[]) {
     [nextCases[index], nextCases[randomIndex]] = [nextCases[randomIndex], nextCases[index]];
   }
   return nextCases;
+}
+
+function insertCaseWithGap(queue: CaseCardData[], nextCase: CaseCardData, gap: number) {
+  const insertIndex = Math.min(queue.length, Math.max(0, gap));
+  queue.splice(insertIndex, 0, nextCase);
 }
 
 function arraysEqual<T>(left: T[], right: T[]) {
@@ -560,6 +578,8 @@ export function useTrainingState(
   const lastMovesRef = useRef<string[]>([]);
   const selectedQueueRef = useRef<CaseCardData[]>([]);
   const selectedQueueCopyRef = useRef<CaseCardData[]>([]);
+  const selectedCaseStateRef = useRef<CaseCardData[]>(cloneCaseCards(selectedCases));
+  const smartReviewRetryCountsRef = useRef<Record<string, number>>({});
   const currentCaseRef = useRef<CaseCardData | null>(null);
   const originalAlgIdRef = useRef('');
   const originalAlgTextRef = useRef('');
@@ -586,6 +606,10 @@ export function useTrainingState(
   currentCaseRef.current = currentCase;
   const countdownActive = countdownValue != null;
   const countdownEnabled = options.countdownMode && !options.timeAttack;
+
+  useEffect(() => {
+    selectedCaseStateRef.current = cloneCaseCards(selectedCases);
+  }, [selectedCases]);
 
   const displayState = useMemo(
     () => buildDisplayState(displayAlg, currentMoveIndex, badMoves, options.randomizeAUF),
@@ -673,9 +697,67 @@ export function useTrainingState(
     return nextQueue;
   }
 
+  function resetSmartReviewRetryState() {
+    smartReviewRetryCountsRef.current = {};
+  }
+
+  function rebuildQueueFromLatestSelectedCases() {
+    selectedQueueRef.current = buildQueue(
+      selectedCaseStateRef.current,
+      options.prioritizeSlowCases,
+      options.smartReviewScheduling,
+    );
+    selectedQueueCopyRef.current = [];
+    resetSmartReviewRetryState();
+  }
+
+  function updateSelectedCaseState(scopeId: string, nextSrsState: CaseSrsState | null, review: CaseReviewEntry) {
+    selectedCaseStateRef.current = selectedCaseStateRef.current.map((selectedCase) => {
+      if (selectedCase.id !== scopeId) {
+        return selectedCase;
+      }
+
+      return {
+        ...selectedCase,
+        reviewCount: selectedCase.reviewCount + 1,
+        smartReviewDueAt: nextSrsState?.dueAt ?? null,
+        smartReviewDue: isCaseDue(nextSrsState, review.reviewedAt),
+        smartReviewUrgency: getCaseUrgency(nextSrsState, review.reviewedAt),
+      };
+    });
+  }
+
+  function shouldRetryCaseInCurrentPass(review: CaseReviewEntry) {
+    return review.aborted || review.grade === 'again' || review.hadMistake;
+  }
+
+  function queueSmartReviewRetry(nextCaseId: string) {
+    if (!options.smartReviewScheduling || options.timeAttack) {
+      return;
+    }
+
+    if (selectedQueueRef.current.some((entry) => entry.id === nextCaseId)) {
+      return;
+    }
+
+    const nextCase = selectedCaseStateRef.current.find((entry) => entry.id === nextCaseId);
+    if (!nextCase) {
+      return;
+    }
+
+    const retryCount = smartReviewRetryCountsRef.current[nextCaseId] ?? 0;
+    if (retryCount >= SMART_REVIEW_MAX_REPEATS_PER_PASS) {
+      return;
+    }
+
+    insertCaseWithGap(selectedQueueRef.current, nextCase, SMART_REVIEW_RETRY_GAP);
+    smartReviewRetryCountsRef.current[nextCaseId] = retryCount + 1;
+  }
+
   function resetTimeAttackQueue() {
     selectedQueueRef.current = buildSelectedQueueState(selectedCases);
     selectedQueueCopyRef.current = [];
+    resetSmartReviewRetryState();
     timeAttackTotalCasesRef.current = selectedQueueRef.current.length;
     syncTimeAttackProgress(false, selectedQueueRef.current.length > 0 ? 1 : 0, timeAttackTotalCasesRef.current);
   }
@@ -885,7 +967,9 @@ export function useTrainingState(
     }
 
     setSrsState(scopeId, nextSrsState);
+    updateSelectedCaseState(scopeId, nextSrsState, review);
     options.onReviewRecorded?.();
+    return review;
   }
 
   function persistExecutionOnlyResult(scopeId: string, executionMs: number) {
@@ -928,7 +1012,9 @@ export function useTrainingState(
     const nextSrsState = updateSrsState(previousSrsState, review);
     appendAttempt(scopeId, buildAttemptFromReview(review));
     setSrsState(scopeId, nextSrsState);
+    updateSelectedCaseState(scopeId, nextSrsState, review);
     options.onReviewRecorded?.();
+    return review;
   }
 
   function selectQueueHead(nextCase: CaseCardData | null) {
@@ -948,29 +1034,24 @@ export function useTrainingState(
     return nextCase?.id;
   }
 
-  function switchToNextAlgorithm() {
+  function switchToNextAlgorithm(review?: CaseReviewEntry) {
     flashKeyRef.current += 1;
     setFlashRequest({ key: flashKeyRef.current, color: 'green', durationMs: 200 });
 
-    if (selectedQueueRef.current.length + selectedQueueCopyRef.current.length > 1) {
-      const currentAlg = selectedQueueRef.current.shift() ?? null;
-      if (selectedQueueRef.current.length === 0) {
-        selectedQueueRef.current = [...selectedQueueCopyRef.current];
-        selectedQueueCopyRef.current = [];
-        if (options.prioritizeSlowCases || options.smartReviewScheduling) {
-          selectedQueueRef.current = buildQueue(
-            selectedQueueRef.current,
-            options.prioritizeSlowCases,
-            options.smartReviewScheduling,
-          );
-        }
+    const currentAlg = selectedQueueRef.current.shift() ?? null;
+    if (currentAlg) {
+      selectedQueueCopyRef.current.push(currentAlg);
+      if (review && shouldRetryCaseInCurrentPass(review)) {
+        queueSmartReviewRetry(currentAlg.id);
       }
-      if (options.randomOrder) {
-        selectedQueueRef.current = shuffleCases(selectedQueueRef.current);
-      }
-      if (currentAlg) {
-        selectedQueueCopyRef.current.push(currentAlg);
-      }
+    }
+
+    if (selectedQueueRef.current.length === 0 && selectedCaseStateRef.current.length > 0) {
+      rebuildQueueFromLatestSelectedCases();
+    }
+
+    if (options.randomOrder && selectedQueueRef.current.length > 1) {
+      selectedQueueRef.current = shuffleCases(selectedQueueRef.current);
     }
 
     selectQueueHead(selectedQueueRef.current[0] ?? currentCaseRef.current);
@@ -1241,6 +1322,8 @@ export function useTrainingState(
       cancelCountdown();
       selectedQueueRef.current = [];
       selectedQueueCopyRef.current = [];
+      selectedCaseStateRef.current = [];
+      resetSmartReviewRetryState();
       clearTimeAttackSession();
       setCurrentCase(null);
       setInputMode(true);
@@ -1266,6 +1349,7 @@ export function useTrainingState(
       clearTimeAttackSession();
       selectedQueueRef.current = buildQueue(selectedCases, options.prioritizeSlowCases, options.smartReviewScheduling);
       selectedQueueCopyRef.current = [];
+      resetSmartReviewRetryState();
       retrainQueueHead(selectedQueueRef.current[0] ?? null);
       return;
     }
@@ -1276,6 +1360,7 @@ export function useTrainingState(
       const retainedCopy = selectedQueueCopyRef.current.filter((c) => existingCopyIds.has(c.id));
       selectedQueueRef.current = newQueue;
       selectedQueueCopyRef.current = retainedCopy;
+      resetSmartReviewRetryState();
       retrainQueueHead(selectedQueueRef.current[0] ?? null);
       return;
     }
@@ -1309,6 +1394,7 @@ export function useTrainingState(
       const removedIdSet = new Set(removedIds);
       selectedQueueRef.current = selectedQueueRef.current.filter((entry) => !removedIdSet.has(entry.id));
       selectedQueueCopyRef.current = selectedQueueCopyRef.current.filter((entry) => !removedIdSet.has(entry.id));
+      resetSmartReviewRetryState();
 
       if (selectedQueueRef.current.length === 0) {
         resetDrill();
@@ -1322,6 +1408,7 @@ export function useTrainingState(
 
     selectedQueueRef.current = buildQueue(selectedCases, options.prioritizeSlowCases, options.smartReviewScheduling);
     selectedQueueCopyRef.current = [];
+    resetSmartReviewRetryState();
     retrainQueueHead(selectedQueueRef.current[0] ?? null);
   }, [
     options.prioritizeSlowCases,
@@ -1382,7 +1469,7 @@ export function useTrainingState(
       return;
     }
 
-    persistCompletedAttempt(algId, finalTime);
+    const review = persistCompletedAttempt(algId, finalTime);
     incrementPracticeCount(algId);
     setTimerText(formatTimerTimestamp(finalTime));
     setTimerStateInternal('STOPPED');
@@ -1391,7 +1478,7 @@ export function useTrainingState(
     if (!options.smartcubeConnected) {
       const nextInitialPattern = patternStatesRef.current.at(-1) ?? initialPatternRef.current;
 
-      switchToNextAlgorithm();
+      switchToNextAlgorithm(review);
 
       const nextCase = selectedQueueRef.current[0] ?? null;
       if (nextCase) {

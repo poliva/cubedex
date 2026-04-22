@@ -46,6 +46,7 @@ const AUTO_LEARNING_MIN_SUCCESSES = 11;
 const DEFAULT_DIFFICULTY = 5;
 const REVIEW_BASELINE_SAMPLE_SIZE = 8;
 const MUCH_SLOWER_THRESHOLD = 1.35;
+const UPWARD_GROWTH_THROTTLE_MS = 2 * 60 * 1000;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -223,6 +224,15 @@ export function computeRetrievability(state: CaseSrsState, reviewedAt: number) {
   return Math.pow(1 + elapsedDays / Math.max(0.01, 9 * state.stabilityDays), -1);
 }
 
+function getDueAt(reviewedAt: number, stabilityDays: number) {
+  return reviewedAt + Math.round(stabilityDays * DAY_MS);
+}
+
+function shouldThrottleUpwardGrowth(state: CaseSrsState, reviewedAt: number) {
+  return state.lastReviewedAt != null
+    && reviewedAt - state.lastReviewedAt < UPWARD_GROWTH_THROTTLE_MS;
+}
+
 function createInitialSrsState(reviewedAt: number, grade: ReviewGrade): CaseSrsState {
   const stabilityDays = grade === 'again'
     ? 0.25
@@ -240,7 +250,7 @@ function createInitialSrsState(reviewedAt: number, grade: ReviewGrade): CaseSrsS
         : 5;
 
   return {
-    dueAt: reviewedAt + Math.round(stabilityDays * DAY_MS),
+    dueAt: getDueAt(reviewedAt, stabilityDays),
     stabilityDays,
     difficulty,
     reps: 1,
@@ -283,8 +293,18 @@ export function updateSrsState(currentState: CaseSrsState | null, review: CaseRe
     );
   }
 
+  let dueAt = getDueAt(review.reviewedAt, stabilityDays);
+  if (
+    review.grade !== 'again'
+    && stabilityDays > current.stabilityDays
+    && shouldThrottleUpwardGrowth(current, review.reviewedAt)
+  ) {
+    stabilityDays = current.stabilityDays;
+    dueAt = current.dueAt ?? getDueAt(review.reviewedAt, stabilityDays);
+  }
+
   return {
-    dueAt: review.reviewedAt + Math.round(stabilityDays * DAY_MS),
+    dueAt,
     stabilityDays: clamp(stabilityDays, 0.25, 36500),
     difficulty: clamp(difficulty, 1, 10),
     reps: current.reps + 1,
