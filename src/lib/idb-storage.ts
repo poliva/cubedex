@@ -41,13 +41,20 @@ export interface CubedexBackupFile {
   stats: ScopedStatsRecord[];
 }
 
-export const IDB_SCHEMA_VERSION = 1;
+export interface PreviewRecord {
+  key: string;
+  src: string;
+  updatedAt: number;
+}
+
+export const IDB_SCHEMA_VERSION = 2;
 export const BACKUP_FORMAT_VERSION = 1;
 
 const DB_NAME = 'cubedex';
 const META_STORE = 'meta';
 const LIBRARY_STORE = 'library';
 const STATS_STORE = 'stats';
+const PREVIEW_STORE = 'previews';
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
@@ -89,6 +96,11 @@ export function openCubedexDatabase() {
         const statsStore = database.createObjectStore(STATS_STORE, { keyPath: 'scopeId' });
         statsStore.createIndex('category', 'category', { unique: false });
         statsStore.createIndex('algId', 'algId', { unique: false });
+      }
+
+      if (!database.objectStoreNames.contains(PREVIEW_STORE)) {
+        const previewStore = database.createObjectStore(PREVIEW_STORE, { keyPath: 'key' });
+        previewStore.createIndex('updatedAt', 'updatedAt', { unique: false });
       }
     };
 
@@ -200,5 +212,48 @@ export async function deleteStatsRecordsFromDb(database: IDBDatabase, scopeIds: 
   for (const scopeId of scopeIds) {
     store.delete(scopeId);
   }
+  await transactionDone(transaction);
+}
+
+export async function loadPreviewFromDb(database: IDBDatabase, key: string) {
+  const transaction = database.transaction(PREVIEW_STORE, 'readonly');
+  const store = transaction.objectStore(PREVIEW_STORE);
+  const result = await requestToPromise(store.get(key)) as PreviewRecord | undefined;
+  await transactionDone(transaction);
+  return result ?? null;
+}
+
+export async function savePreviewToDb(database: IDBDatabase, record: PreviewRecord) {
+  const transaction = database.transaction(PREVIEW_STORE, 'readwrite');
+  transaction.objectStore(PREVIEW_STORE).put(record);
+  await transactionDone(transaction);
+}
+
+export async function deletePreviewFromDb(database: IDBDatabase, key: string) {
+  const transaction = database.transaction(PREVIEW_STORE, 'readwrite');
+  transaction.objectStore(PREVIEW_STORE).delete(key);
+  await transactionDone(transaction);
+}
+
+export async function prunePreviewsInDb(database: IDBDatabase, maxEntries: number) {
+  if (maxEntries < 1) {
+    return;
+  }
+
+  const transaction = database.transaction(PREVIEW_STORE, 'readwrite');
+  const store = transaction.objectStore(PREVIEW_STORE);
+  const records = await requestToPromise(store.getAll()) as PreviewRecord[];
+
+  if (records.length > maxEntries) {
+    const deleteCount = records.length - maxEntries;
+    const oldestRecords = [...records]
+      .sort((left, right) => left.updatedAt - right.updatedAt)
+      .slice(0, deleteCount);
+
+    for (const record of oldestRecords) {
+      store.delete(record.key);
+    }
+  }
+
   await transactionDone(transaction);
 }

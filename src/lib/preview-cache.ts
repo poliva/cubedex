@@ -1,5 +1,12 @@
 import { TwistyPlayer } from 'cubing/twisty';
 import { Alg } from 'cubing/alg';
+import {
+  deletePreviewFromDb,
+  loadPreviewFromDb,
+  openCubedexDatabase,
+  prunePreviewsInDb,
+  savePreviewToDb,
+} from './idb-storage';
 
 export type Preview =
   { src: string };
@@ -13,7 +20,9 @@ export interface PreviewParams {
 
 export type PreviewKey = string;
 
+export const PREVIEW_CACHE_VERSION = 1;
 const LRU_CAPACITY = 512;
+const PERSISTENT_CACHE_CAPACITY = 1024;
 
 const cache = new Map<PreviewKey, Preview>();
 const pending = new Map<PreviewKey, Promise<Preview>>();
@@ -131,7 +140,7 @@ function touch(key: PreviewKey, value: Preview) {
 }
 
 export function previewKey(params: PreviewParams): PreviewKey {
-  return `${params.visualization}|${params.stickering}|${params.setupAnchor ?? 'end'}|${params.alg}`;
+  return `v${PREVIEW_CACHE_VERSION}|${params.visualization}|${params.stickering}|${params.setupAnchor ?? 'end'}|${params.alg}`;
 }
 
 export function getPreview(key: PreviewKey): Preview | undefined {
@@ -162,6 +171,40 @@ function notify(key: PreviewKey) {
     } catch {
       // ignore
     }
+  }
+}
+
+async function loadPreviewFromPersistentCache(key: PreviewKey): Promise<Preview | null> {
+  try {
+    const database = await openCubedexDatabase();
+    const record = await loadPreviewFromDb(database, key);
+    if (!record) {
+      return null;
+    }
+    if (!record.src) {
+      await deletePreviewFromDb(database, key);
+      return null;
+    }
+    return { src: record.src };
+  } catch {
+    return null;
+  }
+}
+
+async function persistPreview(key: PreviewKey, preview: Preview): Promise<void> {
+  if (previewIsEmpty(preview)) {
+    return;
+  }
+  try {
+    const database = await openCubedexDatabase();
+    await savePreviewToDb(database, {
+      key,
+      src: preview.src,
+      updatedAt: Date.now(),
+    });
+    await prunePreviewsInDb(database, PERSISTENT_CACHE_CAPACITY);
+  } catch {
+    // ignore persistent cache failures and fall back to memory-only behavior
   }
 }
 
@@ -383,10 +426,19 @@ export function requestPreview(params: PreviewParams): Promise<Preview> {
   const promise = new Promise<Preview>((resolve) => {
     enqueue(async () => {
       try {
+        const persisted = await loadPreviewFromPersistentCache(key);
+        if (persisted) {
+          touch(key, persisted);
+          resolve(persisted);
+          notify(key);
+          return;
+        }
+
         const preview = is2DVisualization(params.visualization)
           ? await renderSvgPreview(params)
           : await renderImagePreview(params);
         touch(key, preview);
+        await persistPreview(key, preview);
         resolve(preview);
         notify(key);
       } catch (e) {
