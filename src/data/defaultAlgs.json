@@ -522,7 +522,7 @@
         },
         {
           "name": "F2L 2 - Back Left",
-          "algorithm": "d' R' U R"
+          "algorithm": "U' f' L f"
         },
         {
           "name": "F2L 3 - Front Right",
@@ -567,11 +567,11 @@
         },
         {
           "name": "F2L 11 - Front Left",
-          "algorithm": "L' U L U' L' U L U2 L' U L"
+          "algorithm": "L U2 L2 U' L2 U' L'"
         },
         {
           "name": "F2L 11 - Back Right",
-          "algorithm": "R' U R U' R' U R U2 R' U R"
+          "algorithm": "R U2 R2 U' R2 U' R'"
         },
         {
           "name": "F2L 11 - Back Left",
@@ -579,7 +579,7 @@
         },
         {
           "name": "F2L 12 - Front Right",
-          "algorithm": "R U' R' U R U' R' U2 R U' R'"
+          "algorithm": "R' U2 R2 U R2 U R"
         },
         {
           "name": "F2L 12 - Front Left",
@@ -591,11 +591,11 @@
         },
         {
           "name": "F2L 12 - Back Left",
-          "algorithm": "L U' L' U L U' L' U2 L U' L'"
+          "algorithm": "L' U2 L2 U L2 U L"
         },
         {
           "name": "F2L 13 - Front Right",
-          "algorithm": "M' U' R U R' U2 R U' r'"
+          "algorithm": "y' U R' U R U' R' U' R (y)"
         },
         {
           "name": "F2L 13 - Front Left",
@@ -607,7 +607,7 @@
         },
         {
           "name": "F2L 13 - Back Left",
-          "algorithm": "d L' U L U' L' U' L"
+          "algorithm": "y U R' U R U' R' U' R (y')"
         },
         {
           "name": "F2L 14 - Front Right",
@@ -615,11 +615,11 @@
         },
         {
           "name": "F2L 14 - Front Left",
-          "algorithm": "d' L U' L' U L U L'"
+          "algorithm": "y U' L U' L' U L U L' (y')"
         },
         {
           "name": "F2L 14 - Back Right",
-          "algorithm": "d' R U' R' U R U R'"
+          "algorithm": "y' U' L U' L' U L U L' (y)"
         },
         {
           "name": "F2L 14 - Back Left",
@@ -627,7 +627,7 @@
         },
         {
           "name": "F2L 15 - Front Right",
-          "algorithm": "R' D' R U' R' D R U R U' R'"
+          "algorithm": "U R' F R F' U R U R'"
         },
         {
           "name": "F2L 15 - Front Left",
@@ -639,7 +639,7 @@
         },
         {
           "name": "F2L 15 - Back Left",
-          "algorithm": "L U L' U2 L U' L' U L U' L'"
+          "algorithm": "y R' U R U2 f R f' (y')"
         },
         {
           "name": "F2L 16 - Front Right",
@@ -647,11 +647,11 @@
         },
         {
           "name": "F2L 16 - Front Left",
-          "algorithm": "F U' R U' R' U2 F'"
+          "algorithm": "U' L F' L' F U' L' U' L"
         },
         {
           "name": "F2L 16 - Back Right",
-          "algorithm": "R' U' R U2 R' U R U' R' U R"
+          "algorithm": "y' L U' L' U2 f' L' f (y)"
         },
         {
           "name": "F2L 16 - Back Left",
@@ -663,11 +663,11 @@
         },
         {
           "name": "F2L 17 - Front Left",
-          "algorithm": "L F' L' F L' U L U' L' U L"
+          "algorithm": "y L U2 L' U' L U L' (y')"
         },
         {
           "name": "F2L 17 - Back Right",
-          "algorithm": "R' U2 F R U R' U' F' R"
+          "algorithm": "y' L U2 L' U' L U L' (y)"
         },
         {
           "name": "F2L 17 - Back Left",
@@ -675,7 +675,7 @@
         },
         {
           "name": "F2L 18 - Front Right",
-          "algorithm": "R' F R F' R U' R' U R U' R'"
+          "algorithm": "y' R' U2 R U R' U' R (y)"
         },
         {
           "name": "F2L 18 - Front Left",
@@ -687,7 +687,7 @@
         },
         {
           "name": "F2L 18 - Back Left",
-          "algorithm": "L U2 F' L' U' L U F L'"
+          "algorithm": "y R' U2 R U R' U' R (y')"
         },
         {
           "name": "F2L 23 - Front Right",
@@ -695,31 +695,31 @@
         },
         {
           "name": "F2L 23 - Front Left",
-          "algorithm": "F' U' L' U L F L' U L"
+          "algorithm": "U' F R U' R' F' L' U' L"
         },
         {
           "name": "F2L 23 - Back Right",
-          "algorithm": "U R' F R' F' R2 U' R' U R"
+          "algorithm": "y U R U' R' U' R U' R' U R U' R' (y')"
         },
         {
           "name": "F2L 23 - Back Left",
-          "algorithm": "L U L' U2 L U L' U' L U L'"
+          "algorithm": "U L U' L' U' L U' L' U L U' L'"
         },
         {
           "name": "F2L 24 - Front Right",
-          "algorithm": "F U R U' R' F' R U' R'"
+          "algorithm": "U F' L' U L F R U R'"
         },
         {
           "name": "F2L 24 - Front Left",
-          "algorithm": "U' F' r U r' U' L' U' L"
+          "algorithm": "U' L' U L U L' U L U' L' U L"
         },
         {
           "name": "F2L 24 - Back Right",
-          "algorithm": "R' U' R U2 R' U' R U R' U' R"
+          "algorithm": "U' R' U R U R' U R U' R' U R"
         },
         {
           "name": "F2L 24 - Back Left",
-          "algorithm": "U2 r U R' U R U2 B r'"
+          "algorithm": "y U' R' U R U R' U R U' R' U R (y')"
         }
       ]
     },
@@ -732,15 +732,15 @@
         },
         {
           "name": "F2L 25 - Front Left",
-          "algorithm": "U' L' U L F' r U r'"
+          "algorithm": "U' L' U' L U F U F'"
         },
         {
           "name": "F2L 25 - Back Right",
-          "algorithm": "U' R' U M U' R U M'"
+          "algorithm": "U' R' U' R U f R f'"
         },
         {
           "name": "F2L 25 - Back Left",
-          "algorithm": "R D' R' U' R D R' L U L'"
+          "algorithm": "L U' L' U' L U' L' U L U L'"
         },
         {
           "name": "F2L 26 - Front Right",
@@ -748,7 +748,7 @@
         },
         {
           "name": "F2L 26 - Front Left",
-          "algorithm": "r U r' U' r' F r F'"
+          "algorithm": "U L F' L' F L' U' L"
         },
         {
           "name": "F2L 26 - Back Right",
@@ -756,7 +756,7 @@
         },
         {
           "name": "F2L 26 - Back Left",
-          "algorithm": "L S L' U L S' L'"
+          "algorithm": "U L U L' U' f' L' f"
         },
         {
           "name": "F2L 27 - Front Right",
@@ -768,7 +768,7 @@
         },
         {
           "name": "F2L 27 - Back Right",
-          "algorithm": "R' U2 R' F R F' R"
+          "algorithm": "y' L U' L' U L U' L' (y)"
         },
         {
           "name": "F2L 27 - Back Left",
@@ -788,7 +788,7 @@
         },
         {
           "name": "F2L 28 - Back Left",
-          "algorithm": "L U2 L F' L' F L'"
+          "algorithm": "y R' U R U' R' U R (y')"
         },
         {
           "name": "F2L 29 - Front Right",
@@ -804,7 +804,7 @@
         },
         {
           "name": "F2L 29 - Back Left",
-          "algorithm": "U2 L U' L' f' L' f"
+          "algorithm": "y R' U' R U R' U' R (y')"
         },
         {
           "name": "F2L 30 - Front Right",
@@ -816,7 +816,7 @@
         },
         {
           "name": "F2L 30 - Back Right",
-          "algorithm": "f R f' U' f R f'"
+          "algorithm": "y' L U L' U' L U L' (y)"
         },
         {
           "name": "F2L 30 - Back Left",
@@ -837,11 +837,11 @@
         },
         {
           "name": "F2L 31 - Back Right",
-          "algorithm": "R' U R' F R F' R"
+          "algorithm": "R' U R U' f R' f'"
         },
         {
           "name": "F2L 31 - Back Left",
-          "algorithm": "L U' L F' L' F L'"
+          "algorithm": "L U' L' U f' L f"
         },
         {
           "name": "F2L 32 - Front Right",
@@ -853,7 +853,7 @@
         },
         {
           "name": "F2L 32 - Back Right",
-          "algorithm": "U' R' U R U' R' U R U' R' U R"
+          "algorithm": "R' U' R U R' U' R U R' U' R"
         },
         {
           "name": "F2L 32 - Back Left",
@@ -865,15 +865,15 @@
         },
         {
           "name": "F2L 33 - Front Left",
-          "algorithm": "R' D R U' R' D' R"
+          "algorithm": "U' L' U' L U2 L' U' L"
         },
         {
           "name": "F2L 33 - Back Right",
-          "algorithm": "U' R D R' U R D' R'"
+          "algorithm": "U' R' U' R U2 R' U' R"
         },
         {
           "name": "F2L 33 - Back Left",
-          "algorithm": "U' L U' L' U2 L U' L'"
+          "algorithm": "U' L U' L' U' L U2 L'"
         },
         {
           "name": "F2L 34 - Front Right",
@@ -881,7 +881,7 @@
         },
         {
           "name": "F2L 34 - Front Left",
-          "algorithm": "U L' U L U L' U2 L"
+          "algorithm": "U L' U L U2 L' U L"
         },
         {
           "name": "F2L 34 - Back Right",
@@ -901,27 +901,27 @@
         },
         {
           "name": "F2L 35 - Back Right",
-          "algorithm": "U' f R f' U R' U' R"
+          "algorithm": "y' U' L U L' U f' L' f (y)"
         },
         {
           "name": "F2L 35 - Back Left",
-          "algorithm": "U2 L U L' U' L F U F' L'"
+          "algorithm": "U' L U L' U f' L' f"
         },
         {
           "name": "F2L 36 - Front Right",
-          "algorithm": "U F' U' F U' R U R'"
+          "algorithm": "U2 R' F R F' U2 R U R'"
         },
         {
           "name": "F2L 36 - Front Left",
-          "algorithm": "U2 L' U L U F U F'"
+          "algorithm": "U L' U' L U' F U F'"
         },
         {
           "name": "F2L 36 - Back Right",
-          "algorithm": "U2 R' U' R U R' F' U' F R"
+          "algorithm": "U R' U' R U' f R f'"
         },
         {
           "name": "F2L 36 - Back Left",
-          "algorithm": "U f' L' f U' L U L'"
+          "algorithm": "y U R' U' R U' f R f' (y')"
         }
       ]
     },
@@ -938,11 +938,11 @@
         },
         {
           "name": "F2L 37 - Back Right",
-          "algorithm": "R' U R r U2 R2 U' R2 U' r'"
+          "algorithm": "y R2 U2 F R2 F' U2 R' U R' (y')"
         },
         {
           "name": "F2L 37 - Back Left",
-          "algorithm": "L U' L' l' U2 L2 U L2 U l"
+          "algorithm": "y' L2 U2 F' L2 F U2 L U' L (y)"
         },
         {
           "name": "F2L 38 - Front Right",
@@ -978,7 +978,7 @@
         },
         {
           "name": "F2L 40 - Front Right",
-          "algorithm": "r U' r' U2 r U r' R U R'"
+          "algorithm": "R U R' F' L' U L F R U R'"
         },
         {
           "name": "F2L 40 - Front Left",
@@ -986,11 +986,11 @@
         },
         {
           "name": "F2L 40 - Back Right",
-          "algorithm": "R' U R r' U r U2 r' U' r"
+          "algorithm": "R' U' R U R' U R U2 f R f'"
         },
         {
           "name": "F2L 40 - Back Left",
-          "algorithm": "l U' l' U2 l U l' L U L'"
+          "algorithm": "L U' L' U L U L' U2 f' L' f"
         },
         {
           "name": "F2L 41 - Front Right",
@@ -998,15 +998,15 @@
         },
         {
           "name": "F2L 41 - Front Left",
-          "algorithm": "l' U l U2 l' U' l L' U' L"
+          "algorithm": "L' U' L F R U' R' F' L' U' L"
         },
         {
           "name": "F2L 41 - Back Right",
-          "algorithm": "r' U r U2 r' U' r R' U' R"
+          "algorithm": "R' U R U R' U R U' f R f'"
         },
         {
           "name": "F2L 41 - Back Left",
-          "algorithm": "L2 F U F' U' L' U L'"
+          "algorithm": "L U L' U' L U' L' U2 f' L' f"
         }
       ]
     },
@@ -1019,11 +1019,11 @@
         },
         {
           "name": "F2L 5 - Front Left",
-          "algorithm": "U R' F r U' r' F' R"
+          "algorithm": "y U' L U L' U2 L U' L' (y')"
         },
         {
           "name": "F2L 5 - Back Right",
-          "algorithm": "U' R' F R U R' U' F' R"
+          "algorithm": "y' U' L U L' U2 L U' L' (y)"
         },
         {
           "name": "F2L 5 - Back Left",
@@ -1031,43 +1031,43 @@
         },
         {
           "name": "F2L 6 - Front Right",
-          "algorithm": "U' r U' R' U R U r'"
+          "algorithm": "y' U R' U' R U R' U2 R (y)"
         },
         {
           "name": "F2L 6 - Front Left",
-          "algorithm": "F2 R U R' U' F2"
+          "algorithm": "U L' U' L U2 L' U L"
         },
         {
           "name": "F2L 6 - Back Right",
-          "algorithm": "U R' U' R U2 R' U R"
+          "algorithm": "U R' U' R U R' U2 R"
         },
         {
           "name": "F2L 6 - Back Left",
-          "algorithm": "U r U' r' U' L U F L'"
+          "algorithm": "y U R' U' R U R' U2 R (y')"
         },
         {
           "name": "F2L 7 - Front Right",
-          "algorithm": "U' R U2 R' U' R U2 R'"
+          "algorithm": "U' R U2 R' U2 R U' R'"
         },
         {
           "name": "F2L 7 - Front Left",
-          "algorithm": "F U R U2 R' U F'"
+          "algorithm": "y U' L U2 L' U' L U2 L' (y')"
         },
         {
           "name": "F2L 7 - Back Right",
-          "algorithm": "r U2 R2 U' R2 U' r'"
+          "algorithm": "y' U' L U2 L' U' L U2 L' (y)"
         },
         {
           "name": "F2L 7 - Back Left",
-          "algorithm": "U' L U2 L' U2 L U' L'"
+          "algorithm": "U' L U2 L' U' L U2 L'"
         },
         {
           "name": "F2L 8 - Front Right",
-          "algorithm": "d R' U2 R U R' U2 R"
+          "algorithm": "y' U R' U2 R U R' U2 R (y)"
         },
         {
           "name": "F2L 8 - Front Left",
-          "algorithm": "U L' U2 L U L' U2 L"
+          "algorithm": "U L' U2 L U2 L' U L"
         },
         {
           "name": "F2L 8 - Back Right",
@@ -1075,7 +1075,7 @@
         },
         {
           "name": "F2L 8 - Back Left",
-          "algorithm": "l' U2 L2 U L2 U l"
+          "algorithm": "y U R' U2 R U R' U2 R (y')"
         },
         {
           "name": "F2L 9 - Front Right",
@@ -1091,7 +1091,7 @@
         },
         {
           "name": "F2L 9 - Back Left",
-          "algorithm": "d L' U' L U' L' U' L"
+          "algorithm": "U' L U' L' U f' L' f"
         },
         {
           "name": "F2L 10 - Front Right",
@@ -1099,15 +1099,15 @@
         },
         {
           "name": "F2L 10 - Front Left",
-          "algorithm": "F U' R U R' U2 F'"
+          "algorithm": "U L' U L U' F U F'"
         },
         {
           "name": "F2L 10 - Back Right",
-          "algorithm": "R2 U' F' U F R2"
+          "algorithm": "U R' U R U' B U B'"
         },
         {
           "name": "F2L 10 - Back Left",
-          "algorithm": "U' L U L' U L U L'"
+          "algorithm": "U2 L U' L' U' L U L'"
         },
         {
           "name": "F2L 19 - Front Right",
@@ -1119,7 +1119,7 @@
         },
         {
           "name": "F2L 19 - Back Right",
-          "algorithm": "U R' F' U2 F R U R' U' R"
+          "algorithm": "y' U L U2 L' U L U' L' (y)"
         },
         {
           "name": "F2L 19 - Back Left",
@@ -1139,27 +1139,27 @@
         },
         {
           "name": "F2L 20 - Back Left",
-          "algorithm": "d' R' U2 R U' R' U R"
+          "algorithm": "y U' R' U2 R U' R' U R (y')"
         },
         {
           "name": "F2L 21 - Front Right",
-          "algorithm": "U2 R U R' U R U' R'"
+          "algorithm": "R U' R' U2 R U R'"
         },
         {
           "name": "F2L 21 - Front Left",
-          "algorithm": "l' U l U2 l' U' l"
+          "algorithm": "y U2 L U L' U L U' L' (y')"
         },
         {
           "name": "F2L 21 - Back Right",
-          "algorithm": "r' U r U2 r' U' r"
+          "algorithm": "y' U2 L U L' U L U' L' (y)"
         },
         {
           "name": "F2L 21 - Back Left",
-          "algorithm": "L U' L' U2 L U L'"
+          "algorithm": "U2 L U L' U L U' L'"
         },
         {
           "name": "F2L 22 - Front Right",
-          "algorithm": "r U' r' U2 r U r'"
+          "algorithm": "y' U2 R' U' R U' R' U R (y)"
         },
         {
           "name": "F2L 22 - Front Left",
@@ -1167,11 +1167,11 @@
         },
         {
           "name": "F2L 22 - Back Right",
-          "algorithm": "R' U R U2 R' U' R"
+          "algorithm": "U2 R' U' R U' R' U R"
         },
         {
           "name": "F2L 22 - Back Left",
-          "algorithm": "l U' l' U2 l U l'"
+          "algorithm": "y U2 R' U' R U' R' U R (y')"
         }
       ]
     }
