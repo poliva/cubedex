@@ -128,8 +128,8 @@ function makeSmartReviewCases(count: number, overrides: Partial<CaseCardData>[] 
   }));
 }
 
-function renderSmartReviewState(cases: CaseCardData[]) {
-  return renderHook(({ currentCases }) => useTrainingState(currentCases, 'PLL', {
+function renderSmartReviewState(cases: CaseCardData[], reviewRefreshToken = 0) {
+  return renderHook(({ currentCases, currentReviewRefreshToken }) => useTrainingState(currentCases, 'PLL', {
     selectionChangeMode: 'bulk',
     countdownMode: false,
     randomizeAUF: false,
@@ -141,8 +141,9 @@ function renderSmartReviewState(cases: CaseCardData[]) {
     smartcubeConnected: false,
     currentPattern: null,
     statsRefreshToken: 0,
+    reviewRefreshToken: currentReviewRefreshToken,
   }), {
-    initialProps: { currentCases: cases },
+    initialProps: { currentCases: cases, currentReviewRefreshToken: reviewRefreshToken },
   });
 }
 
@@ -822,11 +823,65 @@ describe('useTrainingState time attack counts', () => {
       expect(result.current.currentCase?.id).toBe('case-3');
     });
 
-    rerender({ currentCases: refreshedCases });
+    await act(async () => {
+      rerender({ currentCases: refreshedCases, currentReviewRefreshToken: 0 });
+      await Promise.resolve();
+    });
 
     act(() => {
       result.current.stopAndRecordSolve(1200);
     });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-2');
+    });
+  });
+
+  it('rebuilds smart order when review metadata refreshes for the same selected ids', async () => {
+    const initialCases = [
+      {
+        ...selectedCases[0],
+        id: 'case-1',
+        name: 'Aa',
+        reviewCount: 3,
+        smartReviewDueAt: 100,
+        smartReviewDue: false,
+        smartReviewUrgency: 100,
+      },
+      {
+        ...selectedCases[1],
+        id: 'case-2',
+        name: 'Ab',
+        reviewCount: 3,
+        smartReviewDueAt: 200,
+        smartReviewDue: false,
+        smartReviewUrgency: 200,
+      },
+    ];
+    const refreshedCases = [
+      {
+        ...initialCases[0],
+        reviewCount: 0,
+        smartReviewDueAt: null,
+        smartReviewDue: false,
+        smartReviewUrgency: Number.POSITIVE_INFINITY,
+      },
+      {
+        ...initialCases[1],
+        reviewCount: 0,
+        smartReviewDueAt: 50,
+        smartReviewDue: false,
+        smartReviewUrgency: 50,
+      },
+    ];
+
+    const { result, rerender } = renderSmartReviewState(initialCases, 0);
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+    });
+
+    rerender({ currentCases: refreshedCases, currentReviewRefreshToken: 1 });
 
     await waitFor(() => {
       expect(result.current.currentCase?.id).toBe('case-2');

@@ -106,6 +106,7 @@ export function App() {
     smartcubeConnected: smartcube.connected,
     currentPattern: smartcube.currentPattern,
     statsRefreshToken,
+    reviewRefreshToken,
     onReviewRecorded: () => setReviewRefreshToken((value) => value + 1),
   });
   const scramble = useScrambleState();
@@ -649,6 +650,7 @@ export function App() {
 
     training.clearFailedCounts();
     setStatsRefreshToken((value) => value + 1);
+    setReviewRefreshToken((value) => value + 1);
   }, [selectedCases, training.clearFailedCounts]);
 
   const handleEditCurrentAlgorithm = useCallback(() => {

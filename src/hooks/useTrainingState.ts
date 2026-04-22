@@ -108,6 +108,7 @@ export interface TrainingPracticeOptions {
   smartcubeConnected: boolean;
   currentPattern?: KPattern | null;
   statsRefreshToken?: number;
+  reviewRefreshToken?: number;
   onReviewRecorded?: () => void;
 }
 
@@ -626,6 +627,7 @@ export function useTrainingState(
   const previousPrioritizeSlowCasesRef = useRef(options.prioritizeSlowCases);
   const previousSmartReviewSchedulingRef = useRef(options.smartReviewScheduling);
   const previousSelectionChangeModeRef = useRef(options.selectionChangeMode);
+  const previousReviewRefreshTokenRef = useRef(options.reviewRefreshToken);
   const keepInitialStateRef = useRef(false);
   const timeAttackSessionStartRef = useRef<number | null>(null);
   const timeAttackCaseTimesRef = useRef<number[]>([]);
@@ -1387,6 +1389,7 @@ export function useTrainingState(
     const prioritizeSlowChanged = previousPrioritizeSlowCasesRef.current !== options.prioritizeSlowCases;
     const smartReviewSchedulingChanged = previousSmartReviewSchedulingRef.current !== options.smartReviewScheduling;
     const selectionModeChanged = previousSelectionChangeModeRef.current !== options.selectionChangeMode;
+    const reviewRefreshChanged = previousReviewRefreshTokenRef.current !== options.reviewRefreshToken;
 
     if (
       arraysEqual(previousSelectedIdsRef.current, nextSelectedIds)
@@ -1395,6 +1398,7 @@ export function useTrainingState(
       && !prioritizeSlowChanged
       && !smartReviewSchedulingChanged
       && !selectionModeChanged
+      && !reviewRefreshChanged
     ) {
       return;
     }
@@ -1406,6 +1410,7 @@ export function useTrainingState(
     previousPrioritizeSlowCasesRef.current = options.prioritizeSlowCases;
     previousSmartReviewSchedulingRef.current = options.smartReviewScheduling;
     previousSelectionChangeModeRef.current = options.selectionChangeMode;
+    previousReviewRefreshTokenRef.current = options.reviewRefreshToken;
 
     if (selectedCases.length === 0) {
       cancelCountdown();
@@ -1448,6 +1453,16 @@ export function useTrainingState(
         selectionModeChanged ? 'selection change mode' : null,
       ].filter((entry): entry is string => entry != null);
       logCurrentSmartQueue(`practice options changed: ${joinReadableList(changedOptions) || 'settings updated'}`);
+      retrainQueueHead(selectedQueueRef.current[0] ?? null);
+      return;
+    }
+
+    if (reviewRefreshChanged) {
+      clearTimeAttackSession();
+      selectedQueueRef.current = buildQueue(selectedCases, options.prioritizeSlowCases, options.smartReviewScheduling);
+      selectedQueueCopyRef.current = [];
+      resetSmartReviewRetryState();
+      logCurrentSmartQueue('selected case review data changed');
       retrainQueueHead(selectedQueueRef.current[0] ?? null);
       return;
     }
@@ -1527,6 +1542,7 @@ export function useTrainingState(
   }, [
     options.prioritizeSlowCases,
     options.randomOrder,
+    options.reviewRefreshToken,
     options.selectionChangeMode,
     options.smartReviewScheduling,
     options.timeAttack,

@@ -1,4 +1,5 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { App } from '../src/App';
 
@@ -34,37 +35,8 @@ const mocks = vi.hoisted(() => ({
   averageOfFiveTimeNumber: vi.fn(() => null),
   caseCardStoreSetState: vi.fn(),
   useTrainingGraphs: vi.fn(),
-}));
-
-vi.mock('cubing/alg', () => ({
-  Alg: {
-    fromString: vi.fn(() => ({
-      invert: () => ({
-        toString: () => '',
-      }),
-    })),
-  },
-}));
-
-vi.mock('cubing/puzzles', () => ({
-  cube3x3x3: {},
-}));
-
-vi.mock('../src/state/caseCardStore', () => ({
-  caseCardStore: {
-    setState: mocks.caseCardStoreSetState,
-  },
-  setCaseCardActions: vi.fn(),
-}));
-
-vi.mock('../src/state/trainingViewStore', () => ({
-  trainingViewStore: {
-    setState: vi.fn(),
-  },
-}));
-
-vi.mock('../src/hooks/useCaseLibrary', () => ({
-  useCaseLibrary: vi.fn(() => ({
+  removeAlgorithmTimesStorage: vi.fn(),
+  useCaseLibrary: vi.fn((options?: { reviewRefreshToken?: number }) => ({
     isReady: true,
     selectedCategory: 'PLL',
     caseCards: mockState.caseCards,
@@ -74,10 +46,8 @@ vi.mock('../src/hooks/useCaseLibrary', () => ({
     toggleCaseSelection: vi.fn(),
     cycleCaseLearnedState: vi.fn(),
     reloadSavedAlgorithms: vi.fn(),
+    _options: options,
   })),
-}));
-
-vi.mock('../src/hooks/useTrainingState', () => ({
   useTrainingState: vi.fn(() => ({
     inputMode: false,
     scrambleMode: false,
@@ -134,6 +104,41 @@ vi.mock('../src/hooks/useTrainingState', () => ({
     setScrambleMode: vi.fn(),
     setHelpTone: vi.fn(),
   })),
+}));
+
+vi.mock('cubing/alg', () => ({
+  Alg: {
+    fromString: vi.fn(() => ({
+      invert: () => ({
+        toString: () => '',
+      }),
+    })),
+  },
+}));
+
+vi.mock('cubing/puzzles', () => ({
+  cube3x3x3: {},
+}));
+
+vi.mock('../src/state/caseCardStore', () => ({
+  caseCardStore: {
+    setState: mocks.caseCardStoreSetState,
+  },
+  setCaseCardActions: vi.fn(),
+}));
+
+vi.mock('../src/state/trainingViewStore', () => ({
+  trainingViewStore: {
+    setState: vi.fn(),
+  },
+}));
+
+vi.mock('../src/hooks/useCaseLibrary', () => ({
+  useCaseLibrary: mocks.useCaseLibrary,
+}));
+
+vi.mock('../src/hooks/useTrainingState', () => ({
+  useTrainingState: mocks.useTrainingState,
 }));
 
 vi.mock('../src/hooks/useAppSettings', () => ({
@@ -269,7 +274,7 @@ vi.mock('../src/lib/storage', async () => ({
   deleteAlgorithm: vi.fn(),
   getBestTime: mocks.getBestTime,
   getSavedAlgorithms: vi.fn(() => ({})),
-  removeAlgorithmTimesStorage: vi.fn(),
+  removeAlgorithmTimesStorage: mocks.removeAlgorithmTimesStorage,
 }));
 
 vi.mock('../src/lib/case-cards', async () => ({
@@ -298,7 +303,12 @@ vi.mock('../src/components/MenuNavIcons', () => ({
 }));
 
 vi.mock('../src/views/PracticeView', () => ({
-  PracticeView: () => <div data-testid="practice-view" />,
+  PracticeView: ({ handleDeleteTimes }: { handleDeleteTimes: () => void }) => (
+    <div>
+      <button type="button" onClick={handleDeleteTimes}>Delete Times</button>
+      <div data-testid="practice-view" />
+    </div>
+  ),
 }));
 
 vi.mock('../src/views/OptionsView', () => ({
@@ -327,5 +337,32 @@ describe('App case-card stats refresh', () => {
 
     expect(mocks.getBestTime).toHaveBeenCalledWith('case-1');
     expect(mocks.averageOfFiveTimeNumber).toHaveBeenCalledWith('case-1');
+  });
+
+  it('bumps review refresh after deleting times so learned state can recompute', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    render(<App />);
+
+    mocks.removeAlgorithmTimesStorage.mockClear();
+    mocks.useCaseLibrary.mockClear();
+    mocks.useTrainingState.mockClear();
+
+    await user.click(screen.getByRole('button', { name: 'Delete Times' }));
+
+    expect(mocks.removeAlgorithmTimesStorage).toHaveBeenCalledWith('case-1');
+    expect(mocks.useCaseLibrary).toHaveBeenLastCalledWith(expect.objectContaining({
+      reviewRefreshToken: 1,
+    }));
+    expect(mocks.useTrainingState).toHaveBeenLastCalledWith(
+      mockState.caseCards,
+      'PLL',
+      expect.objectContaining({
+        reviewRefreshToken: 1,
+      }),
+    );
+
+    confirmSpy.mockRestore();
   });
 });
