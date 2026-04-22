@@ -690,42 +690,70 @@ describe('useTrainingState time attack counts', () => {
     }
   });
 
-  it('randomizes smart order when no selected case is due', async () => {
-    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
+  it('orders upcoming smart-review cases by nearest due date when none are due', async () => {
     const nonDueCases = [
       {
         ...selectedCases[0],
+        id: 'case-later',
+        name: 'Later',
         smartReviewDue: false,
         smartReviewUrgency: 10_000,
+        smartReviewDueAt: 10_000,
+        reviewCount: 3,
       },
       {
         ...selectedCases[1],
+        id: 'case-sooner',
+        name: 'Sooner',
+        smartReviewDue: false,
+        smartReviewUrgency: 5_000,
+        smartReviewDueAt: 5_000,
+        reviewCount: 2,
+      },
+      {
+        ...selectedCases[1],
+        id: 'case-latest',
+        name: 'Latest',
         smartReviewDue: false,
         smartReviewUrgency: 20_000,
+        smartReviewDueAt: 20_000,
+        reviewCount: 1,
       },
     ];
 
-    try {
-      const { result } = renderHook(() => useTrainingState(nonDueCases, 'PLL', {
-        selectionChangeMode: 'bulk',
-        countdownMode: false,
-        randomizeAUF: false,
-        randomOrder: false,
-        timeAttack: false,
-        prioritizeSlowCases: false,
-        prioritizeFailedCases: false,
-        smartReviewScheduling: true,
-        smartcubeConnected: false,
-        currentPattern: null,
-        statsRefreshToken: 0,
-      }));
+    const { result } = renderHook(() => useTrainingState(nonDueCases, 'PLL', {
+      selectionChangeMode: 'bulk',
+      countdownMode: false,
+      randomizeAUF: false,
+      randomOrder: false,
+      timeAttack: false,
+      prioritizeSlowCases: false,
+      prioritizeFailedCases: false,
+      smartReviewScheduling: true,
+      smartcubeConnected: false,
+      currentPattern: null,
+      statsRefreshToken: 0,
+    }));
 
-      await waitFor(() => {
-        expect(result.current.currentCase?.id).toBe('case-2');
-      });
-    } finally {
-      randomSpy.mockRestore();
-    }
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-sooner');
+    });
+
+    act(() => {
+      result.current.stopAndRecordSolve(1000);
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-later');
+    });
+
+    act(() => {
+      result.current.stopAndRecordSolve(1100);
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-latest');
+    });
   });
 
   it('rebuilds smart order from refreshed case metadata when a pass wraps', async () => {
@@ -807,7 +835,7 @@ describe('useTrainingState time attack counts', () => {
       result.current.stopAndRecordSolve(1000);
     });
 
-    for (const expectedCaseId of ['case-2', 'case-3', 'case-4', 'case-5', 'case-6']) {
+    for (const expectedCaseId of ['case-2', 'case-3', 'case-4', 'case-5']) {
       await waitFor(() => {
         expect(result.current.currentCase?.id).toBe(expectedCaseId);
       });
@@ -834,7 +862,7 @@ describe('useTrainingState time attack counts', () => {
     });
 
     await waitFor(() => {
-      expect(result.current.currentCase?.id).toBe('case-7');
+      expect(result.current.currentCase?.id).toBe('case-6');
     });
   });
 

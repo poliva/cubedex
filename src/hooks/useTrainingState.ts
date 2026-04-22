@@ -270,10 +270,6 @@ function insertSlowCase(queue: CaseCardData[], nextCase: CaseCardData) {
 }
 
 function buildSmartReviewQueue(selectedCases: CaseCardData[]) {
-  if (!selectedCases.some((selectedCase) => selectedCase.smartReviewDue)) {
-    return shuffleCases(selectedCases);
-  }
-
   const sortBySmartReviewPriority = (left: CaseCardData, right: CaseCardData) => {
     if (left.smartReviewUrgency !== right.smartReviewUrgency) {
       return left.smartReviewUrgency - right.smartReviewUrgency;
@@ -283,6 +279,22 @@ function buildSmartReviewQueue(selectedCases: CaseCardData[]) {
     }
     return left.name.localeCompare(right.name);
   };
+
+  const sortByUpcomingDueDate = (left: CaseCardData, right: CaseCardData) => {
+    const leftDueAt = left.smartReviewDueAt ?? Number.POSITIVE_INFINITY;
+    const rightDueAt = right.smartReviewDueAt ?? Number.POSITIVE_INFINITY;
+    if (leftDueAt !== rightDueAt) {
+      return leftDueAt - rightDueAt;
+    }
+    if (left.reviewCount !== right.reviewCount) {
+      return left.reviewCount - right.reviewCount;
+    }
+    return left.name.localeCompare(right.name);
+  };
+
+  if (!selectedCases.some((selectedCase) => selectedCase.smartReviewDue)) {
+    return [...selectedCases].sort(sortByUpcomingDueDate);
+  }
 
   const seenDueCases = selectedCases
     .filter((selectedCase) => selectedCase.reviewCount > 0 && selectedCase.smartReviewDue)
