@@ -425,11 +425,12 @@ export const PracticeView = memo(function PracticeView({
             className="round-button"
             type="button"
             onClick={() => {
+              const alreadyPreparedAlg = training.displayAlg;
               void scramble.startScrambleTo(
-                training.displayAlg || training.algInput,
+                alreadyPreparedAlg || training.algInput,
                 training.currentCase,
                 smartcube.currentPattern,
-                practiceToggles.randomizeAUF,
+                !alreadyPreparedAlg && practiceToggles.randomizeAUF,
               ).then((started) => {
                 if (!started) {
                   return;

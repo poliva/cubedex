@@ -356,7 +356,7 @@ describe('PracticeView', () => {
         "R U2 R'",
         props.training.currentCase,
         props.smartcube.currentPattern,
-        true,
+        false,
       );
     });
     await waitFor(() => {

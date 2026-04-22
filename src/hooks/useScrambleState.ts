@@ -45,8 +45,7 @@ export function useScrambleState(): ScrambleState {
     setIsComputing(true);
     try {
       const pattern = currentPattern ?? await solvedPattern();
-      const scramble = await getScrambleToSolution(algorithm, pattern);
-      
+
       let aufModifiedAlgorithm = algorithm;
       if (randomizeAUF && currentCase?.category) {
         const prepared = await prepareTrainingAlgorithm(
@@ -56,7 +55,9 @@ export function useScrambleState(): ScrambleState {
         );
         aufModifiedAlgorithm = prepared.displayAlgorithm;
       }
-      
+
+      const scramble = await getScrambleToSolution(aufModifiedAlgorithm, pattern);
+
       if (scramble.length > 0) {
         setScrambleMode(true);
         setScrambleText(scramble);
