@@ -13,7 +13,13 @@ function StatsPanelComponent({
   stats: TrainingStats;
 }) {
   return (
-    <div id="alg-stats" className={`${stats.hasHistory && visible ? 'stats-panel shell-card' : 'hidden stats-panel shell-card'}`}>
+    <div id="alg-stats" className={`${stats.hasHistory && visible ? 'stats-panel' : 'hidden stats-panel'}`}
+      style={stats.hasHistory && visible ? {
+        padding: '12px 14px',
+        borderRadius: 12,
+        border: '1px solid var(--border)',
+        background: 'var(--surface)',
+      } : undefined}>
       <div id="stats-container" className="stats-graph-container">
         <div className="stats-graph-shell">
           <canvas id="statsGraph" className="stats-graph-canvas" />

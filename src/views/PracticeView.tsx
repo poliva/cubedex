@@ -1,34 +1,131 @@
 import { Fragment, memo, useState } from 'react';
-import type { CaseLibraryState } from '../hooks/useCaseLibrary';
 import type { AppSettingsState } from '../hooks/useAppSettings';
 import type { PracticeTogglesState } from '../hooks/usePracticeToggles';
 import type { TrainingState } from '../hooks/useTrainingState';
 import type { ScrambleState } from '../hooks/useScrambleState';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
 import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
-import { ToggleSwitch } from '../components/ToggleSwitch';
-import {
-  AlgHelpInfoIcon,
-  BluetoothIcon,
-  PlayIcon,
-  ScatterIcon,
-  StopIcon,
-} from '../components/Icons';
 import { averageOfFiveTimeNumber, historyTimeString } from '../lib/case-cards';
-import { getBestTime } from '../lib/storage';
+import { getBestTime, getLastTimes } from '../lib/storage';
 import { patternToPlayerAlg } from '../lib/scramble';
-import { CaseGrid } from './CaseGrid';
 import { MainCubeArea } from './MainCubeArea';
 import { MoveListPanel } from './MoveListPanel';
 import { StatsPanel } from './StatsPanel';
 import { NewAlgView } from './NewAlgView';
+import { Icon, IC } from '../components/ui/Icon';
+
+function MiniGraph({ times, width = 180 }: { times: number[]; width?: number }) {
+  if (times.length < 2) return null;
+  const h = 52, pad = 4;
+  const w = width;
+  const min = Math.min(...times), max = Math.max(...times), range = max - min || 1;
+  const pts = times.map((t, i) => {
+    const x = pad + (i / (times.length - 1)) * (w - pad * 2);
+    const y = pad + (1 - (t - min) / range) * (h - pad * 2);
+    return `${x},${y}`;
+  }).join(' ');
+  const lastX = pad + ((times.length - 1) / (times.length - 1)) * (w - pad * 2);
+  const lastY = pad + (1 - (times[times.length - 1] - min) / range) * (h - pad * 2);
+  return (
+    <svg width={w} height={h} style={{ overflow: 'visible', display: 'block' }}>
+      <defs>
+        <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={`${pad},${h} ${pts} ${w - pad},${h}`} fill="url(#mg)" />
+      <polyline points={pts} fill="none" stroke="var(--accent)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={lastX} cy={lastY} r={3} fill="var(--accent)" />
+    </svg>
+  );
+}
+
+function StatChip({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 1,
+      padding: '7px 14px',
+      borderRadius: 10,
+      border: '1px solid var(--border)',
+      background: 'var(--raised)',
+      minWidth: 70,
+      flex: '0 0 auto',
+    }}>
+      <span style={{ fontSize: 10, color: 'var(--fg3)', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{label}</span>
+      <span style={{
+        fontFamily: 'var(--mono)',
+        fontSize: 15,
+        fontWeight: 600,
+        color: highlight ? 'var(--accent)' : 'var(--fg)',
+      }}>{value}</span>
+    </div>
+  );
+}
+
+function Toggle({
+  checked,
+  onChange,
+  label,
+  disabled,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+  disabled?: boolean;
+}) {
+  const w = 30, h = 17, dot = 13;
+  return (
+    <label style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      cursor: disabled ? 'not-allowed' : 'pointer',
+      userSelect: 'none',
+      minHeight: 44,
+      opacity: disabled ? 0.5 : 1,
+    }}>
+      <span style={{
+        position: 'relative',
+        width: w,
+        height: h,
+        flexShrink: 0,
+        background: checked ? 'var(--accent)' : 'var(--border)',
+        borderRadius: 99,
+        transition: 'background 0.2s',
+        display: 'block',
+      }}>
+        <span style={{
+          position: 'absolute',
+          top: (h - dot) / 2,
+          left: checked ? w - dot - 2 : 2,
+          width: dot,
+          height: dot,
+          background: '#fff',
+          borderRadius: '50%',
+          boxShadow: '0 1px 4px oklch(0% 0 0/0.3)',
+          transition: 'left 0.2s',
+        }} />
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.checked)}
+          style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
+        />
+      </span>
+      {label && <span style={{ fontSize: 13, color: 'var(--fg)', lineHeight: 1.3 }}>{label}</span>}
+    </label>
+  );
+}
 
 export const PracticeView = memo(function PracticeView({
-  topVisible,
-  practiceVisible,
+  visible,
   options,
   practiceToggles,
-  caseLibrary,
   training,
   scramble,
   smartcube,
@@ -39,16 +136,8 @@ export const PracticeView = memo(function PracticeView({
   mainCubeAlg,
   selectedStickering,
   setAcknowledgedDisconnectToken,
-  setMainCubeStickeringDeferred,
   lastProcessedScrambleMoveRef,
   setScrambleStartAlg,
-  setDeleteMode,
-  deleteMode,
-  deleteSuccessMessage,
-  handleDeleteAlgorithms,
-  handleDeleteTimes,
-  showTimesInsteadOfGraph,
-  setShowTimesInsteadOfGraph,
   isMoveMasked,
   setIsMoveMasked,
   handleEditCurrentAlgorithm,
@@ -60,12 +149,11 @@ export const PracticeView = memo(function PracticeView({
   flashingIndicatorColor,
   smartcubeAppendMoveKey,
   smartcubeAppendMove,
+  isMobile,
 }: {
-  topVisible: boolean;
-  practiceVisible: boolean;
+  visible: boolean;
   options: AppSettingsState;
   practiceToggles: PracticeTogglesState;
-  caseLibrary: CaseLibraryState;
   training: TrainingState;
   scramble: ScrambleState;
   smartcube: SmartcubeConnectionState;
@@ -76,16 +164,8 @@ export const PracticeView = memo(function PracticeView({
   mainCubeAlg: string;
   selectedStickering: string;
   setAcknowledgedDisconnectToken: (value: number) => void;
-  setMainCubeStickeringDeferred: (value: boolean) => void;
   lastProcessedScrambleMoveRef: { current: string };
   setScrambleStartAlg: (value: string) => void;
-  setDeleteMode: (value: boolean) => void;
-  deleteMode: boolean;
-  deleteSuccessMessage: string;
-  handleDeleteAlgorithms: () => void;
-  handleDeleteTimes: () => void;
-  showTimesInsteadOfGraph: boolean;
-  setShowTimesInsteadOfGraph: (updater: (value: boolean) => boolean) => void;
   isMoveMasked: boolean;
   setIsMoveMasked: (updater: (value: boolean) => boolean) => void;
   handleEditCurrentAlgorithm: () => void;
@@ -97,581 +177,741 @@ export const PracticeView = memo(function PracticeView({
   flashingIndicatorColor: 'gray' | 'red' | 'green';
   smartcubeAppendMoveKey?: string;
   smartcubeAppendMove?: string;
+  isMobile: boolean;
 }) {
-  const {
-    categories,
-    selectedCategory,
-    subsets,
-    selectedSubsets,
-    caseCards,
-    selectAllCases,
-    selectLearningCases,
-    selectLearnedCases,
-    setSelectedCategory,
-    toggleSubset,
-    toggleAllSubsets,
-    setSelectAllCases,
-    setSelectLearningCases,
-    setSelectLearnedCases,
-  } = caseLibrary;
   const [orientationResetState, setOrientationResetState] = useState<{ token: number; alg: string | null }>({
     token: 0,
     alg: null,
   });
-  const showResetGyro = smartcube.connected && options.gyroscope && smartcube.gyroSupported;
-  const showResetOrientation = smartcube.connected && (!smartcube.gyroSupported || !options.gyroscope);
 
-  /*
-  const lastAutoOrientationResetMoveKeyRef = useRef<string>('');
-  useEffect(() => {
-    const last = smartcube.lastProcessedMove;
-    if (!last || !smartcube.connected) return;
+  const statsAlgId = training.statsAlgId;
+  const recentTimes = getLastTimes(statsAlgId);
+  const bestTime = getBestTime(statsAlgId);
+  const ao5 = averageOfFiveTimeNumber(statsAlgId);
+  const lastTime = training.stats.lastFive.at(-1);
 
-    const moveKey = last.key ?? '';
-    if (!moveKey || lastAutoOrientationResetMoveKeyRef.current === moveKey) {
-      return;
-    }
+  const timerColor =
+    training.timerState === 'READY'
+      ? 'var(--ok)'
+      : training.timerState === 'RUNNING'
+        ? 'var(--fg3)'
+        : 'var(--fg)';
 
-    const raw = last.rawMoves?.map((m) => m.move) ?? [];
-    const isOppositeUD =
-      raw.length === 2;
-      //&& ((raw[0] === 'U' && raw[1] === "D'") || (raw[0] === "D'" && raw[1] === 'U'));
-    const isNonGyroMode = !options.gyroscope || !smartcube.gyroSupported;
-    const shouldAutoReset = isNonGyroMode && raw.length === 2 && (last.visualMove === 'E' || last.visualMove === "E'" || last.visualMove === "S'" || last.visualMove === "S");
-    if (!shouldAutoReset) return;
+  const timerLabel = training.inputMode
+    ? ''
+    : training.timerState === 'IDLE'
+      ? (smartcube.connected ? 'Train to begin' : 'Hold Space')
+      : training.timerState === 'READY'
+        ? 'Release!'
+        : training.timerState === 'RUNNING'
+          ? 'Solving…'
+          : 'Time';
 
-    console.log('[auto orientation reset]');
-    lastAutoOrientationResetMoveKeyRef.current = moveKey;
-    smartcube.resetOrientation();
-    setOrientationResetState((current) => ({
-      token: current.token + 1,
-      alg: smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : null,
-    }));
-  }, [options.gyroscope, smartcube, smartcube.connected, smartcube.currentPattern, smartcube.gyroSupported, smartcube.lastProcessedMove]);
-  */
+  const showStatus = scramble.helpTone === 'green' || training.helpTone === 'red' || scramble.scrambleMode;
+  const statusColor =
+    training.helpTone === 'red' ? 'var(--danger)' :
+    scramble.helpTone === 'green' ? 'var(--ok)' :
+    scramble.scrambleMode ? 'var(--ok)' : undefined;
+  const statusText =
+    training.helpTone === 'red'
+      ? 'Ensure the cube is oriented with WHITE center on top and GREEN center on front.'
+      : scramble.scrambleMode
+        ? scramble.scrambleText
+        : scramble.helpTone === 'green'
+          ? 'Scramble complete — cube is ready. Press space to start timer.'
+          : '';
 
-  return (
-    <>
-      <div id="app-top" className={topVisible ? '' : 'hidden'}>
-        <div id="container" className="top-grid-shell">
-          <div
-            id="flashing-indicator"
-            className={`${isFlashingIndicatorVisible ? 'flashing-indicator' : 'hidden flashing-indicator'}`}
-            style={{ backgroundColor: flashingIndicatorColor }}
-          />
+  const cubeNode = (
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{
+        position: 'relative',
+        width: `min(100%, ${options.cubeSizePx}px)`,
+        aspectRatio: '1',
+        maxWidth: '100%',
+        minWidth: 0,
+        overflow: 'visible',
+      }}
+    >
+      <div className={training.countdownActive ? 'cube-area-content cube-area-content--hidden' : 'cube-area-content'}
+        aria-hidden={training.countdownActive}>
+        <MainCubeArea
+          alg={mainCubeAlg}
+          sizePx={options.cubeSizePx}
+          visualization={options.visualization}
+          hintFacelets={options.hintFacelets}
+          controlPanel={options.controlPanel}
+          experimentalStickering={selectedStickering}
+          setupAlg={options.whiteOnBottom ? 'z2' : ''}
+          backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
+          resetToken={`${smartcube.connected}:${training.visualResetKey}`}
+          orientationResetToken={orientationResetState.token}
+          orientationResetAlg={orientationResetState.alg}
+          appendMoveKey={smartcubeAppendMoveKey}
+          appendMove={smartcubeAppendMove}
+          gyroscopeEnabled={options.gyroscope && smartcube.connected}
+          cubeQuaternionRef={smartcube.cubeQuaternionRef}
+        />
+      </div>
+      {training.countdownActive ? (
+        <div className="cube-countdown-overlay" aria-live="polite" aria-label={`Countdown ${training.countdownValue ?? ''}`}>
+          {training.countdownValue}
+        </div>
+      ) : null}
+    </div>
+  );
 
-          <div id="left-side" className="top-column left-column">
-            <div
-              id="left-side-inner"
-              className={`${training.stats.hasHistory && practiceVisible ? 'shell-card side-card' : 'hidden shell-card side-card'}`}
-            >
-              <div id="alg-name-display-container" className="alg-name-display-container">
-                <button
-                  id="toggle-display"
-                  className={`${training.stats.hasHistory ? 'icon-button' : 'hidden icon-button'}`}
-                  type="button"
-                  onClick={() => setShowTimesInsteadOfGraph((value) => !value)}
-                >
-                  {showTimesInsteadOfGraph ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="-2 0 19 19">
-                      <path d="M13.55 15.256H1.45a.554.554 0 0 1-.553-.554V3.168a.554.554 0 1 1 1.108 0v10.98h11.544a.554.554 0 0 1 0 1.108zM3.121 13.02V6.888a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v6.132zm2.785 0V3.507a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v9.513zm2.785 0V6.888a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v6.132zm2.786 0v-2.753a.476.476 0 0 1 .475-.475h.785a.476.476 0 0 1 .475.475v2.753z"/>
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24">
-                      <path d="M11.75 6C7.89 6 4.75 9.14 4.75 13C4.75 16.86 7.89 20 11.75 20C15.61 20 18.75 16.86 18.75 13C18.75 9.14 15.61 6 11.75 6ZM11.75 18.5C8.72 18.5 6.25 16.03 6.25 13C6.25 9.97 8.72 7.5 11.75 7.5C14.78 7.5 17.25 9.97 17.25 13C17.25 16.03 14.78 18.5 11.75 18.5ZM8.5 4.75C8.5 4.34 8.84 4 9.25 4H14.25C14.66 4 15 4.34 15 4.75C15 5.16 14.66 5.5 14.25 5.5H9.25C8.84 5.5 8.5 5.16 8.5 4.75ZM12.5 10V13C12.5 13.41 12.16 13.75 11.75 13.75C11.34 13.75 11 13.41 11 13V10C11 9.59 11.34 9.25 11.75 9.25C12.16 9.25 12.5 9.59 12.5 10ZM19.04 8.27C18.89 8.42 18.7 8.49 18.51 8.49C18.32 8.49 18.13 8.42 17.98 8.27L16.48 6.77C16.19 6.48 16.19 6 16.48 5.71C16.77 5.42 17.25 5.42 17.54 5.71L19.04 7.21C19.33 7.5 19.33 7.98 19.04 8.27Z" fill="currentColor"/>
-                    </svg>
-                  )}
-                </button>
-                <p
-                  id="alg-name-display"
-                  className="alg-name-display"
-                  onClick={() => setShowTimesInsteadOfGraph((value) => !value)}
-                >
-                  {options.showAlgName && !training.countdownActive ? training.currentAlgName : ''}
-                </p>
-              </div>
-              <div
-                id="times-display"
-                className={`${training.stats.hasHistory && showTimesInsteadOfGraph ? 'times-display' : 'hidden times-display'}`}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-              >
-                <div className="times-grid">
-                  {training.stats.lastFive.map((entry, index) => (
-                    <Fragment key={`time-row-${entry.value}-${entry.label}-${index}`}>
-                      <div className="times-grid-label">{entry.label.split(': ')[0]}:</div>
-                      <div className="times-grid-value">
-                        {entry.label.split(': ').slice(1).join(': ')}{entry.isPb ? ' 🎉' : ''}
-                      </div>
-                    </Fragment>
-                  ))}
-                  <div className="times-grid-label times-grid-emphasis">Ao5:</div>
-                  <div className="times-grid-value times-grid-emphasis">{historyTimeString(averageOfFiveTimeNumber(training.statsAlgId))}</div>
-                  <div className="times-grid-label">Best:</div>
-                  <div className="times-grid-value">{historyTimeString(getBestTime(training.statsAlgId))}</div>
-                </div>
-              </div>
-              <div id="graph-display" className={`${showTimesInsteadOfGraph ? 'hidden graph-display' : 'graph-display'}`}>
-                <canvas id="timeGraph" />
-              </div>
-            </div>
+  const algBar = (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      width: '100%',
+      maxWidth: isMobile ? undefined : 900,
+    }}>
+      <button
+        type="button"
+        title="Train"
+        onClick={() => {
+          setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+          if (scramble.scrambleMode && !options.alwaysScrambleTo) {
+            scramble.clearScramble();
+            lastProcessedScrambleMoveRef.current = '';
+          }
+          if (training.timerState === 'RUNNING') {
+            training.abortRunningAttempt();
+            if (training.timeAttackMode) return;
+          }
+          void training.trainCurrent(smartcube.currentPattern);
+        }}
+        style={{
+          width: isMobile ? 48 : 44,
+          height: isMobile ? 48 : 44,
+          borderRadius: 12,
+          border: 'none',
+          flexShrink: 0,
+          background: training.timerState === 'RUNNING' ? 'var(--danger)' : 'var(--accent)',
+          color: '#fff',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(59,130,246,0.35)',
+        }}
+      >
+        <Icon d={training.timerState === 'RUNNING' ? IC.stop : IC.play} size={isMobile ? 20 : 18} />
+      </button>
+
+      <input
+        id="alg-input"
+        type="text"
+        placeholder="Enter alg e.g., (R U R' U) (R U2' R')"
+        className={`alg-input ${training.inputMode ? '' : 'hidden'}`.trim()}
+        value={training.algInput}
+        onChange={(event) => training.setAlgInput(event.target.value)}
+      />
+
+      {/* Alg display in non-input mode */}
+      <div style={{
+        flex: 1,
+        borderRadius: isMobile ? 12 : 8,
+        border: '1px solid var(--border)',
+        background: isMobile ? 'var(--surface)' : 'var(--raised)',
+        padding: '10px 12px',
+        display: training.inputMode ? 'none' : 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 6,
+        minWidth: 0,
+      }}>
+        <MoveListPanel
+          darkMode={options.darkMode}
+          isMoveMasked={isMoveMasked}
+          setIsMoveMasked={setIsMoveMasked}
+          onEditCurrentAlgorithm={handleEditCurrentAlgorithm}
+          showMoves
+          showFix={false}
+          inlineStyle
+        />
+        <button
+          type="button"
+          onClick={() => setIsMoveMasked((v) => !v)}
+          style={{
+            border: 'none',
+            background: 'transparent',
+            color: isMoveMasked ? 'var(--accent)' : 'var(--fg3)',
+            cursor: 'pointer',
+            padding: 4,
+            flexShrink: 0,
+            display: 'flex',
+          }}
+        >
+          <Icon d={IC.mask} size={isMobile ? 18 : 16} />
+        </button>
+      </div>
+
+      {!isMobile && (
+        <button
+          type="button"
+          title="Edit algorithm"
+          onClick={handleEditCurrentAlgorithm}
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: 8,
+            border: '1px solid var(--border)',
+            flexShrink: 0,
+            background: 'var(--raised)',
+            color: 'var(--fg2)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon d={IC.edit} size={16} />
+        </button>
+      )}
+
+      <button
+        type="button"
+        title="Scramble To..."
+        onClick={() => {
+          const alreadyPreparedAlg = training.displayAlg;
+          void scramble.startScrambleTo(
+            alreadyPreparedAlg || training.algInput,
+            training.currentCase,
+            smartcube.currentPattern,
+            !alreadyPreparedAlg && practiceToggles.randomizeAUF,
+          ).then((started) => {
+            if (!started) return;
+            setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+            setScrambleStartAlg(smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : '');
+            lastProcessedScrambleMoveRef.current = '';
+            training.prepareForScramble();
+          });
+        }}
+        style={{
+          width: isMobile ? 48 : 44,
+          height: isMobile ? 48 : 44,
+          borderRadius: isMobile ? 12 : 8,
+          border: isMobile ? 'none' : '1px solid var(--border)',
+          flexShrink: 0,
+          background: 'var(--accent)',
+          color: '#fff',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(59,130,246,0.35)',
+        }}
+      >
+        {scramble.isComputing ? '…' : <Icon d={IC.scatter} size={isMobile ? 20 : 18} />}
+      </button>
+    </div>
+  );
+
+  const statusBar = showStatus ? (
+    <div style={{
+      width: '100%',
+      maxWidth: isMobile ? undefined : 900,
+      padding: '9px 14px',
+      borderRadius: 10,
+      background: statusColor === 'var(--danger)' ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)',
+      border: `1px solid ${statusColor === 'var(--danger)' ? 'rgba(239,68,68,0.25)' : 'rgba(34,197,94,0.25)'}`,
+      color: statusColor,
+      fontSize: 12,
+      display: 'flex',
+      gap: 8,
+      alignItems: 'center',
+    }}>
+      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+        {statusColor === 'var(--danger)'
+          ? <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          : <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>
+        }
+      </svg>
+      {statusText}
+    </div>
+  ) : null;
+
+  const fixPanel = (
+    <MoveListPanel
+      darkMode={options.darkMode}
+      isMoveMasked={isMoveMasked}
+      setIsMoveMasked={setIsMoveMasked}
+      onEditCurrentAlgorithm={handleEditCurrentAlgorithm}
+      showMoves={false}
+      showFix
+    />
+  );
+
+  const practiceTogglesStrip = (
+    <div style={{
+      width: '100%',
+      maxWidth: isMobile ? undefined : 900,
+      padding: '10px 14px',
+      borderRadius: 12,
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: '0px 20px',
+      alignItems: 'center',
+    }}>
+      {training.timeAttackMode && !training.inputMode ? (
+        <div style={{
+          width: '100%',
+          padding: '4px 0',
+          fontSize: 12,
+          color: 'var(--accent)',
+          fontWeight: 600,
+        }}>
+          Time Attack — Case {training.timeAttackCurrentCaseNumber} of {training.timeAttackTotalCases}
+        </div>
+      ) : null}
+      <Toggle
+        checked={practiceToggles.smartReviewScheduling}
+        disabled={practiceToggles.timeAttack}
+        onChange={(checked) => practiceToggles.setSmartReviewScheduling(checked)}
+        label="Smart Order"
+      />
+      <Toggle
+        checked={practiceToggles.randomizeAUF}
+        onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
+        label="Random AUF"
+      />
+      <Toggle
+        checked={practiceToggles.randomOrder}
+        disabled={practiceToggles.smartReviewScheduling}
+        onChange={(checked) => practiceToggles.setRandomOrder(checked)}
+        label="Random Order"
+      />
+      <Toggle
+        checked={practiceToggles.prioritizeSlowCases}
+        disabled={practiceToggles.smartReviewScheduling}
+        onChange={(checked) => practiceToggles.setPrioritizeSlowCases(checked)}
+        label="Slow Cases First"
+      />
+      <Toggle
+        checked={practiceToggles.prioritizeFailedCases}
+        onChange={(checked) => practiceToggles.setPrioritizeFailedCases(checked)}
+        label="Prioritize Failed"
+      />
+      <Toggle
+        checked={practiceToggles.timeAttack}
+        onChange={(checked) => practiceToggles.setTimeAttack(checked)}
+        label="Time Attack"
+      />
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        paddingBottom: 'calc(var(--tab-h) + 12px)',
+        display: visible ? 'flex' : 'none',
+        flexDirection: 'column',
+        position: 'relative',
+      }}>
+        {/* Flashing indicator */}
+        {isFlashingIndicatorVisible && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: flashingIndicatorColor,
+            opacity: 0.75,
+            zIndex: 50,
+            animation: 'flash 1s infinite',
+            pointerEvents: 'none',
+          }} />
+        )}
+
+        {/* Cube */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '16px 16px 8px',
+          gap: 8,
+        }}>
+          <div style={{
+            position: 'relative',
+            borderRadius: 16,
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+            padding: 12,
+            display: 'inline-flex',
+            boxShadow: '0 8px 24px oklch(0% 0 0/0.25)',
+          }}>
+            {training.timerState === 'RUNNING' && (
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: 16,
+                border: '2px solid var(--ok)',
+                animation: 'pulse 1s infinite',
+                pointerEvents: 'none',
+              }} />
+            )}
+            {cubeNode}
           </div>
+          <span style={{ fontSize: 11, color: 'var(--fg3)' }}>White top · Green front</span>
+        </div>
 
-          <div
-            id="cube"
-            className="cube-area"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            style={{
-              width: `min(100%, ${options.cubeSizePx}px)`,
-              aspectRatio: '1',
-              height: 'auto',
-              maxWidth: '100%',
-              minWidth: 0,
-              overflow: 'visible',
-            }}
-          >
-            <div
-              className={training.countdownActive ? 'cube-area-content cube-area-content--hidden' : 'cube-area-content'}
-              aria-hidden={training.countdownActive}
-            >
-              <MainCubeArea
-                alg={mainCubeAlg}
-                sizePx={options.cubeSizePx}
-                visualization={options.visualization}
-                hintFacelets={options.hintFacelets}
-                controlPanel={options.controlPanel}
-                experimentalStickering={selectedStickering}
-                setupAlg={options.whiteOnBottom ? 'z2' : ''}
-                backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
-                resetToken={`${smartcube.connected}:${training.visualResetKey}`}
-                orientationResetToken={orientationResetState.token}
-                orientationResetAlg={orientationResetState.alg}
-                appendMoveKey={smartcubeAppendMoveKey}
-                appendMove={smartcubeAppendMove}
-                gyroscopeEnabled={options.gyroscope && smartcube.connected}
-                cubeQuaternionRef={smartcube.cubeQuaternionRef}
-              />
+        {/* Timer hero */}
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{
+            margin: '0 12px 10px',
+            borderRadius: 16,
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+            padding: '20px 20px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 6,
+            boxShadow: '0 4px 16px oklch(0% 0 0/0.2)',
+          }}
+        >
+          {timerLabel ? (
+            <span style={{
+              fontSize: 10,
+              color: 'var(--fg3)',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+            }}>{timerLabel}</span>
+          ) : null}
+          <div style={{
+            fontFamily: 'var(--mono)',
+            fontSize: 56,
+            fontWeight: 500,
+            lineHeight: 1,
+            letterSpacing: '-0.02em',
+            color: timerColor,
+            transition: 'color 0.2s',
+          }}>
+            {training.timerState === 'IDLE' ? '0.00' : training.timerText}
+          </div>
+          {training.stats.lastFive.at(-1)?.isPb ? (
+            <span style={{ fontSize: 12, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
+          ) : null}
+          <div style={{ width: '100%', height: 1, background: 'var(--border)', margin: '4px 0' }} />
+          <div style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'center' }}>
+            {lastTime && <StatChip label="Last" value={historyTimeString(lastTime.value)} />}
+            <StatChip label="Best" value={historyTimeString(bestTime)} />
+            <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
+          </div>
+        </div>
+
+        {/* Alg bar */}
+        <div style={{ margin: '0 12px 10px' }}>
+          {algBar}
+        </div>
+
+        {/* Fix panel */}
+        {fixPanel}
+
+        {/* Status */}
+        {statusBar && <div style={{ margin: '0 12px 10px' }}>{statusBar}</div>}
+
+        {/* New alg editor */}
+        <div style={{ margin: '0 12px 10px' }}>
+          <NewAlgView
+            visible={showAlgEditor}
+            algorithmActions={algorithmActions}
+            onSave={onAlgEditorSave}
+            onCancel={onAlgEditorCancel}
+          />
+        </div>
+
+        {/* Mini stats */}
+        {training.stats.hasHistory && (
+          <div style={{
+            margin: '0 12px 10px',
+            padding: '12px 14px',
+            borderRadius: 12,
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+          }}>
+            <div style={{
+              fontSize: 10,
+              color: 'var(--fg3)',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              marginBottom: 8,
+            }}>
+              {options.showAlgName && !training.countdownActive ? training.currentAlgName : 'Recent times'}
             </div>
-            {training.countdownActive ? (
-              <div className="cube-countdown-overlay" aria-live="polite" aria-label={`Countdown ${training.countdownValue ?? ''}`}>
-                {training.countdownValue}
+            <MiniGraph times={recentTimes.slice(-10)} width={280} />
+          </div>
+        )}
+
+        {/* Practice toggles */}
+        <div style={{ margin: '0 12px 10px' }}>
+          <div style={{
+            padding: '12px 14px',
+            borderRadius: 12,
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '0 16px',
+          }}>
+            <Toggle
+              checked={practiceToggles.smartReviewScheduling}
+              disabled={practiceToggles.timeAttack}
+              onChange={(checked) => practiceToggles.setSmartReviewScheduling(checked)}
+              label="Smart Order"
+            />
+            <Toggle
+              checked={practiceToggles.randomizeAUF}
+              onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
+              label="Random AUF"
+            />
+            <Toggle
+              checked={practiceToggles.randomOrder}
+              disabled={practiceToggles.smartReviewScheduling}
+              onChange={(checked) => practiceToggles.setRandomOrder(checked)}
+              label="Random Order"
+            />
+            <Toggle
+              checked={practiceToggles.prioritizeSlowCases}
+              disabled={practiceToggles.smartReviewScheduling}
+              onChange={(checked) => practiceToggles.setPrioritizeSlowCases(checked)}
+              label="Slow First"
+            />
+            <Toggle
+              checked={practiceToggles.prioritizeFailedCases}
+              onChange={(checked) => practiceToggles.setPrioritizeFailedCases(checked)}
+              label="Prioritize Failed"
+            />
+            <Toggle
+              checked={practiceToggles.timeAttack}
+              onChange={(checked) => practiceToggles.setTimeAttack(checked)}
+              label="Time Attack"
+            />
+          </div>
+        </div>
+
+        {/* Stats graph */}
+        <div style={{ margin: '0 12px 10px' }}>
+          <StatsPanel
+            visible
+            showAlgName={options.showAlgName && !training.countdownActive}
+            algName={training.currentAlgName}
+            stats={training.stats}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop layout
+  return (
+    <div style={{
+      flex: 1,
+      overflowY: 'auto',
+      padding: '18px 20px',
+      display: visible ? 'flex' : 'none',
+      flexDirection: 'column',
+      gap: 14,
+      alignItems: 'center',
+      position: 'relative',
+    }}>
+      {/* Flashing indicator */}
+      {isFlashingIndicatorVisible && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: flashingIndicatorColor,
+          opacity: 0.75,
+          zIndex: 50,
+          animation: 'flash 1s infinite',
+          pointerEvents: 'none',
+        }} />
+      )}
+
+      {/* 3-col top area */}
+      <div style={{
+        width: '100%',
+        maxWidth: 900,
+        display: 'grid',
+        gridTemplateColumns: '1fr auto 1fr',
+        gap: 14,
+        alignItems: 'stretch',
+      }}>
+        {/* LEFT: stats card */}
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          {training.stats.hasHistory ? (
+            <div style={{
+              padding: '14px 16px',
+              borderRadius: 12,
+              border: '1px solid var(--border)',
+              background: 'var(--surface)',
+            }}>
+              <div style={{
+                fontSize: 10,
+                color: 'var(--fg3)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                marginBottom: 8,
+              }}>
+                {options.showAlgName && !training.countdownActive ? training.currentAlgName : 'Recent times'}
               </div>
+              <MiniGraph times={recentTimes.slice(-10)} width={180} />
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                <StatChip label="Best" value={historyTimeString(bestTime)} />
+                <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
+              </div>
+            </div>
+          ) : (
+            <div style={{
+              padding: '14px 16px',
+              borderRadius: 12,
+              border: '1px solid var(--border)',
+              background: 'var(--surface)',
+              color: 'var(--fg3)',
+              fontSize: 12,
+              textAlign: 'center',
+            }}>
+              No solve history yet
+            </div>
+          )}
+        </div>
+
+        {/* CENTER: cube */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 10,
+          minWidth: 210,
+        }}>
+          <div style={{
+            position: 'relative',
+            padding: 14,
+            borderRadius: 16,
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+            display: 'inline-flex',
+          }}>
+            {training.timerState === 'RUNNING' && (
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: 16,
+                border: '2px solid var(--ok)',
+                animation: 'pulse 1s infinite',
+                pointerEvents: 'none',
+              }} />
+            )}
+            {cubeNode}
+          </div>
+          <span style={{ fontSize: 11, color: 'var(--fg3)' }}>White top · Green front</span>
+        </div>
+
+        {/* RIGHT: timer */}
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            gap: 12,
+          }}
+        >
+          <div style={{
+            padding: '18px 22px',
+            borderRadius: 16,
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+            gap: 6,
+            width: '100%',
+          }}>
+            {timerLabel ? (
+              <span style={{
+                fontSize: 10,
+                color: 'var(--fg3)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.07em',
+              }}>{timerLabel}</span>
+            ) : null}
+            <div style={{
+              fontFamily: 'var(--mono)',
+              fontSize: 60,
+              fontWeight: 500,
+              lineHeight: 1,
+              letterSpacing: '-0.02em',
+              color: timerColor,
+              transition: 'color 0.2s',
+            }}>
+              {training.timerState === 'IDLE' ? '0.00' : training.timerText}
+            </div>
+            {training.stats.lastFive.at(-1)?.isPb ? (
+              <span style={{ fontSize: 13, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
             ) : null}
           </div>
-
-          <div id="right-side" className="top-column right-column">
-            <div className="connect-row">
-              <button
-                id="header-reset-gyro"
-                className={showResetGyro ? 'primary-button' : 'primary-button hidden'}
-                type="button"
-                disabled={!smartcube.connected || !options.gyroscope || !smartcube.gyroSupported}
-                title="Reset gyroscope orientation for the virtual cube"
-                aria-label="Reset gyroscope orientation for the virtual cube"
-                onClick={() => smartcube.resetGyro()}
-              >
-                Reset Gyro
-              </button>
-              <button
-                id="header-reset-orientation"
-                className={showResetOrientation ? 'primary-button' : 'primary-button hidden'}
-                type="button"
-                disabled={!smartcube.connected}
-                title="Reset the virtual cube orientation to its default view"
-                aria-label="Reset the virtual cube orientation to its default view"
-                onClick={() => {
-                  smartcube.resetOrientation();
-                  setOrientationResetState((current) => ({
-                    token: current.token + 1,
-                    alg: smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : null,
-                  }));
-                }}
-              >
-                Reset Orientation
-              </button>
-              <button
-                id="connect-button"
-                className="primary-button connect-button"
-                type="button"
-                onClick={() => void smartcube.connectOrDisconnect()}
-              >
-                <div id="connect">{smartcube.connectLabel}</div>
-                <div id="bluetooth-indicator" className={`${smartcube.connected ? 'hidden indicator-badge' : 'indicator-badge'}`}>
-                  <BluetoothIcon />
-                </div>
-                <div
-                  id="battery-indicator"
-                  className={`${smartcube.connected ? 'indicator-badge' : 'hidden indicator-badge'}`}
-                  title={smartcube.battery.level == null ? '' : `${smartcube.battery.level}%`}
-                  style={{ color: smartcube.battery.color === 'default' ? undefined : smartcube.battery.color }}
-                >
-                  <svg fill="none" className="battery-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18.5 7.5L3.5 7.50001V16.5L18.5 16.5V14.3571H20.5V9.21429H18.5V7.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    {smartcube.battery.level != null && smartcube.battery.level >= 75 ? (
-                      <>
-                        <path d="M5.5 10.5C5.5 9.94772 5.94772 9.5 6.5 9.5H7.5C8.05228 9.5 8.5 9.94772 8.5 10.5V13.5C8.5 14.0523 8.05228 14.5 7.5 14.5H6.5C5.94772 14.5 5.5 14.0523 5.5 13.5V10.5Z" fill="currentColor"/>
-                        <path d="M9.5 10.5C9.5 9.94772 9.94772 9.5 10.5 9.5H11.5C12.0523 9.5 12.5 9.94772 12.5 10.5V13.5C12.5 14.0523 12.0523 14.5 11.5 14.5H10.5C9.94772 14.5 9.5 14.0523 9.5 13.5V10.5Z" fill="currentColor"/>
-                        <path d="M13.5 10.5C13.5 9.94772 13.9477 9.5 14.5 9.5H15.5C16.0523 9.5 16.5 9.94772 16.5 10.5V13.5C16.5 14.0523 16.0523 14.5 15.5 14.5H14.5C13.9477 14.5 13.5 14.0523 13.5 13.5V10.5Z" fill="currentColor"/>
-                      </>
-                    ) : null}
-                    {smartcube.battery.level != null && smartcube.battery.level >= 50 && smartcube.battery.level < 75 ? (
-                      <>
-                        <path d="M5.5 10.5C5.5 9.94772 5.94772 9.5 6.5 9.5H7.5C8.05228 9.5 8.5 9.94772 8.5 10.5V13.5C8.5 14.0523 8.05228 14.5 7.5 14.5H6.5C5.94772 14.5 5.5 14.0523 5.5 13.5V10.5Z" fill="currentColor"/>
-                        <path d="M9.5 10.5C9.5 9.94772 9.94772 9.5 10.5 9.5H11.5C12.0523 9.5 12.5 9.94772 12.5 10.5V13.5C12.5 14.0523 12.0523 14.5 11.5 14.5H10.5C9.94772 14.5 9.5 14.0523 9.5 13.5V10.5Z" fill="currentColor"/>
-                      </>
-                    ) : null}
-                    {smartcube.battery.level != null && smartcube.battery.level >= 20 && smartcube.battery.level < 50 ? (
-                      <path d="M5.5 10.5C5.5 9.94772 5.94772 9.5 6.5 9.5H7.5C8.05228 9.5 8.5 9.94772 8.5 10.5V13.5C8.5 14.0523 8.05228 14.5 7.5 14.5H6.5C5.94772 14.5 5.5 14.0523 5.5 13.5V10.5Z" fill="currentColor"/>
-                    ) : null}
-                    {smartcube.battery.level != null && smartcube.battery.level < 20 ? (
-                      <>
-                        <path d="M11 10V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M11.75 14.25C11.75 14.6642 11.4142 15 11 15C10.5858 15 10.25 14.6642 10.25 14.25C10.25 13.8358 10.5858 13.5 11 13.5C11.4142 13.5 11.75 13.8358 11.75 14.25Z" fill="currentColor"/>
-                      </>
-                    ) : null}
-                  </svg>
-                </div>
-              </button>
-            </div>
-            <div
-              id="touch-timer"
-              className="touch-timer"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              <div className="timer-stack">
-                <div
-                  className={`${training.timeAttackMode && !training.inputMode ? 'time-attack-banner' : 'hidden time-attack-banner'}`}
-                >
-                  <span className="time-attack-banner-title">Complete all cases continuously</span>
-                  {training.timeAttackTotalCases > 0 ? (
-                    <span className="time-attack-banner-progress">
-                      Case {training.timeAttackCurrentCaseNumber} of {training.timeAttackTotalCases}
-                    </span>
-                  ) : null}
-                </div>
-                <div
-                  id="timer"
-                  className={`${!training.inputMode && training.timerState !== 'IDLE' ? 'timer-display' : 'hidden timer-display'}`}
-                  style={{
-                    color:
-                      training.timerState === 'READY'
-                        ? '#080'
-                        : training.timerState === 'RUNNING'
-                          ? '#999'
-                          : options.darkMode
-                            ? '#ccc'
-                            : '#333',
-                  }}
-                >
-                  {training.timerText}
-                </div>
-              </div>
-            </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {lastTime && <StatChip label="Last" value={historyTimeString(lastTime.value)} />}
+            <StatChip label="Best" value={historyTimeString(bestTime)} />
+            <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
           </div>
         </div>
+      </div>
 
-        <div id="alg-bar" className="alg-bar">
-          <button
-            id="train-alg"
-            title="Train"
-            className="round-button"
-            type="button"
-            onClick={() => {
-              setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-              if (scramble.scrambleMode && !options.alwaysScrambleTo) {
-                scramble.clearScramble();
-                lastProcessedScrambleMoveRef.current = '';
-              }
+      {/* Alg bar */}
+      {algBar}
 
-              if (training.timerState === 'RUNNING') {
-                training.abortRunningAttempt();
-                if (training.timeAttackMode) {
-                  return;
-                }
-              }
-              void training.trainCurrent(smartcube.currentPattern);
-            }}
-          >
-            {training.timerState === 'RUNNING' ? <StopIcon /> : <PlayIcon />}
-          </button>
+      {/* Fix panel */}
+      {fixPanel}
 
-          <input
-            id="alg-input"
-            type="text"
-            placeholder="Enter alg e.g., (R U R' U) (R U2' R')"
-            className={`alg-input ${training.inputMode ? '' : 'hidden'}`.trim()}
-            value={training.algInput}
-            onChange={(event) => training.setAlgInput(event.target.value)}
-          />
+      {/* Status */}
+      {statusBar}
 
-          <MoveListPanel
-            className={training.inputMode ? 'hidden' : ''}
-            darkMode={options.darkMode}
-            isMoveMasked={isMoveMasked}
-            setIsMoveMasked={setIsMoveMasked}
-            onEditCurrentAlgorithm={handleEditCurrentAlgorithm}
-            showMoves
-            showFix={false}
-          />
-
-          <button
-            id="scramble-to"
-            title="Scramble To..."
-            className="round-button"
-            type="button"
-            onClick={() => {
-              const alreadyPreparedAlg = training.displayAlg;
-              void scramble.startScrambleTo(
-                alreadyPreparedAlg || training.algInput,
-                training.currentCase,
-                smartcube.currentPattern,
-                !alreadyPreparedAlg && practiceToggles.randomizeAUF,
-              ).then((started) => {
-                if (!started) {
-                  return;
-                }
-
-                setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                setScrambleStartAlg(smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : '');
-                lastProcessedScrambleMoveRef.current = '';
-                training.prepareForScramble();
-              });
-            }}
-          >
-            {scramble.isComputing ? '…' : <ScatterIcon />}
-          </button>
-        </div>
-
+      {/* New alg editor inline */}
+      <div style={{ width: '100%', maxWidth: 900 }}>
         <NewAlgView
           visible={showAlgEditor}
           algorithmActions={algorithmActions}
           onSave={onAlgEditorSave}
           onCancel={onAlgEditorCancel}
         />
-
-        <div
-          id="alg-help-info"
-          className={`${scramble.helpTone === 'green' || training.helpTone === 'red' ? 'info-inline' : 'hidden info-inline'}`}
-          style={{ color: training.helpTone === 'red' ? '#f87171' : scramble.helpTone === 'green' ? '#34d399' : undefined }}
-        >
-          <div className="info-inline-row">
-            <AlgHelpInfoIcon />
-            <p className="info-inline-row-text">Ensure the cube is oriented with WHITE center on top and GREEN center on front.</p>
-          </div>
-        </div>
-        <MoveListPanel
-          darkMode={options.darkMode}
-          isMoveMasked={isMoveMasked}
-          setIsMoveMasked={setIsMoveMasked}
-          onEditCurrentAlgorithm={handleEditCurrentAlgorithm}
-          showMoves={false}
-          showFix
-        />
-        <div id="alg-scramble" className={`${scramble.scrambleMode ? 'status-panel status-success' : 'hidden status-panel status-success'}`}>
-          {scramble.scrambleText}
-        </div>
       </div>
 
-      <StatsPanel
-        visible={practiceVisible}
-        showAlgName={options.showAlgName && !training.countdownActive}
-        algName={training.currentAlgName}
-        stats={training.stats}
-      />
+      {/* Practice toggles strip */}
+      {practiceTogglesStrip}
 
-      <div id="load-container" className={`load-panel shell-card ${practiceVisible ? '' : 'hidden'}`.trim()}>
-        <div id="default-alg-id" className="hidden bg-red-400" />
-
-        <div className="control-row">
-          <div id="category-selector" className="selector-card">
-            <label htmlFor="category-select" className="input-label">Category:</label>
-            <select
-              id="category-select"
-              className="select-input"
-              value={selectedCategory}
-              onChange={(event) => {
-                setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                setMainCubeStickeringDeferred(false);
-                setSelectedCategory(event.target.value);
-                training.clearFailedCounts();
-                training.resetDrill();
-                scramble.clearScramble();
-              }}
-            >
-              <option value="">Filter by Category</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div id="options-selector" className="selector-options-card">
-            <p className="input-label">Options:</p>
-            <div className="toggle-grid">
-              <ToggleSwitch
-                id="select-all-toggle"
-                checked={selectAllCases}
-                onChange={(checked) => {
-                  setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                  if (checked) {
-                    setMainCubeStickeringDeferred(false);
-                  }
-                  setSelectAllCases(checked);
-                }}
-                label="Select All"
-              />
-              <ToggleSwitch
-                id="select-learning-toggle"
-                checked={selectLearningCases}
-                onChange={(checked) => {
-                  setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                  if (checked) {
-                    setMainCubeStickeringDeferred(false);
-                  }
-                  setSelectLearningCases(checked);
-                }}
-                label="Select Learning"
-              />
-              <ToggleSwitch
-                id="select-learned-toggle"
-                checked={selectLearnedCases}
-                onChange={(checked) => {
-                  setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                  if (checked) {
-                    setMainCubeStickeringDeferred(false);
-                  }
-                  setSelectLearnedCases(checked);
-                }}
-                label="Select Learned"
-              />
-              <ToggleSwitch
-                id="smart-review-scheduling-toggle"
-                checked={practiceToggles.smartReviewScheduling}
-                disabled={practiceToggles.timeAttack}
-                onChange={(checked) => practiceToggles.setSmartReviewScheduling(checked)}
-                label="Smart Order"
-              />
-              <ToggleSwitch
-                id="random-order-toggle"
-                checked={practiceToggles.randomOrder}
-                disabled={practiceToggles.smartReviewScheduling}
-                onChange={(checked) => practiceToggles.setRandomOrder(checked)}
-                label="Random Order"
-              />
-              <ToggleSwitch
-                id="prioritize-slow-toggle"
-                checked={practiceToggles.prioritizeSlowCases}
-                disabled={practiceToggles.smartReviewScheduling}
-                onChange={(checked) => practiceToggles.setPrioritizeSlowCases(checked)}
-                label="Slow Cases First"
-              />
-              <ToggleSwitch
-                id="random-auf-toggle"
-                checked={practiceToggles.randomizeAUF}
-                onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
-                label="Random AUF"
-              />
-              <ToggleSwitch
-                id="prioritize-failed-toggle"
-                checked={practiceToggles.prioritizeFailedCases}
-                onChange={(checked) => practiceToggles.setPrioritizeFailedCases(checked)}
-                label="Prioritize Failed Cases"
-              />
-              <ToggleSwitch
-                id="time-attack-toggle"
-                checked={practiceToggles.timeAttack}
-                onChange={(checked) => practiceToggles.setTimeAttack(checked)}
-                label="Time Attack"
-              />
-            </div>
-          </div>
-        </div>
-
-        <p className="input-label subset-label subset-label-row">
-          <label htmlFor="select-all-subsets-toggle">Subset:</label>
-          <input
-            type="checkbox"
-            id="select-all-subsets-toggle"
-            className="subset-checkbox"
-            checked={subsets.length > 0 && selectedSubsets.length === subsets.length}
-            onChange={(event) => {
-              setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-              toggleAllSubsets(event.target.checked);
-              training.clearFailedCounts();
-              training.resetDrill();
-              scramble.clearScramble();
-            }}
-          />
-        </p>
-
-        <div id="subset-checkboxes" className="subsets-panel">
-          <div id="subset-checkboxes-container" className="subset-grid">
-            {subsets.map((subset) => (
-              <label key={subset} className="toggle-item subset-item">
-                <input
-                  type="checkbox"
-                  className="subset-checkbox"
-                  checked={selectedSubsets.includes(subset)}
-                  onChange={(event) => {
-                    setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                    toggleSubset(subset, event.target.checked);
-                    training.clearFailedCounts();
-                    training.resetDrill();
-                    scramble.clearScramble();
-                  }}
-                />
-                <span>{subset}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <CaseGrid caseCards={caseCards} />
-
-        <div className="delete-mode-container">
-          <ToggleSwitch
-            id="delete-mode-toggle"
-            className="toggle-switch--inline"
-            checked={deleteMode}
-            onChange={(checked) => {
-              setDeleteMode(checked);
-            }}
-            label="Delete Mode"
-          />
-          <button
-            id="delete-alg"
-            disabled={!deleteMode}
-            className="primary-button"
-            type="button"
-            onClick={handleDeleteAlgorithms}
-          >
-            Delete Algorithm
-          </button>
-          <button
-            id="delete-times"
-            disabled={!deleteMode}
-            className="primary-button"
-            type="button"
-            onClick={handleDeleteTimes}
-          >
-            Delete Times
-          </button>
-        </div>
-
-        <div id="delete-success" className={`${deleteSuccessMessage ? 'status-panel status-success' : 'hidden status-panel status-success'}`}>
-          {deleteSuccessMessage}
-        </div>
+      {/* Big stats graph */}
+      <div style={{ width: '100%', maxWidth: 900 }}>
+        <StatsPanel
+          visible
+          showAlgName={options.showAlgName && !training.countdownActive}
+          algName={training.currentAlgName}
+          stats={training.stats}
+        />
       </div>
 
       {/* Keep this referenced until timer row is extracted into its own component. */}
       <button type="button" className="hidden" onClick={handleTouchTimerActivation} aria-hidden />
-    </>
+    </div>
   );
 });
-

@@ -1,8 +1,51 @@
 import { memo } from 'react';
 import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
 import type { AppSettingsState } from '../hooks/useAppSettings';
-import { ToggleSwitch } from '../components/ToggleSwitch';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
+
+function Tog({
+  checked,
+  onChange,
+  disabled,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+}) {
+  const w = 30, h = 17, dot = 13;
+  return (
+    <span style={{
+      position: 'relative',
+      width: w,
+      height: h,
+      flexShrink: 0,
+      background: checked ? 'var(--accent)' : 'var(--border)',
+      borderRadius: 99,
+      transition: 'background 0.2s',
+      display: 'inline-block',
+      opacity: disabled ? 0.5 : 1,
+    }}>
+      <span style={{
+        position: 'absolute',
+        top: (h - dot) / 2,
+        left: checked ? w - dot - 2 : 2,
+        width: dot,
+        height: dot,
+        background: '#fff',
+        borderRadius: '50%',
+        boxShadow: '0 1px 4px oklch(0% 0 0/0.3)',
+        transition: 'left 0.2s',
+      }} />
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+        style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
+      />
+    </span>
+  );
+}
 
 export const OptionsView = memo(function OptionsView({
   visible,
@@ -11,6 +54,7 @@ export const OptionsView = memo(function OptionsView({
   options,
   smartcube,
   algorithmActions,
+  isMobile,
 }: {
   visible: boolean;
   infoVisible: boolean;
@@ -18,267 +62,289 @@ export const OptionsView = memo(function OptionsView({
   options: AppSettingsState;
   smartcube: SmartcubeConnectionState;
   algorithmActions: AlgorithmImportExportState;
+  isMobile?: boolean;
 }) {
+  const pad = isMobile ? 12 : 20;
+  const pb = isMobile ? 'calc(var(--tab-h) + 12px)' : 16;
+
+  const sHdr: React.CSSProperties = {
+    padding: '8px 14px',
+    background: 'var(--raised)',
+    borderBottom: '1px solid var(--border)',
+    fontSize: 10,
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.07em',
+    color: 'var(--fg3)',
+  };
+
+  const row = (last = false): React.CSSProperties => ({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '0 14px',
+    minHeight: 44,
+    background: 'var(--surface)',
+    borderBottom: last ? 'none' : '1px solid var(--border)',
+    gap: 8,
+  });
+
+  const lbl: React.CSSProperties = { fontSize: 13, color: 'var(--fg)' };
+
+  const btnStyle = (ghost = false): React.CSSProperties => ({
+    padding: '5px 12px',
+    borderRadius: 8,
+    fontFamily: 'inherit',
+    fontSize: 12,
+    fontWeight: 700,
+    cursor: 'pointer',
+    ...(ghost
+      ? { border: '1px solid var(--border)', background: 'var(--raised)', color: 'var(--fg2)' }
+      : { border: 'none', background: 'var(--accent)', color: '#fff' }),
+  });
+
+  const sel: React.CSSProperties = {
+    background: 'var(--raised)',
+    border: '1px solid var(--border)',
+    color: 'var(--fg)',
+    borderRadius: 8,
+    padding: '4px 8px',
+    fontFamily: 'inherit',
+    fontSize: 12,
+    cursor: 'pointer',
+  };
+
+  const section: React.CSSProperties = {
+    borderRadius: 8,
+    border: '1px solid var(--border)',
+    overflow: 'hidden',
+  };
+
+  if (!visible && !infoVisible) return null;
+
   return (
-    <>
-      <div id="info" className={`${infoVisible ? 'info-panel shell-card' : 'hidden info-panel shell-card'}`}>
-        <label htmlFor="deviceName" className="form-label">Device Name:</label>
-        <input id="deviceName" type="text" readOnly value={smartcube.info.deviceName} className="readonly-input" />
-        <label htmlFor="deviceMAC" className="form-label">Device MAC:</label>
-        <input id="deviceMAC" type="text" readOnly value={smartcube.info.deviceMAC} className="readonly-input" />
-        <label htmlFor="deviceProtocol" className="form-label">Protocol:</label>
-        <input id="deviceProtocol" type="text" readOnly value={smartcube.info.deviceProtocol} className="readonly-input" />
-        <label htmlFor="hardwareName" className="form-label">Hardware Name:</label>
-        <input id="hardwareName" type="text" readOnly value={smartcube.info.hardwareName} className="readonly-input" />
-        <label htmlFor="hardwareVersion" className="form-label">Hardware Version:</label>
-        <input id="hardwareVersion" type="text" readOnly value={smartcube.info.hardwareVersion} className="readonly-input" />
-        <label htmlFor="softwareVersion" className="form-label">Software Version:</label>
-        <input id="softwareVersion" type="text" readOnly value={smartcube.info.softwareVersion} className="readonly-input" />
-        <label htmlFor="productDate" className="form-label">Product Date:</label>
-        <input id="productDate" type="text" readOnly value={smartcube.info.productDate} className="readonly-input" />
-        <label htmlFor="gyroSupported" className="form-label">Gyro Supported:</label>
-        <input id="gyroSupported" type="text" readOnly value={smartcube.info.gyroSupported} className="readonly-input" />
-        <label htmlFor="batteryLevel" className="form-label">Battery:</label>
-        <input id="batteryLevel" type="text" readOnly value={smartcube.info.batteryLevel} className="readonly-input" />
-        <label htmlFor="skew" className="form-label">Clock Skew:</label>
-        <input id="skew" type="text" readOnly value={smartcube.info.skew} className="readonly-input" />
-        <label htmlFor="quaternion" className="form-label">Quaternion:</label>
-        <input id="quaternion" type="text" readOnly value={smartcube.info.quaternion} className="readonly-input" />
-        <label htmlFor="velocity" className="form-label">Angular Velocity:</label>
-        <input id="velocity" type="text" readOnly value={smartcube.info.velocity} className="readonly-input" />
-      </div>
+    <div style={{
+      flex: 1,
+      overflowY: 'auto',
+      padding: `${isMobile ? 14 : 18}px ${pad}px`,
+      paddingBottom: pb,
+    }}>
+      {!isMobile && (
+        <h2 style={{ fontWeight: 700, fontSize: 18, marginBottom: 16, color: 'var(--fg)' }}>Options</h2>
+      )}
 
-      <div
-        id="options-container"
-        className={`options-panel shell-card ${visible && !infoVisible ? '' : 'hidden'}`.trim()}
-      >
-        <div id="alg-options-container" className="options-section">
-          <p className="options-section-title">Algorithms Options:</p>
-          <div className="button-row options-button-row">
-            <button id="export-algs" className="primary-button" type="button" onClick={() => void algorithmActions.exportAll()}>
-              Export Algs
-            </button>
-            <button
-              id="import-algs"
-              className="primary-button"
-              type="button"
-              onClick={() => document.getElementById('import-file')?.click()}
-            >
-              Import Algs
-            </button>
+      {/* Device info panel */}
+      {infoVisible && (
+        <div style={{ ...section, marginBottom: 12 }}>
+          <div style={sHdr}>Device Info</div>
+          {[
+            ['Device Name', smartcube.info.deviceName],
+            ['Device MAC', smartcube.info.deviceMAC],
+            ['Protocol', smartcube.info.deviceProtocol],
+            ['Hardware Name', smartcube.info.hardwareName],
+            ['Hardware Version', smartcube.info.hardwareVersion],
+            ['Software Version', smartcube.info.softwareVersion],
+            ['Product Date', smartcube.info.productDate],
+            ['Gyro Supported', smartcube.info.gyroSupported],
+            ['Battery', smartcube.info.batteryLevel],
+            ['Clock Skew', smartcube.info.skew],
+            ['Quaternion', smartcube.info.quaternion],
+            ['Angular Velocity', smartcube.info.velocity],
+          ].map(([label, value], i, arr) => (
+            <div key={label} style={row(i === arr.length - 1)}>
+              <span style={{ ...lbl, fontSize: 12, color: 'var(--fg3)' }}>{label}</span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--fg)', wordBreak: 'break-all', textAlign: 'right', maxWidth: '60%' }}>
+                {value}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 620 }}>
+
+        {/* Algorithms */}
+        <div style={section}>
+          <div style={sHdr}>Algorithms</div>
+          <div style={row()}>
+            <span style={lbl}>Export / Import Algs</span>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button style={btnStyle()} type="button" onClick={() => void algorithmActions.exportAll()}>
+                Export
+              </button>
+              <button style={btnStyle()} type="button" onClick={() => document.getElementById('import-file')?.click()}>
+                Import
+              </button>
+            </div>
+          </div>
+          <div style={row(true)}>
+            <span style={lbl}>Export / Import Backup</span>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button style={btnStyle()} type="button" onClick={() => void algorithmActions.exportBackup()}>
+                Export
+              </button>
+              <button style={btnStyle()} type="button" onClick={() => document.getElementById('import-backup-file')?.click()}>
+                Import
+              </button>
+            </div>
           </div>
         </div>
 
-        <div id="backup-options-container" className="options-section">
-          <p className="options-section-title">Backup Options:</p>
-          <div className="button-row options-button-row">
-            <button id="export-backup" className="primary-button" type="button" onClick={() => void algorithmActions.exportBackup()}>
-              Export Backup
-            </button>
-            <button
-              id="import-backup"
-              className="primary-button"
-              type="button"
-              onClick={() => document.getElementById('import-backup-file')?.click()}
-            >
-              Import Backup
-            </button>
+        {/* Practice */}
+        <div style={section}>
+          <div style={sHdr}>Practice</div>
+          <div style={row()}>
+            <span style={lbl}>Countdown Mode</span>
+            <Tog checked={options.countdownMode} onChange={(v) => options.setCountdownMode(v)} />
+          </div>
+          <div style={row()}>
+            <span style={lbl}>Always Keep "Scramble To" Enabled</span>
+            <Tog checked={options.alwaysScrambleTo} onChange={(v) => options.setAlwaysScrambleTo(v)} />
+          </div>
+          <div style={row()}>
+            <span style={lbl}>Auto-update Learning State</span>
+            <Tog checked={options.autoUpdateLearningState} onChange={(v) => options.setAutoUpdateLearningState(v)} />
+          </div>
+          <div style={row()}>
+            <span style={lbl}>Flashing Indicator</span>
+            <Tog checked={options.flashingIndicatorEnabled} onChange={(v) => options.setFlashingIndicatorEnabled(v)} />
+          </div>
+          <div style={row(true)}>
+            <span style={lbl}>Show Case Name</span>
+            <Tog checked={options.showAlgName} onChange={(v) => options.setShowAlgName(v)} />
           </div>
         </div>
 
-        <div id="device-options-container" className="options-section">
-          <p className="options-section-title">Smartcube Options:</p>
-          <div className="button-row options-button-row">
-            <button
-              id="reset-state"
-              disabled={!smartcube.connected}
-              className="primary-button"
-              type="button"
-              onClick={() => void smartcube.resetState()}
-            >
-              Reset State
-            </button>
-            <button
-              id="reset-gyro"
-              disabled={!smartcube.connected || !options.gyroscope || !smartcube.gyroSupported}
-              className="primary-button"
-              type="button"
-              onClick={() => smartcube.resetGyro()}
-            >
-              Reset Gyro
-            </button>
-            <button
-              id="device-info"
-              disabled={!smartcube.connected}
-              className="primary-button"
-              type="button"
-              onClick={() => {
-                setInfoVisible((value) => !value);
-              }}
-            >
-              Device Info
-            </button>
+        {/* Visualization */}
+        <div style={section}>
+          <div style={sHdr}>Visualization</div>
+          <div style={row()}>
+            <span style={lbl}>Cube Visualization Mode</span>
+            <select style={sel} value={options.visualization} onChange={(e) => options.setVisualization(e.target.value)}>
+              <option value="PG3D">PG3D</option>
+              <option value="2D">2D</option>
+              <option value="3D">3D</option>
+              <option value="experimental-2D-LL">2D-LL</option>
+              <option value="experimental-2D-LL-face">2D-LL-face</option>
+            </select>
           </div>
-          <div className="device-ble-toggle-row">
-            <ToggleSwitch
-              id="smartcube-show-all-ble-toggle"
-              checked={smartcube.showAllBluetoothDevices}
-              onChange={(checked) => smartcube.setShowAllBluetoothDevices(checked)}
-              label="Show all Bluetooth devices when connecting"
+          <div style={row()}>
+            <span style={lbl}>Back View</span>
+            <select style={sel} value={options.backview} onChange={(e) => options.setBackview(e.target.value)}>
+              <option value="none">Disabled</option>
+              <option value="side-by-side">Side-by-side</option>
+              <option value="top-right">Top Right</option>
+            </select>
+          </div>
+          <div style={row()}>
+            <span style={lbl}>Floating Mirror Stickers</span>
+            <Tog
+              checked={options.hintFacelets === 'floating'}
+              onChange={(v) => options.setHintFacelets(v ? 'floating' : 'none')}
             />
           </div>
-        </div>
-
-        <div className="options-toggle-row">
-          <ToggleSwitch
-            id="dark-mode-toggle"
-            checked={options.darkMode}
-            onChange={(checked) => options.setDarkMode(checked)}
-            label="Dark Mode"
-          />
-        </div>
-        <div className="options-toggle-row">
-          <ToggleSwitch
-            id="gyroscope-toggle"
-            checked={smartcube.connected && !smartcube.gyroSupported ? false : options.gyroscope}
-            disabled={smartcube.gyroscopeToggleDisabled}
-            onChange={(checked) => options.setGyroscope(checked)}
-            label="Animate Virtual Cube Using Gyroscope"
-          />
-        </div>
-        <div className="options-toggle-row">
-          <ToggleSwitch
-            id="control-panel-toggle"
-            checked={options.controlPanel === 'bottom-row'}
-            onChange={(checked) => options.setControlPanel(checked ? 'bottom-row' : 'none')}
-            label="Virtual Cube Control Panel"
-          />
-        </div>
-        <div className="options-toggle-row">
-          <ToggleSwitch
-            id="hintFacelets-toggle"
-            checked={options.hintFacelets === 'floating'}
-            onChange={(checked) => options.setHintFacelets(checked ? 'floating' : 'none')}
-            label="Floating Mirror Stickers"
-          />
-        </div>
-        <div className="options-toggle-row">
-          <ToggleSwitch
-            id="full-stickering-toggle"
-            checked={options.fullStickering}
-            onChange={(checked) => options.setFullStickering(checked)}
-            label="Always Show Full Stickers"
-          />
-        </div>
-
-        <div className="white-bottom-group">
-          <ToggleSwitch
-            id="white-on-bottom-toggle"
-            className="toggle-switch--indented"
-            checked={options.whiteOnBottom}
-            disabled={!options.fullStickering}
-            onChange={(checked) => options.setWhiteOnBottom(checked)}
-            label="Virtual Cube White on Bottom"
-          />
-          <span id="white-on-bottom-hint" className={`${options.fullStickering ? 'hidden subtle-text' : 'subtle-text'}`}>
-            Requires “Always Show Full Stickers”
-          </span>
-        </div>
-
-        <div className="options-toggle-row">
-          <ToggleSwitch
-            id="flashing-indicator-toggle"
-            checked={options.flashingIndicatorEnabled}
-            onChange={(checked) => options.setFlashingIndicatorEnabled(checked)}
-            label="Flashing Indicator"
-          />
-        </div>
-        <div className="options-toggle-row">
-          <ToggleSwitch
-            id="show-alg-name-toggle"
-            checked={options.showAlgName}
-            onChange={(checked) => options.setShowAlgName(checked)}
-            label="Show Case Name"
-          />
-        </div>
-        <div className="options-toggle-row">
-          <ToggleSwitch
-            id="countdown-mode-toggle"
-            checked={options.countdownMode}
-            onChange={(checked) => options.setCountdownMode(checked)}
-            label="Countdown Mode"
-          />
-        </div>
-        <div className="options-toggle-row">
-          <ToggleSwitch
-            id="always-scramble-to-toggle"
-            checked={options.alwaysScrambleTo}
-            onChange={(checked) => options.setAlwaysScrambleTo(checked)}
-            label='Always Keep "Scramble To" Enabled'
-          />
-        </div>
-        <div className="options-toggle-row">
-          <ToggleSwitch
-            id="auto-learning-state-toggle"
-            checked={options.autoUpdateLearningState}
-            onChange={(checked) => options.setAutoUpdateLearningState(checked)}
-            label="Auto-update learning state"
-          />
-        </div>
-
-        <div id="visualization-container">
-          <label htmlFor="visualization-select" className="options-viz-label">Cube Visualization Mode:</label>
-          <select
-            id="visualization-select"
-            className="select-input"
-            value={options.visualization}
-            onChange={(event) => options.setVisualization(event.target.value)}
-          >
-            <option value="PG3D">PG3D</option>
-            <option value="2D">2D</option>
-            <option value="3D">3D</option>
-            <option value="experimental-2D-LL">2D-LL</option>
-            <option value="experimental-2D-LL-face">2D-LL-face</option>
-          </select>
-
-          <label htmlFor="backview-select" className="options-viz-label">Cube Back View:</label>
-          <select
-            id="backview-select"
-            className="select-input"
-            value={options.backview}
-            onChange={(event) => options.setBackview(event.target.value)}
-          >
-            <option value="none">Disabled</option>
-            <option value="side-by-side">Side-by-side</option>
-            <option value="top-right">Top Right</option>
-          </select>
-        </div>
-
-        <div id="large-cube-container">
-          <label htmlFor="cube-size" className="options-cube-size-label">Cube Size:</label>
-          <div className="cube-size-row">
+          <div style={row()}>
+            <span style={lbl}>Always Show Full Stickers</span>
+            <Tog checked={options.fullStickering} onChange={(v) => options.setFullStickering(v)} />
+          </div>
+          <div style={row(!options.fullStickering)}>
+            <span style={{ ...lbl, opacity: options.fullStickering ? 1 : 0.45 }}>Virtual Cube White on Bottom</span>
+            <Tog
+              checked={options.whiteOnBottom}
+              disabled={!options.fullStickering}
+              onChange={(v) => options.setWhiteOnBottom(v)}
+            />
+          </div>
+          {!options.fullStickering && (
+            <div style={{ padding: '0 14px 8px', background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
+              <span style={{ fontSize: 11, color: 'var(--fg3)' }}>Requires "Always Show Full Stickers"</span>
+            </div>
+          )}
+          <div style={row()}>
+            <span style={lbl}>Virtual Cube Control Panel</span>
+            <Tog
+              checked={options.controlPanel === 'bottom-row'}
+              onChange={(v) => options.setControlPanel(v ? 'bottom-row' : 'none')}
+            />
+          </div>
+          <div style={row(true)}>
+            <span style={lbl}>
+              Cube Size{' '}
+              <span style={{ fontFamily: 'var(--mono)', color: 'var(--fg3)', fontSize: 12 }}>
+                {options.cubeSizePx}px
+              </span>
+            </span>
             <input
-              id="cube-size"
               type="range"
-              min="240"
-              max="600"
-              step="10"
+              min={240}
+              max={600}
+              step={10}
               value={options.cubeSizePx}
-              onChange={(event) => options.setCubeSizePx(Number(event.target.value))}
-            />
-            <input
-              id="cube-size-number"
-              type="number"
-              min="240"
-              max="600"
-              step="10"
-              value={options.cubeSizePx}
-              onChange={(event) => options.setCubeSizePx(Number(event.target.value))}
-              className="number-input"
+              onChange={(e) => options.setCubeSizePx(Number(e.target.value))}
+              style={{ width: 110, accentColor: 'var(--accent)' }}
             />
           </div>
         </div>
+
+        {/* Smartcube */}
+        <div style={section}>
+          <div style={sHdr}>Smartcube</div>
+          <div style={row()}>
+            <span style={lbl}>Animate Using Gyroscope</span>
+            <Tog
+              checked={smartcube.connected && !smartcube.gyroSupported ? false : options.gyroscope}
+              disabled={smartcube.gyroscopeToggleDisabled}
+              onChange={(v) => options.setGyroscope(v)}
+            />
+          </div>
+          <div style={row()}>
+            <span style={lbl}>Show All Bluetooth Devices</span>
+            <Tog
+              checked={smartcube.showAllBluetoothDevices}
+              onChange={(v) => smartcube.setShowAllBluetoothDevices(v)}
+            />
+          </div>
+          <div style={{ ...row(true), flexWrap: 'wrap', gap: 8 }}>
+            <span style={lbl}>Device Actions</span>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button
+                style={btnStyle(true)}
+                type="button"
+                disabled={!smartcube.connected}
+                onClick={() => void smartcube.resetState()}
+              >
+                Reset State
+              </button>
+              <button
+                style={btnStyle(true)}
+                type="button"
+                disabled={!smartcube.connected || !options.gyroscope || !smartcube.gyroSupported}
+                onClick={() => smartcube.resetGyro()}
+              >
+                Reset Gyro
+              </button>
+              <button
+                style={btnStyle(true)}
+                type="button"
+                disabled={!smartcube.connected}
+                onClick={() => setInfoVisible((v) => !v)}
+              >
+                Device Info
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Appearance */}
+        <div style={section}>
+          <div style={sHdr}>Appearance</div>
+          <div style={row(true)}>
+            <span style={lbl}>Dark Mode</span>
+            <Tog checked={options.darkMode} onChange={(v) => options.setDarkMode(v)} />
+          </div>
+        </div>
+
       </div>
-    </>
+    </div>
   );
 });

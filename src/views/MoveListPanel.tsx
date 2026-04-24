@@ -10,6 +10,7 @@ function MoveListPanelComponent({
   className,
   showMoves = true,
   showFix = false,
+  inlineStyle = false,
 }: {
   darkMode: boolean;
   isMoveMasked: boolean;
@@ -18,27 +19,31 @@ function MoveListPanelComponent({
   className?: string;
   showMoves?: boolean;
   showFix?: boolean;
+  inlineStyle?: boolean;
 }) {
   const { displayMoves, fixText, fixVisible } = useMoveListSlice();
   return (
     <>
       {showMoves ? (
-        <div id="alg-display-container" className={`alg-display-container ${className ?? ''}`.trim()}>
-          <div className="alg-display-mask-row">
-            <a
-              href="#"
-              id="toggle-move-mask"
-              className="mask-toggle-button"
-              style={{ backgroundColor: isMoveMasked ? '#f97316' : '#3b82f6' }}
-              onClick={(event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                setIsMoveMasked((value) => !value);
-              }}
-            >
-              {isMoveMasked ? <><EyeSlashIcon /> Unmask alg</> : <><EyeIcon /> Mask alg</>}
-            </a>
-          </div>
+        <div id="alg-display-container" className={`alg-display-container ${className ?? ''}`.trim()}
+          style={inlineStyle ? { display: 'contents' } : undefined}>
+          {!inlineStyle && (
+            <div className="alg-display-mask-row">
+              <a
+                href="#"
+                id="toggle-move-mask"
+                className="mask-toggle-button"
+                style={{ backgroundColor: isMoveMasked ? '#f97316' : '#3b82f6' }}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setIsMoveMasked((value) => !value);
+                }}
+              >
+                {isMoveMasked ? <><EyeSlashIcon /> Unmask alg</> : <><EyeIcon /> Mask alg</>}
+              </a>
+            </div>
+          )}
           <div id="alg-display" className="alg-display" onClick={onEditCurrentAlgorithm}>
             <div className="alg-display-moves">
               {displayMoves.map((move, index) => {

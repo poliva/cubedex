@@ -1,12 +1,43 @@
 :root {
-  --border-color: #e5e7eb;
-  /* Match the original #alg-bar max width so graph and metrics stay aligned. */
+  /* Legacy compat */
+  --border-color: #d1d5db;
   --practice-alg-track-max: 1125px;
+
+  /* Design system — light mode defaults */
+  --bg:       #f3f4f6;
+  --surface:  #ffffff;
+  --raised:   #f9fafb;
+  --border:   #9ca3af;
+  --border-l: #d1d5db;
+  --accent:   #3b82f6;
+  --accent-h: #1d4ed8;
+  --ok:       #22c55e;
+  --warn:     #f59e0b;
+  --danger:   #ef4444;
+  --fg:       #111827;
+  --fg2:      #374151;
+  --fg3:      #6b7280;
+  --fg4:      #9ca3af;
+  --mono:     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --sidebar-w: 64px;
+  --tab-h:    60px;
+}
+
+html.dark {
+  --border-color: #2d3748;
+  --bg:       #111827;
+  --surface:  #1f2937;
+  --raised:   #374151;
+  --border:   #374151;
+  --border-l: #4b5563;
+  --fg:       #ffffff;
+  --fg2:      #e5e7eb;
+  --fg3:      #9ca3af;
+  --fg4:      #6b7280;
 }
 
 /*
  * Sans stack + preflight-style html defaults from the original static app stylesheet.
- * Omit font-synthesis/text-rendering/font-smoothing tweaks because they change weight/edges.
  */
 html {
   line-height: 1.5;
@@ -17,15 +48,14 @@ html {
   font-feature-settings: normal;
   font-variation-settings: normal;
   -webkit-tap-highlight-color: transparent;
-  background-color: #f3f4f6;
+  background-color: var(--bg);
   min-height: 100%;
   color-scheme: light;
 }
 
 html.dark {
   color-scheme: dark;
-  --border-color: #2d3748;
-  background-color: #111827;
+  background-color: var(--bg);
 }
 
 * {
@@ -40,22 +70,20 @@ body {
 }
 
 #root {
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
-  flex-direction: column;
-  background-color: inherit;
+  overflow: hidden;
+  background-color: var(--bg);
 }
 
 /* Body matches the original font/line-height rhythm. */
 body {
   min-width: 360px;
-  min-height: 100vh;
-  min-height: 100dvh;
   line-height: 1.625;
   font-family: inherit;
-  background-color: #f3f4f6;
-  color: #111827;
+  background-color: var(--bg);
+  color: var(--fg);
   font-size: 0.875rem;
 }
 
@@ -66,8 +94,8 @@ body {
 }
 
 html.dark body {
-  background-color: #111827;
-  color: #ffffff;
+  background-color: var(--bg);
+  color: var(--fg);
 }
 
 a {
@@ -267,6 +295,14 @@ html.dark .menu-item.selected {
     opacity: 0;
   }
 }
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.9; }
+}
+
+button:active { opacity: 0.75; }
+button { -webkit-tap-highlight-color: transparent; }
 
 .top-column {
   min-height: 100%;

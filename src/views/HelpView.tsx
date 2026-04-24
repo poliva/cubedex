@@ -1,110 +1,237 @@
 import { memo, type Dispatch, type SetStateAction } from 'react';
 
+function Section({ title, items }: {
+  title: string;
+  items: Array<{ icon: string; text: string }>;
+}) {
+  return (
+    <div style={{ borderRadius: 8, border: '1px solid var(--border)', overflow: 'hidden' }}>
+      <div style={{
+        padding: '8px 14px',
+        background: 'var(--raised)',
+        borderBottom: '1px solid var(--border)',
+        fontSize: 10,
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        letterSpacing: '0.07em',
+        color: 'var(--fg3)',
+      }}>
+        {title}
+      </div>
+      <ul style={{ margin: 0, padding: '8px 0', listStyle: 'none', background: 'var(--surface)' }}>
+        {items.map((item, i) => (
+          <li key={i} style={{
+            display: 'flex',
+            gap: 10,
+            padding: '8px 14px',
+            borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none',
+            fontSize: 13,
+            lineHeight: 1.6,
+            color: 'var(--fg2)',
+          }}>
+            <span style={{ flexShrink: 0, fontSize: 15 }}>{item.icon}</span>
+            <span dangerouslySetInnerHTML={{ __html: item.text }} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+const smartSections = [
+  {
+    title: 'Getting Started',
+    items: [
+      { icon: '🔗', text: 'Connect your smart cube by clicking the <strong>Connect</strong> button. See the <a href="https://gist.github.com/afedotov/52057533a8b27a0277598160c384ae71" target="_blank" rel="noreferrer" style="color:var(--accent)">FAQ</a> for more details.' },
+      { icon: '📜', text: "Load an algorithm from the list or type your own using standard Rubik's cube notation. You can also input moves directly on the cube." },
+      { icon: '🟩', text: 'Ensure the cube is oriented with <strong>WHITE on top</strong> and <strong>GREEN on front</strong>.' },
+      { icon: '🏁', text: 'Click the <strong>▶ Train</strong> button and turn the cube to start practicing.' },
+      { icon: '🪄', text: 'To match the virtual cube, click <strong>Scramble To…</strong> and follow the scramble.' },
+    ],
+  },
+  {
+    title: 'During Training',
+    items: [
+      { icon: '⏱️', text: 'The timer starts automatically when you begin the algorithm.' },
+      { icon: '🏆', text: 'On success, the timer stops and your last 5 times with their average are shown.' },
+      { icon: '🔄', text: 'If you make a mistake, follow the moves in the <strong>Fix</strong> section to correct it.' },
+    ],
+  },
+  {
+    title: 'Customise Your Drills',
+    items: [
+      { icon: '📂', text: 'Pick a category, choose subsets, and select the cases you want to work on.' },
+      { icon: '🔖', text: 'Mark algs as Learning or Learned, or let <strong>Auto-update learning state</strong> manage it. Use <strong>Select Learning</strong> to filter by status.' },
+      { icon: '🔀', text: 'Try <strong>Random AUF</strong> for random orientations. Disable Gyroscope & Mirror Stickers for 2-sided recognition practice.' },
+      { icon: '🎲', text: 'Enable <strong>Random Order</strong> to mix up the algorithms.' },
+      { icon: '🐌', text: 'Turn on <strong>Slow Cases First</strong> to focus on your slowest algorithms.' },
+      { icon: '🧠', text: 'Enable <strong>Smart Order</strong> for Anki-style spaced repetition.' },
+      { icon: '🎯', text: 'Activate <strong>Prioritize Failed Cases</strong> to focus on your hardest algorithms.' },
+      { icon: '📝', text: 'Click any algorithm to edit it. Or use <strong>Export Algs</strong> in Options, edit the JSON, then re-import.' },
+      { icon: '⏳', text: 'Turn on <strong>Time Attack</strong> to run all selected cases as one continuous session.' },
+    ],
+  },
+];
+
+const dumbSections = [
+  {
+    title: 'Getting Started',
+    items: [
+      { icon: '📜', text: "Load an algorithm from the list or type your own using standard Rubik's cube notation." },
+      { icon: '🏁', text: 'Press <strong>Spacebar</strong> (desktop) or tap the timer (touchscreen) to start and stop the timer.' },
+    ],
+  },
+  {
+    title: 'During Training',
+    items: [
+      { icon: '🪄', text: 'Click <strong>Scramble To…</strong> to set up the case on your cube and follow the scramble.' },
+      { icon: '🏆', text: 'When you stop the timer, your last 5 times and their average are shown.' },
+    ],
+  },
+  {
+    title: 'Customise Your Drills',
+    items: [
+      { icon: '📂', text: 'Pick a category, choose subsets, and select the cases you want to work on.' },
+      { icon: '🔖', text: 'Mark algs as Learning or Learned, or let <strong>Auto-update learning state</strong> manage it.' },
+      { icon: '🔀', text: 'Try <strong>Random AUF</strong> for random orientations. Disable Mirror Stickers in Options for 2-sided recognition.' },
+      { icon: '🎲', text: 'Enable <strong>Random Order</strong> to mix up the algorithms.' },
+      { icon: '🐌', text: 'Turn on <strong>Slow Cases First</strong> to focus on your slowest algorithms.' },
+      { icon: '🧠', text: 'Enable <strong>Smart Order</strong> for Anki-style spaced repetition.' },
+      { icon: '📝', text: 'Click any algorithm to edit it, or export/modify/re-import from Options.' },
+      { icon: '⏳', text: 'Turn on <strong>Time Attack</strong> to run all selected cases as one continuous session.' },
+    ],
+  },
+];
+
 export const HelpView = memo(function HelpView({
   visible,
   showDumbcubeHelp,
   setShowDumbcubeHelp,
+  isMobile,
 }: {
   visible: boolean;
   showDumbcubeHelp: boolean;
   setShowDumbcubeHelp: Dispatch<SetStateAction<boolean>>;
+  isMobile?: boolean;
 }) {
+  if (!visible) return null;
+
+  const pad = isMobile ? 12 : 20;
+  const pb = isMobile ? 'calc(var(--tab-h) + 12px)' : 16;
+  const sections = showDumbcubeHelp ? dumbSections : smartSections;
+
+  const pillBtn = (val: 'smart' | 'dumb', label: string) => {
+    const active = val === 'smart' ? !showDumbcubeHelp : showDumbcubeHelp;
+    return (
+      <button
+        key={val}
+        type="button"
+        onClick={() => setShowDumbcubeHelp(val === 'dumb')}
+        style={{
+          padding: '5px 12px',
+          borderRadius: 6,
+          border: 'none',
+          fontFamily: 'inherit',
+          fontSize: 12,
+          fontWeight: 700,
+          cursor: 'pointer',
+          transition: 'all 0.15s',
+          background: active ? 'var(--accent)' : 'transparent',
+          color: active ? '#fff' : 'var(--fg3)',
+        }}
+      >
+        {label}
+      </button>
+    );
+  };
+
   return (
-    <div id="help" className={`help-panel shell-card ${visible ? '' : 'hidden'}`.trim()}>
-      <div className="panel-header-row">
-        <p id="help-title" className="panel-title">{showDumbcubeHelp ? 'DUMBCUBE HELP' : 'SMARTCUBE HELP'}</p>
-        <p id="dumbcube-toggle" className="help-toggle-text">
-          {showDumbcubeHelp ? (
-            <>🛜 USING a smart cube?{' '}
-              <button type="button" className="text-blue-500" onClick={() => setShowDumbcubeHelp(false)}>
-                CLICK HERE
-              </button>
-            </>
-          ) : (
-            <>🛜 NOT using a smart cube?{' '}
-              <button type="button" className="text-blue-500" onClick={() => setShowDumbcubeHelp(true)}>
-                CLICK HERE
-              </button>
-            </>
+    <div style={{
+      flex: 1,
+      overflowY: 'auto',
+      padding: `${isMobile ? 14 : 18}px ${pad}px`,
+      paddingBottom: pb,
+    }}>
+      <div style={{ maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+        {/* Header + mode toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          {!isMobile && (
+            <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0, color: 'var(--fg)' }}>Help</h2>
           )}
-        </p>
-      </div>
-
-      {!showDumbcubeHelp ? (
-        <>
-          <p className="section-title">To get started with Cubedex:</p>
-          <div id="help-content-smartcube">
-            <ul className="help-list">
-              <li>🔗 Connect your smart cube by clicking the <strong>Connect</strong> button. For more details, refer to the <a href="https://gist.github.com/afedotov/52057533a8b27a0277598160c384ae71" target="_blank" rel="noreferrer">FAQ</a>.</li>
-              <li>📜 Load an algorithm from the list or input your own in the input field using standard Rubik's cube notation. You can also input the algorithm by performing it on the cube.</li>
-              <li>🟩 Ensure the cube is oriented with <strong>WHITE on top</strong> and <strong>GREEN on front</strong>.</li>
-              <li>🏁 Click the <strong>▶️ Train</strong> button and turn the cube to start practicing the algorithm.</li>
-              <li>🪄 If you want the smartcube to match the virtual cube, click the <strong>Scramble To...</strong> button and follow the scramble.</li>
-            </ul>
-            <p className="section-title">During training:</p>
-            <ul className="help-list">
-              <li>⏱️ The timer will start automatically when you begin the algorithm.</li>
-              <li>🏆 Upon successful completion, the timer will stop and your last 5 times along with their average will be displayed.</li>
-              <li>🔄 If you make a mistake, follow the moves shown in the <strong>Fix</strong> section to correct it. Ensure the top center is <strong>WHITE</strong> and the front center is <strong>GREEN</strong>.</li>
-            </ul>
-            <p className="section-title">Customize your practice drills:</p>
-            <ul className="help-list">
-              <li>📂 Pick a category, choose subsets, and select the cases you want to work on.</li>
-              <li>🔖 Mark the algs you're learning or have already learned, or let <strong>Auto-update learning state</strong> manage that status for you. You can use <strong>Select Learning</strong> to filter algs by learning status.</li>
-              <li>🔀 Try <strong>Random AUF</strong> to practice with random orientations. For 2-sided recognition, turn off the Gyroscope Orientation and Mirror Sticker hints in Options, letting you view only two sides of the cube. For sets like PLL or ZBLL, you'll also get random post-AUFs to sharpen your AUF prediction.</li>
-              <li>🎲 Enable <strong>Random Order</strong> to mix up the algorithms.</li>
-              <li>🐌 Turn on <strong>Slow Cases First</strong> to improve these slow algorithms.</li>
-              <li>🧠 Enable <strong>Smart Order</strong> to focus on the cases that are most due for review (Anki-style spaced repetition).</li>
-              <li>🎯 Activate <strong>Prioritize Failed Cases</strong> to focus on the algorithms you find most challenging.</li>
-              <li>📝 Want to change the algorithm for one or more cases? Click on the algorithm to edit it. You can also <strong>Export Algs</strong> in Options, modify the algorithm in the JSON file, then import it back.</li>
-              <li>⏳ Turn on <strong>Time Attack</strong> to run all currently selected cases as one continuous session.</li>
-            </ul>
+          <div style={{ display: 'flex', background: 'var(--raised)', borderRadius: 8, padding: 2, gap: 1 }}>
+            {pillBtn('smart', '🛜 Smartcube')}
+            {pillBtn('dumb', '⌨️ Regular Cube')}
           </div>
-        </>
-      ) : (
-        <div id="help-content-dumbcube">
-          <ul className="help-list">
-            <li>📜 Load an algorithm from the list or input your own in the input field using standard Rubik's cube notation.</li>
-            <li>🏁 Press the spacebar (on computer) or touch the timer (on touchscreen enabled devices) to start and stop the timer.</li>
-          </ul>
-          <p className="section-title">During training:</p>
-          <ul className="help-list">
-            <li>🪄 If you want to setup the case on your cube, click the <strong>Scramble To...</strong> button and follow the scramble.</li>
-            <li>🏆 When you stop the timer your last 5 times along with their average will be displayed.</li>
-          </ul>
-          <p className="section-title">Customize your practice drills:</p>
-          <ul className="help-list">
-            <li>📂 Pick a category, choose subsets, and select the cases you want to work on.</li>
-            <li>🔖 Mark the algs you're learning or have already learned, or let <strong>Auto-update learning state</strong> manage that status for you. You can use <strong>Select Learning</strong> to filter algs by learning status.</li>
-            <li>🔀 Try <strong>Random AUF</strong> to practice with random orientations. For 2-sided recognition, turn off Mirror Sticker hints in Options, letting you view only two sides of the cube.</li>
-            <li>🎲 Enable <strong>Random Order</strong> to mix up the algorithms.</li>
-            <li>🐌 Turn on <strong>Slow Cases First</strong> to improve these slow algorithms.</li>
-            <li>🧠 Enable <strong>Smart Order</strong> to focus on the cases that are most due for review (Anki-style spaced repetition).</li>
-            <li>📝 Want to change the algorithm for one or more cases? Click on the algorithm to edit it. You can also <strong>Export Algs</strong> in Options, modify the algorithm in the JSON file, then import it back.</li>
-            <li>⏳ Turn on <strong>Time Attack</strong> to run all currently selected cases as one continuous session.</li>
-          </ul>
         </div>
-      )}
 
-      <p className="section-title">Still need help? Watch the video tutorial:</p>
-      <div className="video-shell">
-        <div style={{ position: 'relative', overflow: 'hidden', width: '100%', paddingTop: '56.25%' }}>
-          <iframe
-            title="Cubedex Tutorial"
-            loading="lazy"
-            src="https://www.youtube.com/embed/AZcFMiT2Vm0"
-            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
-            allow="fullscreen; picture-in-picture"
-          />
-        </div>
-      </div>
+        {/* Content sections */}
+        {sections.map((s) => <Section key={s.title} title={s.title} items={s.items} />)}
 
-      <div className="help-footer-shell">
-        <div id="help-footer" className="subpanel">
-          <p className="centered-text"><strong>Love Cubedex? Help us grow! 🌱</strong></p>
-          <p className="centered-text">No Ads here 🤗 Support the app's development on <a href="https://ko-fi.com/cubedex" target="_blank" rel="noreferrer">Ko-fi</a>:</p>
-          <p className="centered-text"><a href="https://ko-fi.com/H2H6132Z3Z" target="_blank" rel="noreferrer">Support Me on Ko-fi</a></p>
+        {/* Video tutorial */}
+        <div style={{ borderRadius: 8, border: '1px solid var(--border)', overflow: 'hidden' }}>
+          <div style={{
+            padding: '8px 14px',
+            background: 'var(--raised)',
+            borderBottom: '1px solid var(--border)',
+            fontSize: 10,
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.07em',
+            color: 'var(--fg3)',
+          }}>
+            Video Tutorial
+          </div>
+          <div style={{ padding: 14, background: 'var(--surface)' }}>
+            <div style={{ position: 'relative', paddingTop: '56.25%', borderRadius: 6, overflow: 'hidden', background: 'var(--bg)' }}>
+              <iframe
+                title="Cubedex Tutorial"
+                loading="lazy"
+                src="https://www.youtube.com/embed/AZcFMiT2Vm0"
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+                allow="fullscreen; picture-in-picture"
+              />
+            </div>
+          </div>
         </div>
+
+        {/* Support */}
+        <div style={{
+          borderRadius: 8,
+          border: '1px solid var(--border)',
+          background: 'var(--surface)',
+          padding: '16px 18px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+          alignItems: 'center',
+          textAlign: 'center',
+        }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg)' }}>Love Cubedex? Help us grow! 🌱</span>
+          <span style={{ fontSize: 13, color: 'var(--fg3)' }}>No ads here 🤗 — support the app's development:</span>
+          <a
+            href="https://ko-fi.com/H2H6132Z3Z"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              marginTop: 4,
+              padding: '7px 18px',
+              borderRadius: 8,
+              border: 'none',
+              background: 'var(--accent)',
+              color: '#fff',
+              fontFamily: 'inherit',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              textDecoration: 'none',
+              boxShadow: '0 4px 10px rgba(59,130,246,0.35)',
+            }}
+          >
+            ☕ Support on Ko-fi
+          </a>
+        </div>
+
       </div>
     </div>
   );
