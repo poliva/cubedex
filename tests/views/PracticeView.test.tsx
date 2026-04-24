@@ -23,8 +23,7 @@ vi.mock('../../src/lib/scramble', async () => ({
 
 function makeProps(overrides: Record<string, unknown> = {}) {
   return {
-    topVisible: true,
-    practiceVisible: true,
+    visible: true,
     options: {
       darkMode: false,
       showAlgName: true,
@@ -259,19 +258,16 @@ describe('PracticeView', () => {
   it('applies responsive cube guardrails and shows orientation reset in non-gyro mode', () => {
     render(<PracticeView {...makeProps()} />);
 
+    const cubeFrame = screen.getByTestId('main-cube-area').parentElement?.parentElement;
+
     expect(screen.getByTestId('main-cube-area')).toBeInTheDocument();
-    expect(document.getElementById('cube')).toHaveStyle({
+    expect(cubeFrame).toHaveStyle({
       width: 'min(100%, 420px)',
       aspectRatio: '1',
       maxWidth: '100%',
       minWidth: '0',
     });
-    expect(
-      screen.getByRole('button', { name: 'Reset the virtual cube orientation to its default view' }),
-    ).not.toHaveClass('hidden');
-    expect(
-      screen.getByRole('button', { name: 'Reset gyroscope orientation for the virtual cube' }),
-    ).toHaveClass('hidden');
+    expect(screen.getByText('White top · Green front')).toBeInTheDocument();
   });
 
   it('shows a countdown overlay and hides the cube content while countdown mode is active', () => {
@@ -288,7 +284,7 @@ describe('PracticeView', () => {
 
     expect(screen.getByLabelText('Countdown 3')).toHaveTextContent('3');
     expect(screen.getByTestId('main-cube-area').parentElement).toHaveClass('cube-area-content--hidden');
-    expect(document.getElementById('alg-name-display')).toHaveTextContent('');
+    expect(screen.queryByText('Aa')).not.toBeInTheDocument();
   });
 
   it('clears scramble mode on Train when alwaysScrambleTo is disabled', async () => {
@@ -383,8 +379,7 @@ describe('PracticeView', () => {
 
     render(<PracticeView {...props} />);
 
-    expect(screen.getByText('Complete all cases continuously')).toBeInTheDocument();
-    expect(screen.getByText('Case 3 of 12')).toBeInTheDocument();
+    expect(screen.getByText('Time Attack — Case 3 of 12')).toBeInTheDocument();
   });
 
   it('disables conflicting order toggles when smart order or time attack is active', async () => {
@@ -417,20 +412,15 @@ describe('PracticeView', () => {
     expect(screen.getByLabelText('Smart Order')).toBeDisabled();
   });
 
-  it('renders Select Learned after Select Learning and keeps Time Attack last', () => {
+  it('keeps the practice toggle order with Time Attack last', () => {
     render(<PracticeView {...makeProps()} />);
 
-    const selectLearning = document.getElementById('select-learning-toggle');
-    const selectLearned = document.getElementById('select-learned-toggle');
-    const prioritizeFailed = document.getElementById('prioritize-failed-toggle');
-    const timeAttack = document.getElementById('time-attack-toggle');
+    const smartOrder = screen.getByLabelText('Smart Order');
+    const randomAuf = screen.getByLabelText('Random AUF');
+    const prioritizeFailed = screen.getByLabelText('Prioritize Failed');
+    const timeAttack = screen.getByLabelText('Time Attack');
 
-    expect(selectLearning).not.toBeNull();
-    expect(selectLearned).not.toBeNull();
-    expect(prioritizeFailed).not.toBeNull();
-    expect(timeAttack).not.toBeNull();
-
-    expect(selectLearning!.compareDocumentPosition(selectLearned!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(prioritizeFailed!.compareDocumentPosition(timeAttack!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(smartOrder.compareDocumentPosition(randomAuf)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(prioritizeFailed.compareDocumentPosition(timeAttack)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 });

@@ -7,16 +7,22 @@ const mockState = vi.hoisted(() => ({
   autoUpdateLearningState: false,
   cycleCaseLearnedState: vi.fn(),
   onBeforeToggleCase: vi.fn(),
+  previewProps: null as null | Record<string, unknown>,
   selected: false,
   toggleCaseSelection: vi.fn(),
 }));
 
 vi.mock('../../src/components/CaseCardPreview', () => ({
-  CaseCardPreview: () => <div data-testid="case-card-preview" />,
+  CaseCardPreview: (props: Record<string, unknown>) => {
+    mockState.previewProps = props;
+    return <div data-testid="case-card-preview" />;
+  },
 }));
 
+const stickeringSpy = vi.hoisted(() => vi.fn(() => 'PLL'));
+
 vi.mock('../../src/lib/stickering', () => ({
-  getStickeringForCategory: vi.fn(() => 'PLL'),
+  getStickeringForCategory: stickeringSpy,
 }));
 
 vi.mock('../../src/state/caseCardStore', () => ({
@@ -32,7 +38,6 @@ vi.mock('../../src/state/caseCardStore', () => ({
     ao5: null,
     selected: mockState.selected,
   })),
-  useFullStickering: vi.fn(() => false),
   useAutoUpdateLearningState: vi.fn(() => mockState.autoUpdateLearningState),
 }));
 
@@ -55,10 +60,12 @@ const card = {
 describe('CaseCard', () => {
   beforeEach(() => {
     mockState.autoUpdateLearningState = false;
+    mockState.previewProps = null;
     mockState.selected = false;
     mockState.cycleCaseLearnedState.mockReset();
     mockState.onBeforeToggleCase.mockReset();
     mockState.toggleCaseSelection.mockReset();
+    stickeringSpy.mockClear();
   });
 
   it('marks the bookmark aria-disabled when auto learning state is enabled', async () => {
@@ -108,5 +115,17 @@ describe('CaseCard', () => {
 
     expect(mockState.onBeforeToggleCase).toHaveBeenCalledTimes(1);
     expect(mockState.toggleCaseSelection).toHaveBeenCalledWith('case-1', false);
+  });
+
+  it('keeps category stickering for previews even when full-stickering is enabled elsewhere', () => {
+    render(<CaseCard card={card} index={0} />);
+
+    expect(stickeringSpy).toHaveBeenCalledWith('PLL', false);
+    expect(mockState.previewProps).toMatchObject({
+      alg: "R U R'",
+      visualization: 'experimental-2D-LL',
+      stickering: 'PLL',
+      setupAnchor: 'end',
+    });
   });
 });

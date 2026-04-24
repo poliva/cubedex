@@ -15,10 +15,11 @@ function StatsPanelComponent({
   return (
     <div id="alg-stats" className={`${stats.hasHistory && visible ? 'stats-panel' : 'hidden stats-panel'}`}
       style={stats.hasHistory && visible ? {
-        padding: '12px 14px',
-        borderRadius: 12,
+        padding: '16px 18px',
+        borderRadius: 16,
         border: '1px solid var(--border)',
         background: 'var(--surface)',
+        boxShadow: '0 8px 24px oklch(0% 0 0 / 0.16)',
       } : undefined}>
       <div id="stats-container" className="stats-graph-container">
         <div className="stats-graph-shell">
@@ -26,12 +27,12 @@ function StatsPanelComponent({
         </div>
       </div>
       <div id="metrics-container" className="metrics-container">
-        <div id="alg-name-display2" className="metrics-title">
+        <div id="alg-name-display2" className="metrics-title" style={{ marginBottom: 10 }}>
           {showAlgName ? algName : ''}
         </div>
         <div id="stats-grid" className="metrics-grid">
           <div id="average-time-box" className="metric-box metric-box--time">
-            <div className="metric-box-title">Avgerage Time</div>
+            <div className="metric-box-title">Average Time</div>
             <div className="metric-time-row">
               <span className="metric-time-label">Exec</span>
               <span className="metric-time-value">{stats.avgExec}</span>

@@ -76,6 +76,9 @@ export const NewAlgView = memo(function NewAlgView({
   // Standalone view (new design)
   const pad = isMobile ? 12 : 20;
   const pb = isMobile ? 'calc(var(--tab-h) + 12px)' : 16;
+  const presetCategories = ['PLL', 'OLL', 'F2L', 'Custom'] as const;
+  const parsedMoves = algInput.trim() ? algInput.trim().split(/\s+/).filter(Boolean) : [];
+  const activeCategory = algorithmActions.categoryInput.trim();
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
@@ -98,6 +101,17 @@ export const NewAlgView = memo(function NewAlgView({
     display: 'block',
   };
 
+  const cardStyle: React.CSSProperties = {
+    padding: isMobile ? '14px 16px' : '18px 20px',
+    borderRadius: 16,
+    border: '1px solid var(--border)',
+    background: 'var(--surface)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 14,
+    boxShadow: '0 8px 24px oklch(0% 0 0 / 0.16)',
+  };
+
   return (
     <div style={{
       flex: 1,
@@ -108,47 +122,117 @@ export const NewAlgView = memo(function NewAlgView({
       {!isMobile && (
         <h2 style={{ fontWeight: 700, fontSize: 18, marginBottom: 16, color: 'var(--fg)' }}>New Alg</h2>
       )}
-      <div style={{ maxWidth: 560, display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ maxWidth: 760, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.15fr) minmax(280px, 0.85fr)', gap: 14 }}>
 
-        {/* Algorithm input card */}
-        <div style={{
-          padding: '14px 16px',
-          borderRadius: 8,
-          border: '1px solid var(--border)',
-          background: 'var(--surface)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-        }}>
-          <label style={labelStyle}>Algorithm</label>
-          <input
-            id="alg-input"
-            type="text"
-            placeholder="Enter alg e.g., (R U R' U) (R U2' R')"
-            value={algInput}
-            onChange={(e) => setAlgInput?.(e.target.value)}
-            style={{
-              ...inputStyle,
-              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-            }}
-          />
-          <p style={{ margin: 0, fontSize: 11, color: 'var(--fg3)' }}>
-            Type or use a connected smartcube to input moves.
-          </p>
+        <div style={cardStyle}>
+          <div>
+            <div style={{ ...labelStyle, marginBottom: 6 }}>Algorithm Input</div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--fg)' }}>Build a new case</div>
+            <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--fg3)', lineHeight: 1.5 }}>
+              Type moves manually or use a connected smartcube. The raw algorithm is saved exactly as entered.
+            </p>
+          </div>
+
+          <div style={{
+            borderRadius: 12,
+            border: '1px solid var(--border)',
+            background: 'var(--raised)',
+            padding: '12px 14px',
+            minHeight: 92,
+          }}>
+            <div style={{ ...labelStyle, marginBottom: 8 }}>Move Preview</div>
+            {parsedMoves.length > 0 ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {parsedMoves.map((move, index) => (
+                  <span
+                    key={`${move}-${index}`}
+                    style={{
+                      padding: '6px 8px',
+                      borderRadius: 8,
+                      border: '1px solid var(--border)',
+                      background: index === parsedMoves.length - 1 ? 'rgba(59,130,246,0.12)' : 'var(--surface)',
+                      color: index === parsedMoves.length - 1 ? 'var(--accent)' : 'var(--fg)',
+                      fontFamily: 'var(--mono)',
+                      fontSize: 13,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {move}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div style={{ fontSize: 12, color: 'var(--fg3)', lineHeight: 1.5 }}>
+                No moves yet. Start typing an algorithm to preview the move tokens here.
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="alg-input" style={labelStyle}>Raw Algorithm</label>
+            <textarea
+              id="alg-input"
+              placeholder="Enter alg e.g., (R U R' U) (R U2' R')"
+              value={algInput}
+              onChange={(e) => setAlgInput?.(e.target.value)}
+              rows={isMobile ? 4 : 5}
+              style={{
+                ...inputStyle,
+                minHeight: isMobile ? 108 : 128,
+                resize: 'vertical',
+                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                lineHeight: 1.5,
+              }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
+              <p style={{ margin: 0, fontSize: 11, color: 'var(--fg3)' }}>
+                Smartcube input appends moves into this field in real time.
+              </p>
+              <span style={{ fontSize: 11, color: 'var(--fg4)', fontFamily: 'var(--mono)' }}>
+                {parsedMoves.length} move{parsedMoves.length === 1 ? '' : 's'}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Metadata card */}
-        <div style={{
-          padding: '14px 16px',
-          borderRadius: 8,
-          border: '1px solid var(--border)',
-          background: 'var(--surface)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 12,
-        }}>
+        <div style={cardStyle}>
           <div>
-            <label style={labelStyle}>Category</label>
+            <div style={{ ...labelStyle, marginBottom: 6 }}>Metadata</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--fg)' }}>Describe the case</div>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Quick Category</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {presetCategories.map((category) => {
+                const isActive = activeCategory.toLowerCase() === category.toLowerCase();
+                return (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => algorithmActions.setCategoryInput(category)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 999,
+                      border: '1px solid',
+                      borderColor: isActive ? 'var(--accent)' : 'var(--border)',
+                      background: isActive ? 'rgba(59,130,246,0.12)' : 'transparent',
+                      color: isActive ? 'var(--accent)' : 'var(--fg2)',
+                      fontFamily: 'inherit',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {category}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="category-input" style={labelStyle}>Category</label>
             <input
               id="category-input"
               type="text"
@@ -159,20 +243,20 @@ export const NewAlgView = memo(function NewAlgView({
             />
           </div>
           <div>
-            <label style={labelStyle}>
+            <label htmlFor="subset-input" style={labelStyle}>
               Subset <span style={{ fontWeight: 400, color: 'var(--fg4)' }}>(optional)</span>
             </label>
             <input
               id="subset-input"
               type="text"
-              placeholder="e.g. G, J, T…"
+              placeholder="e.g. G, J, T..."
               value={algorithmActions.subsetInput}
               onChange={(e) => algorithmActions.setSubsetInput(e.target.value)}
               style={inputStyle}
             />
           </div>
           <div>
-            <label style={labelStyle}>
+            <label htmlFor="alg-name-input" style={labelStyle}>
               Name <span style={{ fontWeight: 400, color: 'var(--fg4)' }}>(optional)</span>
             </label>
             <input
@@ -183,6 +267,18 @@ export const NewAlgView = memo(function NewAlgView({
               onChange={(e) => algorithmActions.setAlgNameInput(e.target.value)}
               style={inputStyle}
             />
+          </div>
+
+          <div style={{
+            borderRadius: 12,
+            border: '1px solid var(--border)',
+            background: 'var(--raised)',
+            padding: '12px 14px',
+            fontSize: 12,
+            color: 'var(--fg3)',
+            lineHeight: 1.5,
+          }}>
+            Save tip: if the category does not already exist, Cubedex will create it and switch Practice/Cases to that category after saving.
           </div>
         </div>
 
@@ -213,7 +309,7 @@ export const NewAlgView = memo(function NewAlgView({
         )}
 
         {/* Actions */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button
             type="button"
             onClick={onSave}
@@ -231,6 +327,27 @@ export const NewAlgView = memo(function NewAlgView({
             }}
           >
             Save Algorithm
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              algorithmActions.clearForm();
+              algorithmActions.clearMessages();
+              setAlgInput?.('');
+            }}
+            style={{
+              padding: '8px 20px',
+              borderRadius: 8,
+              border: '1px solid var(--border)',
+              background: 'var(--raised)',
+              color: 'var(--fg2)',
+              fontFamily: 'inherit',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            Clear
           </button>
           <button
             type="button"

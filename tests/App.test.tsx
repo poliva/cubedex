@@ -38,12 +38,26 @@ const mocks = vi.hoisted(() => ({
   removeAlgorithmTimesStorage: vi.fn(),
   useCaseLibrary: vi.fn((options?: { reviewRefreshToken?: number }) => ({
     isReady: true,
+    savedAlgorithms: {},
+    categories: ['PLL'],
     selectedCategory: 'PLL',
+    subsets: ['A'],
+    selectedSubsets: ['A'],
     caseCards: mockState.caseCards,
     selectedCaseIds: mockState.selectedCaseIds,
     selectionChangeMode: 'manual',
+    selectAllCases: false,
+    selectLearningCases: false,
+    selectLearnedCases: false,
     setSelectedCategory: vi.fn(),
+    toggleSubset: vi.fn(),
+    toggleAllSubsets: vi.fn(),
     toggleCaseSelection: vi.fn(),
+    selectVisibleCases: vi.fn(),
+    clearSelectedCases: vi.fn(),
+    setSelectAllCases: vi.fn(),
+    setSelectLearningCases: vi.fn(),
+    setSelectLearnedCases: vi.fn(),
     cycleCaseLearnedState: vi.fn(),
     reloadSavedAlgorithms: vi.fn(),
     _options: options,
@@ -303,16 +317,20 @@ vi.mock('../src/components/MenuNavIcons', () => ({
 }));
 
 vi.mock('../src/views/PracticeView', () => ({
-  PracticeView: ({ handleDeleteTimes }: { handleDeleteTimes: () => void }) => (
-    <div>
-      <button type="button" onClick={handleDeleteTimes}>Delete Times</button>
-      <div data-testid="practice-view" />
-    </div>
-  ),
+  PracticeView: () => <div data-testid="practice-view" />,
 }));
 
 vi.mock('../src/views/OptionsView', () => ({
   OptionsView: () => <div data-testid="options-view" />,
+}));
+
+vi.mock('../src/views/CasesView', () => ({
+  CasesView: ({ handleDeleteTimes }: { handleDeleteTimes: () => void }) => (
+    <div>
+      <button type="button" onClick={handleDeleteTimes}>Delete Times</button>
+      <div data-testid="cases-view" />
+    </div>
+  ),
 }));
 
 vi.mock('../src/views/HelpView', () => ({
@@ -349,6 +367,7 @@ describe('App case-card stats refresh', () => {
     mocks.useCaseLibrary.mockClear();
     mocks.useTrainingState.mockClear();
 
+    await user.click(screen.getByRole('button', { name: 'Cases' }));
     await user.click(screen.getByRole('button', { name: 'Delete Times' }));
 
     expect(mocks.removeAlgorithmTimesStorage).toHaveBeenCalledWith('case-1');

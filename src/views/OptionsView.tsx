@@ -2,50 +2,7 @@ import { memo } from 'react';
 import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
 import type { AppSettingsState } from '../hooks/useAppSettings';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
-
-function Tog({
-  checked,
-  onChange,
-  disabled,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  disabled?: boolean;
-}) {
-  const w = 30, h = 17, dot = 13;
-  return (
-    <span style={{
-      position: 'relative',
-      width: w,
-      height: h,
-      flexShrink: 0,
-      background: checked ? 'var(--accent)' : 'var(--border)',
-      borderRadius: 99,
-      transition: 'background 0.2s',
-      display: 'inline-block',
-      opacity: disabled ? 0.5 : 1,
-    }}>
-      <span style={{
-        position: 'absolute',
-        top: (h - dot) / 2,
-        left: checked ? w - dot - 2 : 2,
-        width: dot,
-        height: dot,
-        background: '#fff',
-        borderRadius: '50%',
-        boxShadow: '0 1px 4px oklch(0% 0 0/0.3)',
-        transition: 'left 0.2s',
-      }} />
-      <input
-        type="checkbox"
-        checked={checked}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.checked)}
-        style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
-      />
-    </span>
-  );
-}
+import { Toggle } from '../components/ui/Toggle';
 
 export const OptionsView = memo(function OptionsView({
   visible,
@@ -195,23 +152,23 @@ export const OptionsView = memo(function OptionsView({
           <div style={sHdr}>Practice</div>
           <div style={row()}>
             <span style={lbl}>Countdown Mode</span>
-            <Tog checked={options.countdownMode} onChange={(v) => options.setCountdownMode(v)} />
+            <Toggle ariaLabel="Countdown Mode" checked={options.countdownMode} onChange={(v) => options.setCountdownMode(v)} />
           </div>
           <div style={row()}>
             <span style={lbl}>Always Keep "Scramble To" Enabled</span>
-            <Tog checked={options.alwaysScrambleTo} onChange={(v) => options.setAlwaysScrambleTo(v)} />
+            <Toggle ariaLabel='Always Keep "Scramble To" Enabled' checked={options.alwaysScrambleTo} onChange={(v) => options.setAlwaysScrambleTo(v)} />
           </div>
           <div style={row()}>
             <span style={lbl}>Auto-update Learning State</span>
-            <Tog checked={options.autoUpdateLearningState} onChange={(v) => options.setAutoUpdateLearningState(v)} />
+            <Toggle ariaLabel="Auto-update learning state" checked={options.autoUpdateLearningState} onChange={(v) => options.setAutoUpdateLearningState(v)} />
           </div>
           <div style={row()}>
             <span style={lbl}>Flashing Indicator</span>
-            <Tog checked={options.flashingIndicatorEnabled} onChange={(v) => options.setFlashingIndicatorEnabled(v)} />
+            <Toggle ariaLabel="Flashing Indicator" checked={options.flashingIndicatorEnabled} onChange={(v) => options.setFlashingIndicatorEnabled(v)} />
           </div>
           <div style={row(true)}>
             <span style={lbl}>Show Case Name</span>
-            <Tog checked={options.showAlgName} onChange={(v) => options.setShowAlgName(v)} />
+            <Toggle ariaLabel="Show Case Name" checked={options.showAlgName} onChange={(v) => options.setShowAlgName(v)} />
           </div>
         </div>
 
@@ -238,18 +195,20 @@ export const OptionsView = memo(function OptionsView({
           </div>
           <div style={row()}>
             <span style={lbl}>Floating Mirror Stickers</span>
-            <Tog
+            <Toggle
+              ariaLabel="Floating Mirror Stickers"
               checked={options.hintFacelets === 'floating'}
               onChange={(v) => options.setHintFacelets(v ? 'floating' : 'none')}
             />
           </div>
           <div style={row()}>
             <span style={lbl}>Always Show Full Stickers</span>
-            <Tog checked={options.fullStickering} onChange={(v) => options.setFullStickering(v)} />
+            <Toggle ariaLabel="Always Show Full Stickers" checked={options.fullStickering} onChange={(v) => options.setFullStickering(v)} />
           </div>
           <div style={row(!options.fullStickering)}>
             <span style={{ ...lbl, opacity: options.fullStickering ? 1 : 0.45 }}>Virtual Cube White on Bottom</span>
-            <Tog
+            <Toggle
+              ariaLabel="Virtual Cube White on Bottom"
               checked={options.whiteOnBottom}
               disabled={!options.fullStickering}
               onChange={(v) => options.setWhiteOnBottom(v)}
@@ -262,7 +221,8 @@ export const OptionsView = memo(function OptionsView({
           )}
           <div style={row()}>
             <span style={lbl}>Virtual Cube Control Panel</span>
-            <Tog
+            <Toggle
+              ariaLabel="Virtual Cube Control Panel"
               checked={options.controlPanel === 'bottom-row'}
               onChange={(v) => options.setControlPanel(v ? 'bottom-row' : 'none')}
             />
@@ -291,7 +251,8 @@ export const OptionsView = memo(function OptionsView({
           <div style={sHdr}>Smartcube</div>
           <div style={row()}>
             <span style={lbl}>Animate Using Gyroscope</span>
-            <Tog
+            <Toggle
+              ariaLabel="Animate Virtual Cube Using Gyroscope"
               checked={smartcube.connected && !smartcube.gyroSupported ? false : options.gyroscope}
               disabled={smartcube.gyroscopeToggleDisabled}
               onChange={(v) => options.setGyroscope(v)}
@@ -299,7 +260,8 @@ export const OptionsView = memo(function OptionsView({
           </div>
           <div style={row()}>
             <span style={lbl}>Show All Bluetooth Devices</span>
-            <Tog
+            <Toggle
+              ariaLabel="Show all Bluetooth devices when connecting"
               checked={smartcube.showAllBluetoothDevices}
               onChange={(v) => smartcube.setShowAllBluetoothDevices(v)}
             />
@@ -340,7 +302,7 @@ export const OptionsView = memo(function OptionsView({
           <div style={sHdr}>Appearance</div>
           <div style={row(true)}>
             <span style={lbl}>Dark Mode</span>
-            <Tog checked={options.darkMode} onChange={(v) => options.setDarkMode(v)} />
+            <Toggle ariaLabel="Dark Mode" checked={options.darkMode} onChange={(v) => options.setDarkMode(v)} />
           </div>
         </div>
 

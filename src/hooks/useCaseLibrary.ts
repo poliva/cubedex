@@ -29,6 +29,8 @@ export interface CaseLibraryState {
   toggleSubset: (subset: string, checked: boolean) => void;
   toggleAllSubsets: (checked: boolean) => void;
   toggleCaseSelection: (algId: string, checked: boolean) => void;
+  selectVisibleCases: () => void;
+  clearSelectedCases: () => void;
   setSelectAllCases: (checked: boolean) => void;
   setSelectLearningCases: (checked: boolean) => void;
   setSelectLearnedCases: (checked: boolean) => void;
@@ -193,6 +195,26 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     });
   }, []);
 
+  const selectVisibleCases = useCallback(() => {
+    const filteredCards = (selectLearningCases || selectLearnedCases)
+      ? caseCards.filter((card) => (
+        (selectLearningCases && card.learned === 1)
+        || (selectLearnedCases && card.learned === 2)
+      ))
+      : caseCards;
+
+    setSelectionChangeMode('bulk');
+    setSelectedCaseIds(filteredCards.map((card) => card.id));
+  }, [caseCards, selectLearnedCases, selectLearningCases]);
+
+  const clearSelectedCases = useCallback(() => {
+    setSelectionChangeMode('bulk');
+    setSelectAllCasesState(false);
+    setSelectLearningCasesState(false);
+    setSelectLearnedCasesState(false);
+    setSelectedCaseIds([]);
+  }, []);
+
   const setSelectAllCases = useCallback((checked: boolean) => {
     setSelectionChangeMode('bulk');
     setSelectAllCasesState(checked);
@@ -248,6 +270,8 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     toggleSubset,
     toggleAllSubsets,
     toggleCaseSelection,
+    selectVisibleCases,
+    clearSelectedCases,
     setSelectAllCases,
     setSelectLearningCases,
     setSelectLearnedCases,
@@ -262,8 +286,10 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     reloadSavedAlgorithms,
     savedAlgorithms,
     selectAllCases,
+    clearSelectedCases,
     selectLearnedCases,
     selectLearningCases,
+    selectVisibleCases,
     selectedCaseIds,
     selectedCategory,
     selectedSubsets,

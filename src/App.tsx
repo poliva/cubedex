@@ -203,10 +203,6 @@ export function App() {
   }, [selectedCaseIds]);
 
   useEffect(() => {
-    caseCardStore.setState({ fullStickering: options.fullStickering });
-  }, [options.fullStickering]);
-
-  useEffect(() => {
     caseCardStore.setState({ autoUpdateLearningState: options.autoUpdateLearningState });
   }, [options.autoUpdateLearningState]);
 
@@ -464,14 +460,6 @@ export function App() {
     training.trainCurrent,
   ]);
 
-  const handleTouchStart = useCallback(() => {
-    // Managed by PracticeView's touch tracking ref
-  }, []);
-
-  const handleTouchMove = useCallback(() => {
-    // Managed by PracticeView's touch tracking ref
-  }, []);
-
   const isTouchScrollingRef = useRef(false);
   const _handleTouchStart = useCallback(() => { isTouchScrollingRef.current = false; }, []);
   const _handleTouchMove = useCallback(() => { isTouchScrollingRef.current = true; }, []);
@@ -683,7 +671,7 @@ export function App() {
   }, [algorithmActions.importBackupFromFile, reloadSavedAlgorithms, setSelectedCategory, training.clearFailedCounts]);
 
   return (
-    <div style={{ display: 'flex', height: '100vh', height: '100dvh', width: '100vw', overflow: 'hidden', background: 'var(--bg)' } as React.CSSProperties}>
+    <div style={{ display: 'flex', height: '100dvh', width: '100vw', overflow: 'hidden', background: 'var(--bg)' } as React.CSSProperties}>
       {/* Sidebar: desktop only */}
       {!isMobile && <Sidebar active={activeView} onNav={selectView} />}
 

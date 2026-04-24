@@ -24,7 +24,7 @@ describe('StatsPanel', () => {
       />,
     );
 
-    expect(screen.getByText('Avgerage Time')).toBeInTheDocument();
+    expect(screen.getByText('Average Time')).toBeInTheDocument();
     expect(screen.getByText('Exec')).toBeInTheDocument();
     expect(screen.getByText('1.900')).toBeInTheDocument();
     expect(screen.getByText('Recog')).toBeInTheDocument();

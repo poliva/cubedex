@@ -118,7 +118,7 @@ describe('OptionsView', () => {
 
     const whiteOnBottom = screen.getByLabelText('Virtual Cube White on Bottom');
     expect(whiteOnBottom).toBeDisabled();
-    expect(screen.getByText('Requires “Always Show Full Stickers”')).toBeVisible();
+    expect(screen.getByText('Requires "Always Show Full Stickers"')).toBeVisible();
 
     await user.click(screen.getByLabelText('Always Show Full Stickers'));
     expect(options.setFullStickering).toHaveBeenCalledWith(true);
@@ -173,11 +173,11 @@ describe('OptionsView', () => {
       />,
     );
 
-    expect(screen.getByLabelText('Cube Visualization Mode:')).toHaveValue('2D');
-    expect(screen.getByLabelText('Cube Back View:')).toHaveValue('side-by-side');
+    expect(screen.getByDisplayValue('2D')).toBeVisible();
+    expect(screen.getByDisplayValue('Side-by-side')).toBeVisible();
     expect(screen.getByLabelText('Virtual Cube White on Bottom')).toBeEnabled();
 
-    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '480' } });
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '480' } });
     expect(options.setCubeSizePx).toHaveBeenCalledWith(480);
   });
 

@@ -19,6 +19,13 @@ export function MobileTopbar({
   screen: NavView;
   smartcube: SmartcubeConnectionState;
 }) {
+  const statusText = smartcube.connecting
+    ? 'Connecting'
+    : smartcube.connected
+      ? (smartcube.info.deviceName || 'Connected')
+      : 'Bluetooth';
+  const statusColor = smartcube.connected ? 'var(--ok)' : smartcube.connecting ? 'var(--accent)' : 'var(--fg3)';
+
   return (
     <div style={{
       height: 48,
@@ -35,18 +42,39 @@ export function MobileTopbar({
         {SCREEN_TITLES[screen]}
       </span>
 
-      {screen === 'practice' && smartcube.connected ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+      {(smartcube.connected || smartcube.connecting) ? (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          maxWidth: screen === 'practice' ? 110 : 90,
+          padding: '4px 8px',
+          borderRadius: 999,
+          border: '1px solid var(--border)',
+          background: 'var(--raised)',
+        }}>
           <div style={{
             width: 7,
             height: 7,
             borderRadius: '50%',
-            background: 'var(--ok)',
-            boxShadow: '0 0 5px var(--ok)',
+            background: statusColor,
+            boxShadow: `0 0 5px ${statusColor}`,
           }} />
-          <span style={{ fontSize: 11, color: 'var(--ok)', fontFamily: 'var(--mono)' }}>
-            {smartcube.info.deviceName || 'Connected'}
+          <span style={{
+            fontSize: 11,
+            color: statusColor,
+            fontFamily: 'var(--mono)',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}>
+            {statusText}
           </span>
+          {smartcube.connected && smartcube.battery.level != null ? (
+            <span style={{ fontSize: 10, color: 'var(--fg3)', fontFamily: 'var(--mono)' }}>
+              {smartcube.battery.level}%
+            </span>
+          ) : null}
         </div>
       ) : null}
 
@@ -57,9 +85,9 @@ export function MobileTopbar({
           width: 36,
           height: 36,
           borderRadius: 10,
-          border: '1.5px solid var(--border)',
-          background: 'transparent',
-          color: 'var(--fg2)',
+          border: `1.5px solid ${smartcube.connected ? 'rgba(34,197,94,0.35)' : 'var(--border)'}`,
+          background: smartcube.connected ? 'rgba(34,197,94,0.08)' : 'transparent',
+          color: smartcube.connected ? 'var(--ok)' : 'var(--fg2)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',

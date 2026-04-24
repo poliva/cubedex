@@ -26,26 +26,45 @@ function MoveListPanelComponent({
     <>
       {showMoves ? (
         <div id="alg-display-container" className={`alg-display-container ${className ?? ''}`.trim()}
-          style={inlineStyle ? { display: 'contents' } : undefined}>
+          style={inlineStyle ? { display: 'contents' } : {
+            borderRadius: 12,
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+            padding: '10px 12px',
+          }}>
           {!inlineStyle && (
-            <div className="alg-display-mask-row">
-              <a
-                href="#"
+            <div className="alg-display-mask-row" style={{ marginBottom: 8 }}>
+              <button
                 id="toggle-move-mask"
                 className="mask-toggle-button"
-                style={{ backgroundColor: isMoveMasked ? '#f97316' : '#3b82f6' }}
+                type="button"
+                style={{
+                  backgroundColor: isMoveMasked ? '#f97316' : '#3b82f6',
+                  border: 'none',
+                  color: '#fff',
+                }}
                 onClick={(event) => {
-                  event.preventDefault();
                   event.stopPropagation();
                   setIsMoveMasked((value) => !value);
                 }}
               >
                 {isMoveMasked ? <><EyeSlashIcon /> Unmask alg</> : <><EyeIcon /> Mask alg</>}
-              </a>
+              </button>
             </div>
           )}
-          <div id="alg-display" className="alg-display" onClick={onEditCurrentAlgorithm}>
-            <div className="alg-display-moves">
+          <div
+            id="alg-display"
+            className="alg-display"
+            onClick={onEditCurrentAlgorithm}
+            style={inlineStyle ? { minWidth: 0, cursor: 'pointer' } : {
+              borderRadius: 10,
+              background: 'var(--raised)',
+              padding: '10px 12px',
+              minHeight: 48,
+              cursor: 'pointer',
+            }}
+          >
+            <div className="alg-display-moves" style={{ color: darkMode ? '#fff' : 'var(--fg)' }}>
               {displayMoves.map((move, index) => {
                 const color = move.color === 'green'
                   ? 'green'
@@ -89,7 +108,18 @@ function MoveListPanelComponent({
       ) : null}
 
       {showFix ? (
-        <div id="alg-fix" className={`${fixVisible && fixText ? 'status-panel status-error' : 'hidden status-panel status-error'}`}>
+        <div
+          id="alg-fix"
+          className={`${fixVisible && fixText ? 'status-panel status-error' : 'hidden status-panel status-error'}`}
+          style={fixVisible && fixText ? {
+            borderRadius: 10,
+            border: '1px solid rgba(239,68,68,0.25)',
+            background: 'rgba(239,68,68,0.08)',
+            color: 'var(--danger)',
+            padding: '9px 12px',
+            marginTop: 8,
+          } : undefined}
+        >
           {fixText}
         </div>
       ) : null}

@@ -40,13 +40,13 @@ export const CasesView = memo(function CasesView({
     subsets,
     selectedSubsets,
     caseCards,
-    selectAllCases,
     selectLearningCases,
     selectLearnedCases,
     setSelectedCategory,
     toggleSubset,
     toggleAllSubsets,
-    setSelectAllCases,
+    selectVisibleCases,
+    clearSelectedCases,
     setSelectLearningCases,
     setSelectLearnedCases,
   } = caseLibrary;
@@ -159,9 +159,7 @@ export const CasesView = memo(function CasesView({
           {([
             ['all', 'All', () => {
               setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-              setSelectAllCases(false);
-              setSelectLearningCases(false);
-              setSelectLearnedCases(false);
+              clearSelectedCases();
             }],
             ['learning', 'Learning', () => {
               setAcknowledgedDisconnectToken(smartcube.disconnectToken);
@@ -206,7 +204,7 @@ export const CasesView = memo(function CasesView({
           onClick={() => {
             setAcknowledgedDisconnectToken(smartcube.disconnectToken);
             setMainCubeStickeringDeferred(false);
-            setSelectAllCases(true);
+            selectVisibleCases();
           }}
           style={{
             padding: '4px 10px',
@@ -228,9 +226,7 @@ export const CasesView = memo(function CasesView({
             type="button"
             onClick={() => {
               setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-              setSelectAllCases(false);
-              setSelectLearningCases(false);
-              setSelectLearnedCases(false);
+              clearSelectedCases();
             }}
             style={{
               padding: '4px 10px',

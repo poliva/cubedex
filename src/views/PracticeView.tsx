@@ -1,4 +1,4 @@
-import { Fragment, memo, useState } from 'react';
+import { memo, useState } from 'react';
 import type { AppSettingsState } from '../hooks/useAppSettings';
 import type { PracticeTogglesState } from '../hooks/usePracticeToggles';
 import type { TrainingState } from '../hooks/useTrainingState';
@@ -13,114 +13,9 @@ import { MoveListPanel } from './MoveListPanel';
 import { StatsPanel } from './StatsPanel';
 import { NewAlgView } from './NewAlgView';
 import { Icon, IC } from '../components/ui/Icon';
-
-function MiniGraph({ times, width = 180 }: { times: number[]; width?: number }) {
-  if (times.length < 2) return null;
-  const h = 52, pad = 4;
-  const w = width;
-  const min = Math.min(...times), max = Math.max(...times), range = max - min || 1;
-  const pts = times.map((t, i) => {
-    const x = pad + (i / (times.length - 1)) * (w - pad * 2);
-    const y = pad + (1 - (t - min) / range) * (h - pad * 2);
-    return `${x},${y}`;
-  }).join(' ');
-  const lastX = pad + ((times.length - 1) / (times.length - 1)) * (w - pad * 2);
-  const lastY = pad + (1 - (times[times.length - 1] - min) / range) * (h - pad * 2);
-  return (
-    <svg width={w} height={h} style={{ overflow: 'visible', display: 'block' }}>
-      <defs>
-        <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon points={`${pad},${h} ${pts} ${w - pad},${h}`} fill="url(#mg)" />
-      <polyline points={pts} fill="none" stroke="var(--accent)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={lastX} cy={lastY} r={3} fill="var(--accent)" />
-    </svg>
-  );
-}
-
-function StatChip({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: 1,
-      padding: '7px 14px',
-      borderRadius: 10,
-      border: '1px solid var(--border)',
-      background: 'var(--raised)',
-      minWidth: 70,
-      flex: '0 0 auto',
-    }}>
-      <span style={{ fontSize: 10, color: 'var(--fg3)', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{label}</span>
-      <span style={{
-        fontFamily: 'var(--mono)',
-        fontSize: 15,
-        fontWeight: 600,
-        color: highlight ? 'var(--accent)' : 'var(--fg)',
-      }}>{value}</span>
-    </div>
-  );
-}
-
-function Toggle({
-  checked,
-  onChange,
-  label,
-  disabled,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  label: string;
-  disabled?: boolean;
-}) {
-  const w = 30, h = 17, dot = 13;
-  return (
-    <label style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      cursor: disabled ? 'not-allowed' : 'pointer',
-      userSelect: 'none',
-      minHeight: 44,
-      opacity: disabled ? 0.5 : 1,
-    }}>
-      <span style={{
-        position: 'relative',
-        width: w,
-        height: h,
-        flexShrink: 0,
-        background: checked ? 'var(--accent)' : 'var(--border)',
-        borderRadius: 99,
-        transition: 'background 0.2s',
-        display: 'block',
-      }}>
-        <span style={{
-          position: 'absolute',
-          top: (h - dot) / 2,
-          left: checked ? w - dot - 2 : 2,
-          width: dot,
-          height: dot,
-          background: '#fff',
-          borderRadius: '50%',
-          boxShadow: '0 1px 4px oklch(0% 0 0/0.3)',
-          transition: 'left 0.2s',
-        }} />
-        <input
-          type="checkbox"
-          checked={checked}
-          disabled={disabled}
-          onChange={(e) => onChange(e.target.checked)}
-          style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
-        />
-      </span>
-      {label && <span style={{ fontSize: 13, color: 'var(--fg)', lineHeight: 1.3 }}>{label}</span>}
-    </label>
-  );
-}
+import { MiniGraph } from '../components/ui/MiniGraph';
+import { StatChip } from '../components/ui/StatChip';
+import { Toggle } from '../components/ui/Toggle';
 
 export const PracticeView = memo(function PracticeView({
   visible,
@@ -179,7 +74,7 @@ export const PracticeView = memo(function PracticeView({
   smartcubeAppendMove?: string;
   isMobile: boolean;
 }) {
-  const [orientationResetState, setOrientationResetState] = useState<{ token: number; alg: string | null }>({
+  const [orientationResetState] = useState<{ token: number; alg: string | null }>({
     token: 0,
     alg: null,
   });
@@ -196,6 +91,18 @@ export const PracticeView = memo(function PracticeView({
       : training.timerState === 'RUNNING'
         ? 'var(--fg3)'
         : 'var(--fg)';
+  const flashAccent =
+    flashingIndicatorColor === 'green'
+      ? 'rgba(34,197,94,0.65)'
+      : flashingIndicatorColor === 'red'
+        ? 'rgba(239,68,68,0.65)'
+        : 'rgba(148,163,184,0.55)';
+  const timerCardFlashStyle = isFlashingIndicatorVisible
+    ? {
+      borderColor: flashAccent,
+      boxShadow: `0 0 0 1px ${flashAccent}, 0 0 24px ${flashAccent}`,
+    }
+    : undefined;
 
   const timerLabel = training.inputMode
     ? ''
@@ -518,19 +425,6 @@ export const PracticeView = memo(function PracticeView({
         flexDirection: 'column',
         position: 'relative',
       }}>
-        {/* Flashing indicator */}
-        {isFlashingIndicatorVisible && (
-          <div style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: flashingIndicatorColor,
-            opacity: 0.75,
-            zIndex: 50,
-            animation: 'flash 1s infinite',
-            pointerEvents: 'none',
-          }} />
-        )}
-
         {/* Cube */}
         <div style={{
           display: 'flex',
@@ -579,6 +473,8 @@ export const PracticeView = memo(function PracticeView({
             alignItems: 'center',
             gap: 6,
             boxShadow: '0 4px 16px oklch(0% 0 0/0.2)',
+            transition: 'border-color 0.15s, box-shadow 0.15s',
+            ...timerCardFlashStyle,
           }}
         >
           {timerLabel ? (
@@ -728,19 +624,6 @@ export const PracticeView = memo(function PracticeView({
       alignItems: 'center',
       position: 'relative',
     }}>
-      {/* Flashing indicator */}
-      {isFlashingIndicatorVisible && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          backgroundColor: flashingIndicatorColor,
-          opacity: 0.75,
-          zIndex: 50,
-          animation: 'flash 1s infinite',
-          pointerEvents: 'none',
-        }} />
-      )}
-
       {/* 3-col top area */}
       <div style={{
         width: '100%',
@@ -845,6 +728,8 @@ export const PracticeView = memo(function PracticeView({
             alignItems: 'flex-end',
             gap: 6,
             width: '100%',
+            transition: 'border-color 0.15s, box-shadow 0.15s',
+            ...timerCardFlashStyle,
           }}>
             {timerLabel ? (
               <span style={{
