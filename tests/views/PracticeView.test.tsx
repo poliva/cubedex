@@ -265,7 +265,8 @@ describe('PracticeView', () => {
 
     expect(screen.getByTestId('main-cube-area')).toBeInTheDocument();
     expect(cubeFrame).toHaveStyle({
-      width: '420px',
+      width: 'min(100%, 420px)',
+      aspectRatio: '1',
       maxWidth: '100%',
     });
     expect(screen.getByText('White top · Green front')).toBeInTheDocument();

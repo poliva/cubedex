@@ -166,8 +166,9 @@ export const PracticeView = memo(function PracticeView({
       onTouchEnd={handleTouchEnd}
       style={{
         position: 'relative',
-        width: options.cubeSizePx,
-        height: options.cubeSizePx,
+        width: isMobile ? `min(calc(100vw - 56px), ${options.cubeSizePx}px)` : `min(100%, ${options.cubeSizePx}px)`,
+        height: isMobile ? `min(calc(100vw - 56px), ${options.cubeSizePx}px)` : undefined,
+        aspectRatio: isMobile ? undefined : 1,
         maxWidth: '100%',
         overflow: 'visible',
         flexShrink: 0,
@@ -476,6 +477,8 @@ export const PracticeView = memo(function PracticeView({
         }}>
           <div style={{
             position: 'relative',
+            width: `min(calc(100vw - 32px), ${options.cubeSizePx + 24}px)`,
+            maxWidth: '100%',
             borderRadius: 16,
             border: '1px solid var(--border)',
             background: 'var(--surface)',
@@ -546,16 +549,15 @@ export const PracticeView = memo(function PracticeView({
           {training.stats.lastFive.at(-1)?.isPb ? (
             <span style={{ fontSize: 12, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
           ) : null}
-          <div style={{ width: '100%', height: 1, background: 'var(--border)', margin: '4px 0' }} />
-          <div className="mobile-stat-chip-row" style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
-            {lastTime && <StatChip label="Last" value={historyTimeString(lastTime.value)} />}
-            <StatChip label="Best" value={historyTimeString(bestTime)} />
-            <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
-          </div>
+        </div>
+        <div className="mobile-stat-chip-row" style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'center', flexWrap: 'wrap', margin: '-8px 12px 16px', position: 'relative', zIndex: 1 }}>
+          {lastTime && <StatChip label="Last" value={historyTimeString(lastTime.value)} />}
+          <StatChip label="Best" value={historyTimeString(bestTime)} />
+          <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
         </div>
 
         {/* Alg bar */}
-        <div className="mobile-alg-bar-shell" style={{ margin: '18px 12px 10px' }}>
+        <div className="mobile-alg-bar-shell" style={{ margin: '0 12px 10px' }}>
           {algBar}
         </div>
 
@@ -771,13 +773,13 @@ export const PracticeView = memo(function PracticeView({
 
         {/* CENTER: cube */}
         <div className="practice-cube-column">
-          <div style={{
+          <div className="practice-cube-card" style={{
             position: 'relative',
+            maxWidth: `calc(${options.cubeSizePx}px + 28px)`,
             padding: 14,
             borderRadius: 16,
             border: '1px solid var(--border)',
             background: 'var(--surface)',
-            flexShrink: 0,
           }}>
             {training.timerState === 'RUNNING' && (
               <div style={{
