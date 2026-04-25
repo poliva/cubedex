@@ -250,7 +250,7 @@ export const PracticeView = memo(function PracticeView({
         style={{
           borderRadius: isMobile ? 12 : 8,
           border: '1px solid var(--border)',
-          background: isMobile ? 'var(--surface)' : 'var(--raised)',
+          background: 'var(--raised)',
           padding: '10px 12px',
         }}
       >
@@ -291,8 +291,8 @@ export const PracticeView = memo(function PracticeView({
               }}
             >
               {isMoveMasked
-                ? <EyeSlashIcon size={isMobile ? 18 : 16} />
-                : <EyeIcon size={isMobile ? 18 : 16} />
+                ? <EyeSlashIcon size={isMobile ? 28 : 32} />
+                : <EyeIcon size={isMobile ? 28 : 32} />
               }
             </button>
           </>
@@ -531,11 +531,15 @@ export const PracticeView = memo(function PracticeView({
           ) : null}
           <div className="practice-timer-value practice-timer-value--mobile" style={{
             fontFamily: 'var(--mono)',
+            fontSize: 'clamp(38px, 14vw, 56px)',
             fontWeight: 500,
             lineHeight: 1,
             letterSpacing: '-0.02em',
             color: timerColor,
             transition: 'color 0.2s',
+            width: '100%',
+            textAlign: 'center',
+            whiteSpace: 'nowrap',
           }}>
             {training.timerState === 'IDLE' ? '0.00' : training.timerText}
           </div>
@@ -825,11 +829,14 @@ export const PracticeView = memo(function PracticeView({
             ) : null}
             <div className="practice-timer-value" style={{
               fontFamily: 'var(--mono)',
+              fontSize: 'clamp(40px, 3.2vw, 60px)',
               fontWeight: 500,
               lineHeight: 1,
               letterSpacing: '-0.02em',
               color: timerColor,
               transition: 'color 0.2s',
+              width: '100%',
+              whiteSpace: 'nowrap',
             }}>
               {training.timerState === 'IDLE' ? '0.00' : training.timerText}
             </div>

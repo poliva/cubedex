@@ -125,6 +125,20 @@ export function resizeTimeGraph(canvas: HTMLCanvasElement | null) {
   chart.update('none');
 }
 
+export function recreateTimeGraph(canvas: HTMLCanvasElement | null, times: number[]) {
+  if (!canvas) {
+    return;
+  }
+
+  const existing = timeChartByCanvas.get(canvas);
+  if (existing) {
+    existing.destroy();
+    timeChartByCanvas.delete(canvas);
+  }
+  timeChartSignature.delete(canvas);
+  createTimeGraph(canvas, times);
+}
+
 function calculateTrimmedAverage(data: number[], windowSize: number, meanSize: number): Array<number | null> {
   const averages: Array<number | null> = [];
   for (let i = 0; i < data.length; i += 1) {
@@ -294,4 +308,18 @@ export function resizeStatsGraph(canvas: HTMLCanvasElement | null) {
 
   chart.resize();
   chart.update('none');
+}
+
+export function recreateStatsGraph(canvas: HTMLCanvasElement | null, solveHistory: SolveHistoryEntry[]) {
+  if (!canvas) {
+    return;
+  }
+
+  const existing = statsChartByCanvas.get(canvas);
+  if (existing) {
+    existing.destroy();
+    statsChartByCanvas.delete(canvas);
+  }
+  statsChartSignature.delete(canvas);
+  createStatsGraph(canvas, solveHistory);
 }

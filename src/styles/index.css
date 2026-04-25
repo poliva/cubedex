@@ -501,6 +501,7 @@ html.dark .alg-name-display-container {
 .practice-timer-value--mobile {
   text-align: center;
   font-size: clamp(2.375rem, 14vw, 3.5rem);
+  overflow: visible;
 }
 
 .practice-recent-card {
@@ -1058,11 +1059,12 @@ html.dark .text-input::placeholder {
   padding: 0;
   border: none;
   border-radius: 0;
-  background: transparent;
+  background: transparent !important;
   box-shadow: none;
 }
 
 .alg-display.alg-display--embed .alg-display-moves {
+  background: transparent;
   line-height: 1.35;
 }
 
