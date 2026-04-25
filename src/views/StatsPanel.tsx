@@ -43,11 +43,6 @@ function StatsPanelComponent({
             </div>
           </div>
           <div id="average-tps-box" className="metric-box">Average TPS<br />{stats.averageTps}</div>
-          <div id="single-pb-box" className="metric-box">
-            Single PB<br />
-            {stats.singlePb}
-            {stats.lastFive.at(-1)?.isPb ? ' 🎉' : ''}
-          </div>
         </div>
       </div>
     </div>

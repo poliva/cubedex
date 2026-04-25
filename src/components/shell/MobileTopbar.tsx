@@ -12,6 +12,34 @@ const SCREEN_TITLES: Record<NavView, string> = {
   'new-alg': 'New Alg',
 };
 
+function HeaderBackButton({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        border: '1px solid var(--border)',
+        background: 'var(--raised)',
+        color: 'var(--fg2)',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        padding: 0,
+      }}
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+    </button>
+  );
+}
+
 export function MobileTopbar({
   screen,
   smartcube,
@@ -19,6 +47,9 @@ export function MobileTopbar({
   showResetOrientation,
   onResetGyro,
   onResetOrientation,
+  headerTitleOverride,
+  onHeaderBack,
+  headerBackLabel = 'Back',
 }: {
   screen: NavView;
   smartcube: SmartcubeConnectionState;
@@ -26,7 +57,13 @@ export function MobileTopbar({
   showResetOrientation: boolean;
   onResetGyro: () => void;
   onResetOrientation: () => void;
+  /** When set with `onHeaderBack`, replaces the default screen title (e.g. options drill-down). */
+  headerTitleOverride?: string;
+  onHeaderBack?: () => void;
+  headerBackLabel?: string;
 }) {
+  const title = headerTitleOverride ?? SCREEN_TITLES[screen];
+
   const statusText = smartcube.connecting
     ? 'Connecting'
     : smartcube.connected
@@ -46,8 +83,9 @@ export function MobileTopbar({
       gap: 10,
     }}>
       <Logo size={24} />
-      <span style={{ fontWeight: 700, fontSize: 15, flex: 1, color: 'var(--fg)' }}>
-        {SCREEN_TITLES[screen]}
+      {onHeaderBack ? <HeaderBackButton onClick={onHeaderBack} label={headerBackLabel} /> : null}
+      <span style={{ fontWeight: 700, fontSize: 15, flex: 1, color: 'var(--fg)', minWidth: 0 }}>
+        {title}
       </span>
 
       {(smartcube.connected || smartcube.connecting) ? (

@@ -258,7 +258,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 }
 
 describe('PracticeView', () => {
-  it('applies responsive cube guardrails and shows orientation reset in non-gyro mode', () => {
+  it('applies responsive cube guardrails and shows idle practice chrome', () => {
     render(<PracticeView {...makeProps()} />);
 
     const cubeFrame = screen.getByTestId('main-cube-area').parentElement?.parentElement;
@@ -269,7 +269,14 @@ describe('PracticeView', () => {
       aspectRatio: '1',
       maxWidth: '100%',
     });
-    expect(screen.getByText('White top · Green front')).toBeInTheDocument();
+    expect(screen.getByText('Train to begin')).toBeInTheDocument();
+  });
+
+  it('shows the Last stat chip with a dash when there is no recent solve', () => {
+    render(<PracticeView {...makeProps()} />);
+
+    const lastLabel = screen.getByText('Last');
+    expect(lastLabel.parentElement).toHaveTextContent('Last-');
   });
 
   it('shows recent-times graph canvas and mode toggle when solve history exists', () => {

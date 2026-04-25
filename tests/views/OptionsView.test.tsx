@@ -152,6 +152,42 @@ describe('OptionsView', () => {
     expect(smartcube.setShowAllBluetoothDevices).toHaveBeenCalledWith(true);
   });
 
+  it('opens device info with setInfoVisible(true) and hides other option sections when info is shown', async () => {
+    const user = userEvent.setup();
+    const setInfoVisible = vi.fn();
+    const smartcube = createSmartcube({ connected: true });
+
+    const { rerender } = render(
+      <OptionsView
+        visible
+        infoVisible={false}
+        setInfoVisible={setInfoVisible}
+        options={createOptions()}
+        smartcube={smartcube}
+        algorithmActions={createAlgorithmActions()}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Device Info' }));
+    expect(setInfoVisible).toHaveBeenCalledWith(true);
+
+    rerender(
+      <OptionsView
+        visible
+        infoVisible
+        setInfoVisible={setInfoVisible}
+        options={createOptions()}
+        smartcube={smartcube}
+        algorithmActions={createAlgorithmActions()}
+      />,
+    );
+
+    expect(screen.getByText('Device Name')).toBeVisible();
+    expect(screen.getByText('Cube')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Export' })).toBeNull();
+    expect(screen.queryByLabelText('Countdown Mode')).toBeNull();
+  });
+
   it('forwards non-default visualization settings and cube size changes', async () => {
     const options = createOptions({
       visualization: '2D',

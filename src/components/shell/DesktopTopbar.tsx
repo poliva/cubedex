@@ -11,6 +11,34 @@ const SCREEN_TITLES: Record<NavView, string> = {
   'new-alg': 'New Alg',
 };
 
+function HeaderBackButton({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        border: '1px solid var(--border)',
+        background: 'var(--raised)',
+        color: 'var(--fg2)',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        padding: 0,
+      }}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+    </button>
+  );
+}
+
 export function DesktopTopbar({
   screen,
   selectedCategory,
@@ -20,6 +48,9 @@ export function DesktopTopbar({
   showResetOrientation,
   onResetGyro,
   onResetOrientation,
+  headerTitleOverride,
+  onHeaderBack,
+  headerBackLabel = 'Back',
 }: {
   screen: NavView;
   selectedCategory: string;
@@ -29,6 +60,9 @@ export function DesktopTopbar({
   showResetOrientation: boolean;
   onResetGyro: () => void;
   onResetOrientation: () => void;
+  headerTitleOverride?: string;
+  onHeaderBack?: () => void;
+  headerBackLabel?: string;
 }) {
   const resetBtnStyle = {
     padding: '4px 10px',
@@ -43,6 +77,8 @@ export function DesktopTopbar({
     whiteSpace: 'nowrap' as const,
   };
 
+  const title = headerTitleOverride ?? SCREEN_TITLES[screen];
+
   return (
     <div style={{
       height: 50,
@@ -54,8 +90,9 @@ export function DesktopTopbar({
       flexShrink: 0,
       gap: 10,
     }}>
+      {onHeaderBack ? <HeaderBackButton onClick={onHeaderBack} label={headerBackLabel} /> : null}
       <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--fg)' }}>
-        {SCREEN_TITLES[screen]}
+        {title}
       </span>
 
       {(screen === 'practice' || screen === 'cases') && selectedCategory ? (

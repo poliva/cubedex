@@ -140,7 +140,7 @@ export const PracticeView = memo(function PracticeView({
     : training.timerState === 'IDLE'
       ? (smartcube.connected ? 'Train to begin' : 'Hold Space')
       : training.timerState === 'READY'
-        ? 'Release!'
+        ? 'Ready'
         : training.timerState === 'RUNNING'
           ? 'Solving…'
           : 'Time';
@@ -479,10 +479,10 @@ export const PracticeView = memo(function PracticeView({
             position: 'relative',
             width: `min(calc(100vw - 32px), ${options.cubeSizePx + 24}px)`,
             maxWidth: '100%',
-            borderRadius: 16,
-            border: '1px solid var(--border)',
-            background: 'var(--surface)',
-            padding: 12,
+            borderRadius: 0,
+            border: 'none',
+            background: 'transparent',
+            padding: 5,
             flexShrink: 0,
             boxShadow: '0 8px 24px oklch(0% 0 0/0.25)',
           }}>
@@ -498,7 +498,6 @@ export const PracticeView = memo(function PracticeView({
             )}
             {cubeNode}
           </div>
-          <span style={{ fontSize: 11, color: 'var(--fg3)' }}>White top · Green front</span>
         </div>
 
         {/* Timer hero */}
@@ -551,7 +550,7 @@ export const PracticeView = memo(function PracticeView({
           ) : null}
         </div>
         <div className="mobile-stat-chip-row" style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'center', flexWrap: 'wrap', margin: '-8px 12px 16px', position: 'relative', zIndex: 1 }}>
-          {lastTime && <StatChip label="Last" value={historyTimeString(lastTime.value)} />}
+          <StatChip label="Last" value={historyTimeString(lastTime?.value ?? null)} />
           <StatChip label="Best" value={historyTimeString(bestTime)} />
           <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
         </div>
@@ -776,10 +775,10 @@ export const PracticeView = memo(function PracticeView({
           <div className="practice-cube-card" style={{
             position: 'relative',
             maxWidth: `calc(${options.cubeSizePx}px + 28px)`,
-            padding: 14,
-            borderRadius: 16,
-            border: '1px solid var(--border)',
-            background: 'var(--surface)',
+            padding: 5,
+            borderRadius: 0,
+            border: 'none',
+            background: 'transparent',
           }}>
             {training.timerState === 'RUNNING' && (
               <div style={{
@@ -793,7 +792,6 @@ export const PracticeView = memo(function PracticeView({
             )}
             {cubeNode}
           </div>
-          <span style={{ fontSize: 11, color: 'var(--fg3)' }}>White top · Green front</span>
         </div>
 
         {/* RIGHT: timer */}
@@ -854,10 +852,10 @@ export const PracticeView = memo(function PracticeView({
             width: '100%',
             padding: '10px 14px',
             borderRadius: 12,
-            border: '1px solid var(--border)',
-            background: 'var(--surface)',
+            border: 'none',
+            background: 'transparent',
           }}>
-            {lastTime && <StatChip label="Last" value={historyTimeString(lastTime.value)} />}
+            <StatChip label="Last" value={historyTimeString(lastTime?.value ?? null)} />
             <StatChip label="Best" value={historyTimeString(bestTime)} />
             <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
           </div>

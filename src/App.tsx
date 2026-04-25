@@ -110,6 +110,7 @@ export function App() {
     ? 'full'
     : getStickeringForCategory(selectedCategory || 'PLL', options.fullStickering);
   const optionsVisible = activeView === 'options';
+  const optionsDeviceInfoOpen = activeView === 'options' && infoVisible;
 
   const showFlashingIndicator = useCallback((color: 'gray' | 'red' | 'green', durationMs: number) => {
     if (!options.flashingIndicatorEnabled && color !== 'gray') {
@@ -700,6 +701,9 @@ export function App() {
               showResetOrientation={smartcube.connected && (!smartcube.gyroSupported || !options.gyroscope)}
               onResetGyro={handleResetGyro}
               onResetOrientation={handleResetOrientation}
+              headerTitleOverride={optionsDeviceInfoOpen ? 'Device Info' : undefined}
+              onHeaderBack={optionsDeviceInfoOpen ? () => setInfoVisible(false) : undefined}
+              headerBackLabel="Back to options"
             />
           )
           : (
@@ -712,6 +716,9 @@ export function App() {
               showResetOrientation={smartcube.connected && (!smartcube.gyroSupported || !options.gyroscope)}
               onResetGyro={handleResetGyro}
               onResetOrientation={handleResetOrientation}
+              headerTitleOverride={optionsDeviceInfoOpen ? 'Device Info' : undefined}
+              onHeaderBack={optionsDeviceInfoOpen ? () => setInfoVisible(false) : undefined}
+              headerBackLabel="Back to options"
             />
           )
         }

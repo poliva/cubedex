@@ -79,6 +79,44 @@ export const OptionsView = memo(function OptionsView({
 
   if (!visible && !infoVisible) return null;
 
+  const stackStyle: React.CSSProperties = {
+    width: '100%',
+    maxWidth: 620,
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12,
+  };
+
+  const deviceInfoRows: [string, string][] = [
+    ['Device Name', smartcube.info.deviceName],
+    ['Device MAC', smartcube.info.deviceMAC],
+    ['Protocol', smartcube.info.deviceProtocol],
+    ['Hardware Name', smartcube.info.hardwareName],
+    ['Hardware Version', smartcube.info.hardwareVersion],
+    ['Software Version', smartcube.info.softwareVersion],
+    ['Product Date', smartcube.info.productDate],
+    ['Gyro Supported', smartcube.info.gyroSupported],
+    ['Battery', smartcube.info.batteryLevel],
+    ['Clock Skew', smartcube.info.skew],
+    ['Quaternion', smartcube.info.quaternion],
+    ['Angular Velocity', smartcube.info.velocity],
+  ];
+
+  const deviceInfoTable = (
+    <div style={section}>
+      {deviceInfoRows.map(([label, value], i, arr) => (
+        <div key={label} style={row(i === arr.length - 1)}>
+          <span style={{ ...lbl, fontSize: 12, color: 'var(--fg3)' }}>{label}</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--fg)', wordBreak: 'break-all', textAlign: 'right', maxWidth: '60%' }}>
+            {value}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div style={{
       flex: 1,
@@ -86,39 +124,14 @@ export const OptionsView = memo(function OptionsView({
       padding: `${isMobile ? 14 : 18}px ${pad}px`,
       paddingBottom: pb,
     }}>
-      {!isMobile && (
-        <h2 style={{ fontWeight: 700, fontSize: 18, marginBottom: 16, color: 'var(--fg)' }}>Options</h2>
-      )}
-
-      {/* Device info panel */}
-      {infoVisible && (
-        <div style={{ ...section, marginBottom: 12 }}>
-          <div style={sHdr}>Device Info</div>
-          {[
-            ['Device Name', smartcube.info.deviceName],
-            ['Device MAC', smartcube.info.deviceMAC],
-            ['Protocol', smartcube.info.deviceProtocol],
-            ['Hardware Name', smartcube.info.hardwareName],
-            ['Hardware Version', smartcube.info.hardwareVersion],
-            ['Software Version', smartcube.info.softwareVersion],
-            ['Product Date', smartcube.info.productDate],
-            ['Gyro Supported', smartcube.info.gyroSupported],
-            ['Battery', smartcube.info.batteryLevel],
-            ['Clock Skew', smartcube.info.skew],
-            ['Quaternion', smartcube.info.quaternion],
-            ['Angular Velocity', smartcube.info.velocity],
-          ].map(([label, value], i, arr) => (
-            <div key={label} style={row(i === arr.length - 1)}>
-              <span style={{ ...lbl, fontSize: 12, color: 'var(--fg3)' }}>{label}</span>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--fg)', wordBreak: 'break-all', textAlign: 'right', maxWidth: '60%' }}>
-                {value}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 620 }}>
+      <div style={stackStyle}>
+        {infoVisible ? (
+          deviceInfoTable
+        ) : (
+          <>
+            {!isMobile && (
+              <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0, color: 'var(--fg)' }}>Options</h2>
+            )}
 
         {/* Algorithms */}
         <div style={section}>
@@ -289,7 +302,7 @@ export const OptionsView = memo(function OptionsView({
                 style={btnStyle(true)}
                 type="button"
                 disabled={!smartcube.connected}
-                onClick={() => setInfoVisible((v) => !v)}
+                onClick={() => setInfoVisible(true)}
               >
                 Device Info
               </button>
@@ -306,6 +319,8 @@ export const OptionsView = memo(function OptionsView({
           </div>
         </div>
 
+          </>
+        )}
       </div>
     </div>
   );
