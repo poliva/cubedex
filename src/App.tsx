@@ -181,7 +181,7 @@ export function App() {
     training.currentCase,
     training.displayAlg || training.algInput,
     training.statsAlgId,
-    `${statsRefreshToken}:${activeStatsSolveCount}`,
+    `${statsRefreshToken}:${activeStatsSolveCount}:${isMobile}:${showTimesInsteadOfGraph}`,
   );
 
   useEffect(() => {

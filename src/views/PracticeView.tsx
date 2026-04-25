@@ -555,7 +555,7 @@ export const PracticeView = memo(function PracticeView({
         </div>
 
         {/* Alg bar */}
-        <div style={{ margin: '0 12px 10px' }}>
+        <div className="mobile-alg-bar-shell" style={{ margin: '18px 12px 10px' }}>
           {algBar}
         </div>
 
