@@ -11,6 +11,7 @@ function MoveListPanelComponent({
   showMoves = true,
   showFix = false,
   inlineStyle = false,
+  variant = 'default',
 }: {
   darkMode: boolean;
   isMoveMasked: boolean;
@@ -20,19 +21,34 @@ function MoveListPanelComponent({
   showMoves?: boolean;
   showFix?: boolean;
   inlineStyle?: boolean;
+  variant?: 'default' | 'algTrack';
 }) {
   const { displayMoves, fixText, fixVisible } = useMoveListSlice();
+  const isAlgTrack = variant === 'algTrack';
   return (
     <>
       {showMoves ? (
-        <div id="alg-display-container" className={`alg-display-container ${className ?? ''}`.trim()}
-          style={inlineStyle ? { display: 'contents' } : {
-            borderRadius: 12,
-            border: '1px solid var(--border)',
-            background: 'var(--surface)',
-            padding: '10px 12px',
-          }}>
-          {!inlineStyle && (
+        <div
+          id="alg-display-container"
+          className={
+            isAlgTrack
+              ? `alg-display-container alg-display-container--embed ${className ?? ''}`.trim()
+              : `alg-display-container ${className ?? ''}`.trim()
+          }
+          style={
+            isAlgTrack
+              ? undefined
+              : inlineStyle
+                ? { display: 'contents' }
+                : {
+                  borderRadius: 12,
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface)',
+                  padding: '10px 12px',
+                }
+          }
+        >
+          {!inlineStyle && !isAlgTrack && (
             <div className="alg-display-mask-row" style={{ marginBottom: 8 }}>
               <button
                 id="toggle-move-mask"
@@ -54,15 +70,21 @@ function MoveListPanelComponent({
           )}
           <div
             id="alg-display"
-            className="alg-display"
+            className={isAlgTrack ? 'alg-display alg-display--embed' : 'alg-display'}
             onClick={onEditCurrentAlgorithm}
-            style={inlineStyle ? { minWidth: 0, cursor: 'pointer' } : {
-              borderRadius: 10,
-              background: 'var(--raised)',
-              padding: '10px 12px',
-              minHeight: 48,
-              cursor: 'pointer',
-            }}
+            style={
+              isAlgTrack
+                ? { minWidth: 0, cursor: 'pointer' }
+                : inlineStyle
+                  ? { minWidth: 0, cursor: 'pointer' }
+                  : {
+                    borderRadius: 10,
+                    background: 'var(--raised)',
+                    padding: '10px 12px',
+                    minHeight: 48,
+                    cursor: 'pointer',
+                  }
+            }
           >
             <div className="alg-display-moves" style={{ color: darkMode ? '#fff' : 'var(--fg)' }}>
               {displayMoves.map((move, index) => {

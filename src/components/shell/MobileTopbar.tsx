@@ -1,5 +1,5 @@
 import type { SmartcubeConnectionState } from '../../hooks/useSmartcubeConnection';
-import { Icon, IC } from '../ui/Icon';
+import { BluetoothIcon } from '../ui/Icon';
 import { Logo } from './Logo';
 
 type NavView = 'practice' | 'cases' | 'options' | 'help' | 'new-alg';
@@ -15,9 +15,17 @@ const SCREEN_TITLES: Record<NavView, string> = {
 export function MobileTopbar({
   screen,
   smartcube,
+  showResetGyro,
+  showResetOrientation,
+  onResetGyro,
+  onResetOrientation,
 }: {
   screen: NavView;
   smartcube: SmartcubeConnectionState;
+  showResetGyro: boolean;
+  showResetOrientation: boolean;
+  onResetGyro: () => void;
+  onResetOrientation: () => void;
 }) {
   const statusText = smartcube.connecting
     ? 'Connecting'
@@ -78,6 +86,47 @@ export function MobileTopbar({
         </div>
       ) : null}
 
+      {showResetGyro ? (
+        <button
+          type="button"
+          onClick={onResetGyro}
+          style={{
+            padding: '4px 8px',
+            borderRadius: 7,
+            border: '1px solid var(--border)',
+            background: 'var(--raised)',
+            color: 'var(--fg2)',
+            cursor: 'pointer',
+            fontSize: 10,
+            fontWeight: 600,
+            fontFamily: 'inherit',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Reset Gyro
+        </button>
+      ) : null}
+      {showResetOrientation ? (
+        <button
+          type="button"
+          onClick={onResetOrientation}
+          style={{
+            padding: '4px 8px',
+            borderRadius: 7,
+            border: '1px solid var(--border)',
+            background: 'var(--raised)',
+            color: 'var(--fg2)',
+            cursor: 'pointer',
+            fontSize: 10,
+            fontWeight: 600,
+            fontFamily: 'inherit',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Reset Orient.
+        </button>
+      ) : null}
+
       <button
         type="button"
         onClick={() => void smartcube.connectOrDisconnect()}
@@ -94,7 +143,7 @@ export function MobileTopbar({
           justifyContent: 'center',
         }}
       >
-        <Icon d={IC.bt} size={16} />
+        <BluetoothIcon size={16} />
       </button>
     </div>
   );

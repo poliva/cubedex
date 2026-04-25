@@ -44,6 +44,7 @@ export function App() {
   const [deleteSuccessMessage, setDeleteSuccessMessage] = useState('');
   const [infoVisible, setInfoVisible] = useState(false);
   const [isMoveMasked, setIsMoveMasked] = useState(false);
+  const [showTimesInsteadOfGraph, setShowTimesInsteadOfGraph] = useState(false);
   const [mainCubeStickeringDeferred, setMainCubeStickeringDeferred] = useState(true);
   const [scrambleStartAlg, setScrambleStartAlg] = useState('');
   const [acknowledgedDisconnectToken, setAcknowledgedDisconnectToken] = useState(0);
@@ -60,6 +61,7 @@ export function App() {
   const flashingIndicatorTimeoutRef = useRef<number | null>(null);
   const [isFlashingIndicatorVisible, setIsFlashingIndicatorVisible] = useState(false);
   const [flashingIndicatorColor, setFlashingIndicatorColor] = useState<'gray' | 'red' | 'green'>('gray');
+  const [orientationResetState, setOrientationResetState] = useState<{ token: number; alg: string | null }>({ token: 0, alg: null });
 
   const isMobile = useIsMobile();
   const options = useAppSettings();
@@ -485,6 +487,18 @@ export function App() {
     if (!isTouchScrollingRef.current) handleTimerActivation();
   }, [handleTimerActivation]);
 
+  const handleResetOrientation = useCallback(() => {
+    smartcube.resetOrientation();
+    setOrientationResetState((current) => ({
+      token: current.token + 1,
+      alg: smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : null,
+    }));
+  }, [smartcube.resetOrientation, smartcube.currentPattern]);
+
+  const handleResetGyro = useCallback(() => {
+    smartcube.resetGyro();
+  }, [smartcube.resetGyro]);
+
   const handleDeleteAlgorithms = useCallback(() => {
     if (!selectedCategory || selectedCases.length === 0) return;
     if (!window.confirm('Are you sure you want to delete the selected algorithms?')) return;
@@ -678,13 +692,26 @@ export function App() {
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
         {/* Topbar */}
         {isMobile
-          ? <MobileTopbar screen={activeView} smartcube={smartcube} />
+          ? (
+            <MobileTopbar
+              screen={activeView}
+              smartcube={smartcube}
+              showResetGyro={smartcube.connected && options.gyroscope && smartcube.gyroSupported}
+              showResetOrientation={smartcube.connected && (!smartcube.gyroSupported || !options.gyroscope)}
+              onResetGyro={handleResetGyro}
+              onResetOrientation={handleResetOrientation}
+            />
+          )
           : (
             <DesktopTopbar
               screen={activeView}
               selectedCategory={selectedCategory ?? ''}
               selectedCount={selectedCaseIds.length}
               smartcube={smartcube}
+              showResetGyro={smartcube.connected && options.gyroscope && smartcube.gyroSupported}
+              showResetOrientation={smartcube.connected && (!smartcube.gyroSupported || !options.gyroscope)}
+              onResetGyro={handleResetGyro}
+              onResetOrientation={handleResetOrientation}
             />
           )
         }
@@ -724,6 +751,10 @@ export function App() {
             smartcubeAppendMoveKey={smartcubeAppendMoveKey}
             smartcubeAppendMove={smartcubeAppendMove}
             isMobile={isMobile}
+            orientationResetToken={orientationResetState.token}
+            orientationResetAlg={orientationResetState.alg}
+            showTimesInsteadOfGraph={showTimesInsteadOfGraph}
+            setShowTimesInsteadOfGraph={setShowTimesInsteadOfGraph}
           />
 
           {activeView === 'cases' && (

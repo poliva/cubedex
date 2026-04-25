@@ -234,6 +234,8 @@ function makeProps(overrides: Record<string, unknown> = {}) {
     setMainCubeStickeringDeferred: vi.fn(),
     lastProcessedScrambleMoveRef: { current: 'old-move' },
     setScrambleStartAlg: vi.fn(),
+    orientationResetToken: 0,
+    orientationResetAlg: null as string | null,
     setDeleteMode: vi.fn(),
     deleteMode: false,
     deleteSuccessMessage: '',
@@ -250,6 +252,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
     handleTouchTimerActivation: vi.fn(),
     isFlashingIndicatorVisible: false,
     flashingIndicatorColor: 'gray',
+    isMobile: false,
     ...overrides,
   } as any;
 }
@@ -262,12 +265,41 @@ describe('PracticeView', () => {
 
     expect(screen.getByTestId('main-cube-area')).toBeInTheDocument();
     expect(cubeFrame).toHaveStyle({
-      width: 'min(100%, 420px)',
-      aspectRatio: '1',
+      width: '420px',
       maxWidth: '100%',
-      minWidth: '0',
     });
     expect(screen.getByText('White top · Green front')).toBeInTheDocument();
+  });
+
+  it('shows recent-times graph canvas and mode toggle when solve history exists', () => {
+    const base = makeProps();
+    render(
+      <PracticeView
+        {...makeProps({
+          training: {
+            ...base.training,
+            stats: {
+              ...base.training.stats,
+              hasHistory: true,
+              lastFive: [{ value: 1000, label: 'Time 1: 1.00s', isPb: false }],
+            },
+          },
+        })}
+      />,
+    );
+
+    expect(document.getElementById('timeGraph')).toBeTruthy();
+    expect(screen.getByTitle('Show times list')).toBeInTheDocument();
+  });
+
+  it('keeps desktop practice rows constrained and the top side cards in layout columns', () => {
+    render(<PracticeView {...makeProps()} />);
+
+    expect(document.querySelector('.practice-top-grid')).toBeTruthy();
+    expect(document.querySelector('.practice-side-column--right')).toBeTruthy();
+    expect(document.getElementById('alg-bar')).toHaveStyle({
+      maxWidth: 'var(--practice-alg-track-max)',
+    });
   });
 
   it('shows a countdown overlay and hides the cube content while countdown mode is active', () => {

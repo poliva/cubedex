@@ -1,5 +1,5 @@
 import type { SmartcubeConnectionState } from '../../hooks/useSmartcubeConnection';
-import { Icon, IC } from '../ui/Icon';
+import { BluetoothIcon } from '../ui/Icon';
 
 type NavView = 'practice' | 'cases' | 'options' | 'help' | 'new-alg';
 
@@ -16,12 +16,33 @@ export function DesktopTopbar({
   selectedCategory,
   selectedCount,
   smartcube,
+  showResetGyro,
+  showResetOrientation,
+  onResetGyro,
+  onResetOrientation,
 }: {
   screen: NavView;
   selectedCategory: string;
   selectedCount: number;
   smartcube: SmartcubeConnectionState;
+  showResetGyro: boolean;
+  showResetOrientation: boolean;
+  onResetGyro: () => void;
+  onResetOrientation: () => void;
 }) {
+  const resetBtnStyle = {
+    padding: '4px 10px',
+    borderRadius: 7,
+    border: '1px solid var(--border)',
+    background: 'var(--raised)',
+    color: 'var(--fg2)',
+    cursor: 'pointer',
+    fontSize: 11,
+    fontWeight: 600,
+    fontFamily: 'inherit',
+    whiteSpace: 'nowrap' as const,
+  };
+
   return (
     <div style={{
       height: 50,
@@ -47,7 +68,18 @@ export function DesktopTopbar({
         </>
       ) : null}
 
-      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+        {showResetGyro ? (
+          <button type="button" onClick={onResetGyro} style={resetBtnStyle}>
+            Reset Gyro
+          </button>
+        ) : null}
+        {showResetOrientation ? (
+          <button type="button" onClick={onResetOrientation} style={resetBtnStyle}>
+            Reset Orientation
+          </button>
+        ) : null}
+
         {smartcube.connected ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -78,16 +110,16 @@ export function DesktopTopbar({
             width: 34,
             height: 34,
             borderRadius: 9,
-            border: '1.5px solid var(--border)',
-            background: 'transparent',
-            color: 'var(--fg2)',
+            border: `1.5px solid ${smartcube.connected ? 'rgba(34,197,94,0.35)' : 'var(--border)'}`,
+            background: smartcube.connected ? 'rgba(34,197,94,0.08)' : 'transparent',
+            color: smartcube.connected ? 'var(--ok)' : 'var(--fg2)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
           }}
         >
-          <Icon d={IC.bt} size={15} />
+          <BluetoothIcon size={15} />
         </button>
       </div>
     </div>

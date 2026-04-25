@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { Fragment, memo } from 'react';
 import type { AppSettingsState } from '../hooks/useAppSettings';
 import type { PracticeTogglesState } from '../hooks/usePracticeToggles';
 import type { TrainingState } from '../hooks/useTrainingState';
@@ -6,16 +6,44 @@ import type { ScrambleState } from '../hooks/useScrambleState';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
 import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
 import { averageOfFiveTimeNumber, historyTimeString } from '../lib/case-cards';
-import { getBestTime, getLastTimes } from '../lib/storage';
+import { getBestTime } from '../lib/storage';
 import { patternToPlayerAlg } from '../lib/scramble';
 import { MainCubeArea } from './MainCubeArea';
 import { MoveListPanel } from './MoveListPanel';
 import { StatsPanel } from './StatsPanel';
 import { NewAlgView } from './NewAlgView';
-import { Icon, IC } from '../components/ui/Icon';
-import { MiniGraph } from '../components/ui/MiniGraph';
+import { Icon, IC, EyeIcon, EyeSlashIcon } from '../components/ui/Icon';
 import { StatChip } from '../components/ui/StatChip';
 import { Toggle } from '../components/ui/Toggle';
+
+function RecentTimesModeToggle({
+  showTimesInsteadOfGraph,
+  onToggle,
+}: {
+  showTimesInsteadOfGraph: boolean;
+  onToggle: () => void;
+}) {
+  const label = showTimesInsteadOfGraph ? 'Show graph' : 'Show times list';
+  return (
+    <button
+      type="button"
+      className="recent-times-toggle"
+      aria-label={label}
+      title={label}
+      onClick={onToggle}
+    >
+      {showTimesInsteadOfGraph ? (
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="currentColor" viewBox="-2 0 19 19" aria-hidden>
+          <path d="M13.55 15.256H1.45a.554.554 0 0 1-.553-.554V3.168a.554.554 0 1 1 1.108 0v10.98h11.544a.554.554 0 0 1 0 1.108zM3.121 13.02V6.888a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v6.132zm2.785 0V3.507a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v9.513zm2.785 0V6.888a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v6.132zm2.786 0v-2.753a.476.476 0 0 1 .475-.475h.785a.476.476 0 0 1 .475.475v2.753z" />
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+          <path d="M11.75 6C7.89 6 4.75 9.14 4.75 13C4.75 16.86 7.89 20 11.75 20C15.61 20 18.75 16.86 18.75 13C18.75 9.14 15.61 6 11.75 6ZM11.75 18.5C8.72 18.5 6.25 16.03 6.25 13C6.25 9.97 8.72 7.5 11.75 7.5C14.78 7.5 17.25 9.97 17.25 13C17.25 16.03 14.78 18.5 11.75 18.5ZM8.5 4.75C8.5 4.34 8.84 4 9.25 4H14.25C14.66 4 15 4.34 15 4.75C15 5.16 14.66 5.5 14.25 5.5H9.25C8.84 5.5 8.5 5.16 8.5 4.75ZM12.5 10V13C12.5 13.41 12.16 13.75 11.75 13.75C11.34 13.75 11 13.41 11 13V10C11 9.59 11.34 9.25 11.75 9.25C12.16 9.25 12.5 9.59 12.5 10ZM19.04 8.27C18.89 8.42 18.7 8.49 18.51 8.49C18.32 8.49 18.13 8.42 17.98 8.27L16.48 6.77C16.19 6.48 16.19 6 16.48 5.71C16.77 5.42 17.25 5.42 17.54 5.71L19.04 7.21C19.33 7.5 19.33 7.98 19.04 8.27Z" />
+        </svg>
+      )}
+    </button>
+  );
+}
 
 export const PracticeView = memo(function PracticeView({
   visible,
@@ -45,6 +73,10 @@ export const PracticeView = memo(function PracticeView({
   smartcubeAppendMoveKey,
   smartcubeAppendMove,
   isMobile,
+  orientationResetToken,
+  orientationResetAlg,
+  showTimesInsteadOfGraph,
+  setShowTimesInsteadOfGraph,
 }: {
   visible: boolean;
   options: AppSettingsState;
@@ -73,14 +105,13 @@ export const PracticeView = memo(function PracticeView({
   smartcubeAppendMoveKey?: string;
   smartcubeAppendMove?: string;
   isMobile: boolean;
+  orientationResetToken: number;
+  orientationResetAlg: string | null;
+  showTimesInsteadOfGraph: boolean;
+  setShowTimesInsteadOfGraph: (updater: (value: boolean) => boolean) => void;
 }) {
-  const [orientationResetState] = useState<{ token: number; alg: string | null }>({
-    token: 0,
-    alg: null,
-  });
 
   const statsAlgId = training.statsAlgId;
-  const recentTimes = getLastTimes(statsAlgId);
   const bestTime = getBestTime(statsAlgId);
   const ao5 = averageOfFiveTimeNumber(statsAlgId);
   const lastTime = training.stats.lastFive.at(-1);
@@ -135,11 +166,11 @@ export const PracticeView = memo(function PracticeView({
       onTouchEnd={handleTouchEnd}
       style={{
         position: 'relative',
-        width: `min(100%, ${options.cubeSizePx}px)`,
-        aspectRatio: '1',
+        width: options.cubeSizePx,
+        height: options.cubeSizePx,
         maxWidth: '100%',
-        minWidth: 0,
         overflow: 'visible',
+        flexShrink: 0,
       }}
     >
       <div className={training.countdownActive ? 'cube-area-content cube-area-content--hidden' : 'cube-area-content'}
@@ -154,8 +185,8 @@ export const PracticeView = memo(function PracticeView({
           setupAlg={options.whiteOnBottom ? 'z2' : ''}
           backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
           resetToken={`${smartcube.connected}:${training.visualResetKey}`}
-          orientationResetToken={orientationResetState.token}
-          orientationResetAlg={orientationResetState.alg}
+          orientationResetToken={orientationResetToken}
+          orientationResetAlg={orientationResetAlg}
           appendMoveKey={smartcubeAppendMoveKey}
           appendMove={smartcubeAppendMove}
           gyroscopeEnabled={options.gyroscope && smartcube.connected}
@@ -171,14 +202,17 @@ export const PracticeView = memo(function PracticeView({
   );
 
   const algBar = (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      width: '100%',
-      maxWidth: isMobile ? undefined : 900,
-    }}>
+    <div
+      id="alg-bar"
+      className="alg-bar"
+      style={{
+        gap: 8,
+        width: '100%',
+        maxWidth: isMobile ? undefined : 'var(--practice-alg-track-max)',
+      }}
+    >
       <button
+        id="train-alg"
         type="button"
         title="Train"
         onClick={() => {
@@ -199,7 +233,7 @@ export const PracticeView = memo(function PracticeView({
           borderRadius: 12,
           border: 'none',
           flexShrink: 0,
-          background: training.timerState === 'RUNNING' ? 'var(--danger)' : 'var(--accent)',
+          background: 'var(--accent)',
           color: '#fff',
           cursor: 'pointer',
           display: 'flex',
@@ -211,52 +245,58 @@ export const PracticeView = memo(function PracticeView({
         <Icon d={training.timerState === 'RUNNING' ? IC.stop : IC.play} size={isMobile ? 20 : 18} />
       </button>
 
-      <input
-        id="alg-input"
-        type="text"
-        placeholder="Enter alg e.g., (R U R' U) (R U2' R')"
-        className={`alg-input ${training.inputMode ? '' : 'hidden'}`.trim()}
-        value={training.algInput}
-        onChange={(event) => training.setAlgInput(event.target.value)}
-      />
-
-      {/* Alg display in non-input mode */}
-      <div style={{
-        flex: 1,
-        borderRadius: isMobile ? 12 : 8,
-        border: '1px solid var(--border)',
-        background: isMobile ? 'var(--surface)' : 'var(--raised)',
-        padding: '10px 12px',
-        display: training.inputMode ? 'none' : 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 6,
-        minWidth: 0,
-      }}>
-        <MoveListPanel
-          darkMode={options.darkMode}
-          isMoveMasked={isMoveMasked}
-          setIsMoveMasked={setIsMoveMasked}
-          onEditCurrentAlgorithm={handleEditCurrentAlgorithm}
-          showMoves
-          showFix={false}
-          inlineStyle
+      <div
+        className="alg-track"
+        style={{
+          borderRadius: isMobile ? 12 : 8,
+          border: '1px solid var(--border)',
+          background: isMobile ? 'var(--surface)' : 'var(--raised)',
+          padding: '10px 12px',
+        }}
+      >
+        <input
+          id="alg-input"
+          type="text"
+          placeholder="Enter alg e.g., (R U R' U) (R U2' R')"
+          className={`alg-input alg-input--track ${training.inputMode ? '' : 'hidden'}`.trim()}
+          value={training.algInput}
+          onChange={(event) => training.setAlgInput(event.target.value)}
         />
-        <button
-          type="button"
-          onClick={() => setIsMoveMasked((v) => !v)}
-          style={{
-            border: 'none',
-            background: 'transparent',
-            color: isMoveMasked ? 'var(--accent)' : 'var(--fg3)',
-            cursor: 'pointer',
-            padding: 4,
-            flexShrink: 0,
-            display: 'flex',
-          }}
-        >
-          <Icon d={IC.mask} size={isMobile ? 18 : 16} />
-        </button>
+
+        {!training.inputMode ? (
+          <>
+            <MoveListPanel
+              darkMode={options.darkMode}
+              isMoveMasked={isMoveMasked}
+              setIsMoveMasked={setIsMoveMasked}
+              onEditCurrentAlgorithm={handleEditCurrentAlgorithm}
+              showMoves
+              showFix={false}
+              variant="algTrack"
+            />
+            <button
+              type="button"
+              onClick={() => setIsMoveMasked((v) => !v)}
+              title={isMoveMasked ? 'Unmask algorithm' : 'Mask algorithm'}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                color: isMoveMasked ? 'var(--accent)' : 'var(--fg3)',
+                cursor: 'pointer',
+                padding: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              {isMoveMasked
+                ? <EyeSlashIcon size={isMobile ? 18 : 16} />
+                : <EyeIcon size={isMobile ? 18 : 16} />
+              }
+            </button>
+          </>
+        ) : null}
       </div>
 
       {!isMobile && (
@@ -283,6 +323,7 @@ export const PracticeView = memo(function PracticeView({
       )}
 
       <button
+        id="scramble-to"
         type="button"
         title="Scramble To..."
         onClick={() => {
@@ -315,7 +356,7 @@ export const PracticeView = memo(function PracticeView({
           boxShadow: '0 4px 12px rgba(59,130,246,0.35)',
         }}
       >
-        {scramble.isComputing ? '…' : <Icon d={IC.scatter} size={isMobile ? 20 : 18} />}
+        {scramble.isComputing ? '…' : <Icon d={IC.wand} size={isMobile ? 20 : 18} />}
       </button>
     </div>
   );
@@ -323,7 +364,7 @@ export const PracticeView = memo(function PracticeView({
   const statusBar = showStatus ? (
     <div style={{
       width: '100%',
-      maxWidth: isMobile ? undefined : 900,
+      maxWidth: isMobile ? undefined : 'var(--practice-alg-track-max)',
       padding: '9px 14px',
       borderRadius: 10,
       background: statusColor === 'var(--danger)' ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)',
@@ -358,7 +399,7 @@ export const PracticeView = memo(function PracticeView({
   const practiceTogglesStrip = (
     <div style={{
       width: '100%',
-      maxWidth: isMobile ? undefined : 900,
+      maxWidth: isMobile ? undefined : 'var(--practice-alg-track-max)',
       padding: '10px 14px',
       borderRadius: 12,
       border: '1px solid var(--border)',
@@ -439,7 +480,7 @@ export const PracticeView = memo(function PracticeView({
             border: '1px solid var(--border)',
             background: 'var(--surface)',
             padding: 12,
-            display: 'inline-flex',
+            flexShrink: 0,
             boxShadow: '0 8px 24px oklch(0% 0 0/0.25)',
           }}>
             {training.timerState === 'RUNNING' && (
@@ -472,6 +513,7 @@ export const PracticeView = memo(function PracticeView({
             flexDirection: 'column',
             alignItems: 'center',
             gap: 6,
+            minHeight: 130,
             boxShadow: '0 4px 16px oklch(0% 0 0/0.2)',
             transition: 'border-color 0.15s, box-shadow 0.15s',
             ...timerCardFlashStyle,
@@ -537,18 +579,51 @@ export const PracticeView = memo(function PracticeView({
             borderRadius: 12,
             border: '1px solid var(--border)',
             background: 'var(--surface)',
-          }}>
-            <div style={{
-              fontSize: 10,
-              color: 'var(--fg3)',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              marginBottom: 8,
-            }}>
-              {options.showAlgName && !training.countdownActive ? training.currentAlgName : 'Recent times'}
+          }}
+          >
+            <div className="recent-times-header">
+              <div style={{
+                fontSize: 10,
+                color: 'var(--fg3)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}
+              >
+                {options.showAlgName && !training.countdownActive ? training.currentAlgName : 'Recent times'}
+              </div>
+              <RecentTimesModeToggle
+                showTimesInsteadOfGraph={showTimesInsteadOfGraph}
+                onToggle={() => setShowTimesInsteadOfGraph((v) => !v)}
+              />
             </div>
-            <MiniGraph times={recentTimes.slice(-10)} width={280} />
+            <div
+              className={`${showTimesInsteadOfGraph ? 'times-display' : 'hidden times-display'}`.trim()}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div className="times-grid">
+                {training.stats.lastFive.map((entry, index) => (
+                  <Fragment key={`time-row-${entry.value}-${entry.label}-${index}`}>
+                    <div className="times-grid-label">{entry.label.split(': ')[0]}:</div>
+                    <div className="times-grid-value">
+                      {entry.label.split(': ').slice(1).join(': ')}{entry.isPb ? ' 🎉' : ''}
+                    </div>
+                  </Fragment>
+                ))}
+                <div className="times-grid-label times-grid-emphasis">Ao5:</div>
+                <div className="times-grid-value times-grid-emphasis">{historyTimeString(averageOfFiveTimeNumber(statsAlgId))}</div>
+                <div className="times-grid-label">Best:</div>
+                <div className="times-grid-value">{historyTimeString(getBestTime(statsAlgId))}</div>
+              </div>
+            </div>
+            <div
+              id="graph-display"
+              className={`${showTimesInsteadOfGraph ? 'hidden graph-display' : 'graph-display'}`.trim()}
+            >
+              <canvas id="timeGraph" />
+            </div>
           </div>
         )}
 
@@ -625,41 +700,58 @@ export const PracticeView = memo(function PracticeView({
       position: 'relative',
     }}>
       {/* 3-col top area */}
-      <div style={{
-        width: '100%',
-        maxWidth: 900,
-        display: 'grid',
-        gridTemplateColumns: '1fr auto 1fr',
-        gap: 14,
-        alignItems: 'stretch',
-      }}>
+      <div className="practice-top-grid">
         {/* LEFT: stats card */}
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div className="practice-side-column practice-side-column--left">
           {training.stats.hasHistory ? (
-            <div style={{
+            <div className="practice-recent-card" style={{
               padding: '14px 16px',
               borderRadius: 12,
               border: '1px solid var(--border)',
               background: 'var(--surface)',
-            }}>
-              <div style={{
-                fontSize: 10,
-                color: 'var(--fg3)',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                marginBottom: 8,
-              }}>
-                {options.showAlgName && !training.countdownActive ? training.currentAlgName : 'Recent times'}
+            }}
+            >
+              <div className="recent-times-header">
+                <div style={{
+                  fontSize: 10,
+                  color: 'var(--fg3)',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}
+                >
+                  {options.showAlgName && !training.countdownActive ? training.currentAlgName : 'Recent times'}
+                </div>
+                <RecentTimesModeToggle
+                  showTimesInsteadOfGraph={showTimesInsteadOfGraph}
+                  onToggle={() => setShowTimesInsteadOfGraph((v) => !v)}
+                />
               </div>
-              <MiniGraph times={recentTimes.slice(-10)} width={180} />
-              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                <StatChip label="Best" value={historyTimeString(bestTime)} />
-                <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
+              <div className={`${showTimesInsteadOfGraph ? 'times-display' : 'hidden times-display'}`.trim()}>
+                <div className="times-grid">
+                  {training.stats.lastFive.map((entry, index) => (
+                    <Fragment key={`time-row-d-${entry.value}-${entry.label}-${index}`}>
+                      <div className="times-grid-label">{entry.label.split(': ')[0]}:</div>
+                      <div className="times-grid-value">
+                        {entry.label.split(': ').slice(1).join(': ')}{entry.isPb ? ' 🎉' : ''}
+                      </div>
+                    </Fragment>
+                  ))}
+                  <div className="times-grid-label times-grid-emphasis">Ao5:</div>
+                  <div className="times-grid-value times-grid-emphasis">{historyTimeString(averageOfFiveTimeNumber(statsAlgId))}</div>
+                  <div className="times-grid-label">Best:</div>
+                  <div className="times-grid-value">{historyTimeString(getBestTime(statsAlgId))}</div>
+                </div>
+              </div>
+              <div
+                id="graph-display"
+                className={`${showTimesInsteadOfGraph ? 'hidden graph-display' : 'graph-display'}`.trim()}
+              >
+                <canvas id="timeGraph" />
               </div>
             </div>
           ) : (
-            <div style={{
+            <div className="practice-recent-card" style={{
               padding: '14px 16px',
               borderRadius: 12,
               border: '1px solid var(--border)',
@@ -674,21 +766,14 @@ export const PracticeView = memo(function PracticeView({
         </div>
 
         {/* CENTER: cube */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 10,
-          minWidth: 210,
-        }}>
+        <div className="practice-cube-column">
           <div style={{
             position: 'relative',
             padding: 14,
             borderRadius: 16,
             border: '1px solid var(--border)',
             background: 'var(--surface)',
-            display: 'inline-flex',
+            flexShrink: 0,
           }}>
             {training.timerState === 'RUNNING' && (
               <div style={{
@@ -707,14 +792,11 @@ export const PracticeView = memo(function PracticeView({
 
         {/* RIGHT: timer */}
         <div
+          className="practice-side-column practice-side-column--right"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-end',
-            justifyContent: 'center',
             gap: 12,
           }}
         >
@@ -728,6 +810,7 @@ export const PracticeView = memo(function PracticeView({
             alignItems: 'flex-end',
             gap: 6,
             width: '100%',
+            minHeight: 140,
             transition: 'border-color 0.15s, box-shadow 0.15s',
             ...timerCardFlashStyle,
           }}>
@@ -755,7 +838,17 @@ export const PracticeView = memo(function PracticeView({
               <span style={{ fontSize: 13, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
             ) : null}
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div style={{
+            display: 'flex',
+            gap: 8,
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            width: '100%',
+            padding: '10px 14px',
+            borderRadius: 12,
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+          }}>
             {lastTime && <StatChip label="Last" value={historyTimeString(lastTime.value)} />}
             <StatChip label="Best" value={historyTimeString(bestTime)} />
             <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
@@ -773,7 +866,7 @@ export const PracticeView = memo(function PracticeView({
       {statusBar}
 
       {/* New alg editor inline */}
-      <div style={{ width: '100%', maxWidth: 900 }}>
+      <div style={{ width: '100%', maxWidth: 'var(--practice-alg-track-max)' }}>
         <NewAlgView
           visible={showAlgEditor}
           algorithmActions={algorithmActions}
@@ -786,7 +879,7 @@ export const PracticeView = memo(function PracticeView({
       {practiceTogglesStrip}
 
       {/* Big stats graph */}
-      <div style={{ width: '100%', maxWidth: 900 }}>
+      <div style={{ width: '100%', maxWidth: 'var(--practice-alg-track-max)' }}>
         <StatsPanel
           visible
           showAlgName={options.showAlgName && !training.countdownActive}

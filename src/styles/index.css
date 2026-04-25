@@ -428,9 +428,106 @@ html.dark .alg-name-display-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 200px;
+  width: 100%;
   max-width: 100%;
+  min-height: 200px;
   margin: 0 auto;
+}
+
+.recent-times-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.recent-times-toggle {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: var(--raised);
+  color: var(--fg2);
+  cursor: pointer;
+}
+
+.recent-times-toggle:hover {
+  color: var(--accent);
+}
+
+.practice-top-grid {
+  width: 100%;
+  max-width: var(--practice-alg-track-max);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.practice-side-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.practice-recent-card,
+.practice-side-column--right {
+  width: min(100%, 360px);
+}
+
+.practice-recent-card {
+  overflow: hidden;
+}
+
+.practice-recent-card .graph-display {
+  min-height: 130px;
+}
+
+.practice-recent-card .times-display {
+  min-height: 130px;
+  overflow: auto;
+}
+
+.practice-cube-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+@media (max-width: 1080px) {
+  .practice-top-grid {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .practice-cube-column {
+    order: 1;
+  }
+
+  .practice-side-column--left {
+    order: 2;
+    width: 100%;
+  }
+
+  .practice-side-column--right {
+    order: 3;
+    width: min(100%, 420px);
+  }
+
+  .practice-recent-card {
+    width: min(100%, 420px);
+  }
 }
 
 .cube-area {
@@ -642,14 +739,39 @@ html.dark .time-attack-banner {
   color: #bfdbfe;
 }
 
-/* Keep the horizontal control row so round buttons align with the input and alg display. */
+/* Keep the horizontal control row; center round buttons with the alg track (mockup). */
 .alg-bar {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  align-items: center;
   width: 100%;
   max-width: var(--practice-alg-track-max);
   margin: 0 auto;
+}
+
+.alg-track {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 6px;
+}
+
+.alg-bar .alg-input--track {
+  margin-bottom: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.alg-display--embed {
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  flex: 1;
+  min-width: 0;
 }
 
 .round-button {
@@ -658,7 +780,7 @@ html.dark .time-attack-banner {
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0;
   padding: 0;
   border-radius: 9999px;
   flex-shrink: 0;
@@ -677,11 +799,11 @@ html.dark .time-attack-banner {
 }
 
 .alg-bar #train-alg {
-  margin-right: 1rem;
+  margin-right: 0;
 }
 
 .alg-bar #scramble-to {
-  margin-left: 1rem;
+  margin-left: 0;
 }
 
 .alg-bar > .alg-input,
@@ -805,6 +927,15 @@ html.dark .text-input::placeholder {
   margin: 0;
 }
 
+.alg-display-container--embed {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
 /* Inner wrapper only exists to right-align the absolutely positioned mask. */
 .alg-display-mask-row {
   display: flex;
@@ -877,6 +1008,31 @@ html.dark .text-input::placeholder {
     white-space: normal;
     overflow-x: visible;
   }
+}
+
+.alg-track .alg-input--track {
+  height: auto;
+  min-height: calc(1.5 * 1rem);
+  max-height: none;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.alg-display.alg-display--embed {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.alg-display.alg-display--embed .alg-display-moves {
+  line-height: 1.35;
 }
 
 /* Current / next move highlight from the original static app. */
@@ -2189,12 +2345,12 @@ html.dark .footer {
   }
 
   .alg-bar {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
 
-  .alg-input,
-  .alg-display-container {
-    flex: 1 1 100%;
+  .alg-bar .alg-track {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .panel-header-row,

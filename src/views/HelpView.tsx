@@ -24,7 +24,6 @@ function Section({ title, items }: {
             display: 'flex',
             gap: 10,
             padding: '8px 14px',
-            borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none',
             fontSize: 13,
             lineHeight: 1.6,
             color: 'var(--fg2)',
