@@ -295,8 +295,12 @@ describe('PracticeView', () => {
   it('keeps desktop practice rows constrained and the top side cards in layout columns', () => {
     render(<PracticeView {...makeProps()} />);
 
-    expect(document.querySelector('.practice-top-grid')).toBeTruthy();
+    const topGrid = document.querySelector('.practice-top-grid');
+
+    expect(topGrid).toBeTruthy();
+    expect(document.querySelector('.practice-side-column--left')).toBeTruthy();
     expect(document.querySelector('.practice-side-column--right')).toBeTruthy();
+    expect(document.querySelector('.practice-timer-value')).toBeTruthy();
     expect(document.getElementById('alg-bar')).toHaveStyle({
       maxWidth: 'var(--practice-alg-track-max)',
     });

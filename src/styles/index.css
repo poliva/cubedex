@@ -463,7 +463,7 @@ html.dark .alg-name-display-container {
 
 .practice-top-grid {
   width: 100%;
-  max-width: var(--practice-alg-track-max);
+  max-width: 95%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 14px;
@@ -478,9 +478,29 @@ html.dark .alg-name-display-container {
   min-width: 0;
 }
 
+.practice-side-column--left {
+  align-items: flex-end;
+}
+
 .practice-recent-card,
 .practice-side-column--right {
   width: min(100%, 360px);
+}
+
+.practice-timer-card {
+  overflow: hidden;
+}
+
+.practice-timer-value {
+  max-width: 100%;
+  overflow: hidden;
+  text-align: right;
+  font-size: clamp(2.5rem, 3.2vw, 3.75rem);
+}
+
+.practice-timer-value--mobile {
+  text-align: center;
+  font-size: clamp(2.375rem, 14vw, 3.5rem);
 }
 
 .practice-recent-card {
@@ -518,6 +538,7 @@ html.dark .alg-name-display-container {
   .practice-side-column--left {
     order: 2;
     width: 100%;
+    align-items: center;
   }
 
   .practice-side-column--right {
@@ -527,6 +548,16 @@ html.dark .alg-name-display-container {
 
   .practice-recent-card {
     width: min(100%, 420px);
+  }
+}
+
+@media (max-width: 639px) {
+  .mobile-timer-card {
+    isolation: isolate;
+  }
+
+  .mobile-stat-chip-row {
+    row-gap: 8px;
   }
 }
 

@@ -500,11 +500,12 @@ export const PracticeView = memo(function PracticeView({
 
         {/* Timer hero */}
         <div
+          className="mobile-timer-card"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
           style={{
-            margin: '0 12px 10px',
+            margin: '0 12px 16px',
             borderRadius: 16,
             border: '1px solid var(--border)',
             background: 'var(--surface)',
@@ -528,9 +529,8 @@ export const PracticeView = memo(function PracticeView({
               letterSpacing: '0.08em',
             }}>{timerLabel}</span>
           ) : null}
-          <div style={{
+          <div className="practice-timer-value practice-timer-value--mobile" style={{
             fontFamily: 'var(--mono)',
-            fontSize: 56,
             fontWeight: 500,
             lineHeight: 1,
             letterSpacing: '-0.02em',
@@ -543,7 +543,7 @@ export const PracticeView = memo(function PracticeView({
             <span style={{ fontSize: 12, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
           ) : null}
           <div style={{ width: '100%', height: 1, background: 'var(--border)', margin: '4px 0' }} />
-          <div style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'center' }}>
+          <div className="mobile-stat-chip-row" style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
             {lastTime && <StatChip label="Last" value={historyTimeString(lastTime.value)} />}
             <StatChip label="Best" value={historyTimeString(bestTime)} />
             <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
@@ -800,7 +800,7 @@ export const PracticeView = memo(function PracticeView({
             gap: 12,
           }}
         >
-          <div style={{
+          <div className="practice-timer-card" style={{
             padding: '18px 22px',
             borderRadius: 16,
             border: '1px solid var(--border)',
@@ -823,9 +823,8 @@ export const PracticeView = memo(function PracticeView({
                 letterSpacing: '0.07em',
               }}>{timerLabel}</span>
             ) : null}
-            <div style={{
+            <div className="practice-timer-value" style={{
               fontFamily: 'var(--mono)',
-              fontSize: 60,
               fontWeight: 500,
               lineHeight: 1,
               letterSpacing: '-0.02em',
