@@ -90,31 +90,31 @@ describe('CasesView', () => {
     expect(screen.getByTestId('case-grid')).toHaveTextContent('Aa');
   });
 
-  it('selects the currently visible cases without resetting the active learning filter', async () => {
+  it('toggles select-all via the "All" filter chip', async () => {
     const user = userEvent.setup();
     const props = makeProps({
       caseLibrary: {
         ...makeProps().caseLibrary,
-        selectLearningCases: true,
+        selectAllCases: false,
       },
     });
 
     render(<CasesView {...props} />);
 
-    await user.click(screen.getByRole('button', { name: 'Select All' }));
+    // First match is the filter-chip "All"; the subset row also has an "All".
+    await user.click(screen.getAllByRole('button', { name: 'All' })[0]);
 
-    expect(props.caseLibrary.selectVisibleCases).toHaveBeenCalledTimes(1);
-    expect(props.caseLibrary.setSelectAllCases).not.toHaveBeenCalled();
+    expect(props.caseLibrary.setSelectAllCases).toHaveBeenCalledWith(true);
   });
 
-  it('clears selection through the dedicated clear action', async () => {
+  it('toggles learning selection via the "Learning" filter chip', async () => {
     const user = userEvent.setup();
     const props = makeProps();
 
     render(<CasesView {...props} />);
 
-    await user.click(screen.getByRole('button', { name: 'Deselect All' }));
+    await user.click(screen.getByRole('button', { name: 'Learning' }));
 
-    expect(props.caseLibrary.clearSelectedCases).toHaveBeenCalledTimes(1);
+    expect(props.caseLibrary.setSelectLearningCases).toHaveBeenCalledWith(true);
   });
 });

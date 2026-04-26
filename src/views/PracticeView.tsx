@@ -358,7 +358,7 @@ export const PracticeView = memo(function PracticeView({
         }}
         style={{
           ...segButtonBase,
-          background: 'rgba(59,130,246,0.12)',
+          background: 'var(--accent-tint)',
           color: 'var(--accent)',
         }}
       >

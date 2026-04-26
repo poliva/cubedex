@@ -56,6 +56,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
   const [selectLearnedCases, setSelectLearnedCasesState] = useState(false);
   const [learnedRefreshToken, setLearnedRefreshToken] = useState(0);
   const previousCategoryRef = useRef('');
+  const caseCardsRef = useRef<CaseCardData[]>([]);
 
   const reloadSavedAlgorithms = useCallback(() => {
     const saved = getSavedAlgorithms();
@@ -117,7 +118,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     const nextSubsets = getSubsetsForCategory(savedAlgorithms, selectedCategory).map((entry) => entry.subset);
     if (previousCategoryRef.current !== selectedCategory) {
       previousCategoryRef.current = selectedCategory;
-      setSelectedSubsets([]);
+      setSelectedSubsets(nextSubsets);
       return;
     }
 
@@ -141,6 +142,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
   );
 
   useEffect(() => {
+    caseCardsRef.current = caseCards;
     const filteredCards = (selectLearningCases || selectLearnedCases)
       ? caseCards.filter((card) => (
         (selectLearningCases && card.learned === 1)
@@ -231,6 +233,12 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     setSelectLearningCasesState(checked);
     if (checked) {
       setSelectAllCasesState(false);
+    } else {
+      // Toggling Learning off: drop only learning cases from the current selection.
+      setSelectedCaseIds((current) => current.filter((id) => {
+        const card = caseCardsRef.current.find((c) => c.id === id);
+        return !card || card.learned !== 1;
+      }));
     }
   }, []);
 
@@ -239,6 +247,12 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     setSelectLearnedCasesState(checked);
     if (checked) {
       setSelectAllCasesState(false);
+    } else {
+      // Toggling Learned off: drop only learned cases from the current selection.
+      setSelectedCaseIds((current) => current.filter((id) => {
+        const card = caseCardsRef.current.find((c) => c.id === id);
+        return !card || card.learned !== 2;
+      }));
     }
   }, []);
 

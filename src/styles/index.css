@@ -21,6 +21,18 @@
   --mono:     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --sidebar-w: 64px;
   --tab-h:    60px;
+
+  /* Radii — two scales: containers and controls. */
+  --radius:    12px;   /* containers/cards */
+  --radius-sm: 8px;    /* inputs/buttons/pills */
+  --radius-pill: 9999px;
+
+  /* Elevation — one shadow token per resting/raised level. */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+  /* Single-blue tint used for "selected" surfaces; derived from --accent. */
+  --accent-tint: rgba(59, 130, 246, 0.12);
 }
 
 html.dark {
@@ -34,6 +46,7 @@ html.dark {
   --fg2:      #e5e7eb;
   --fg3:      #9ca3af;
   --fg4:      #6b7280;
+  --accent-tint: rgba(96, 165, 250, 0.18);
 }
 
 /*
@@ -162,7 +175,7 @@ html.dark .app-shell {
   left: 0;
   border: 0;
   background: transparent;
-  color: #3b82f6;
+  color: var(--accent);
   font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;
@@ -339,14 +352,14 @@ button { -webkit-tap-highlight-color: transparent; }
   border-radius: 0.5rem;
   background: #ffffff;
   color: #111827;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 html.dark .shell-card {
   border-color: #374151;
   background-color: #374151;
   color: #ffffff;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .side-card {
@@ -642,7 +655,7 @@ html.dark .alg-name-display-container {
 .round-button,
 .mask-toggle-button {
   border: 0;
-  background: #3b82f6;
+  background: var(--accent);
   color: #ffffff;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -651,7 +664,7 @@ html.dark .alg-name-display-container {
 .primary-button:hover,
 .round-button:hover,
 .mask-toggle-button:hover {
-  background: #1d4ed8;
+  background: var(--accent-h);
 }
 
 .round-button:disabled {
@@ -727,7 +740,7 @@ html.dark .primary-button:disabled {
   border: 1px solid #93c5fd;
   border-radius: 0.5rem;
   background: #eff6ff;
-  color: #1d4ed8;
+  color: var(--accent-h);
   text-align: center;
 }
 
@@ -774,7 +787,7 @@ html.dark .timer-display {
 }
 
 html.dark .time-attack-banner {
-  border-color: #1d4ed8;
+  border-color: var(--accent-h);
   background: rgb(30 58 138 / 0.3);
   color: #bfdbfe;
 }
@@ -863,7 +876,7 @@ html.dark .time-attack-banner {
   border-radius: 0.5rem;
   background: #ffffff;
   color: #111827;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -873,7 +886,7 @@ html.dark .time-attack-banner {
 .readonly-input:focus,
 .select-input:focus,
 .number-input:focus {
-  border-color: #3b82f6;
+  border-color: var(--accent);
 }
 
 html.dark .alg-input,
@@ -1241,7 +1254,7 @@ html.dark .status-success {
 }
 
 .help-panel a {
-  color: #3b82f6;
+  color: var(--accent);
 }
 
 .help-panel a:hover {
@@ -1271,7 +1284,7 @@ html.dark .help-panel a {
   border-radius: 0.5rem;
   background: #f9fafb;
   padding: 1rem;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 html.dark .subpanel {
@@ -1320,14 +1333,14 @@ html.dark .subpanel {
   font-weight: 700;
   font-size: inherit;
   line-height: 1.5;
-  background: #3b82f6;
+  background: var(--accent);
   color: #ffffff;
   cursor: pointer;
   transition: background-color 0.3s ease-in-out;
 }
 
 .save-panel-button:hover {
-  background: #1d4ed8;
+  background: var(--accent-h);
 }
 
 .save-panel-button:disabled {
@@ -1552,7 +1565,7 @@ html.dark .stats-panel.shell-card {
   line-height: 1.4;
   font-weight: 700;
   text-align: center;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 @media (min-width: 640px) {
@@ -1688,7 +1701,7 @@ html.dark .selector-card .select-input {
   border: 1px solid #9ca3af;
   border-radius: 0.5rem;
   background: #f9fafb;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 @media (min-width: 1024px) {
@@ -1722,7 +1735,7 @@ html.dark .toggle-grid {
 }
 
 .text-blue-500 {
-  color: #3b82f6;
+  color: var(--accent);
   background: none;
   border: none;
   padding: 0;
@@ -1758,7 +1771,7 @@ html.dark .toggle-grid {
   border: 1px solid #9ca3af;
   border-radius: 0.5rem;
   background: #f9fafb;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 html.dark .subsets-panel {
@@ -1822,11 +1835,15 @@ html.dark .subsets-panel {
   }
 }
 
+.cases-category-strip::-webkit-scrollbar {
+  display: none;
+}
+
 .case-wrapper {
   position: relative;
   padding: 1rem;
   border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
   border: none;
   /* Rendering optimization: large case lists otherwise cause main-thread jank. */
   content-visibility: auto;
@@ -1963,7 +1980,7 @@ html.dark .case-metric {
 }
 
 .case-toggle-row > input:checked + .toggle-track {
-  background: #3b82f6;
+  background: var(--accent);
 }
 
 .case-toggle-row > input:checked + .toggle-track + .toggle-dot {
@@ -2027,7 +2044,7 @@ html.dark .case-metric {
 }
 
 .toggle-switch input.sr-only:checked + .toggle-switch-track {
-  background-color: #3b82f6;
+  background-color: var(--accent);
 }
 
 .toggle-switch input.sr-only:checked + .toggle-switch-track + .toggle-switch-dot {
@@ -2100,8 +2117,8 @@ html.dark .subset-label-row input[type='checkbox'].subset-checkbox {
 
 .subset-grid input[type='checkbox'].subset-checkbox:checked,
 .subset-label-row input[type='checkbox'].subset-checkbox:checked {
-  background-color: #2563eb;
-  border-color: #2563eb;
+  background-color: var(--accent);
+  border-color: var(--accent);
 }
 
 .subset-grid input[type='checkbox'].subset-checkbox:checked::after,
@@ -2119,7 +2136,7 @@ html.dark .subset-label-row input[type='checkbox'].subset-checkbox {
 
 .subset-grid input[type='checkbox'].subset-checkbox:focus-visible,
 .subset-label-row input[type='checkbox'].subset-checkbox:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -2312,7 +2329,7 @@ html.dark .footer {
 }
 
 .footer a {
-  color: #3b82f6;
+  color: var(--accent);
   text-decoration: none;
 }
 

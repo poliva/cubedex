@@ -55,7 +55,7 @@ function MoveListPanelComponent({
                 className="mask-toggle-button"
                 type="button"
                 style={{
-                  backgroundColor: isMoveMasked ? '#f97316' : '#3b82f6',
+                  backgroundColor: isMoveMasked ? '#f97316' : 'var(--accent)',
                   border: 'none',
                   color: '#fff',
                 }}
