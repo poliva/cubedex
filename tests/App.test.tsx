@@ -130,6 +130,14 @@ vi.mock('cubing/alg', () => ({
   },
 }));
 
+vi.mock('cubing/twisty', () => ({
+  TwistyPlayer: class {
+    constructor() {
+      return document.createElement('div');
+    }
+  },
+}));
+
 vi.mock('cubing/puzzles', () => ({
   cube3x3x3: {},
 }));

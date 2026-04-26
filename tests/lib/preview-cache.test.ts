@@ -180,4 +180,69 @@ describe('preview cache', () => {
     expect(prunePreviewsInDbMock).not.toHaveBeenCalled();
     expect(previewCache.getPreview(key)).toBeUndefined();
   });
+
+  it('invalidates cached previews when algorithm is edited', async () => {
+    const previewCache = await loadPreviewCacheModule();
+    const params = {
+      alg: "R U R'",
+      visualization: '3D',
+      stickering: 'PLL',
+      setupAnchor: 'end' as const,
+    };
+
+    // First request generates and caches the preview
+    const firstPreview = await previewCache.requestPreview(params);
+    expect(firstPreview).toEqual({ src: 'data:image/png;base64,generated' });
+    expect(experimentalScreenshotMock).toHaveBeenCalledTimes(1);
+
+    // Invalidate the preview (simulating algorithm edit)
+    experimentalScreenshotMock.mockClear();
+    previewCache.invalidatePreview("R U R'");
+
+    // The cache should be cleared - requesting again should regenerate
+    const key = previewCache.previewKey(params);
+    expect(previewCache.getPreview(key)).toBeUndefined();
+
+    // Request again - should regenerate the preview
+    const secondPreview = await previewCache.requestPreview(params);
+    expect(secondPreview).toEqual({ src: 'data:image/png;base64,generated' });
+    expect(experimentalScreenshotMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not affect other cached previews when invalidating one algorithm', async () => {
+    const previewCache = await loadPreviewCacheModule();
+    const params1 = {
+      alg: "R U R'",
+      visualization: '3D',
+      stickering: 'PLL',
+      setupAnchor: 'end' as const,
+    };
+    const params2 = {
+      alg: "U R U' R'",
+      visualization: '3D',
+      stickering: 'PLL',
+      setupAnchor: 'end' as const,
+    };
+
+    // Generate previews for both algorithms
+    await previewCache.requestPreview(params1);
+    await previewCache.requestPreview(params2);
+    expect(experimentalScreenshotMock).toHaveBeenCalledTimes(2);
+
+    // Invalidate only the first algorithm
+    experimentalScreenshotMock.mockClear();
+    previewCache.invalidatePreview("R U R'");
+
+    // First algorithm's cache should be cleared
+    const key1 = previewCache.previewKey(params1);
+    expect(previewCache.getPreview(key1)).toBeUndefined();
+
+    // Second algorithm's cache should still exist
+    const key2 = previewCache.previewKey(params2);
+    expect(previewCache.getPreview(key2)).toEqual({ src: 'data:image/png;base64,generated' });
+
+    // Requesting second algorithm should use cache (no new generation)
+    await previewCache.requestPreview(params2);
+    expect(experimentalScreenshotMock).toHaveBeenCalledTimes(0);
+  });
 });
