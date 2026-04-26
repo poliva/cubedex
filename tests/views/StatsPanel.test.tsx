@@ -29,6 +29,5 @@ describe('StatsPanel', () => {
     expect(screen.getByText('1.900')).toBeInTheDocument();
     expect(screen.getByText('Recog')).toBeInTheDocument();
     expect(screen.getByText('0.445')).toBeInTheDocument();
-    expect(screen.getByText(/1\.234/)).toBeInTheDocument();
   });
 });

@@ -272,11 +272,12 @@ describe('PracticeView', () => {
     expect(screen.getByText('Train to begin')).toBeInTheDocument();
   });
 
-  it('shows the Last stat chip with a dash when there is no recent solve', () => {
+  it('hides the Last/Best/Ao5 stat chips when there is no solve history', () => {
     render(<PracticeView {...makeProps()} />);
 
-    const lastLabel = screen.getByText('Last');
-    expect(lastLabel.parentElement).toHaveTextContent('Last-');
+    expect(screen.queryByText('Last')).toBeNull();
+    expect(screen.queryByText('Best')).toBeNull();
+    expect(screen.queryByText('Ao5')).toBeNull();
   });
 
   it('shows recent-times graph canvas and mode toggle when solve history exists', () => {

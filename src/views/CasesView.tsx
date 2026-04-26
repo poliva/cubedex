@@ -81,13 +81,8 @@ export const CasesView = memo(function CasesView({
       flexDirection: 'column',
       gap: 12,
     }}>
-      {/* Header: category pills + practice button */}
+      {/* Header: category pills + practice button (page title comes from the topbar) */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        {!isMobile && (
-          <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0, marginRight: 4, color: 'var(--fg)' }}>
-            Case Library
-          </h2>
-        )}
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
           {categories.map((cat) => (
             <button
@@ -120,30 +115,35 @@ export const CasesView = memo(function CasesView({
           ))}
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
-          {!isMobile && (
-            <span style={{ fontSize: 12, color: 'var(--fg3)' }}>
-              {caseLibrary.selectedCaseIds.length} selected
-            </span>
-          )}
-          <button
-            type="button"
-            onClick={onPracticeSelected}
-            style={{
-              padding: '6px 14px',
-              borderRadius: 8,
-              border: 'none',
-              background: 'var(--accent)',
-              color: '#fff',
-              fontFamily: 'inherit',
-              fontSize: 12,
-              fontWeight: 700,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              boxShadow: '0 4px 10px rgba(59,130,246,0.35)',
-            }}
-          >
-            {isMobile ? 'Practice' : 'Practice Selected'}
-          </button>
+          {(() => {
+            const hasSelection = caseLibrary.selectedCaseIds.length > 0;
+            return (
+              <button
+                type="button"
+                onClick={onPracticeSelected}
+                disabled={!hasSelection}
+                aria-disabled={!hasSelection}
+                title={hasSelection ? undefined : 'Select at least one case to practice'}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: 'var(--accent)',
+                  color: '#fff',
+                  fontFamily: 'inherit',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: hasSelection ? 'pointer' : 'not-allowed',
+                  whiteSpace: 'nowrap',
+                  boxShadow: hasSelection ? '0 4px 10px rgba(59,130,246,0.35)' : 'none',
+                  opacity: hasSelection ? 1 : 0.45,
+                  transition: 'opacity 0.15s, box-shadow 0.15s',
+                }}
+              >
+                {isMobile ? 'Practice' : 'Practice Selected'}
+              </button>
+            );
+          })()}
         </div>
       </div>
 

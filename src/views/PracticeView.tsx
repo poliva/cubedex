@@ -202,14 +202,37 @@ export const PracticeView = memo(function PracticeView({
     </div>
   );
 
+  const segHeight = isMobile ? 52 : 48;
+  const segButtonBase = {
+    width: isMobile ? 52 : 48,
+    alignSelf: 'stretch',
+    border: 'none',
+    borderRadius: 0,
+    flexShrink: 0,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 0,
+  } as const;
+  const segDivider = (
+    <div aria-hidden style={{ width: 1, alignSelf: 'stretch', background: 'var(--border-l)', flexShrink: 0 }} />
+  );
+
   const algBar = (
     <div
       id="alg-bar"
-      className="alg-bar"
+      className="alg-bar alg-bar--segmented"
       style={{
-        gap: 8,
         width: '100%',
         maxWidth: isMobile ? undefined : 'var(--practice-alg-track-max)',
+        height: segHeight,
+        flexShrink: 0,
+        border: '1px solid var(--border)',
+        borderRadius: 12,
+        background: 'var(--raised)',
+        overflow: 'hidden',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
       }}
     >
       <button
@@ -229,30 +252,24 @@ export const PracticeView = memo(function PracticeView({
           void training.trainCurrent(smartcube.currentPattern);
         }}
         style={{
-          width: isMobile ? 48 : 44,
-          height: isMobile ? 48 : 44,
-          borderRadius: 12,
-          border: 'none',
-          flexShrink: 0,
+          ...segButtonBase,
           background: 'var(--accent)',
           color: '#fff',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 12px rgba(59,130,246,0.35)',
         }}
       >
         <Icon d={training.timerState === 'RUNNING' ? IC.stop : IC.play} size={isMobile ? 20 : 18} />
       </button>
 
+      {segDivider}
+
       <div
         className="alg-track"
         style={{
-          borderRadius: isMobile ? 12 : 8,
-          border: '1px solid var(--border)',
-          background: 'var(--raised)',
-          padding: '10px 12px',
+          borderRadius: 0,
+          border: 'none',
+          background: 'transparent',
+          padding: '0 12px',
+          alignSelf: 'stretch',
         }}
       >
         <input
@@ -301,27 +318,24 @@ export const PracticeView = memo(function PracticeView({
       </div>
 
       {!isMobile && (
-        <button
-          type="button"
-          title="Edit algorithm"
-          onClick={handleEditCurrentAlgorithm}
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: 8,
-            border: '1px solid var(--border)',
-            flexShrink: 0,
-            background: 'var(--raised)',
-            color: 'var(--fg2)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Icon d={IC.edit} size={16} />
-        </button>
+        <>
+          {segDivider}
+          <button
+            type="button"
+            title="Edit algorithm"
+            onClick={handleEditCurrentAlgorithm}
+            style={{
+              ...segButtonBase,
+              background: 'transparent',
+              color: 'var(--fg2)',
+            }}
+          >
+            <Icon d={IC.edit} size={16} />
+          </button>
+        </>
       )}
+
+      {segDivider}
 
       <button
         id="scramble-to"
@@ -343,18 +357,9 @@ export const PracticeView = memo(function PracticeView({
           });
         }}
         style={{
-          width: isMobile ? 48 : 44,
-          height: isMobile ? 48 : 44,
-          borderRadius: isMobile ? 12 : 8,
-          border: isMobile ? 'none' : '1px solid var(--border)',
-          flexShrink: 0,
-          background: 'var(--accent)',
-          color: '#fff',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 12px rgba(59,130,246,0.35)',
+          ...segButtonBase,
+          background: 'rgba(59,130,246,0.12)',
+          color: 'var(--accent)',
         }}
       >
         {scramble.isComputing ? '…' : <Icon d={IC.wand} size={isMobile ? 20 : 18} />}
@@ -549,11 +554,13 @@ export const PracticeView = memo(function PracticeView({
             <span style={{ fontSize: 12, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
           ) : null}
         </div>
-        <div className="mobile-stat-chip-row" style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'center', flexWrap: 'wrap', margin: '-8px 12px 16px', position: 'relative', zIndex: 1 }}>
-          <StatChip label="Last" value={historyTimeString(lastTime?.value ?? null)} />
-          <StatChip label="Best" value={historyTimeString(bestTime)} />
-          <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
-        </div>
+        {training.stats.hasHistory ? (
+          <div className="mobile-stat-chip-row" style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'center', flexWrap: 'wrap', margin: '-8px 12px 16px', position: 'relative', zIndex: 1 }}>
+            <StatChip label="Last" value={historyTimeString(lastTime?.value ?? null)} />
+            <StatChip label="Best" value={historyTimeString(bestTime)} />
+            <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
+          </div>
+        ) : null}
 
         {/* Alg bar */}
         <div className="mobile-alg-bar-shell" style={{ margin: '0 12px 10px' }}>
@@ -706,7 +713,7 @@ export const PracticeView = memo(function PracticeView({
     }}>
       {/* 3-col top area */}
       <div className="practice-top-grid">
-        {/* LEFT: stats card */}
+        {/* LEFT: stats card (hidden until there's solve history) */}
         <div className="practice-side-column practice-side-column--left">
           {training.stats.hasHistory ? (
             <div className="practice-recent-card" style={{
@@ -755,19 +762,7 @@ export const PracticeView = memo(function PracticeView({
                 <canvas id="timeGraph" />
               </div>
             </div>
-          ) : (
-            <div className="practice-recent-card" style={{
-              padding: '14px 16px',
-              borderRadius: 12,
-              border: '1px solid var(--border)',
-              background: 'var(--surface)',
-              color: 'var(--fg3)',
-              fontSize: 12,
-              textAlign: 'center',
-            }}>
-              No solve history yet
-            </div>
-          )}
+          ) : null}
         </div>
 
         {/* CENTER: cube */}
@@ -844,21 +839,23 @@ export const PracticeView = memo(function PracticeView({
               <span style={{ fontSize: 13, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
             ) : null}
           </div>
-          <div style={{
-            display: 'flex',
-            gap: 8,
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            width: '100%',
-            padding: '10px 14px',
-            borderRadius: 12,
-            border: 'none',
-            background: 'transparent',
-          }}>
-            <StatChip label="Last" value={historyTimeString(lastTime?.value ?? null)} />
-            <StatChip label="Best" value={historyTimeString(bestTime)} />
-            <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
-          </div>
+          {training.stats.hasHistory ? (
+            <div style={{
+              display: 'flex',
+              gap: 8,
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: 12,
+              border: 'none',
+              background: 'transparent',
+            }}>
+              <StatChip label="Last" value={historyTimeString(lastTime?.value ?? null)} />
+              <StatChip label="Best" value={historyTimeString(bestTime)} />
+              <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
+            </div>
+          ) : null}
         </div>
       </div>
 
