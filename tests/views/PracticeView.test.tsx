@@ -253,6 +253,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
     isFlashingIndicatorVisible: false,
     flashingIndicatorColor: 'gray',
     isMobile: false,
+    onOpenCaseLibrary: vi.fn(),
     ...overrides,
   } as any;
 }

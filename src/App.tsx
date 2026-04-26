@@ -772,6 +772,7 @@ export function App() {
             orientationResetAlg={orientationResetState.alg}
             showTimesInsteadOfGraph={showTimesInsteadOfGraph}
             setShowTimesInsteadOfGraph={setShowTimesInsteadOfGraph}
+            onOpenCaseLibrary={() => selectView('cases')}
           />
 
           {activeView === 'cases' && (
@@ -789,6 +790,7 @@ export function App() {
               setMainCubeStickeringDeferred={setMainCubeStickeringDeferred}
               isMobile={isMobile}
               onPracticeSelected={() => selectView('practice')}
+              onOpenOptions={() => selectView('options')}
             />
           )}
 

@@ -73,6 +73,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
     setMainCubeStickeringDeferred: vi.fn(),
     isMobile: false,
     onPracticeSelected: vi.fn(),
+    onOpenOptions: vi.fn(),
     ...overrides,
   } as any;
 }

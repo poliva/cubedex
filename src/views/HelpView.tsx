@@ -145,12 +145,15 @@ export const HelpView = memo(function HelpView({
   };
 
   return (
-    <div style={{
-      flex: 1,
-      overflowY: 'auto',
-      padding: `${isMobile ? 14 : 18}px ${pad}px`,
-      paddingBottom: pb,
-    }}>
+    <div
+      className="app-view-fade-in"
+      style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: `${isMobile ? 14 : 18}px ${pad}px`,
+        paddingBottom: pb,
+      }}
+    >
       <div style={{ maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 14 }}>
 
         {/* Header + mode toggle */}

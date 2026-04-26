@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
+import { EmptyState } from '../components/ui/EmptyState';
 
 export const NewAlgView = memo(function NewAlgView({
   visible,
@@ -113,12 +114,15 @@ export const NewAlgView = memo(function NewAlgView({
   };
 
   return (
-    <div style={{
-      flex: 1,
-      overflowY: 'auto',
-      padding: `${isMobile ? 14 : 18}px ${pad}px`,
-      paddingBottom: pb,
-    }}>
+    <div
+      className="app-view-fade-in"
+      style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: `${isMobile ? 14 : 18}px ${pad}px`,
+        paddingBottom: pb,
+      }}
+    >
       {!isMobile && (
         <h2 style={{ fontWeight: 700, fontSize: 18, marginBottom: 16, color: 'var(--fg)' }}>New Alg</h2>
       )}
@@ -162,9 +166,12 @@ export const NewAlgView = memo(function NewAlgView({
                 ))}
               </div>
             ) : (
-              <div style={{ fontSize: 12, color: 'var(--fg3)', lineHeight: 1.5 }}>
-                No moves yet. Start typing an algorithm to preview the move tokens here.
-              </div>
+              <EmptyState
+                compact
+                showIcon={false}
+                title="No moves yet"
+                description="Start typing an algorithm to preview the move tokens here."
+              />
             )}
           </div>
 

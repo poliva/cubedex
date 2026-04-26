@@ -8,16 +8,19 @@ const links = [
 
 export function Footer() {
   return (
-    <footer style={{
-      flexShrink: 0,
-      borderTop: '1px solid var(--border)',
-      background: 'var(--surface)',
-      padding: '8px 20px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: 16,
-      flexWrap: 'wrap',
-    }}>
+    <footer
+      className="app-footer-chrome"
+      style={{
+        flexShrink: 0,
+        borderTop: '1px solid var(--border)',
+        background: 'var(--surface)',
+        padding: '8px 20px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 16,
+        flexWrap: 'wrap',
+      }}
+    >
       <span style={{ fontSize: 11, color: 'var(--fg3)', fontFamily: 'var(--mono)' }}>cubedex</span>
       <div style={{ flex: 1 }} />
       {links.map(({ href, label, icon, fill }) => (

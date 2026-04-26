@@ -19,6 +19,7 @@ export const CasesView = memo(function CasesView({
   setMainCubeStickeringDeferred,
   isMobile,
   onPracticeSelected,
+  onOpenOptions,
 }: {
   caseLibrary: CaseLibraryState;
   training: TrainingState;
@@ -33,6 +34,7 @@ export const CasesView = memo(function CasesView({
   setMainCubeStickeringDeferred: (v: boolean) => void;
   isMobile: boolean;
   onPracticeSelected: () => void;
+  onOpenOptions?: () => void;
 }) {
   const {
     categories,
@@ -94,15 +96,18 @@ export const CasesView = memo(function CasesView({
   );
 
   return (
-    <div style={{
-      flex: 1,
-      overflowY: 'auto',
-      padding: `${isMobile ? 14 : 18}px ${pad}px`,
-      paddingBottom: pb,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 12,
-    }}>
+    <div
+      className="app-view-fade-in"
+      style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: `${isMobile ? 14 : 18}px ${pad}px`,
+        paddingBottom: pb,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+      }}
+    >
       {/* Header: scrollable category tabs + practice button + overflow menu */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
@@ -451,7 +456,7 @@ export const CasesView = memo(function CasesView({
       )}
 
       {/* Case grid */}
-      <CaseGrid caseCards={caseCards} />
+      <CaseGrid caseCards={caseCards} onOpenOptions={onOpenOptions} />
 
       {deleteSuccessMessage ? (
         <div style={{

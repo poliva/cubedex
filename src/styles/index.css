@@ -314,6 +314,148 @@ html.dark .menu-item.selected {
   50% { opacity: 0.9; }
 }
 
+@keyframes appViewFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.app-view-fade-in {
+  animation: appViewFadeIn 120ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-view-fade-in {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+.app-footer-chrome {
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 -1px 0 var(--border);
+}
+
+html.dark .app-footer-chrome {
+  box-shadow: 0 -1px 0 oklch(100% 0 0 / 0.08);
+}
+
+/* Unified empty state (icon + copy + optional CTA) */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  padding: 20px 16px 22px;
+  max-width: 32rem;
+  margin: 0 auto;
+  color: var(--fg2);
+}
+
+.empty-state--compact {
+  padding: 8px 4px 10px;
+  max-width: none;
+}
+
+.empty-state-icon-wrap {
+  color: var(--fg3);
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+
+.empty-state--compact .empty-state-icon-wrap {
+  margin-bottom: 6px;
+}
+
+.empty-state--compact .empty-state-icon-svg {
+  width: 22px;
+  height: 22px;
+}
+
+.empty-state-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+  line-height: 1.35;
+}
+
+.empty-state--compact .empty-state-title {
+  font-size: 13px;
+}
+
+.empty-state-desc {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fg3);
+  max-width: 28rem;
+}
+
+.empty-state--compact .empty-state-desc {
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.empty-state-cta {
+  margin-top: 14px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: filter 0.15s, opacity 0.15s;
+}
+
+.empty-state-cta:hover {
+  filter: brightness(1.06);
+}
+
+.empty-state-cta:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.empty-state--compact .empty-state-cta {
+  margin-top: 8px;
+  padding: 5px 10px;
+  font-size: 11px;
+}
+
+.alg-cases-empty {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px dashed var(--border);
+  background: var(--raised);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .practice-timer-card,
+  .mobile-timer-card {
+    transition: border-color 0.15s, box-shadow 0.15s !important;
+  }
+
+  .practice-timer-card,
+  .mobile-timer-card,
+  .practice-timer-value,
+  .practice-timer-value--mobile {
+    transform: none !important;
+  }
+}
+
 button:active { opacity: 0.75; }
 button { -webkit-tap-highlight-color: transparent; }
 

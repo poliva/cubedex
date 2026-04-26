@@ -1,4 +1,4 @@
-import { Fragment, memo } from 'react';
+import { Fragment, memo, useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { AppSettingsState } from '../hooks/useAppSettings';
 import type { PracticeTogglesState } from '../hooks/usePracticeToggles';
 import type { TrainingState } from '../hooks/useTrainingState';
@@ -77,6 +77,7 @@ export const PracticeView = memo(function PracticeView({
   orientationResetAlg,
   showTimesInsteadOfGraph,
   setShowTimesInsteadOfGraph,
+  onOpenCaseLibrary,
 }: {
   visible: boolean;
   options: AppSettingsState;
@@ -109,12 +110,44 @@ export const PracticeView = memo(function PracticeView({
   orientationResetAlg: string | null;
   showTimesInsteadOfGraph: boolean;
   setShowTimesInsteadOfGraph: (updater: (value: boolean) => boolean) => void;
+  onOpenCaseLibrary: () => void;
 }) {
+  const skipPracticeEnterAnim = useRef(true);
+  const [practiceViewEnter, setPracticeViewEnter] = useState(false);
+  useEffect(() => {
+    if (!visible) {
+      return;
+    }
+    if (skipPracticeEnterAnim.current) {
+      skipPracticeEnterAnim.current = false;
+      return;
+    }
+    setPracticeViewEnter(true);
+    const t = window.setTimeout(() => {
+      setPracticeViewEnter(false);
+    }, 130);
+    return () => {
+      window.clearTimeout(t);
+    };
+  }, [visible]);
 
   const statsAlgId = training.statsAlgId;
   const bestTime = getBestTime(statsAlgId);
   const ao5 = averageOfFiveTimeNumber(statsAlgId);
   const lastTime = training.stats.lastFive.at(-1);
+
+  const timerCardScale = training.inputMode
+    ? 1
+    : training.timerState === 'IDLE'
+      ? 0.985
+      : training.timerState === 'READY'
+        ? 1.02
+        : 1;
+  const timerTransformStyle: CSSProperties = {
+    transform: `scale(${timerCardScale})`,
+    transformOrigin: '50% 50%',
+    transition: 'transform 0.22s ease, border-color 0.15s, box-shadow 0.15s, color 0.2s',
+  };
 
   const timerColor =
     training.timerState === 'READY'
@@ -464,14 +497,17 @@ export const PracticeView = memo(function PracticeView({
 
   if (isMobile) {
     return (
-      <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        paddingBottom: 'calc(var(--tab-h) + 12px)',
-        display: visible ? 'flex' : 'none',
-        flexDirection: 'column',
-        position: 'relative',
-      }}>
+      <div
+        className={practiceViewEnter ? 'app-view-fade-in' : undefined}
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: 'calc(var(--tab-h) + 12px)',
+          display: visible ? 'flex' : 'none',
+          flexDirection: 'column',
+          position: 'relative',
+        }}
+      >
         {/* Cube */}
         <div style={{
           display: 'flex',
@@ -523,7 +559,7 @@ export const PracticeView = memo(function PracticeView({
             gap: 6,
             minHeight: 130,
             boxShadow: '0 4px 16px oklch(0% 0 0/0.2)',
-            transition: 'border-color 0.15s, box-shadow 0.15s',
+            ...timerTransformStyle,
             ...timerCardFlashStyle,
           }}
         >
@@ -693,6 +729,7 @@ export const PracticeView = memo(function PracticeView({
             showAlgName={options.showAlgName && !training.countdownActive}
             algName={training.currentAlgName}
             stats={training.stats}
+            onOpenCaseLibrary={onOpenCaseLibrary}
           />
         </div>
       </div>
@@ -701,16 +738,19 @@ export const PracticeView = memo(function PracticeView({
 
   // Desktop layout
   return (
-    <div style={{
-      flex: 1,
-      overflowY: 'auto',
-      padding: '18px 20px',
-      display: visible ? 'flex' : 'none',
-      flexDirection: 'column',
-      gap: 14,
-      alignItems: 'center',
-      position: 'relative',
-    }}>
+    <div
+      className={practiceViewEnter ? 'app-view-fade-in' : undefined}
+      style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '18px 20px',
+        display: visible ? 'flex' : 'none',
+        flexDirection: 'column',
+        gap: 14,
+        alignItems: 'center',
+        position: 'relative',
+      }}
+    >
       {/* 3-col top area */}
       <div className="practice-top-grid">
         {/* LEFT: stats card (hidden until there's solve history) */}
@@ -810,9 +850,10 @@ export const PracticeView = memo(function PracticeView({
             gap: 6,
             width: '100%',
             minHeight: 140,
-            transition: 'border-color 0.15s, box-shadow 0.15s',
+            ...timerTransformStyle,
             ...timerCardFlashStyle,
-          }}>
+          }}
+          >
             {timerLabel ? (
               <span style={{
                 fontSize: 10,
@@ -888,6 +929,7 @@ export const PracticeView = memo(function PracticeView({
           showAlgName={options.showAlgName && !training.countdownActive}
           algName={training.currentAlgName}
           stats={training.stats}
+          onOpenCaseLibrary={onOpenCaseLibrary}
         />
       </div>
 

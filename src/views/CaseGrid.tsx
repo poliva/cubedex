@@ -1,6 +1,7 @@
 import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CaseCardData } from '../lib/case-cards';
 import { CaseCard } from '../components/CaseCard';
+import { EmptyState } from '../components/ui/EmptyState';
 
 function VirtualizedCaseGrid({ cards }: { cards: CaseCardData[] }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -120,7 +121,26 @@ function VirtualizedCaseGrid({ cards }: { cards: CaseCardData[] }) {
   );
 }
 
-function CaseGridComponent({ caseCards }: { caseCards: CaseCardData[] }) {
+function CaseGridComponent({
+  caseCards,
+}: {
+  caseCards: CaseCardData[];
+}) {
+  if (caseCards.length === 0) {
+    return (
+      <div
+        id="alg-cases"
+        className="alg-cases-grid alg-cases-empty"
+      >
+        <EmptyState
+          title="No cases to show"
+          description="Pick a category, adjust filters, or import algorithms from Options."
+          data-testid="case-grid-empty"
+        />
+      </div>
+    );
+  }
+
   if (caseCards.length > 10) {
     return (
       <div id="alg-cases" className="alg-cases-virtualized">

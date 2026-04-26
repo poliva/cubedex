@@ -118,12 +118,15 @@ export const OptionsView = memo(function OptionsView({
   );
 
   return (
-    <div style={{
-      flex: 1,
-      overflowY: 'auto',
-      padding: `${isMobile ? 14 : 18}px ${pad}px`,
-      paddingBottom: pb,
-    }}>
+    <div
+      className="app-view-fade-in"
+      style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: `${isMobile ? 14 : 18}px ${pad}px`,
+        paddingBottom: pb,
+      }}
+    >
       <div style={stackStyle}>
         {infoVisible ? (
           deviceInfoTable
