@@ -823,7 +823,7 @@ export const PracticeView = memo(function PracticeView({
       }}
     >
       {/* 3-col top area */}
-      <div className={`practice-top-grid${!training.stats.hasHistory ? ' practice-top-grid--empty' : ''}`}>
+      <div className="practice-top-grid">
         {/* LEFT: stats card (hidden until there's solve history) */}
         <div className="practice-side-column practice-side-column--left">
           {training.stats.hasHistory ? (
