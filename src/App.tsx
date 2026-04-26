@@ -17,7 +17,8 @@ import { useSmartcubeConnection } from './hooks/useSmartcubeConnection';
 import { useAlgorithmImportExport } from './hooks/useAlgorithmImportExport';
 import { useIsMobile } from './hooks/useIsMobile';
 import { getStickeringForCategory } from './lib/stickering';
-import { deleteAlgorithm, getBestTime, getSavedAlgorithms, removeAlgorithmTimesStorage } from './lib/storage';
+import { invalidatePreview } from './lib/preview-cache';
+import { deleteAlgorithm, expandNotation, getBestTime, getSavedAlgorithms, removeAlgorithmTimesStorage } from './lib/storage';
 import { usePracticeToggles } from './hooks/usePracticeToggles';
 import { useTrainingGraphs } from './hooks/useTrainingGraphs';
 import { averageOfFiveTimeNumber } from './lib/case-cards';
@@ -505,6 +506,8 @@ export function App() {
     if (!window.confirm('Are you sure you want to delete the selected algorithms?')) return;
     void (async () => {
       for (const selectedCase of selectedCases) {
+        // Invalidate previews before deleting
+        invalidatePreview(selectedCase.algorithm);
         await deleteAlgorithm(selectedCategory, selectedCase.algorithm);
       }
       training.clearFailedCounts();
@@ -557,6 +560,9 @@ export function App() {
   const handleNewAlgSave = useCallback(() => {
     const nextCategory = algorithmActions.categoryInput.trim();
     const algToSave = activeView === 'new-alg' ? training.algInput : (training.displayAlg || training.algInput);
+    const algToSaveNormalized = expandNotation(algToSave);
+    // Invalidate previews before saving - this ensures fresh previews after algorithm changes
+    invalidatePreview(algToSaveNormalized);
     void algorithmActions.submitSave(algToSave).then((saved) => {
       if (saved && nextCategory) {
         training.clearFailedCounts();
@@ -605,7 +611,11 @@ export function App() {
 
   const handleInlineAlgSave = useCallback(() => {
     const nextCategory = algorithmActions.categoryInput.trim();
-    void algorithmActions.submitSave(training.algInput).then((ok) => {
+    const algToSave = training.algInput;
+    const algToSaveNormalized = expandNotation(algToSave);
+    // Invalidate previews before saving - this ensures fresh previews after algorithm changes
+    invalidatePreview(algToSaveNormalized);
+    void algorithmActions.submitSave(algToSave).then((ok) => {
       if (ok && nextCategory) {
         training.clearFailedCounts();
         reloadSavedAlgorithms();
