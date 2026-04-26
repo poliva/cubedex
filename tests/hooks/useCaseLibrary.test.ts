@@ -113,7 +113,17 @@ describe('useCaseLibrary', () => {
       expect(result.current.isReady).toBe(true);
     });
 
-    // Subsets are pre-selected by default; toggling B off should leave only A's cases.
+    // Subsets start empty by default now; select both A and B first
+    act(() => {
+      result.current.toggleSubset('A', true);
+      result.current.toggleSubset('B', true);
+    });
+
+    await waitFor(() => {
+      expect(result.current.selectedCaseIds).toEqual(['case-1', 'case-2', 'case-3']);
+    });
+
+    // Now toggle B off - should keep only A's cases.
     act(() => {
       result.current.toggleSubset('B', false);
     });

@@ -118,7 +118,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     const nextSubsets = getSubsetsForCategory(savedAlgorithms, selectedCategory).map((entry) => entry.subset);
     if (previousCategoryRef.current !== selectedCategory) {
       previousCategoryRef.current = selectedCategory;
-      setSelectedSubsets(nextSubsets);
+      setSelectedSubsets([]);
       return;
     }
 
