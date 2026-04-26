@@ -114,6 +114,7 @@ export const PracticeView = memo(function PracticeView({
 }) {
   const skipPracticeEnterAnim = useRef(true);
   const [practiceViewEnter, setPracticeViewEnter] = useState(false);
+  const [practiceTogglesExpanded, setPracticeTogglesExpanded] = useState(false);
   useEffect(() => {
     if (!visible) {
       return;
@@ -435,63 +436,133 @@ export const PracticeView = memo(function PracticeView({
     />
   );
 
+  const activeToggleChipStyle: CSSProperties = {
+    padding: '3px 8px',
+    fontSize: 11,
+    fontWeight: 600,
+    background: 'var(--accent)',
+    color: '#fff',
+    borderRadius: 4,
+    textTransform: 'uppercase',
+    letterSpacing: '0.03em',
+  };
+
   const practiceTogglesStrip = (
     <div style={{
       width: '100%',
       maxWidth: isMobile ? undefined : 'var(--practice-alg-track-max)',
-      padding: '10px 14px',
       borderRadius: 12,
       border: '1px solid var(--border)',
       background: 'var(--surface)',
-      display: 'flex',
-      flexWrap: 'wrap',
-      gap: '0px 20px',
-      alignItems: 'center',
+      overflow: 'hidden',
     }}>
-      {training.timeAttackMode && !training.inputMode ? (
-        <div style={{
-          width: '100%',
-          padding: '4px 0',
-          fontSize: 12,
-          color: 'var(--accent)',
-          fontWeight: 600,
+      {/* Collapsed header with active toggles visible */}
+      <div
+        style={{
+          padding: '8px 14px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '6px 12px',
+          alignItems: 'center',
+          cursor: 'pointer',
+        }}
+        onClick={() => setPracticeTogglesExpanded(!practiceTogglesExpanded)}
+        role="button"
+        aria-expanded={practiceTogglesExpanded}
+      >
+        {training.timeAttackMode && !training.inputMode ? (
+          <div style={{
+            padding: '3px 8px',
+            fontSize: 11,
+            fontWeight: 600,
+            background: 'var(--accent)',
+            color: '#fff',
+            borderRadius: 4,
+          }}>
+            Time Attack — Case {training.timeAttackCurrentCaseNumber} of {training.timeAttackTotalCases}
+          </div>
+        ) : (
+          <>
+            {practiceToggles.smartReviewScheduling && !practiceToggles.timeAttack && (
+              <span style={activeToggleChipStyle}>Smart Order</span>
+            )}
+            {practiceToggles.randomizeAUF && (
+              <span style={activeToggleChipStyle}>Random AUF</span>
+            )}
+            {practiceToggles.randomOrder && !practiceToggles.smartReviewScheduling && (
+              <span style={activeToggleChipStyle}>Random</span>
+            )}
+            {practiceToggles.prioritizeSlowCases && !practiceToggles.smartReviewScheduling && (
+              <span style={activeToggleChipStyle}>Slow First</span>
+            )}
+            {practiceToggles.prioritizeFailedCases && (
+              <span style={activeToggleChipStyle}>Failed</span>
+            )}
+            {practiceToggles.timeAttack && (
+              <span style={activeToggleChipStyle}>Time Attack</span>
+            )}
+            {!practiceToggles.smartReviewScheduling && !practiceToggles.randomizeAUF && !practiceToggles.randomOrder &&
+             !practiceToggles.prioritizeSlowCases && !practiceToggles.prioritizeFailedCases && !practiceToggles.timeAttack && (
+              <span style={{ fontSize: 12, color: 'var(--fg3)' }}>Practice options</span>
+            )}
+          </>
+        )}
+        <span style={{
+          marginLeft: 'auto',
+          fontSize: 11,
+          color: 'var(--fg3)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
         }}>
-          Time Attack — Case {training.timeAttackCurrentCaseNumber} of {training.timeAttackTotalCases}
+          {practiceTogglesExpanded ? '▲' : '▼'}
+        </span>
+      </div>
+
+      {/* Expanded toggles list */}
+      {practiceTogglesExpanded && (
+        <div style={{
+          padding: '10px 14px',
+          borderTop: '1px solid var(--border)',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '0px 20px',
+          alignItems: 'center',
+        }}>
+          <Toggle
+            checked={practiceToggles.smartReviewScheduling}
+            disabled={practiceToggles.timeAttack}
+            onChange={(checked) => practiceToggles.setSmartReviewScheduling(checked)}
+            label="Smart Order"
+          />
+          <Toggle
+            checked={practiceToggles.randomizeAUF}
+            onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
+            label="Random AUF"
+          />
+          <Toggle
+            checked={practiceToggles.randomOrder}
+            disabled={practiceToggles.smartReviewScheduling}
+            onChange={(checked) => practiceToggles.setRandomOrder(checked)}
+            label="Random Order"
+          />
+          <Toggle
+            checked={practiceToggles.prioritizeSlowCases}
+            disabled={practiceToggles.smartReviewScheduling}
+            onChange={(checked) => practiceToggles.setPrioritizeSlowCases(checked)}
+            label="Slow Cases First"
+          />
+          <Toggle
+            checked={practiceToggles.prioritizeFailedCases}
+            onChange={(checked) => practiceToggles.setPrioritizeFailedCases(checked)}
+            label="Prioritize Failed"
+          />
+          <Toggle
+            checked={practiceToggles.timeAttack}
+            onChange={(checked) => practiceToggles.setTimeAttack(checked)}
+            label="Time Attack"
+          />
         </div>
-      ) : null}
-      <Toggle
-        checked={practiceToggles.smartReviewScheduling}
-        disabled={practiceToggles.timeAttack}
-        onChange={(checked) => practiceToggles.setSmartReviewScheduling(checked)}
-        label="Smart Order"
-      />
-      <Toggle
-        checked={practiceToggles.randomizeAUF}
-        onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
-        label="Random AUF"
-      />
-      <Toggle
-        checked={practiceToggles.randomOrder}
-        disabled={practiceToggles.smartReviewScheduling}
-        onChange={(checked) => practiceToggles.setRandomOrder(checked)}
-        label="Random Order"
-      />
-      <Toggle
-        checked={practiceToggles.prioritizeSlowCases}
-        disabled={practiceToggles.smartReviewScheduling}
-        onChange={(checked) => practiceToggles.setPrioritizeSlowCases(checked)}
-        label="Slow Cases First"
-      />
-      <Toggle
-        checked={practiceToggles.prioritizeFailedCases}
-        onChange={(checked) => practiceToggles.setPrioritizeFailedCases(checked)}
-        label="Prioritize Failed"
-      />
-      <Toggle
-        checked={practiceToggles.timeAttack}
-        onChange={(checked) => practiceToggles.setTimeAttack(checked)}
-        label="Time Attack"
-      />
+      )}
     </div>
   );
 
@@ -752,7 +823,7 @@ export const PracticeView = memo(function PracticeView({
       }}
     >
       {/* 3-col top area */}
-      <div className="practice-top-grid">
+      <div className={`practice-top-grid${!training.stats.hasHistory ? ' practice-top-grid--empty' : ''}`}>
         {/* LEFT: stats card (hidden until there's solve history) */}
         <div className="practice-side-column practice-side-column--left">
           {training.stats.hasHistory ? (

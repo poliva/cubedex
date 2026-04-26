@@ -1,9 +1,11 @@
 import { memo, type Dispatch, type SetStateAction } from 'react';
 
-function Section({ title, items }: {
+function Section({ title, items, accentColor }: {
   title: string;
   items: Array<{ icon: string; text: string }>;
+  accentColor?: string;
 }) {
+  const accent = accentColor || 'var(--accent)';
   return (
     <div style={{ borderRadius: 8, border: '1px solid var(--border)', overflow: 'hidden' }}>
       <div style={{
@@ -15,6 +17,8 @@ function Section({ title, items }: {
         textTransform: 'uppercase',
         letterSpacing: '0.07em',
         color: 'var(--fg3)',
+        borderLeft: `3px solid ${accent}`,
+        marginLeft: '-1px',
       }}>
         {title}
       </div>
@@ -40,6 +44,7 @@ function Section({ title, items }: {
 const smartSections = [
   {
     title: 'Getting Started',
+    accentColor: 'oklch(0.7 0.2 250)',
     items: [
       { icon: '🔗', text: 'Connect your smart cube by clicking the <strong>Connect</strong> button. See the <a href="https://gist.github.com/afedotov/52057533a8b27a0277598160c384ae71" target="_blank" rel="noreferrer" style="color:var(--accent)">FAQ</a> for more details.' },
       { icon: '📜', text: "Load an algorithm from the list or type your own using standard Rubik's cube notation. You can also input moves directly on the cube." },
@@ -50,6 +55,7 @@ const smartSections = [
   },
   {
     title: 'During Training',
+    accentColor: 'oklch(0.7 0.2 140)',
     items: [
       { icon: '⏱️', text: 'The timer starts automatically when you begin the algorithm.' },
       { icon: '🏆', text: 'On success, the timer stops and your last 5 times with their average are shown.' },
@@ -58,6 +64,7 @@ const smartSections = [
   },
   {
     title: 'Customise Your Drills',
+    accentColor: 'oklch(0.7 0.2 30)',
     items: [
       { icon: '📂', text: 'Pick a category, choose subsets, and select the cases you want to work on.' },
       { icon: '🔖', text: 'Mark algs as Learning or Learned, or let <strong>Auto-update learning state</strong> manage it. Use <strong>Select Learning</strong> to filter by status.' },
@@ -75,6 +82,7 @@ const smartSections = [
 const dumbSections = [
   {
     title: 'Getting Started',
+    accentColor: 'oklch(0.7 0.2 250)',
     items: [
       { icon: '📜', text: "Load an algorithm from the list or type your own using standard Rubik's cube notation." },
       { icon: '🏁', text: 'Press <strong>Spacebar</strong> (desktop) or tap the timer (touchscreen) to start and stop the timer.' },
@@ -82,6 +90,7 @@ const dumbSections = [
   },
   {
     title: 'During Training',
+    accentColor: 'oklch(0.7 0.2 140)',
     items: [
       { icon: '🪄', text: 'Click <strong>Scramble To…</strong> to set up the case on your cube and follow the scramble.' },
       { icon: '🏆', text: 'When you stop the timer, your last 5 times and their average are shown.' },
@@ -89,6 +98,7 @@ const dumbSections = [
   },
   {
     title: 'Customise Your Drills',
+    accentColor: 'oklch(0.7 0.2 30)',
     items: [
       { icon: '📂', text: 'Pick a category, choose subsets, and select the cases you want to work on.' },
       { icon: '🔖', text: 'Mark algs as Learning or Learned, or let <strong>Auto-update learning state</strong> manage it.' },
@@ -127,11 +137,11 @@ export const HelpView = memo(function HelpView({
         type="button"
         onClick={() => setShowDumbcubeHelp(val === 'dumb')}
         style={{
-          padding: '5px 12px',
-          borderRadius: 6,
-          border: 'none',
+          padding: '7px 16px',
+          borderRadius: 7,
+          border: active ? 'none' : '1px solid transparent',
           fontFamily: 'inherit',
-          fontSize: 12,
+          fontSize: 13,
           fontWeight: 700,
           cursor: 'pointer',
           transition: 'all 0.15s',
@@ -156,19 +166,26 @@ export const HelpView = memo(function HelpView({
     >
       <div style={{ maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-        {/* Header + mode toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+        {/* Header + mode toggle - make toggle a prominent tab row */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {!isMobile && (
             <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0, color: 'var(--fg)' }}>Help</h2>
           )}
-          <div style={{ display: 'flex', background: 'var(--raised)', borderRadius: 8, padding: 2, gap: 1 }}>
+          <div style={{
+            display: 'flex',
+            background: 'var(--raised)',
+            borderRadius: 10,
+            padding: 3,
+            gap: 2,
+            border: '1px solid var(--border)',
+          }}>
             {pillBtn('smart', '🛜 Smartcube')}
             {pillBtn('dumb', '⌨️ Regular Cube')}
           </div>
         </div>
 
         {/* Content sections */}
-        {sections.map((s) => <Section key={s.title} title={s.title} items={s.items} />)}
+        {sections.map((s) => <Section key={s.title} title={s.title} items={s.items} accentColor={s.accentColor} />)}
 
         {/* Video tutorial */}
         <div style={{ borderRadius: 8, border: '1px solid var(--border)', overflow: 'hidden' }}>

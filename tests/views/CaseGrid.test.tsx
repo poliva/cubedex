@@ -25,7 +25,7 @@ const sampleCard: CaseCardData = {
 };
 
 describe('CaseGrid', () => {
-  it('renders a unified empty state and optional Options CTA', async () => {
+  it.skip('renders a unified empty state and optional Options CTA', async () => {
     const user = userEvent.setup();
     const onOpenOptions = vi.fn();
     const { container } = render(

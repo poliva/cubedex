@@ -625,6 +625,12 @@ html.dark .alg-name-display-container {
   align-items: start;
 }
 
+/* When there's no history, center the grid content vertically */
+.practice-top-grid.practice-top-grid--empty {
+  align-items: center;
+  padding-top: 40px;
+}
+
 .practice-side-column {
   display: flex;
   flex-direction: column;

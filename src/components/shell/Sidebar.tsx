@@ -19,20 +19,20 @@ export function Sidebar({ active, onNav }: { active: NavView; onNav: (view: NavV
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      paddingTop: 16,
-      paddingBottom: 16,
-      gap: 4,
+      paddingTop: 12,
+      paddingBottom: 12,
+      gap: 2,
       flexShrink: 0,
       zIndex: 10,
     }}>
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 8 }}>
         <Logo size={30} />
       </div>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, width: '100%', alignItems: 'center' }}>
         {NAV_ITEMS.map((item) => (
           <NavBtn key={item.id} item={item} active={active === item.id} onNav={onNav} />
         ))}
-        <div style={{ width: 32, height: 1, background: 'var(--border)', margin: '6px 0' }} />
+        <div style={{ width: 28, height: 1, background: 'var(--border)', margin: '6px 8px' }} />
         <NavBtn item={{ id: 'new-alg', icon: IC.newAlg, label: 'New' }} active={active === 'new-alg'} onNav={onNav} />
       </div>
     </nav>
