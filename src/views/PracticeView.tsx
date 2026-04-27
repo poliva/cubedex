@@ -751,10 +751,6 @@ export const PracticeView = memo(function PracticeView({
                     </div>
                   </Fragment>
                 ))}
-                <div className="times-grid-label times-grid-emphasis">Ao5:</div>
-                <div className="times-grid-value times-grid-emphasis">{historyTimeString(averageOfFiveTimeNumber(statsAlgId))}</div>
-                <div className="times-grid-label">Best:</div>
-                <div className="times-grid-value">{historyTimeString(getBestTime(statsAlgId))}</div>
               </div>
             </div>
             <div
@@ -842,10 +838,6 @@ export const PracticeView = memo(function PracticeView({
                       </div>
                     </Fragment>
                   ))}
-                  <div className="times-grid-label times-grid-emphasis">Ao5:</div>
-                  <div className="times-grid-value times-grid-emphasis">{historyTimeString(averageOfFiveTimeNumber(statsAlgId))}</div>
-                  <div className="times-grid-label">Best:</div>
-                  <div className="times-grid-value">{historyTimeString(getBestTime(statsAlgId))}</div>
                 </div>
               </div>
               <div
