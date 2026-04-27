@@ -1434,6 +1434,26 @@ export function useTrainingState(
       return;
     }
 
+    if (
+      options.timeAttack
+      && reviewRefreshChanged
+      && selectedIdsUnchanged
+      && !timeAttackChanged
+      && !randomOrderChanged
+      && !prioritizeSlowChanged
+      && !smartReviewSchedulingChanged
+      && !selectionModeChanged
+    ) {
+      const selectedCaseMap = new Map(selectedCases.map((selectedCase) => [selectedCase.id, selectedCase]));
+      selectedQueueCopyRef.current = selectedQueueCopyRef.current
+        .map((entry) => selectedCaseMap.get(entry.id) ?? entry)
+        .filter((entry) => selectedCaseMap.has(entry.id));
+      selectedQueueRef.current = selectedQueueRef.current
+        .map((entry) => selectedCaseMap.get(entry.id) ?? entry)
+        .filter((entry) => selectedCaseMap.has(entry.id));
+      return;
+    }
+
     if (options.timeAttack) {
       clearTimeAttackSession();
       resetTimeAttackQueue();
