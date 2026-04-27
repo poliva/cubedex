@@ -562,6 +562,7 @@ export function App() {
   ]);
 
   const handleNewAlgSave = useCallback(() => {
+    const savingFromNewAlgTab = activeView === 'new-alg';
     const nextCategory = algorithmActions.categoryInput.trim();
     const algToSave = activeView === 'new-alg' ? training.algInput : (training.displayAlg || training.algInput);
     const algToSaveNormalized = expandNotation(algToSave);
@@ -575,6 +576,11 @@ export function App() {
         setAcknowledgedDisconnectToken(smartcube.disconnectToken);
         setSelectedCategory(nextCategory);
         setMainCubeStickeringDeferred(false);
+      }
+      if (saved && savingFromNewAlgTab) {
+        training.enterInputMode('');
+        void training.trainCurrent(smartcube.currentPattern);
+        return;
       }
       if (saved) {
         setAlgEditorVisible(false);
@@ -593,6 +599,7 @@ export function App() {
     training.algInput,
     training.clearFailedCounts,
     training.displayAlg,
+    training.enterInputMode,
     training.trainCurrent,
   ]);
 
