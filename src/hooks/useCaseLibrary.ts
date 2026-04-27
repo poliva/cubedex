@@ -262,10 +262,13 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
   }, []);
 
   const handleSetSelectedCategory = useCallback((category: string) => {
+    if (category === selectedCategory) {
+      return;
+    }
     setSelectedCaseIds([]);
     setSelectionChangeMode('bulk');
     setSelectedCategory(category);
-  }, []);
+  }, [selectedCategory]);
 
   return useMemo(() => ({
     isReady,
