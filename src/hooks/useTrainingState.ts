@@ -596,6 +596,8 @@ export function useTrainingState(
   });
 
   const timerStartRef = useRef<number | null>(null);
+  /** After a recorded solve, the next `READY` (next case) should keep showing that time until a new attempt starts. */
+  const preserveTimerTextOnNextReadyRef = useRef(false);
   const frameRef = useRef<number | null>(null);
   const countdownTimeoutRef = useRef<number | null>(null);
   const countdownGenerationRef = useRef(0);
@@ -1240,7 +1242,11 @@ export function useTrainingState(
 
     if (state === 'READY') {
       timerStartRef.current = null;
-      setTimerText('0:00.000');
+      if (preserveTimerTextOnNextReadyRef.current) {
+        preserveTimerTextOnNextReadyRef.current = false;
+      } else {
+        setTimerText('0:00.000');
+      }
       return;
     }
 
@@ -1651,6 +1657,7 @@ export function useTrainingState(
 
       const nextCase = selectedQueueRef.current[0] ?? null;
       if (nextCase) {
+        preserveTimerTextOnNextReadyRef.current = true;
         void trainCurrent(nextInitialPattern, {
           algorithm: nextCase.algorithm,
           statsScopeId: nextCase.id,
@@ -1820,6 +1827,7 @@ export function useTrainingState(
           switchToNextAlgorithm(review ?? undefined);
           const nextCase = selectedQueueRef.current[0] ?? null;
           if (nextCase) {
+            preserveTimerTextOnNextReadyRef.current = true;
             void trainCurrent(completedPattern, {
               algorithm: nextCase.algorithm,
               statsScopeId: nextCase.id,

@@ -151,6 +151,9 @@ describe('useTrainingState spacebar timer flow', () => {
       expect(result.current.timerState).toBe('READY');
     });
 
+    // Main timer should still show the last solve time while "Ready" for the next case.
+    expect(result.current.timerText).toBe('0:01.350');
+
     expect(result.current.practiceCounts['case-1']).toBe(1);
     expect(getLastTimes('case-1')).toEqual([1350]);
     expect(getSolveHistory('case-1')).toEqual([
