@@ -207,6 +207,8 @@ export const PracticeView = memo(function PracticeView({
             ? 'Solving…'
             : 'Time';
 
+  const showPracticeTimerCard = training.selectedCases.length > 0;
+
   const showStatus = scramble.helpTone === 'green' || training.helpTone === 'red' || scramble.scrambleMode;
   const statusColor =
     training.helpTone === 'red' ? 'var(--danger)' :
@@ -647,56 +649,58 @@ export const PracticeView = memo(function PracticeView({
         </div>
 
         {/* Timer hero */}
-        <div
-          className="mobile-timer-card"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          style={{
-            margin: '0 12px 16px',
-            borderRadius: 16,
-            borderWidth: 1,
-            borderStyle: 'solid',
-            borderColor: 'var(--border)',
-            background: 'var(--surface)',
-            padding: '20px 20px 16px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 6,
-            minHeight: 130,
-            boxShadow: '0 4px 16px oklch(0% 0 0/0.2)',
-            ...timerTransformStyle,
-            ...timerCardFlashStyle,
-          }}
-        >
-          {timerLabel ? (
-            <span style={{
-              fontSize: 10,
-              color: 'var(--fg3)',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-            }}>{timerLabel}</span>
-          ) : null}
-          <div className="practice-timer-value practice-timer-value--mobile" style={{
-            fontFamily: 'var(--mono)',
-            fontSize: 'clamp(38px, 14vw, 56px)',
-            fontWeight: 500,
-            lineHeight: 1,
-            letterSpacing: '-0.02em',
-            color: timerColor,
-            transition: 'color 0.2s',
-            width: '100%',
-            textAlign: 'center',
-            whiteSpace: 'nowrap',
-          }}>
-            {displayedTimerText}
+        {showPracticeTimerCard ? (
+          <div
+            className="mobile-timer-card"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{
+              margin: '0 12px 16px',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: 'var(--border)',
+              background: 'var(--surface)',
+              padding: '20px 20px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 6,
+              minHeight: 130,
+              boxShadow: '0 4px 16px oklch(0% 0 0/0.2)',
+              ...timerTransformStyle,
+              ...timerCardFlashStyle,
+            }}
+          >
+            {timerLabel ? (
+              <span style={{
+                fontSize: 10,
+                color: 'var(--fg3)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}>{timerLabel}</span>
+            ) : null}
+            <div className="practice-timer-value practice-timer-value--mobile" style={{
+              fontFamily: 'var(--mono)',
+              fontSize: 'clamp(38px, 14vw, 56px)',
+              fontWeight: 500,
+              lineHeight: 1,
+              letterSpacing: '-0.02em',
+              color: timerColor,
+              transition: 'color 0.2s',
+              width: '100%',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+            }}>
+              {displayedTimerText}
+            </div>
+            {showPbBadge ? (
+              <span style={{ fontSize: 12, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
+            ) : null}
           </div>
-          {showPbBadge ? (
-            <span style={{ fontSize: 12, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
-          ) : null}
-        </div>
+        ) : null}
         {training.stats.hasHistory ? (
           <div className="mobile-stat-chip-row" style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'center', flexWrap: 'wrap', margin: '-8px 12px 16px', position: 'relative', zIndex: 1 }}>
             <StatChip label="Last" value={historyTimeString(lastTime?.value ?? null)} />
@@ -890,49 +894,51 @@ export const PracticeView = memo(function PracticeView({
             gap: 12,
           }}
         >
-          <div className="practice-timer-card" style={{
-            padding: '18px 22px',
-            borderRadius: 16,
-            borderWidth: 1,
-            borderStyle: 'solid',
-            borderColor: 'var(--border)',
-            background: 'var(--surface)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'flex-end',
-            gap: 6,
-            width: '100%',
-            minHeight: 140,
-            ...timerTransformStyle,
-            ...timerCardFlashStyle,
-          }}
-          >
-            {timerLabel ? (
-              <span style={{
-                fontSize: 10,
-                color: 'var(--fg3)',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                letterSpacing: '0.07em',
-              }}>{timerLabel}</span>
-            ) : null}
-            <div className="practice-timer-value" style={{
-              fontFamily: 'var(--mono)',
-              fontSize: 'clamp(40px, 3.2vw, 60px)',
-              fontWeight: 500,
-              lineHeight: 1,
-              letterSpacing: '-0.02em',
-              color: timerColor,
-              transition: 'color 0.2s',
+          {showPracticeTimerCard ? (
+            <div className="practice-timer-card" style={{
+              padding: '18px 22px',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: 'var(--border)',
+              background: 'var(--surface)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              gap: 6,
               width: '100%',
-              whiteSpace: 'nowrap',
-            }}>
-              {displayedTimerText}
+              minHeight: 140,
+              ...timerTransformStyle,
+              ...timerCardFlashStyle,
+            }}
+            >
+              {timerLabel ? (
+                <span style={{
+                  fontSize: 10,
+                  color: 'var(--fg3)',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                }}>{timerLabel}</span>
+              ) : null}
+              <div className="practice-timer-value" style={{
+                fontFamily: 'var(--mono)',
+                fontSize: 'clamp(40px, 3.2vw, 60px)',
+                fontWeight: 500,
+                lineHeight: 1,
+                letterSpacing: '-0.02em',
+                color: timerColor,
+                transition: 'color 0.2s',
+                width: '100%',
+                whiteSpace: 'nowrap',
+              }}>
+                {displayedTimerText}
+              </div>
+              {showPbBadge ? (
+                <span style={{ fontSize: 13, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
+              ) : null}
             </div>
-            {showPbBadge ? (
-              <span style={{ fontSize: 13, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
-            ) : null}
-          </div>
+          ) : null}
           {training.stats.hasHistory ? (
             <div style={{
               display: 'flex',

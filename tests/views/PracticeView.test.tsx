@@ -26,6 +26,22 @@ vi.mock('../../src/lib/scramble', async () => ({
 }));
 
 function makeProps(overrides: Record<string, unknown> = {}) {
+  const defaultPracticeCase = {
+    id: 'case-1',
+    name: 'Aa',
+    algorithm: "R U R'",
+    subset: 'A',
+    category: 'PLL',
+    bestTime: null,
+    ao5: null,
+    learned: 0,
+    manualLearned: 0,
+    reviewCount: 0,
+    smartReviewDueAt: null,
+    smartReviewDue: true,
+    smartReviewUrgency: 0,
+  };
+
   return {
     visible: true,
     options: {
@@ -105,23 +121,9 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       visualResetKey: 1,
       algInput: '',
       displayAlg: "R U R'",
-      currentCase: {
-        id: 'case-1',
-        name: 'Aa',
-        algorithm: "R U R'",
-        subset: 'A',
-        category: 'PLL',
-        bestTime: null,
-        ao5: null,
-        learned: 0,
-        manualLearned: 0,
-        reviewCount: 0,
-        smartReviewDueAt: null,
-        smartReviewDue: true,
-        smartReviewUrgency: 0,
-      },
+      currentCase: defaultPracticeCase,
       currentAlgName: 'Aa',
-      selectedCases: [],
+      selectedCases: [defaultPracticeCase],
       stats: {
         best: '-',
         ao5: '-',
@@ -283,6 +285,40 @@ describe('PracticeView', () => {
     expect(screen.queryByText('Last')).toBeNull();
     expect(screen.queryByText('Best')).toBeNull();
     expect(screen.queryByText('Ao5')).toBeNull();
+  });
+
+  it('hides desktop and mobile timer cards when no cases are selected', () => {
+    const base = makeProps();
+    const emptyTraining = {
+      ...base.training,
+      currentCase: null,
+      currentAlgName: '',
+      selectedCases: [] as typeof base.training.selectedCases,
+    };
+
+    const { rerender } = render(
+      <PracticeView
+        {...makeProps({
+          training: emptyTraining,
+          isMobile: false,
+        })}
+      />,
+    );
+
+    expect(document.querySelector('.practice-timer-card')).toBeNull();
+    expect(document.querySelector('.mobile-timer-card')).toBeNull();
+
+    rerender(
+      <PracticeView
+        {...makeProps({
+          training: emptyTraining,
+          isMobile: true,
+        })}
+      />,
+    );
+
+    expect(document.querySelector('.practice-timer-card')).toBeNull();
+    expect(document.querySelector('.mobile-timer-card')).toBeNull();
   });
 
   it('hides practice options and alg stats while the inline algorithm editor is open', () => {
