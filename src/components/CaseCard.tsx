@@ -30,11 +30,9 @@ function CaseCardComponent({ card, index, style }: CaseCardProps) {
 
   const background = failedCount
     ? 'rgba(239,68,68,0.12)'
-    : selected
-      ? 'rgba(59,130,246,0.1)'
-      : index % 2 === 0
-        ? 'var(--surface)'
-        : 'var(--raised)';
+    : index % 2 === 0
+      ? 'var(--surface)'
+      : 'var(--raised)';
 
   return (
     <div
@@ -49,7 +47,7 @@ function CaseCardComponent({ card, index, style }: CaseCardProps) {
         ...style,
         border: `1px solid ${selected ? 'rgba(59,130,246,0.4)' : 'var(--border)'}`,
         background,
-        boxShadow: selected ? '0 10px 24px rgba(59,130,246,0.14)' : '0 10px 24px oklch(0% 0 0 / 0.12)',
+        boxShadow: '0 10px 24px oklch(0% 0 0 / 0.12)',
       }}
     >
       <div className="case-card-header">
@@ -68,8 +66,8 @@ function CaseCardComponent({ card, index, style }: CaseCardProps) {
             width: 28,
             height: 28,
             borderRadius: 8,
-            border: '1px solid var(--border)',
-            background: 'var(--raised)',
+            border: 'none',
+            background: 'transparent',
             color: 'var(--fg2)',
           }}
           onClick={() => {
@@ -98,7 +96,7 @@ function CaseCardComponent({ card, index, style }: CaseCardProps) {
           Ao5: {averageTimeString(ao5)}
         </div>
         <div id={`alg-case-${card.id}`} className="case-preview" style={{ marginTop: 6 }}>
-          <div className="case-preview-inner" style={{ borderRadius: 12, background: 'rgba(255,255,255,0.35)' }}>
+          <div className="case-preview-inner" style={{ borderRadius: 12, background: 'transparent' }}>
             <CaseCardPreview
               alg={card.algorithm}
               visualization={visualization}
