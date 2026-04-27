@@ -234,9 +234,14 @@ export function App() {
   useEffect(() => {
     if (!scramble.scrambleMode) {
       setScrambleStartAlg('');
-      lastAutoScrambleKeyRef.current = '';
+      // When alwaysScrambleTo is on, keep lastAutoScrambleKeyRef so the auto effect does not
+      // treat the same (case, alg) as new and call startScrambleTo again while still READY
+      // after a completed scramble-to (would re-enter scramble mode during the solve).
+      if (!options.alwaysScrambleTo) {
+        lastAutoScrambleKeyRef.current = '';
+      }
     }
-  }, [scramble.scrambleMode]);
+  }, [options.alwaysScrambleTo, scramble.scrambleMode]);
 
   useEffect(() => {
     if (!smartcube.connected) {

@@ -1,7 +1,25 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../src/App';
+
+/** Mutable wiring for `alwaysScrambleTo` + scramble-mode regression (see App.tsx lastAutoScrambleKeyRef). */
+const alwaysScrambleRegressDyn = vi.hoisted(() => ({
+  alwaysScrambleTo: false,
+  practiceTimeAttack: true,
+  scrambleMode: false,
+  /** Mimics real `useScrambleState` returning a new `startScrambleTo` when scramble state updates. */
+  startScrambleToSpyPick: 0 as 0 | 1,
+  startScrambleToSpyA: vi.fn(async () => true),
+  startScrambleToSpyB: vi.fn(async () => true),
+}));
+
+const trainingRegressDyn = vi.hoisted(() => ({
+  timerState: 'IDLE' as string,
+  statsAlgId: 'time-attack-scope',
+  timeAttackMode: true,
+  displayAlg: "R U R'",
+}));
 
 const mockState = vi.hoisted(() => {
   const caseCard = {
@@ -65,13 +83,13 @@ const mocks = vi.hoisted(() => ({
   useTrainingState: vi.fn(() => ({
     inputMode: false,
     scrambleMode: false,
-    timerState: 'IDLE',
+    timerState: trainingRegressDyn.timerState,
     timerText: '0.000',
     countdownActive: false,
     countdownValue: null,
     visualResetKey: 1,
     algInput: '',
-    displayAlg: "R U R'",
+    displayAlg: trainingRegressDyn.displayAlg,
     currentCase: mockState.caseCards[0],
     currentAlgName: 'Aa',
     selectedCases: mockState.caseCards,
@@ -85,7 +103,7 @@ const mocks = vi.hoisted(() => ({
       hasHistory: false,
       lastFive: [],
     },
-    statsAlgId: 'time-attack-scope',
+    statsAlgId: trainingRegressDyn.statsAlgId,
     displayMoves: [],
     fixText: '',
     fixVisible: false,
@@ -93,7 +111,7 @@ const mocks = vi.hoisted(() => ({
     failedCounts: {},
     practiceCounts: mockState.practiceCounts,
     flashRequest: null,
-    timeAttackMode: true,
+    timeAttackMode: trainingRegressDyn.timeAttackMode,
     timeAttackActive: true,
     timeAttackCurrentCaseNumber: 1,
     timeAttackTotalCases: 1,
@@ -170,7 +188,7 @@ vi.mock('../src/hooks/useAppSettings', () => ({
     flashingIndicatorEnabled: true,
     showAlgName: true,
     countdownMode: false,
-    alwaysScrambleTo: false,
+    alwaysScrambleTo: alwaysScrambleRegressDyn.alwaysScrambleTo,
     autoUpdateLearningState: false,
     visualization: 'PG3D',
     backview: 'none',
@@ -199,7 +217,7 @@ vi.mock('../src/hooks/usePracticeToggles', () => ({
   usePracticeToggles: vi.fn(() => ({
     randomizeAUF: false,
     randomOrder: false,
-    timeAttack: true,
+    timeAttack: alwaysScrambleRegressDyn.practiceTimeAttack,
     prioritizeSlowCases: false,
     prioritizeFailedCases: false,
     smartReviewScheduling: false,
@@ -214,12 +232,14 @@ vi.mock('../src/hooks/usePracticeToggles', () => ({
 
 vi.mock('../src/hooks/useScrambleState', () => ({
   useScrambleState: vi.fn(() => ({
-    scrambleMode: false,
+    scrambleMode: alwaysScrambleRegressDyn.scrambleMode,
     scrambleText: '',
     isComputing: false,
     targetAlgorithm: '',
     helpTone: 'hidden',
-    startScrambleTo: vi.fn(async () => true),
+    startScrambleTo: alwaysScrambleRegressDyn.startScrambleToSpyPick === 0
+      ? alwaysScrambleRegressDyn.startScrambleToSpyA
+      : alwaysScrambleRegressDyn.startScrambleToSpyB,
     advanceScramble: vi.fn(async () => false),
     clearScramble: vi.fn(),
   })),
@@ -391,5 +411,45 @@ describe('App case-card stats refresh', () => {
     );
 
     confirmSpy.mockRestore();
+  });
+});
+
+describe('App alwaysScrambleTo auto scramble-to', () => {
+  beforeEach(() => {
+    alwaysScrambleRegressDyn.alwaysScrambleTo = false;
+    alwaysScrambleRegressDyn.practiceTimeAttack = true;
+    alwaysScrambleRegressDyn.scrambleMode = false;
+    alwaysScrambleRegressDyn.startScrambleToSpyPick = 0;
+    alwaysScrambleRegressDyn.startScrambleToSpyA.mockClear();
+    alwaysScrambleRegressDyn.startScrambleToSpyB.mockClear();
+    trainingRegressDyn.timerState = 'IDLE';
+    trainingRegressDyn.statsAlgId = 'time-attack-scope';
+    trainingRegressDyn.timeAttackMode = true;
+    trainingRegressDyn.displayAlg = "R U R'";
+  });
+
+  it('does not call startScrambleTo again after scramble ends when alwaysScrambleTo is on', async () => {
+    alwaysScrambleRegressDyn.alwaysScrambleTo = true;
+    alwaysScrambleRegressDyn.practiceTimeAttack = false;
+    trainingRegressDyn.timerState = 'READY';
+    trainingRegressDyn.statsAlgId = 'case-1';
+    trainingRegressDyn.timeAttackMode = false;
+
+    const { rerender } = render(<App />);
+
+    await waitFor(() => {
+      expect(alwaysScrambleRegressDyn.startScrambleToSpyA.mock.calls.length).toBeGreaterThanOrEqual(1);
+    });
+    const callsAfterInitial = alwaysScrambleRegressDyn.startScrambleToSpyA.mock.calls.length;
+
+    alwaysScrambleRegressDyn.scrambleMode = true;
+    rerender(<App />);
+
+    alwaysScrambleRegressDyn.scrambleMode = false;
+    alwaysScrambleRegressDyn.startScrambleToSpyPick = 1;
+    rerender(<App />);
+
+    expect(alwaysScrambleRegressDyn.startScrambleToSpyA.mock.calls.length).toBe(callsAfterInitial);
+    expect(alwaysScrambleRegressDyn.startScrambleToSpyB).not.toHaveBeenCalled();
   });
 });
