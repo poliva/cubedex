@@ -767,16 +767,18 @@ export const PracticeView = memo(function PracticeView({
         )}
 
         {/* Practice toggles */}
+        {!showAlgEditor && (
         <div style={{ margin: '0 12px 10px' }}>
           <div style={practiceTogglesGridInnerStyle}>
             {practiceTogglesFields}
           </div>
         </div>
+        )}
 
         {/* Stats graph */}
         <div style={{ margin: '0 12px 10px' }}>
           <StatsPanel
-            visible
+            visible={!showAlgEditor}
             showAlgName={options.showAlgName && !training.countdownActive}
             algName={training.currentAlgName}
             stats={training.stats}
@@ -963,16 +965,16 @@ export const PracticeView = memo(function PracticeView({
       </div>
 
       {/* Practice toggles: full grid at tablet widths (strip squeezed into one unusable row); collapsible strip on wide desktop */}
-      {!narrowPracticeDesktop ? practiceTogglesStrip : (
+      {!showAlgEditor && (!narrowPracticeDesktop ? practiceTogglesStrip : (
         <div style={{ width: '100%', maxWidth: 'var(--practice-alg-track-max)' }}>
           <div style={practiceTogglesGridInnerStyle}>{practiceTogglesFields}</div>
         </div>
-      )}
+      ))}
 
-      {/* Big stats graph */}
+      {/* Big stats graph (#alg-stats) */}
       <div style={{ width: '100%', maxWidth: 'var(--practice-alg-track-max)' }}>
         <StatsPanel
-          visible
+          visible={!showAlgEditor}
           showAlgName={options.showAlgName && !training.countdownActive}
           algName={training.currentAlgName}
           stats={training.stats}

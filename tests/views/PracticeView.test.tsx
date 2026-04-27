@@ -6,7 +6,11 @@ import { PracticeView } from '../../src/views/PracticeView';
 vi.mock('../../src/views/CaseGrid', () => ({ CaseGrid: () => <div data-testid="case-grid" /> }));
 vi.mock('../../src/views/MainCubeArea', () => ({ MainCubeArea: () => <div data-testid="main-cube-area" /> }));
 vi.mock('../../src/views/MoveListPanel', () => ({ MoveListPanel: () => <div data-testid="move-list-panel" /> }));
-vi.mock('../../src/views/StatsPanel', () => ({ StatsPanel: () => <div data-testid="stats-panel" /> }));
+vi.mock('../../src/views/StatsPanel', () => ({
+  StatsPanel: ({ visible = true }: { visible?: boolean }) => (
+    <div data-testid="stats-panel" data-stats-panel-visible={String(visible)} />
+  ),
+}));
 vi.mock('../../src/views/NewAlgView', () => ({ NewAlgView: () => <div data-testid="new-alg-view" /> }));
 vi.mock('../../src/lib/case-cards', async () => ({
   ...(await vi.importActual<typeof import('../../src/lib/case-cards')>('../../src/lib/case-cards')),
@@ -279,6 +283,29 @@ describe('PracticeView', () => {
     expect(screen.queryByText('Last')).toBeNull();
     expect(screen.queryByText('Best')).toBeNull();
     expect(screen.queryByText('Ao5')).toBeNull();
+  });
+
+  it('hides practice options and alg stats while the inline algorithm editor is open', () => {
+    const { rerender } = render(
+      <PracticeView
+        {...makeProps({
+          showAlgEditor: true,
+        })}
+      />,
+    );
+
+    expect(screen.getByTestId('stats-panel')).toHaveAttribute('data-stats-panel-visible', 'false');
+    expect(screen.queryByText('Practice options')).toBeNull();
+
+    rerender(
+      <PracticeView
+        {...makeProps({
+          showAlgEditor: true,
+          isMobile: true,
+        })}
+      />,
+    );
+    expect(screen.queryByLabelText(/smart order/i)).toBeNull();
   });
 
   it('shows recent-times graph canvas and mode toggle when solve history exists', () => {
