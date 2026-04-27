@@ -105,6 +105,38 @@ export function App() {
     onReviewRecorded: () => setReviewRefreshToken((value) => value + 1),
   });
   const scramble = useScrambleState();
+  const prevSmartcubeConnectedRef = useRef(smartcube.connected);
+  const pendingPhysicalTrainingRetrainRef = useRef(false);
+
+  useEffect(() => {
+    const wasConnected = prevSmartcubeConnectedRef.current;
+    prevSmartcubeConnectedRef.current = smartcube.connected;
+    if (smartcube.connected && !wasConnected) {
+      pendingPhysicalTrainingRetrainRef.current = true;
+    }
+    if (!smartcube.connected) {
+      pendingPhysicalTrainingRetrainRef.current = false;
+    }
+  }, [smartcube.connected]);
+
+  useEffect(() => {
+    if (!pendingPhysicalTrainingRetrainRef.current || !smartcube.connected || !smartcube.currentPattern) {
+      return;
+    }
+    if (training.inputMode || training.countdownActive || scramble.scrambleMode) {
+      return;
+    }
+    pendingPhysicalTrainingRetrainRef.current = false;
+    void training.trainCurrent(smartcube.currentPattern);
+  }, [
+    scramble.scrambleMode,
+    smartcube.connected,
+    smartcube.currentPattern,
+    training.countdownActive,
+    training.inputMode,
+    training.trainCurrent,
+  ]);
+
   const algorithmActions = useAlgorithmImportExport(reloadSavedAlgorithms);
   const selectedStickering = mainCubeStickeringDeferred && !options.fullStickering
     ? 'full'
