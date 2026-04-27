@@ -1,5 +1,4 @@
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { CaseCardData } from '../../src/lib/case-cards';
 import { CaseGrid } from '../../src/views/CaseGrid';
@@ -25,17 +24,13 @@ const sampleCard: CaseCardData = {
 };
 
 describe('CaseGrid', () => {
-  it.skip('renders a unified empty state and optional Options CTA', async () => {
-    const user = userEvent.setup();
-    const onOpenOptions = vi.fn();
+  it.skip('renders a unified empty state', async () => {
     const { container } = render(
-      <CaseGrid caseCards={[]} onOpenOptions={onOpenOptions} />,
+      <CaseGrid caseCards={[]} />,
     );
 
     expect(container.querySelector('#alg-cases')).toBeTruthy();
     expect(screen.getByTestId('case-grid-empty')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /open options/i }));
-    expect(onOpenOptions).toHaveBeenCalledTimes(1);
   });
 
   it('renders a non-virtualized grid for a small set of cases', () => {

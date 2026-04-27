@@ -123,10 +123,8 @@ function VirtualizedCaseGrid({ cards }: { cards: CaseCardData[] }) {
 
 function CaseGridComponent({
   caseCards,
-  onOpenOptions,
 }: {
   caseCards: CaseCardData[];
-  onOpenOptions?: () => void;
 }) {
   if (caseCards.length === 0) {
     return (
@@ -136,8 +134,7 @@ function CaseGridComponent({
       >
         <EmptyState
           title="No cases to show"
-          description="Pick a category, adjust filters, or import algorithms from Options."
-          action={onOpenOptions ? { label: 'Open Options', onClick: onOpenOptions } : undefined}
+          description="Pick a category, choose a subset or adjust filters."
           data-testid="case-grid-empty"
         />
       </div>

@@ -790,7 +790,6 @@ export function App() {
               setMainCubeStickeringDeferred={setMainCubeStickeringDeferred}
               isMobile={isMobile}
               onPracticeSelected={() => selectView('practice')}
-              onOpenOptions={() => selectView('options')}
             />
           )}
 

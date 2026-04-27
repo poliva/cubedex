@@ -19,7 +19,6 @@ export const CasesView = memo(function CasesView({
   setMainCubeStickeringDeferred,
   isMobile,
   onPracticeSelected,
-  onOpenOptions,
 }: {
   caseLibrary: CaseLibraryState;
   training: TrainingState;
@@ -34,7 +33,6 @@ export const CasesView = memo(function CasesView({
   setMainCubeStickeringDeferred: (v: boolean) => void;
   isMobile: boolean;
   onPracticeSelected: () => void;
-  onOpenOptions?: () => void;
 }) {
   const {
     categories,
@@ -332,33 +330,6 @@ export const CasesView = memo(function CasesView({
         </div>
       </div>
 
-      {/* Filter row: All/Learning/Learned independent toggles. */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <div style={{
-          display: 'flex',
-          background: 'var(--raised)',
-          borderRadius: 'var(--radius-sm)',
-          padding: 2,
-          gap: 1,
-        }}>
-          {filterChip('All', selectAllCases, () => {
-            setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-            setMainCubeStickeringDeferred(false);
-            setSelectAllCases(!selectAllCases);
-          })}
-          {filterChip('Learning', selectLearningCases, () => {
-            setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-            setMainCubeStickeringDeferred(false);
-            setSelectLearningCases(!selectLearningCases);
-          })}
-          {filterChip('Learned', selectLearnedCases, () => {
-            setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-            setMainCubeStickeringDeferred(false);
-            setSelectLearnedCases(!selectLearnedCases);
-          })}
-        </div>
-      </div>
-
       {/* Subset chips — horizontally scrollable like the category strip */}
       {subsets.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -455,8 +426,35 @@ export const CasesView = memo(function CasesView({
         </div>
       )}
 
+      {/* Filter row: All/Learning/Learned independent toggles. */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{
+          display: 'flex',
+          background: 'var(--raised)',
+          borderRadius: 'var(--radius-sm)',
+          padding: 2,
+          gap: 1,
+        }}>
+          {filterChip('All', selectAllCases, () => {
+            setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+            setMainCubeStickeringDeferred(false);
+            setSelectAllCases(!selectAllCases);
+          })}
+          {filterChip('Learning', selectLearningCases, () => {
+            setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+            setMainCubeStickeringDeferred(false);
+            setSelectLearningCases(!selectLearningCases);
+          })}
+          {filterChip('Learned', selectLearnedCases, () => {
+            setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+            setMainCubeStickeringDeferred(false);
+            setSelectLearnedCases(!selectLearnedCases);
+          })}
+        </div>
+      </div>
+
       {/* Case grid */}
-      <CaseGrid caseCards={caseCards} onOpenOptions={onOpenOptions} />
+      <CaseGrid caseCards={caseCards} />
 
       {deleteSuccessMessage ? (
         <div style={{

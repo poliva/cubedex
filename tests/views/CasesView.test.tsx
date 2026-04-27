@@ -102,8 +102,8 @@ describe('CasesView', () => {
 
     render(<CasesView {...props} />);
 
-    // First match is the filter-chip "All"; the subset row also has an "All".
-    await user.click(screen.getAllByRole('button', { name: 'All' })[0]);
+    // Filter row "All" is now second (subset row is above it).
+    await user.click(screen.getAllByRole('button', { name: 'All' })[1]);
 
     expect(props.caseLibrary.setSelectAllCases).toHaveBeenCalledWith(true);
   });
