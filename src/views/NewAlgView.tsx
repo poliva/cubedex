@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
 import { EmptyState } from '../components/ui/EmptyState';
+import { expandNotation } from '../lib/storage';
 
 export const NewAlgView = memo(function NewAlgView({
   visible,
@@ -78,7 +79,8 @@ export const NewAlgView = memo(function NewAlgView({
   const pad = isMobile ? 12 : 20;
   const pb = isMobile ? 'calc(var(--tab-h) + 12px)' : 16;
   const presetCategories = ['PLL', 'OLL', 'F2L', 'Custom'] as const;
-  const parsedMoves = algInput.trim() ? algInput.trim().split(/\s+/).filter(Boolean) : [];
+  const expandedAlg = algInput.trim() ? expandNotation(algInput.trim()) : '';
+  const parsedMoves = expandedAlg ? expandedAlg.split(/\s+/).filter(Boolean) : [];
   const activeCategory = algorithmActions.categoryInput.trim();
 
   const inputStyle: React.CSSProperties = {
@@ -151,8 +153,8 @@ export const NewAlgView = memo(function NewAlgView({
                       padding: '6px 8px',
                       borderRadius: 8,
                       border: '1px solid var(--border)',
-                      background: index === parsedMoves.length - 1 ? 'var(--accent-tint)' : 'var(--surface)',
-                      color: index === parsedMoves.length - 1 ? 'var(--accent)' : 'var(--fg)',
+                      background: 'var(--surface)',
+                      color: 'var(--fg)',
                       fontFamily: 'var(--mono)',
                       fontSize: 13,
                       fontWeight: 600,
@@ -248,12 +250,12 @@ export const NewAlgView = memo(function NewAlgView({
           </div>
           <div>
             <label htmlFor="subset-input" style={labelStyle}>
-              Subset <span style={{ fontWeight: 400, color: 'var(--fg4)' }}>(optional)</span>
+              Subset
             </label>
             <input
               id="subset-input"
               type="text"
-              placeholder="e.g. G, J, T..."
+              placeholder="e.g. Dot Cases, Free Pairs, etc..."
               value={algorithmActions.subsetInput}
               onChange={(e) => algorithmActions.setSubsetInput(e.target.value)}
               style={inputStyle}
@@ -261,7 +263,7 @@ export const NewAlgView = memo(function NewAlgView({
           </div>
           <div>
             <label htmlFor="alg-name-input" style={labelStyle}>
-              Name <span style={{ fontWeight: 400, color: 'var(--fg4)' }}>(optional)</span>
+              Name
             </label>
             <input
               id="alg-name-input"
@@ -282,7 +284,7 @@ export const NewAlgView = memo(function NewAlgView({
             color: 'var(--fg3)',
             lineHeight: 1.5,
           }}>
-            Save tip: if the category does not already exist, Cubedex will create it and switch Practice/Cases to that category after saving.
+            Save tip: if the category or subset does not already exist, Cubedex will create it.
           </div>
         </div>
 
