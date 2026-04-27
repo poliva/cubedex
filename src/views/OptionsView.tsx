@@ -81,9 +81,7 @@ export const OptionsView = memo(function OptionsView({
 
   const stackStyle: React.CSSProperties = {
     width: '100%',
-    maxWidth: 620,
-    marginLeft: 'auto',
-    marginRight: 'auto',
+    maxWidth: 640,
     display: 'flex',
     flexDirection: 'column',
     gap: 12,
