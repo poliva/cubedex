@@ -316,6 +316,24 @@ describe('PracticeView', () => {
     });
   });
 
+  it('shows a two-column practice toggles grid on narrow desktop widths instead of the collapsible strip', () => {
+    vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => ({
+      matches: query === '(max-width: 1080px)',
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    render(<PracticeView {...makeProps()} />);
+
+    expect(screen.getByRole('checkbox', { name: /smart order/i })).toBeInTheDocument();
+    expect(screen.queryByText('Practice options')).toBeNull();
+  });
+
   it('shows a countdown overlay and hides the cube content while countdown mode is active', () => {
     const base = makeProps();
     const props = makeProps({

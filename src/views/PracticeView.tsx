@@ -112,6 +112,18 @@ export const PracticeView = memo(function PracticeView({
   setShowTimesInsteadOfGraph: (updater: (value: boolean) => boolean) => void;
   onOpenCaseLibrary: () => void;
 }) {
+  const narrowPracticeDesktopQuery = '(max-width: 1080px)';
+  const [narrowPracticeDesktop, setNarrowPracticeDesktop] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(narrowPracticeDesktopQuery).matches,
+  );
+  useEffect(() => {
+    const mql = window.matchMedia(narrowPracticeDesktopQuery);
+    const sync = () => setNarrowPracticeDesktop(mql.matches);
+    sync();
+    mql.addEventListener('change', sync);
+    return () => mql.removeEventListener('change', sync);
+  }, []);
+
   const skipPracticeEnterAnim = useRef(true);
   const [practiceViewEnter, setPracticeViewEnter] = useState(false);
   const [practiceTogglesExpanded, setPracticeTogglesExpanded] = useState(false);
@@ -447,6 +459,55 @@ export const PracticeView = memo(function PracticeView({
     letterSpacing: '0.03em',
   };
 
+  /** Same grid as mobile — usable on tablet-width desktop where the collapsible strip squeezed into one row. */
+  const practiceTogglesGridInnerStyle: CSSProperties = {
+    padding: '12px 14px',
+    borderRadius: 12,
+    border: '1px solid var(--border)',
+    background: 'var(--surface)',
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '0 16px',
+  };
+
+  const practiceTogglesFields = (
+    <>
+      <Toggle
+        checked={practiceToggles.smartReviewScheduling}
+        disabled={practiceToggles.timeAttack}
+        onChange={(checked) => practiceToggles.setSmartReviewScheduling(checked)}
+        label="Smart Order"
+      />
+      <Toggle
+        checked={practiceToggles.randomizeAUF}
+        onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
+        label="Random AUF"
+      />
+      <Toggle
+        checked={practiceToggles.randomOrder}
+        disabled={practiceToggles.smartReviewScheduling}
+        onChange={(checked) => practiceToggles.setRandomOrder(checked)}
+        label="Random Order"
+      />
+      <Toggle
+        checked={practiceToggles.prioritizeSlowCases}
+        disabled={practiceToggles.smartReviewScheduling}
+        onChange={(checked) => practiceToggles.setPrioritizeSlowCases(checked)}
+        label="Slow First"
+      />
+      <Toggle
+        checked={practiceToggles.prioritizeFailedCases}
+        onChange={(checked) => practiceToggles.setPrioritizeFailedCases(checked)}
+        label="Prioritize Failed"
+      />
+      <Toggle
+        checked={practiceToggles.timeAttack}
+        onChange={(checked) => practiceToggles.setTimeAttack(checked)}
+        label="Time Attack"
+      />
+    </>
+  );
+
   const practiceTogglesStrip = (
     <div style={{
       width: '100%',
@@ -490,13 +551,13 @@ export const PracticeView = memo(function PracticeView({
               <span style={activeToggleChipStyle}>Random AUF</span>
             )}
             {practiceToggles.randomOrder && !practiceToggles.smartReviewScheduling && (
-              <span style={activeToggleChipStyle}>Random</span>
+              <span style={activeToggleChipStyle}>Random Order</span>
             )}
             {practiceToggles.prioritizeSlowCases && !practiceToggles.smartReviewScheduling && (
               <span style={activeToggleChipStyle}>Slow First</span>
             )}
             {practiceToggles.prioritizeFailedCases && (
-              <span style={activeToggleChipStyle}>Failed</span>
+              <span style={activeToggleChipStyle}>Prioritize Failed</span>
             )}
             {practiceToggles.timeAttack && (
               <span style={activeToggleChipStyle}>Time Attack</span>
@@ -521,46 +582,14 @@ export const PracticeView = memo(function PracticeView({
       {/* Expanded toggles list */}
       {practiceTogglesExpanded && (
         <div style={{
-          padding: '10px 14px',
+          padding: '12px 14px',
           borderTop: '1px solid var(--border)',
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '0px 20px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+          gap: '12px 20px',
           alignItems: 'center',
         }}>
-          <Toggle
-            checked={practiceToggles.smartReviewScheduling}
-            disabled={practiceToggles.timeAttack}
-            onChange={(checked) => practiceToggles.setSmartReviewScheduling(checked)}
-            label="Smart Order"
-          />
-          <Toggle
-            checked={practiceToggles.randomizeAUF}
-            onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
-            label="Random AUF"
-          />
-          <Toggle
-            checked={practiceToggles.randomOrder}
-            disabled={practiceToggles.smartReviewScheduling}
-            onChange={(checked) => practiceToggles.setRandomOrder(checked)}
-            label="Random Order"
-          />
-          <Toggle
-            checked={practiceToggles.prioritizeSlowCases}
-            disabled={practiceToggles.smartReviewScheduling}
-            onChange={(checked) => practiceToggles.setPrioritizeSlowCases(checked)}
-            label="Slow Cases First"
-          />
-          <Toggle
-            checked={practiceToggles.prioritizeFailedCases}
-            onChange={(checked) => practiceToggles.setPrioritizeFailedCases(checked)}
-            label="Prioritize Failed"
-          />
-          <Toggle
-            checked={practiceToggles.timeAttack}
-            onChange={(checked) => practiceToggles.setTimeAttack(checked)}
-            label="Time Attack"
-          />
+          {practiceTogglesFields}
         </div>
       )}
     </div>
@@ -739,48 +768,8 @@ export const PracticeView = memo(function PracticeView({
 
         {/* Practice toggles */}
         <div style={{ margin: '0 12px 10px' }}>
-          <div style={{
-            padding: '12px 14px',
-            borderRadius: 12,
-            border: '1px solid var(--border)',
-            background: 'var(--surface)',
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '0 16px',
-          }}>
-            <Toggle
-              checked={practiceToggles.smartReviewScheduling}
-              disabled={practiceToggles.timeAttack}
-              onChange={(checked) => practiceToggles.setSmartReviewScheduling(checked)}
-              label="Smart Order"
-            />
-            <Toggle
-              checked={practiceToggles.randomizeAUF}
-              onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
-              label="Random AUF"
-            />
-            <Toggle
-              checked={practiceToggles.randomOrder}
-              disabled={practiceToggles.smartReviewScheduling}
-              onChange={(checked) => practiceToggles.setRandomOrder(checked)}
-              label="Random Order"
-            />
-            <Toggle
-              checked={practiceToggles.prioritizeSlowCases}
-              disabled={practiceToggles.smartReviewScheduling}
-              onChange={(checked) => practiceToggles.setPrioritizeSlowCases(checked)}
-              label="Slow First"
-            />
-            <Toggle
-              checked={practiceToggles.prioritizeFailedCases}
-              onChange={(checked) => practiceToggles.setPrioritizeFailedCases(checked)}
-              label="Prioritize Failed"
-            />
-            <Toggle
-              checked={practiceToggles.timeAttack}
-              onChange={(checked) => practiceToggles.setTimeAttack(checked)}
-              label="Time Attack"
-            />
+          <div style={practiceTogglesGridInnerStyle}>
+            {practiceTogglesFields}
           </div>
         </div>
 
@@ -973,8 +962,12 @@ export const PracticeView = memo(function PracticeView({
         />
       </div>
 
-      {/* Practice toggles strip */}
-      {practiceTogglesStrip}
+      {/* Practice toggles: full grid at tablet widths (strip squeezed into one unusable row); collapsible strip on wide desktop */}
+      {!narrowPracticeDesktop ? practiceTogglesStrip : (
+        <div style={{ width: '100%', maxWidth: 'var(--practice-alg-track-max)' }}>
+          <div style={practiceTogglesGridInnerStyle}>{practiceTogglesFields}</div>
+        </div>
+      )}
 
       {/* Big stats graph */}
       <div style={{ width: '100%', maxWidth: 'var(--practice-alg-track-max)' }}>
