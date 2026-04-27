@@ -45,7 +45,7 @@ function CaseCardComponent({ card, index, style }: CaseCardProps) {
       data-subset={card.subset}
       style={{
         ...style,
-        border: `1px solid ${selected ? 'rgba(59,130,246,0.4)' : 'var(--border)'}`,
+        border: `4px solid ${selected ? 'rgba(59,130,246,0.4)' : 'transparent'}`,
         background,
         boxShadow: '0 10px 24px oklch(0% 0 0 / 0.12)',
       }}
