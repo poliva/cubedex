@@ -141,22 +141,27 @@ export function DesktopTopbar({
 
         <button
           type="button"
-          title="Connect Smartcube"
+          title={smartcube.connected ? 'Disconnect Smartcube' : 'Connect Smartcube'}
           onClick={() => void smartcube.connectOrDisconnect()}
           style={{
-            width: 34,
-            height: 34,
-            borderRadius: 9,
+            height: 32,
+            paddingLeft: 12,
+            paddingRight: 12,
+            borderRadius: 8,
             border: `1.5px solid ${smartcube.connected ? 'rgba(34,197,94,0.35)' : 'var(--border)'}`,
             background: smartcube.connected ? 'rgba(34,197,94,0.08)' : 'transparent',
             color: smartcube.connected ? 'var(--ok)' : 'var(--fg2)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            gap: 6,
+            fontFamily: 'inherit',
+            fontSize: 12,
+            fontWeight: 600,
           }}
         >
-          <BluetoothIcon size={15} />
+          <BluetoothIcon size={21} />
+          <span>{smartcube.connectLabel}</span>
         </button>
       </div>
     </div>

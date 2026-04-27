@@ -169,19 +169,24 @@ export function MobileTopbar({
         type="button"
         onClick={() => void smartcube.connectOrDisconnect()}
         style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
+          height: 34,
+          paddingLeft: 10,
+          paddingRight: 10,
+          borderRadius: 8,
           border: `1.5px solid ${smartcube.connected ? 'rgba(34,197,94,0.35)' : 'var(--border)'}`,
           background: smartcube.connected ? 'rgba(34,197,94,0.08)' : 'transparent',
           color: smartcube.connected ? 'var(--ok)' : 'var(--fg2)',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          gap: 5,
+          fontFamily: 'inherit',
+          fontSize: 11,
+          fontWeight: 600,
         }}
       >
-        <BluetoothIcon size={16} />
+        <BluetoothIcon size={21} />
+        <span>{smartcube.connectLabel}</span>
       </button>
     </div>
   );
