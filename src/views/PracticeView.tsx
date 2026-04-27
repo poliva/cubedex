@@ -596,18 +596,7 @@ export const PracticeView = memo(function PracticeView({
             background: 'transparent',
             padding: 5,
             flexShrink: 0,
-            boxShadow: '0 8px 24px oklch(0% 0 0/0.25)',
           }}>
-            {training.timerState === 'RUNNING' && (
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                borderRadius: 16,
-                border: '2px solid var(--ok)',
-                animation: 'pulse 1s infinite',
-                pointerEvents: 'none',
-              }} />
-            )}
             {cubeNode}
           </div>
         </div>
@@ -886,16 +875,6 @@ export const PracticeView = memo(function PracticeView({
             border: 'none',
             background: 'transparent',
           }}>
-            {training.timerState === 'RUNNING' && (
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                borderRadius: 16,
-                border: '2px solid var(--ok)',
-                animation: 'pulse 1s infinite',
-                pointerEvents: 'none',
-              }} />
-            )}
             {cubeNode}
           </div>
         </div>
