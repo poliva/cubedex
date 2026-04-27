@@ -3,56 +3,96 @@ import type { CaseCardData } from '../lib/case-cards';
 import { CaseCard } from '../components/CaseCard';
 import { EmptyState } from '../components/ui/EmptyState';
 
+function findVerticalScrollParent(el: HTMLElement | null): HTMLElement | null {
+  let n = el?.parentElement ?? null;
+  while (n) {
+    const st = getComputedStyle(n);
+    const oy = st.overflowY;
+    if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight + 1) {
+      return n;
+    }
+    n = n.parentElement;
+  }
+  return null;
+}
+
 function VirtualizedCaseGrid({ cards }: { cards: CaseCardData[] }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const scrollParentRef = useRef<HTMLElement | null>(null);
   const rafRef = useRef<number | null>(null);
-  const containerTopRef = useRef<number>(0);
-  const [viewport, setViewport] = useState<{ scrollY: number; vh: number; width: number }>({
-    scrollY: typeof window !== 'undefined' ? window.scrollY : 0,
-    vh: typeof window !== 'undefined' ? window.innerHeight : 0,
+  const [viewport, setViewport] = useState<{
+    width: number;
+    /** Viewport Y of visible clip top (scroll parent top or 0). */
+    clipTop: number;
+    /** Viewport Y of visible clip bottom. */
+    clipBottom: number;
+    /** Viewport Y of virtualized container top. */
+    containerTop: number;
+  }>({
     width: 0,
+    clipTop: 0,
+    clipBottom: typeof window !== 'undefined' ? window.innerHeight : 0,
+    containerTop: 0,
   });
 
-  function measureContainerTop() {
+  function measureVisibleSlice() {
     const el = containerRef.current;
     if (!el) return;
-    const rect = el.getBoundingClientRect();
-    containerTopRef.current = rect.top + window.scrollY;
+    const cr = el.getBoundingClientRect();
+    const S = scrollParentRef.current;
+    let clipTop = 0;
+    let clipBottom = window.innerHeight;
+    if (S) {
+      const pr = S.getBoundingClientRect();
+      clipTop = pr.top;
+      clipBottom = pr.bottom;
+    }
+    setViewport((v) => ({
+      ...v,
+      clipTop,
+      clipBottom,
+      containerTop: cr.top,
+    }));
+  }
+
+  function scheduleMeasure() {
+    if (rafRef.current != null) return;
+    rafRef.current = window.requestAnimationFrame(() => {
+      rafRef.current = null;
+      measureVisibleSlice();
+    });
   }
 
   useLayoutEffect(() => {
-    measureContainerTop();
+    scrollParentRef.current = findVerticalScrollParent(containerRef.current);
+    measureVisibleSlice();
   }, [viewport.width, cards.length]);
 
   useEffect(() => {
-    function scheduleUpdate() {
-      if (rafRef.current != null) return;
-      rafRef.current = window.requestAnimationFrame(() => {
-        rafRef.current = null;
-        measureContainerTop();
-        setViewport((v) => ({
-          ...v,
-          scrollY: window.scrollY,
-          vh: window.innerHeight,
-        }));
-      });
-    }
-
     function onScrollOrResize() {
-      scheduleUpdate();
+      scheduleMeasure();
     }
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('scroll', onScrollOrResize, { passive: true, capture: true });
     window.addEventListener('resize', onScrollOrResize);
-    onScrollOrResize();
+    const el = containerRef.current;
+    const S = findVerticalScrollParent(el);
+    scrollParentRef.current = S;
+    if (S) {
+      S.addEventListener('scroll', onScrollOrResize, { passive: true });
+    }
+    scheduleMeasure();
     return () => {
-      window.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('scroll', onScrollOrResize, true);
       window.removeEventListener('resize', onScrollOrResize);
+      if (S) {
+        S.removeEventListener('scroll', onScrollOrResize);
+      }
       if (rafRef.current != null) {
         window.cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       }
     };
-  }, []);
+  }, [cards.length]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -80,16 +120,14 @@ function VirtualizedCaseGrid({ cards }: { cards: CaseCardData[] }) {
     return <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '0px' }} />;
   }
 
-  const containerTop = containerTopRef.current;
-  const viewTop = viewport.scrollY;
-  const viewBottom = viewport.scrollY + viewport.vh;
+  const { clipTop, clipBottom, containerTop } = viewport;
   const startRow = Math.min(
     totalRows - 1,
-    Math.max(0, Math.floor((viewTop - containerTop) / rowHeight) - overscanRows),
+    Math.max(0, Math.floor((clipTop - containerTop) / rowHeight) - overscanRows),
   );
   const endRow = Math.min(
     totalRows - 1,
-    Math.max(startRow, Math.ceil((viewBottom - containerTop) / rowHeight) + overscanRows),
+    Math.max(startRow, Math.ceil((clipBottom - containerTop) / rowHeight) + overscanRows),
   );
   const startIndex = Math.max(0, startRow * cols);
   const endIndexExclusive = Math.min(cards.length, (endRow + 1) * cols);
