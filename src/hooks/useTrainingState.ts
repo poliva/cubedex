@@ -182,7 +182,7 @@ function averageFromValues(values: number[]) {
 function buildStats(
   algId: string,
   statsAlgorithm: string,
-  _practiceCount: number,
+  sessionSolveCount: number,
   selectedCases: CaseCardData[] = [],
 ) : TrainingStats {
   if (!algId) {
@@ -229,11 +229,19 @@ function buildStats(
     singlePb: bestTimeString(bestTime),
     practiceCount: derivedPracticeCount,
     hasHistory: historyCount > 0,
-    lastFive: executionTimes.slice(-5).map((time, index, times) => ({
-      value: time,
-      label: `Time ${derivedPracticeCount < 5 ? index + 1 : derivedPracticeCount - times.length + index + 1}: ${historyTimeString(time)}`,
-      isPb: bestTime === time,
-    })),
+    lastFive: executionTimes.slice(-5).map((time, index, times) => {
+      const positionFromEnd = times.length - 1 - index;
+      const sessionTimeNumber = sessionSolveCount - positionFromEnd;
+      const timeStr = historyTimeString(time);
+      const label = sessionTimeNumber >= 1
+        ? `Time ${sessionTimeNumber}: ${timeStr}`
+        : `Recorded: ${timeStr}`;
+      return {
+        value: time,
+        label,
+        isPb: bestTime === time,
+      };
+    }),
   };
 }
 
