@@ -168,9 +168,6 @@ export const HelpView = memo(function HelpView({
 
         {/* Header + mode toggle - make toggle a prominent tab row */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {!isMobile && (
-            <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0, color: 'var(--fg)' }}>Help</h2>
-          )}
           <div style={{
             display: 'flex',
             background: 'var(--raised)',

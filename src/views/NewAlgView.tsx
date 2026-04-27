@@ -123,10 +123,7 @@ export const NewAlgView = memo(function NewAlgView({
         paddingBottom: pb,
       }}
     >
-      {!isMobile && (
-        <h2 style={{ fontWeight: 700, fontSize: 18, marginBottom: 16, color: 'var(--fg)' }}>New Alg</h2>
-      )}
-      <div style={{ maxWidth: 760, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.15fr) minmax(280px, 0.85fr)', gap: 14 }}>
+        <div style={{ maxWidth: 760, display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.15fr) minmax(280px, 0.85fr)', gap: 14 }}>
 
         <div style={cardStyle}>
           <div>

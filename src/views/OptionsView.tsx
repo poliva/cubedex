@@ -132,10 +132,6 @@ export const OptionsView = memo(function OptionsView({
           deviceInfoTable
         ) : (
           <>
-            {!isMobile && (
-              <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0, color: 'var(--fg)' }}>Options</h2>
-            )}
-
         {/* Algorithms */}
         <div style={section}>
           <div style={sHdr}>Algorithms</div>
