@@ -125,6 +125,9 @@ export interface TrainingState {
   scrambleMode: boolean;
   timerState: TimerState;
   timerText: string;
+  lastSolveText: string | null;
+  lastSolveIsPb: boolean;
+  lastSolveAlgName: string | null;
   countdownActive: boolean;
   countdownValue: number | null;
   visualResetKey: number;
@@ -597,6 +600,9 @@ export function useTrainingState(
   const [failedCounts, setFailedCounts] = useState<Record<string, number>>({});
   const [practiceCounts, setPracticeCounts] = useState<Record<string, number>>({});
   const [flashRequest, setFlashRequest] = useState<TrainingFlashRequest | null>(null);
+  const [lastSolveText, setLastSolveText] = useState<string | null>(null);
+  const [lastSolveIsPb, setLastSolveIsPb] = useState(false);
+  const [lastSolveAlgName, setLastSolveAlgName] = useState<string | null>(null);
   const [timeAttackProgress, setTimeAttackProgress] = useState({
     active: false,
     currentCaseNumber: 0,
@@ -1296,6 +1302,9 @@ export function useTrainingState(
     setInputMode(true);
     setScrambleMode(false);
     setTimerText('');
+    setLastSolveText(null);
+    setLastSolveIsPb(false);
+    setLastSolveAlgName(null);
     setTimerStateInternal('IDLE');
     setAlgInputState(expandNotation(algorithm.trim()));
   }
@@ -1435,6 +1444,9 @@ export function useTrainingState(
       setAlgInputState('');
       setDisplayAlg('');
       setTimerText('');
+      setLastSolveText(null);
+      setLastSolveIsPb(false);
+      setLastSolveAlgName(null);
       clearStatsIdentity();
       initialPatternRef.current = null;
       clearProgressState();
@@ -1632,6 +1644,7 @@ export function useTrainingState(
       const totalWallTime = timeAttackSessionStartRef.current == null
         ? finalTime
         : Math.round(performance.now() - timeAttackSessionStartRef.current);
+      const previousTimeAttackBest = getBestTime(algId);
       persistExecutionOnlyResult(algId, totalWallTime);
       setTimeAttackLastRuns(algId, appendLimitedTime(
         { wallMs: totalWallTime, caseTimes: timeAttackCaseTimesRef.current },
@@ -1641,14 +1654,23 @@ export function useTrainingState(
       incrementPracticeCount(algId);
       const totalTimeText = formatTimerTimestamp(totalWallTime);
       setTimerText(totalTimeText);
+      setLastSolveText(totalTimeText);
+      setLastSolveIsPb(previousTimeAttackBest == null || totalWallTime < previousTimeAttackBest);
+      setLastSolveAlgName('Time Attack');
       setTimerStateInternal('STOPPED');
       prepareNextTimeAttack(totalTimeText);
       return null;
     }
 
+    const previousBest = getBestTime(algId);
+    const completedCaseName = currentCaseRef.current?.name ?? null;
     const review = persistCompletedAttempt(algId, finalTime);
     incrementPracticeCount(algId);
-    setTimerText(formatTimerTimestamp(finalTime));
+    const finalTimeText = formatTimerTimestamp(finalTime);
+    setTimerText(finalTimeText);
+    setLastSolveText(finalTimeText);
+    setLastSolveIsPb(previousBest == null || finalTime < previousBest);
+    setLastSolveAlgName(completedCaseName);
     setTimerStateInternal('STOPPED');
     isKeyboardTimerActiveRef.current = false;
 
@@ -1897,6 +1919,9 @@ export function useTrainingState(
     setAlgInputState('');
     setDisplayAlg('');
     setTimerText('');
+    setLastSolveText(null);
+    setLastSolveIsPb(false);
+    setLastSolveAlgName(null);
     setTimerState('IDLE');
     setVisualResetKey((v) => v + 1);
   }
@@ -1926,6 +1951,9 @@ export function useTrainingState(
     scrambleMode,
     timerState,
     timerText,
+    lastSolveText,
+    lastSolveIsPb,
+    lastSolveAlgName,
     countdownActive,
     countdownValue,
     visualResetKey,
@@ -1998,6 +2026,9 @@ export function useTrainingState(
     statsAlgId,
     timerState,
     timerText,
+    lastSolveText,
+    lastSolveIsPb,
+    lastSolveAlgName,
     timeAttackProgress.active,
     timeAttackProgress.currentCaseNumber,
     timeAttackProgress.totalCases,

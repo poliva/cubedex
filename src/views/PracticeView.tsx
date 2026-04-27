@@ -162,12 +162,26 @@ export const PracticeView = memo(function PracticeView({
     transition: 'transform 0.22s ease, border-color 0.15s, box-shadow 0.15s, color 0.2s',
   };
 
-  const timerColor =
-    training.timerState === 'READY'
+  const showingLastSolve =
+    !training.inputMode
+    && training.lastSolveText != null
+    && (training.timerState === 'IDLE' || training.timerState === 'READY');
+  const displayedTimerText = showingLastSolve
+    ? training.lastSolveText!
+    : training.timerState === 'IDLE'
+      ? '0.00'
+      : training.timerText;
+  const timerColor = showingLastSolve
+    ? 'var(--ok)'
+    : training.timerState === 'READY'
       ? 'var(--ok)'
       : training.timerState === 'RUNNING'
         ? 'var(--fg3)'
         : 'var(--fg)';
+  const showPbBadge =
+    training.lastSolveIsPb
+    && !training.inputMode
+    && training.timerState !== 'RUNNING';
   const flashAccent =
     flashingIndicatorColor === 'green'
       ? 'rgba(34,197,94,0.65)'
@@ -183,13 +197,15 @@ export const PracticeView = memo(function PracticeView({
 
   const timerLabel = training.inputMode
     ? ''
-    : training.timerState === 'IDLE'
-      ? (smartcube.connected ? 'Train to begin' : 'Hold Space')
-      : training.timerState === 'READY'
-        ? 'Ready'
-        : training.timerState === 'RUNNING'
-          ? 'Solving…'
-          : 'Time';
+    : showingLastSolve
+      ? (training.lastSolveAlgName ?? 'Last')
+      : training.timerState === 'IDLE'
+        ? (smartcube.connected ? 'Train to begin' : 'Hold Space')
+        : training.timerState === 'READY'
+          ? 'Ready'
+          : training.timerState === 'RUNNING'
+            ? 'Solving…'
+            : 'Time';
 
   const showStatus = scramble.helpTone === 'green' || training.helpTone === 'red' || scramble.scrambleMode;
   const statusColor =
@@ -675,9 +691,9 @@ export const PracticeView = memo(function PracticeView({
             textAlign: 'center',
             whiteSpace: 'nowrap',
           }}>
-            {training.timerState === 'IDLE' ? '0.00' : training.timerText}
+            {displayedTimerText}
           </div>
-          {training.stats.lastFive.at(-1)?.isPb ? (
+          {showPbBadge ? (
             <span style={{ fontSize: 12, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
           ) : null}
         </div>
@@ -911,9 +927,9 @@ export const PracticeView = memo(function PracticeView({
               width: '100%',
               whiteSpace: 'nowrap',
             }}>
-              {training.timerState === 'IDLE' ? '0.00' : training.timerText}
+              {displayedTimerText}
             </div>
-            {training.stats.lastFive.at(-1)?.isPb ? (
+            {showPbBadge ? (
               <span style={{ fontSize: 13, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
             ) : null}
           </div>
