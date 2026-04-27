@@ -45,7 +45,6 @@ export function App() {
   const [deleteSuccessMessage, setDeleteSuccessMessage] = useState('');
   const [infoVisible, setInfoVisible] = useState(false);
   const [isMoveMasked, setIsMoveMasked] = useState(false);
-  const [showTimesInsteadOfGraph, setShowTimesInsteadOfGraph] = useState(false);
   const [mainCubeStickeringDeferred, setMainCubeStickeringDeferred] = useState(true);
   const [scrambleStartAlg, setScrambleStartAlg] = useState('');
   const [acknowledgedDisconnectToken, setAcknowledgedDisconnectToken] = useState(0);
@@ -183,7 +182,7 @@ export function App() {
     training.currentCase,
     training.displayAlg || training.algInput,
     training.statsAlgId,
-    `${statsRefreshToken}:${activeStatsSolveCount}:${isMobile}:${showTimesInsteadOfGraph}`,
+    `${statsRefreshToken}:${activeStatsSolveCount}:${isMobile}:${options.showTimesInsteadOfGraph}`,
   );
 
   useEffect(() => {
@@ -775,8 +774,8 @@ export function App() {
             isMobile={isMobile}
             orientationResetToken={orientationResetState.token}
             orientationResetAlg={orientationResetState.alg}
-            showTimesInsteadOfGraph={showTimesInsteadOfGraph}
-            setShowTimesInsteadOfGraph={setShowTimesInsteadOfGraph}
+            showTimesInsteadOfGraph={options.showTimesInsteadOfGraph}
+            setShowTimesInsteadOfGraph={options.setShowTimesInsteadOfGraph}
             onOpenCaseLibrary={() => selectView('cases')}
           />
 

@@ -22,6 +22,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     controlPanel: 'none',
     flashingIndicatorEnabled: true,
     cubeSizePx: 400,
+    showTimesInsteadOfGraph: false,
     setDarkMode: vi.fn(),
     setShowAlgName: vi.fn(),
     setCountdownMode: vi.fn(),
@@ -36,6 +37,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     setControlPanel: vi.fn(),
     setFlashingIndicatorEnabled: vi.fn(),
     setCubeSizePx: vi.fn(),
+    setShowTimesInsteadOfGraph: vi.fn(),
     ...overrides,
   };
 }

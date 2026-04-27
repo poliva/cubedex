@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { readOption, writeOption } from '../lib/storage';
 
 export interface AppSettingsState {
@@ -16,6 +16,7 @@ export interface AppSettingsState {
   controlPanel: string;
   flashingIndicatorEnabled: boolean;
   cubeSizePx: number;
+  showTimesInsteadOfGraph: boolean;
   setDarkMode: (value: boolean) => void;
   setShowAlgName: (value: boolean) => void;
   setCountdownMode: (value: boolean) => void;
@@ -30,6 +31,7 @@ export interface AppSettingsState {
   setControlPanel: (value: string) => void;
   setFlashingIndicatorEnabled: (value: boolean) => void;
   setCubeSizePx: (value: number) => void;
+  setShowTimesInsteadOfGraph: Dispatch<SetStateAction<boolean>>;
 }
 
 function clampInt(value: unknown, min: number, max: number, fallback: number) {
@@ -70,6 +72,9 @@ export function useAppSettings(): AppSettingsState {
   );
   const [cubeSizePx, setCubeSizePxState] = useState(
     clampInt(readOption('cubeSizePx'), 240, 600, 400),
+  );
+  const [showTimesInsteadOfGraph, setShowTimesInsteadOfGraph] = useState(
+    readOption('showTimesInsteadOfGraph') === 'true',
   );
 
   useEffect(() => {
@@ -132,6 +137,10 @@ export function useAppSettings(): AppSettingsState {
     writeOption('cubeSizePx', String(cubeSizePx));
   }, [cubeSizePx]);
 
+  useEffect(() => {
+    writeOption('showTimesInsteadOfGraph', String(showTimesInsteadOfGraph));
+  }, [showTimesInsteadOfGraph]);
+
   const setCubeSizePx = useCallback((value: number) => {
     setCubeSizePxState(clampInt(value, 240, 600, 400));
   }, []);
@@ -151,6 +160,7 @@ export function useAppSettings(): AppSettingsState {
     controlPanel,
     flashingIndicatorEnabled,
     cubeSizePx,
+    showTimesInsteadOfGraph,
     setDarkMode: setDarkModeState,
     setShowAlgName: setShowAlgNameState,
     setCountdownMode: setCountdownModeState,
@@ -165,6 +175,7 @@ export function useAppSettings(): AppSettingsState {
     setControlPanel: setControlPanelState,
     setFlashingIndicatorEnabled: setFlashingIndicatorEnabledState,
     setCubeSizePx,
+    setShowTimesInsteadOfGraph,
   }), [
     alwaysScrambleTo,
     autoUpdateLearningState,
@@ -179,6 +190,7 @@ export function useAppSettings(): AppSettingsState {
     hintFacelets,
     setCubeSizePx,
     showAlgName,
+    showTimesInsteadOfGraph,
     visualization,
     whiteOnBottom,
   ]);

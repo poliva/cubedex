@@ -196,6 +196,7 @@ vi.mock('../src/hooks/useAppSettings', () => ({
     whiteOnBottom: false,
     controlPanel: 'none',
     cubeSizePx: 420,
+    showTimesInsteadOfGraph: false,
     setDarkMode: vi.fn(),
     setShowAlgName: vi.fn(),
     setCountdownMode: vi.fn(),
@@ -210,6 +211,7 @@ vi.mock('../src/hooks/useAppSettings', () => ({
     setControlPanel: vi.fn(),
     setFlashingIndicatorEnabled: vi.fn(),
     setCubeSizePx: vi.fn(),
+    setShowTimesInsteadOfGraph: vi.fn(),
   })),
 }));
 

@@ -52,6 +52,7 @@ export const STORAGE_KEYS = {
   theme: 'theme',
   smartcubeDeviceSelection: 'smartcubeDeviceSelection',
   autoUpdateLearningState: 'autoUpdateLearningState',
+  showTimesInsteadOfGraph: 'showTimesInsteadOfGraph',
 } as const;
 
 export const DEFAULT_ALG_ID = 'default-alg-id';
