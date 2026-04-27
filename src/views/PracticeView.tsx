@@ -610,7 +610,9 @@ export const PracticeView = memo(function PracticeView({
           style={{
             margin: '0 12px 16px',
             borderRadius: 16,
-            border: '1px solid var(--border)',
+            borderWidth: 1,
+            borderStyle: 'solid',
+            borderColor: 'var(--border)',
             background: 'var(--surface)',
             padding: '20px 20px 16px',
             display: 'flex',
@@ -892,7 +894,9 @@ export const PracticeView = memo(function PracticeView({
           <div className="practice-timer-card" style={{
             padding: '18px 22px',
             borderRadius: 16,
-            border: '1px solid var(--border)',
+            borderWidth: 1,
+            borderStyle: 'solid',
+            borderColor: 'var(--border)',
             background: 'var(--surface)',
             display: 'flex',
             flexDirection: 'column',
