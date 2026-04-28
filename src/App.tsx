@@ -5,7 +5,6 @@ import {
   useRef,
   useState,
   type ChangeEventHandler,
-  type ComponentType,
 } from 'react';
 import { Alg } from 'cubing/alg';
 import { cube3x3x3 } from 'cubing/puzzles';
@@ -16,39 +15,35 @@ import { useAppSettings } from './hooks/useAppSettings';
 import { useScrambleState } from './hooks/useScrambleState';
 import { useSmartcubeConnection } from './hooks/useSmartcubeConnection';
 import { useAlgorithmImportExport } from './hooks/useAlgorithmImportExport';
+import { useIsMobile } from './hooks/useIsMobile';
 import { getStickeringForCategory } from './lib/stickering';
-import { deleteAlgorithm, getBestTime, getSavedAlgorithms, removeAlgorithmTimesStorage } from './lib/storage';
+import { invalidatePreview } from './lib/preview-cache';
+import { deleteAlgorithm, expandNotation, getBestTime, getSavedAlgorithms, removeAlgorithmTimesStorage } from './lib/storage';
 import { usePracticeToggles } from './hooks/usePracticeToggles';
 import { useTrainingGraphs } from './hooks/useTrainingGraphs';
 import { averageOfFiveTimeNumber } from './lib/case-cards';
 import { patternToPlayerAlg } from './lib/scramble';
-import {
-  HamburgerIcon,
-} from './components/Icons';
 import { ImportFileInput } from './components/ImportFileInput';
-import { MenuHelpIcon, MenuNewAlgIcon, MenuOptionsIcon, MenuPracticeIcon } from './components/MenuNavIcons';
 import { PracticeView } from './views/PracticeView';
+import { CasesView } from './views/CasesView';
 import { OptionsView } from './views/OptionsView';
 import { HelpView } from './views/HelpView';
+import { NewAlgView } from './views/NewAlgView';
+import { Sidebar } from './components/shell/Sidebar';
+import { DesktopTopbar } from './components/shell/DesktopTopbar';
+import { MobileTopbar } from './components/shell/MobileTopbar';
+import { BottomTabBar } from './components/shell/BottomTabBar';
+import { Footer } from './components/shell/Footer';
 import { trainingViewStore } from './state/trainingViewStore';
 
-type MenuView = 'practice' | 'new-alg' | 'options' | 'help';
-
-const MENU_ITEMS: Array<{ id: MenuView; label: string; Icon: ComponentType }> = [
-  { id: 'practice', label: 'Practice', Icon: MenuPracticeIcon },
-  { id: 'new-alg', label: 'New Alg', Icon: MenuNewAlgIcon },
-  { id: 'options', label: 'Options', Icon: MenuOptionsIcon },
-  { id: 'help', label: 'Help', Icon: MenuHelpIcon },
-];
+type MenuView = 'practice' | 'cases' | 'new-alg' | 'options' | 'help';
 
 export function App() {
   const [activeView, setActiveView] = useState<MenuView>('practice');
-  const [menuOpen, setMenuOpen] = useState(false);
   const [showDumbcubeHelp, setShowDumbcubeHelp] = useState(false);
   const [deleteMode, setDeleteMode] = useState(false);
   const [deleteSuccessMessage, setDeleteSuccessMessage] = useState('');
   const [infoVisible, setInfoVisible] = useState(false);
-  const [showTimesInsteadOfGraph, setShowTimesInsteadOfGraph] = useState(false);
   const [isMoveMasked, setIsMoveMasked] = useState(false);
   const [mainCubeStickeringDeferred, setMainCubeStickeringDeferred] = useState(true);
   const [scrambleStartAlg, setScrambleStartAlg] = useState('');
@@ -57,9 +52,6 @@ export function App() {
   const [reviewRefreshToken, setReviewRefreshToken] = useState(0);
   const [algEditorVisible, setAlgEditorVisible] = useState(false);
   const hideAlgEditorTimeoutRef = useRef<number | null>(null);
-  const menuToggleRef = useRef<HTMLButtonElement | null>(null);
-  const menuItemsRef = useRef<HTMLDivElement | null>(null);
-  const isTouchScrollingRef = useRef(false);
   const lastAutoScrambleKeyRef = useRef('');
   const lastProcessedScrambleMoveRef = useRef('');
   const lastProcessedInputMoveRef = useRef('');
@@ -69,6 +61,9 @@ export function App() {
   const flashingIndicatorTimeoutRef = useRef<number | null>(null);
   const [isFlashingIndicatorVisible, setIsFlashingIndicatorVisible] = useState(false);
   const [flashingIndicatorColor, setFlashingIndicatorColor] = useState<'gray' | 'red' | 'green'>('gray');
+  const [orientationResetState, setOrientationResetState] = useState<{ token: number; alg: string | null }>({ token: 0, alg: null });
+
+  const isMobile = useIsMobile();
   const options = useAppSettings();
   const practiceToggles = usePracticeToggles();
   const caseLibrary = useCaseLibrary({
@@ -110,19 +105,49 @@ export function App() {
     onReviewRecorded: () => setReviewRefreshToken((value) => value + 1),
   });
   const scramble = useScrambleState();
+  const prevSmartcubeConnectedRef = useRef(smartcube.connected);
+  const pendingPhysicalTrainingRetrainRef = useRef(false);
+
+  useEffect(() => {
+    const wasConnected = prevSmartcubeConnectedRef.current;
+    prevSmartcubeConnectedRef.current = smartcube.connected;
+    if (smartcube.connected && !wasConnected) {
+      pendingPhysicalTrainingRetrainRef.current = true;
+    }
+    if (!smartcube.connected) {
+      pendingPhysicalTrainingRetrainRef.current = false;
+    }
+  }, [smartcube.connected]);
+
+  useEffect(() => {
+    if (!pendingPhysicalTrainingRetrainRef.current || !smartcube.connected || !smartcube.currentPattern) {
+      return;
+    }
+    if (training.inputMode || training.countdownActive || scramble.scrambleMode) {
+      return;
+    }
+    pendingPhysicalTrainingRetrainRef.current = false;
+    void training.trainCurrent(smartcube.currentPattern);
+  }, [
+    scramble.scrambleMode,
+    smartcube.connected,
+    smartcube.currentPattern,
+    training.countdownActive,
+    training.inputMode,
+    training.trainCurrent,
+  ]);
+
   const algorithmActions = useAlgorithmImportExport(reloadSavedAlgorithms);
   const selectedStickering = mainCubeStickeringDeferred && !options.fullStickering
     ? 'full'
     : getStickeringForCategory(selectedCategory || 'PLL', options.fullStickering);
   const optionsVisible = activeView === 'options';
-  const helpVisible = activeView === 'help';
-  const newAlgVisible = activeView === 'new-alg';
-  const optionsMounted = optionsVisible || infoVisible;
+  const optionsDeviceInfoOpen = activeView === 'options' && infoVisible;
+
   const showFlashingIndicator = useCallback((color: 'gray' | 'red' | 'green', durationMs: number) => {
     if (!options.flashingIndicatorEnabled && color !== 'gray') {
       return;
     }
-
     setFlashingIndicatorColor(color);
     setIsFlashingIndicatorVisible(true);
     if (flashingIndicatorTimeoutRef.current !== null) {
@@ -136,52 +161,36 @@ export function App() {
 
   const [inputModeSmartcubeSeed, setInputModeSmartcubeSeed] = useState<{ key: string; alg: string } | null>(null);
   useEffect(() => {
-    // In input-mode with a connected smartcube, we want the virtual cube to animate turns.
-    // We seed the cube's state once from the current pattern, then animate incremental moves via appendMove.
     const pattern = smartcube.currentPattern;
     if (!training.inputMode || !smartcube.connected || !pattern) {
       setInputModeSmartcubeSeed(null);
       return;
     }
-
     const seedKey = `${smartcube.disconnectToken}:${training.visualResetKey}`;
     setInputModeSmartcubeSeed((current) => {
-      if (current?.key === seedKey) {
-        return current;
-      }
+      if (current?.key === seedKey) return current;
       const alg = patternToPlayerAlg(pattern);
       return { key: seedKey, alg };
     });
   }, [smartcube.connected, smartcube.currentPattern, smartcube.disconnectToken, training.inputMode, training.visualResetKey]);
 
-  // `mainCubeAlg` represents the *algorithm shown on the main cube*, which only
-  // changes at case transitions — not per move. Deps intentionally exclude
-  // `smartcube.currentPattern`, which fires on every physical move and would
-  // otherwise rerun this memo (and the Alg.fromString(...).invert() work) each
-  // time, even when the returned string is identical.
+  // `mainCubeAlg` intentionally excludes `smartcube.currentPattern` from deps — see CLAUDE.md.
   const mainCubeAlg = useMemo(() => {
     if (!smartcube.connected && smartcube.disconnectToken !== acknowledgedDisconnectToken) {
       return '';
     }
-
     if (scramble.scrambleMode && smartcube.connected) {
       return scrambleStartAlg;
     }
-
     if (training.inputMode) {
       if (smartcube.connected && inputModeSmartcubeSeed) {
         return inputModeSmartcubeSeed.alg;
       }
-
       return training.displayAlg.trim()
         ? Alg.fromString(training.displayAlg).invert().toString()
         : '';
     }
-
-    if (!training.displayAlg.trim()) {
-      return '';
-    }
-
+    if (!training.displayAlg.trim()) return '';
     return Alg.fromString(training.displayAlg).invert().toString();
   }, [
     acknowledgedDisconnectToken,
@@ -205,10 +214,9 @@ export function App() {
     training.currentCase,
     training.displayAlg || training.algInput,
     training.statsAlgId,
-    `${statsRefreshToken}:${activeStatsSolveCount}`,
+    `${statsRefreshToken}:${activeStatsSolveCount}:${isMobile}:${options.showTimesInsteadOfGraph}`,
   );
 
-  // Mirror move-list specific fields into an external store so only the move list rerenders per-move.
   useEffect(() => {
     trainingViewStore.setState({
       displayMoves: training.displayMoves,
@@ -218,8 +226,6 @@ export function App() {
     });
   }, [training.displayMoves, training.fixText, training.fixVisible, training.helpTone]);
 
-  // Sync case-card slices into the store so CaseCard instances subscribe via selectors
-  // and don't re-render on every training state change.
   useEffect(() => {
     caseCardStore.setState({
       practiceCounts: training.practiceCounts,
@@ -232,14 +238,9 @@ export function App() {
   }, [selectedCaseIds]);
 
   useEffect(() => {
-    caseCardStore.setState({ fullStickering: options.fullStickering });
-  }, [options.fullStickering]);
-
-  useEffect(() => {
     caseCardStore.setState({ autoUpdateLearningState: options.autoUpdateLearningState });
   }, [options.autoUpdateLearningState]);
 
-  // Refresh per-card best/ao5 from cached storage whenever solves may have changed.
   useEffect(() => {
     const bestTimes: Record<string, number | null> = {};
     const ao5Times: Record<string, number | null> = {};
@@ -250,7 +251,6 @@ export function App() {
     caseCardStore.setState({ bestTimes, ao5Times });
   }, [activeStatsSolveCount, caseCards, selectedCaseSolveCount, statsRefreshToken]);
 
-  // Keep action wrappers pointing at the latest closures.
   useEffect(() => {
     setCaseCardActions({
       cycleCaseLearnedState,
@@ -262,29 +262,26 @@ export function App() {
     });
   }, [cycleCaseLearnedState, toggleCaseSelection, smartcube.disconnectToken]);
 
-
   useEffect(() => {
     if (!scramble.scrambleMode) {
       setScrambleStartAlg('');
-      lastAutoScrambleKeyRef.current = '';
+      // When alwaysScrambleTo is on, keep lastAutoScrambleKeyRef so the auto effect does not
+      // treat the same (case, alg) as new and call startScrambleTo again while still READY
+      // after a completed scramble-to (would re-enter scramble mode during the solve).
+      if (!options.alwaysScrambleTo) {
+        lastAutoScrambleKeyRef.current = '';
+      }
     }
-  }, [scramble.scrambleMode]);
+  }, [options.alwaysScrambleTo, scramble.scrambleMode]);
 
   useEffect(() => {
     if (!smartcube.connected) {
       handledGyroSupportSessionRef.current = '';
       return;
     }
-
-    if (!smartcube.gyroSupportResolved) {
-      return;
-    }
-
+    if (!smartcube.gyroSupportResolved) return;
     const sessionKey = `${smartcube.disconnectToken}:${smartcube.info.deviceMAC}:${smartcube.info.gyroSupported}`;
-    if (handledGyroSupportSessionRef.current === sessionKey) {
-      return;
-    }
-
+    if (handledGyroSupportSessionRef.current === sessionKey) return;
     handledGyroSupportSessionRef.current = sessionKey;
     if (smartcube.gyroSupported) {
       options.setGyroscope(true);
@@ -303,49 +300,18 @@ export function App() {
   ]);
 
   useEffect(() => {
-    function onDocumentClick(event: MouseEvent) {
-      const target = event.target as Node | null;
-      if (!target) {
-        return;
-      }
-
-      const clickedToggle = menuToggleRef.current?.contains(target) ?? false;
-      const clickedMenu = menuItemsRef.current?.contains(target) ?? false;
-
-      if (!clickedToggle && !clickedMenu) {
-        setMenuOpen(false);
-      }
-    }
-
-    document.addEventListener('click', onDocumentClick);
-    return () => {
-      document.removeEventListener('click', onDocumentClick);
-    };
-  }, []);
-
-  useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.code !== 'Space' || smartcube.connected || training.inputMode) {
-        return;
-      }
-
+      if (event.code !== 'Space' || smartcube.connected || training.inputMode) return;
       event.preventDefault();
       training.handleSpaceKeyDown();
     }
-
     function onKeyUp(event: KeyboardEvent) {
-      if (event.code !== 'Space' || smartcube.connected || training.inputMode) {
-        return;
-      }
-
+      if (event.code !== 'Space' || smartcube.connected || training.inputMode) return;
       event.preventDefault();
       const shouldFlash = training.timerState === 'READY';
       training.handleSpaceKeyUp();
-      if (shouldFlash) {
-        showFlashingIndicator('gray', 200);
-      }
+      if (shouldFlash) showFlashingIndicator('gray', 200);
     }
-
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
     return () => {
@@ -370,38 +336,23 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    if (!training.flashRequest) {
-      return;
-    }
-
+    if (!training.flashRequest) return;
     showFlashingIndicator(training.flashRequest.color, training.flashRequest.durationMs);
   }, [showFlashingIndicator, training.flashRequest]);
 
   useEffect(() => {
-    if (options.flashingIndicatorEnabled) {
-      return;
-    }
-
+    if (options.flashingIndicatorEnabled) return;
     if (flashingIndicatorTimeoutRef.current !== null) {
       window.clearTimeout(flashingIndicatorTimeoutRef.current);
       flashingIndicatorTimeoutRef.current = null;
     }
-
     setIsFlashingIndicatorVisible(false);
   }, [options.flashingIndicatorEnabled]);
 
   useEffect(() => {
-    if (!deleteSuccessMessage) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setDeleteSuccessMessage('');
-    }, 3000);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
+    if (!deleteSuccessMessage) return;
+    const timeoutId = window.setTimeout(() => setDeleteSuccessMessage(''), 3000);
+    return () => window.clearTimeout(timeoutId);
   }, [deleteSuccessMessage]);
 
   useEffect(() => {
@@ -409,21 +360,13 @@ export function App() {
       lastAutoScrambleKeyRef.current = '';
       return;
     }
-
     if (practiceToggles.timeAttack) {
       lastAutoScrambleKeyRef.current = '';
       return;
     }
-
-    if (training.inputMode || training.timerState !== 'READY') {
-      return;
-    }
-
+    if (training.inputMode || training.timerState !== 'READY') return;
     const key = `${training.statsAlgId}:${training.displayAlg || training.algInput}`;
-    if (lastAutoScrambleKeyRef.current === key) {
-      return;
-    }
-
+    if (lastAutoScrambleKeyRef.current === key) return;
     lastAutoScrambleKeyRef.current = key;
     void scramble.startScrambleTo(
       training.displayAlg || training.algInput,
@@ -431,10 +374,7 @@ export function App() {
       smartcube.currentPattern,
       practiceToggles.randomizeAUF,
     ).then((started) => {
-      if (!started) {
-        return;
-      }
-
+      if (!started) return;
       setAcknowledgedDisconnectToken(smartcube.disconnectToken);
       setScrambleStartAlg(smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : '');
       lastProcessedScrambleMoveRef.current = '';
@@ -457,26 +397,15 @@ export function App() {
   ]);
 
   useEffect(() => {
-    if (!smartcube.lastProcessedMove) {
-      return;
-    }
-
+    if (!smartcube.lastProcessedMove) return;
     const moveKey = smartcube.lastProcessedMove.key;
-
-    // Global dedupe: UI state transitions can cause this effect to re-run with the same moveKey.
-    // We should never process the same smartcube move twice, regardless of mode.
-    if (lastProcessedAnyMoveKeyRef.current === moveKey) {
-      return;
-    }
+    if (lastProcessedAnyMoveKeyRef.current === moveKey) return;
     lastProcessedAnyMoveKeyRef.current = moveKey;
 
     if (training.inputMode) {
-      if (lastProcessedInputMoveRef.current === moveKey) {
-        return;
-      }
+      if (lastProcessedInputMoveRef.current === moveKey) return;
       lastProcessedInputMoveRef.current = moveKey;
       lastProcessedPracticeMoveRef.current = '';
-
       const currentValue = training.algInput.trim();
       const nextValue = Alg.fromString(`${currentValue} ${smartcube.lastProcessedMove.rawMoves.map((entry) => entry.move).join(' ')}`.trim())
         .experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 })
@@ -486,9 +415,7 @@ export function App() {
     }
 
     if (!scramble.scrambleMode) {
-      if (lastProcessedPracticeMoveRef.current === moveKey) {
-        return;
-      }
+      if (lastProcessedPracticeMoveRef.current === moveKey) return;
       lastProcessedPracticeMoveRef.current = moveKey;
       if (smartcube.lastProcessedMove.currentPattern) {
         training.handleSmartcubeMove(
@@ -501,9 +428,7 @@ export function App() {
       return;
     }
 
-    if (lastProcessedScrambleMoveRef.current === moveKey) {
-      return;
-    }
+    if (lastProcessedScrambleMoveRef.current === moveKey) return;
     lastProcessedScrambleMoveRef.current = moveKey;
     lastProcessedPracticeMoveRef.current = '';
 
@@ -536,7 +461,6 @@ export function App() {
 
   const selectView = useCallback((view: MenuView) => {
     setActiveView(view);
-    setMenuOpen(false);
     setInfoVisible(false);
     if (hideAlgEditorTimeoutRef.current != null) {
       window.clearTimeout(hideAlgEditorTimeoutRef.current);
@@ -576,28 +500,17 @@ export function App() {
     training.trainCurrent,
   ]);
 
-  const handleTouchStart = useCallback(() => {
-    isTouchScrollingRef.current = false;
-  }, []);
-
-  const handleTouchMove = useCallback(() => {
-    isTouchScrollingRef.current = true;
-  }, []);
+  const isTouchScrollingRef = useRef(false);
+  const _handleTouchStart = useCallback(() => { isTouchScrollingRef.current = false; }, []);
+  const _handleTouchMove = useCallback(() => { isTouchScrollingRef.current = true; }, []);
 
   const handleTimerActivation = useCallback(() => {
-    if (smartcube.connected || training.inputMode || training.countdownActive) {
-      return;
-    }
-
+    if (smartcube.connected || training.inputMode || training.countdownActive) return;
     const shouldFlash =
       training.timerState === 'STOPPED' ||
       training.timerState === 'IDLE' ||
       training.timerState === 'READY';
-
-    if (shouldFlash) {
-      showFlashingIndicator('gray', 200);
-    }
-
+    if (shouldFlash) showFlashingIndicator('gray', 200);
     training.activateTimer();
   }, [
     showFlashingIndicator,
@@ -609,25 +522,30 @@ export function App() {
   ]);
 
   const handleTouchEnd = useCallback(() => {
-    if (!isTouchScrollingRef.current) {
-      handleTimerActivation();
-    }
+    if (!isTouchScrollingRef.current) handleTimerActivation();
   }, [handleTimerActivation]);
 
+  const handleResetOrientation = useCallback(() => {
+    smartcube.resetOrientation();
+    setOrientationResetState((current) => ({
+      token: current.token + 1,
+      alg: smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : null,
+    }));
+  }, [smartcube.resetOrientation, smartcube.currentPattern]);
+
+  const handleResetGyro = useCallback(() => {
+    smartcube.resetGyro();
+  }, [smartcube.resetGyro]);
+
   const handleDeleteAlgorithms = useCallback(() => {
-    if (!selectedCategory || selectedCases.length === 0) {
-      return;
-    }
-
-    if (!window.confirm('Are you sure you want to delete the selected algorithms?')) {
-      return;
-    }
-
+    if (!selectedCategory || selectedCases.length === 0) return;
+    if (!window.confirm('Are you sure you want to delete the selected algorithms?')) return;
     void (async () => {
       for (const selectedCase of selectedCases) {
+        // Invalidate previews before deleting
+        invalidatePreview(selectedCase.algorithm);
         await deleteAlgorithm(selectedCategory, selectedCase.algorithm);
       }
-
       training.clearFailedCounts();
       reloadSavedAlgorithms();
       setDeleteMode(false);
@@ -637,18 +555,11 @@ export function App() {
   }, [reloadSavedAlgorithms, selectedCategory, selectedCases, training.clearFailedCounts]);
 
   const handleDeleteTimes = useCallback(() => {
-    if (selectedCases.length === 0) {
-      return;
-    }
-
-    if (!window.confirm('Are you sure you want to remove the times for the selected algorithms?')) {
-      return;
-    }
-
+    if (selectedCases.length === 0) return;
+    if (!window.confirm('Are you sure you want to remove the times for the selected algorithms?')) return;
     for (const selectedCase of selectedCases) {
       removeAlgorithmTimesStorage(selectedCase.id);
     }
-
     training.clearFailedCounts();
     setStatsRefreshToken((value) => value + 1);
     setReviewRefreshToken((value) => value + 1);
@@ -656,9 +567,7 @@ export function App() {
 
   const handleEditCurrentAlgorithm = useCallback(() => {
     const algorithm = training.currentCase?.algorithm || training.displayAlg || training.algInput;
-    if (!algorithm.trim()) {
-      return;
-    }
+    if (!algorithm.trim()) return;
 
     if (training.currentCase) {
       algorithmActions.setCategoryInput(training.currentCase.category);
@@ -685,8 +594,13 @@ export function App() {
   ]);
 
   const handleNewAlgSave = useCallback(() => {
+    const savingFromNewAlgTab = activeView === 'new-alg';
     const nextCategory = algorithmActions.categoryInput.trim();
-    void algorithmActions.submitSave(training.displayAlg || training.algInput).then((saved) => {
+    const algToSave = activeView === 'new-alg' ? training.algInput : (training.displayAlg || training.algInput);
+    const algToSaveNormalized = expandNotation(algToSave);
+    // Invalidate previews before saving - this ensures fresh previews after algorithm changes
+    invalidatePreview(algToSaveNormalized);
+    void algorithmActions.submitSave(algToSave).then((saved) => {
       if (saved && nextCategory) {
         training.clearFailedCounts();
         reloadSavedAlgorithms();
@@ -695,16 +609,30 @@ export function App() {
         setSelectedCategory(nextCategory);
         setMainCubeStickeringDeferred(false);
       }
+      if (saved && savingFromNewAlgTab) {
+        training.enterInputMode('');
+        void training.trainCurrent(smartcube.currentPattern);
+        return;
+      }
+      if (saved) {
+        setAlgEditorVisible(false);
+        setActiveView('practice');
+        void training.trainCurrent(smartcube.currentPattern);
+      }
     });
   }, [
+    activeView,
     algorithmActions.categoryInput,
     algorithmActions.submitSave,
     reloadSavedAlgorithms,
     setSelectedCategory,
+    smartcube.currentPattern,
     smartcube.disconnectToken,
     training.algInput,
     training.clearFailedCounts,
     training.displayAlg,
+    training.enterInputMode,
+    training.trainCurrent,
   ]);
 
   const handleNewAlgCancel = useCallback(() => {
@@ -726,7 +654,11 @@ export function App() {
 
   const handleInlineAlgSave = useCallback(() => {
     const nextCategory = algorithmActions.categoryInput.trim();
-    void algorithmActions.submitSave(training.algInput).then((ok) => {
+    const algToSave = training.algInput;
+    const algToSaveNormalized = expandNotation(algToSave);
+    // Invalidate previews before saving - this ensures fresh previews after algorithm changes
+    invalidatePreview(algToSaveNormalized);
+    void algorithmActions.submitSave(algToSave).then((ok) => {
       if (ok && nextCategory) {
         training.clearFailedCounts();
         reloadSavedAlgorithms();
@@ -807,115 +739,117 @@ export function App() {
   }, [algorithmActions.importBackupFromFile, reloadSavedAlgorithms, setSelectedCategory, training.clearFailedCounts]);
 
   return (
-    <div className="app-shell">
-      <div className="app-main-row">
-        <div id="menu-container" className="menu-container">
-          <div id="menu-toggle-container" className="menu-toggle-container">
-            <button
-              id="menu-toggle"
-              ref={menuToggleRef}
-              className="menu-toggle"
-              type="button"
-              onClick={() => setMenuOpen((open) => !open)}
-              aria-label="Toggle menu"
-            >
-              <HamburgerIcon />
-            </button>
-            <div
-              id="menu-items"
-              ref={menuItemsRef}
-              className={`menu-items ${menuOpen ? '' : 'menu-items-mobile-hidden'}`.trim()}
-            >
-              {MENU_ITEMS.map((item, index) => {
-                const selected = activeView === item.id;
-                const radiusClass =
-                  index === 0
-                    ? 'menu-item-top'
-                    : index === MENU_ITEMS.length - 1
-                      ? 'menu-item-bottom'
-                      : '';
-                const MenuIcon = item.Icon;
+    <div style={{ display: 'flex', height: '100dvh', width: '100vw', overflow: 'hidden', background: 'var(--bg)' } as React.CSSProperties}>
+      {/* Sidebar: desktop only */}
+      {!isMobile && <Sidebar active={activeView} onNav={selectView} />}
 
-                return (
-                  <button
-                    key={item.id}
-                    id={
-                      item.id === 'practice'
-                        ? 'load-alg'
-                        : item.id === 'new-alg'
-                          ? 'save-alg'
-                          : item.id === 'options'
-                            ? 'show-options'
-                            : 'show-help'
-                    }
-                    className={`menu-item ${radiusClass} ${selected ? 'selected' : ''}`.trim()}
-                    type="button"
-                    onClick={() => selectView(item.id)}
-                  >
-                    <span className="menu-item-icon-wrap" aria-hidden>
-                      <MenuIcon />
-                    </span>
-                    <span className="menu-item-label">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+        {/* Topbar */}
+        {isMobile
+          ? (
+            <MobileTopbar
+              screen={activeView}
+              smartcube={smartcube}
+              showResetGyro={smartcube.connected && options.gyroscope && smartcube.gyroSupported}
+              showResetOrientation={smartcube.connected && (!smartcube.gyroSupported || !options.gyroscope)}
+              onResetGyro={handleResetGyro}
+              onResetOrientation={handleResetOrientation}
+              headerTitleOverride={optionsDeviceInfoOpen ? 'Device Info' : undefined}
+              onHeaderBack={optionsDeviceInfoOpen ? () => setInfoVisible(false) : undefined}
+              headerBackLabel="Back to options"
+            />
+          )
+          : (
+            <DesktopTopbar
+              screen={activeView}
+              selectedCategory={selectedCategory ?? ''}
+              selectedCount={selectedCaseIds.length}
+              smartcube={smartcube}
+              showResetGyro={smartcube.connected && options.gyroscope && smartcube.gyroSupported}
+              showResetOrientation={smartcube.connected && (!smartcube.gyroSupported || !options.gyroscope)}
+              onResetGyro={handleResetGyro}
+              onResetOrientation={handleResetOrientation}
+              headerTitleOverride={optionsDeviceInfoOpen ? 'Device Info' : undefined}
+              onHeaderBack={optionsDeviceInfoOpen ? () => setInfoVisible(false) : undefined}
+              headerBackLabel="Back to options"
+            />
+          )
+        }
 
-        <div id="app" className="app-content">
-          {!isReady ? <div className="footer">Loading saved data…</div> : null}
+        {!isReady ? (
+          <div style={{ padding: '1rem', color: 'var(--fg3)', fontSize: 13 }}>Loading saved data…</div>
+        ) : null}
+
+        {/* Content area */}
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+          {/* PracticeView always mounted (training state + cube continuity) */}
           <PracticeView
-            topVisible={activeView === 'practice' || activeView === 'new-alg'}
-            practiceVisible={activeView === 'practice'}
+            visible={activeView === 'practice'}
             options={options}
             practiceToggles={practiceToggles}
-            caseLibrary={caseLibrary}
             training={training}
             scramble={scramble}
             smartcube={smartcube}
             algorithmActions={algorithmActions}
             showAlgEditor={algEditorVisible}
-            onAlgEditorSave={newAlgVisible ? handleNewAlgSave : handleInlineAlgSave}
-            onAlgEditorCancel={newAlgVisible ? handleNewAlgCancel : handleInlineAlgCancel}
+            onAlgEditorSave={handleInlineAlgSave}
+            onAlgEditorCancel={handleInlineAlgCancel}
             mainCubeAlg={mainCubeAlg}
             selectedStickering={selectedStickering}
             setAcknowledgedDisconnectToken={setAcknowledgedDisconnectToken}
-            setMainCubeStickeringDeferred={setMainCubeStickeringDeferred}
             lastProcessedScrambleMoveRef={lastProcessedScrambleMoveRef}
             setScrambleStartAlg={setScrambleStartAlg}
-            setDeleteMode={setDeleteMode}
-            deleteMode={deleteMode}
-            deleteSuccessMessage={deleteSuccessMessage}
-            handleDeleteAlgorithms={handleDeleteAlgorithms}
-            handleDeleteTimes={handleDeleteTimes}
-            showTimesInsteadOfGraph={showTimesInsteadOfGraph}
-            setShowTimesInsteadOfGraph={setShowTimesInsteadOfGraph}
             isMoveMasked={isMoveMasked}
             setIsMoveMasked={setIsMoveMasked}
             handleEditCurrentAlgorithm={handleEditCurrentAlgorithm}
-            handleTouchStart={handleTouchStart}
-            handleTouchMove={handleTouchMove}
+            handleTouchStart={_handleTouchStart}
+            handleTouchMove={_handleTouchMove}
             handleTouchEnd={handleTouchEnd}
             handleTouchTimerActivation={handleTimerActivation}
             isFlashingIndicatorVisible={isFlashingIndicatorVisible}
             flashingIndicatorColor={flashingIndicatorColor}
             smartcubeAppendMoveKey={smartcubeAppendMoveKey}
             smartcubeAppendMove={smartcubeAppendMove}
+            isMobile={isMobile}
+            orientationResetToken={orientationResetState.token}
+            orientationResetAlg={orientationResetState.alg}
+            showTimesInsteadOfGraph={options.showTimesInsteadOfGraph}
+            setShowTimesInsteadOfGraph={options.setShowTimesInsteadOfGraph}
+            onOpenCaseLibrary={() => selectView('cases')}
           />
 
-          {helpVisible ? (
-            <HelpView
-              visible
-              showDumbcubeHelp={showDumbcubeHelp}
-              setShowDumbcubeHelp={setShowDumbcubeHelp}
+          {activeView === 'cases' && (
+            <CasesView
+              caseLibrary={caseLibrary}
+              training={training}
+              scramble={scramble}
+              smartcube={smartcube}
+              deleteMode={deleteMode}
+              setDeleteMode={setDeleteMode}
+              deleteSuccessMessage={deleteSuccessMessage}
+              handleDeleteAlgorithms={handleDeleteAlgorithms}
+              handleDeleteTimes={handleDeleteTimes}
+              setAcknowledgedDisconnectToken={setAcknowledgedDisconnectToken}
+              setMainCubeStickeringDeferred={setMainCubeStickeringDeferred}
+              isMobile={isMobile}
+              onPracticeSelected={() => selectView('practice')}
             />
-          ) : null}
+          )}
 
-          <ImportFileInput id="import-file" onChange={handleImportFileChange} />
-          <ImportFileInput id="import-backup-file" onChange={handleBackupImportFileChange} />
+          {activeView === 'new-alg' && (
+            <NewAlgView
+              visible
+              standalone
+              algorithmActions={algorithmActions}
+              onSave={handleNewAlgSave}
+              onCancel={handleNewAlgCancel}
+              isMobile={isMobile}
+              algInput={training.algInput}
+              setAlgInput={training.setAlgInput}
+            />
+          )}
 
-          {optionsMounted ? (
+          {activeView === 'options' && (
             <OptionsView
               visible={optionsVisible}
               infoVisible={infoVisible}
@@ -923,19 +857,29 @@ export function App() {
               options={options}
               smartcube={smartcube}
               algorithmActions={algorithmActions}
+              isMobile={isMobile}
             />
-          ) : null}
-        </div>
-      </div>
+          )}
 
-      <div id="footer" className="footer">
-        <p>
-          Cubedex has been created with ♥ by <a href="https://twitter.com/pof" target="_blank" rel="noreferrer">Pau Oliva Fora</a> using <a href="https://github.com/poliva/smartcube-web-bluetooth" target="_blank" rel="noreferrer">smartcube-web-bluetooth</a> and <a href="https://github.com/cubing/cubing.js" target="_blank" rel="noreferrer">cubing.js</a>.
-        </p>
-        <p>
-          The <a href="https://github.com/poliva/cubedex" target="_blank" rel="noreferrer">source code</a> is available on GitHub, feel free to contribute by sending a PR or <a href="https://ko-fi.com/cubedex" target="_blank" rel="noreferrer">buy me a coffee</a>.
-        </p>
-      </div>
+          {activeView === 'help' && (
+            <HelpView
+              visible
+              showDumbcubeHelp={showDumbcubeHelp}
+              setShowDumbcubeHelp={setShowDumbcubeHelp}
+              isMobile={isMobile}
+            />
+          )}
+        </div>
+
+        {/* Footer: desktop only */}
+        {!isMobile && <Footer />}
+      </main>
+
+      {/* Bottom tabs: mobile only */}
+      {isMobile && <BottomTabBar active={activeView} onNav={selectView} />}
+
+      <ImportFileInput id="import-file" onChange={handleImportFileChange} />
+      <ImportFileInput id="import-backup-file" onChange={handleBackupImportFileChange} />
     </div>
   );
 }

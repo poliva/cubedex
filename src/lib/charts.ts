@@ -111,6 +111,34 @@ export function createTimeGraph(canvas: HTMLCanvasElement | null, times: number[
   timeChartByCanvas.set(canvas, created);
 }
 
+export function resizeTimeGraph(canvas: HTMLCanvasElement | null) {
+  if (!canvas) {
+    return;
+  }
+
+  const chart = timeChartByCanvas.get(canvas);
+  if (!chart) {
+    return;
+  }
+
+  chart.resize();
+  chart.update('none');
+}
+
+export function recreateTimeGraph(canvas: HTMLCanvasElement | null, times: number[]) {
+  if (!canvas) {
+    return;
+  }
+
+  const existing = timeChartByCanvas.get(canvas);
+  if (existing) {
+    existing.destroy();
+    timeChartByCanvas.delete(canvas);
+  }
+  timeChartSignature.delete(canvas);
+  createTimeGraph(canvas, times);
+}
+
 function calculateTrimmedAverage(data: number[], windowSize: number, meanSize: number): Array<number | null> {
   const averages: Array<number | null> = [];
   for (let i = 0; i < data.length; i += 1) {
@@ -266,4 +294,32 @@ export function createStatsGraph(canvas: HTMLCanvasElement | null, solveHistory:
     },
   });
   statsChartByCanvas.set(canvas, createdStats);
+}
+
+export function resizeStatsGraph(canvas: HTMLCanvasElement | null) {
+  if (!canvas) {
+    return;
+  }
+
+  const chart = statsChartByCanvas.get(canvas);
+  if (!chart) {
+    return;
+  }
+
+  chart.resize();
+  chart.update('none');
+}
+
+export function recreateStatsGraph(canvas: HTMLCanvasElement | null, solveHistory: SolveHistoryEntry[]) {
+  if (!canvas) {
+    return;
+  }
+
+  const existing = statsChartByCanvas.get(canvas);
+  if (existing) {
+    existing.destroy();
+    statsChartByCanvas.delete(canvas);
+  }
+  statsChartSignature.delete(canvas);
+  createStatsGraph(canvas, solveHistory);
 }

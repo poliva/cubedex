@@ -101,4 +101,27 @@ describe('useAppSettings', () => {
       expect(localStorage.getItem('autoUpdateLearningState')).toBe('false');
     });
   });
+
+  it('defaults recent times to graph and persists list mode', async () => {
+    const { result } = renderHook(() => useAppSettings());
+
+    expect(result.current.showTimesInsteadOfGraph).toBe(false);
+
+    act(() => {
+      result.current.setShowTimesInsteadOfGraph(true);
+    });
+
+    await waitFor(() => {
+      expect(result.current.showTimesInsteadOfGraph).toBe(true);
+      expect(localStorage.getItem('showTimesInsteadOfGraph')).toBe('true');
+    });
+  });
+
+  it('loads recent times list mode from persisted storage', () => {
+    localStorage.setItem('showTimesInsteadOfGraph', 'true');
+
+    const { result } = renderHook(() => useAppSettings());
+
+    expect(result.current.showTimesInsteadOfGraph).toBe(true);
+  });
 });

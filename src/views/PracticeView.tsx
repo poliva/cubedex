@@ -1,34 +1,69 @@
-import { Fragment, memo, useState } from 'react';
-import type { CaseLibraryState } from '../hooks/useCaseLibrary';
+import { Fragment, memo, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { AppSettingsState } from '../hooks/useAppSettings';
 import type { PracticeTogglesState } from '../hooks/usePracticeToggles';
 import type { TrainingState } from '../hooks/useTrainingState';
 import type { ScrambleState } from '../hooks/useScrambleState';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
 import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
-import { ToggleSwitch } from '../components/ToggleSwitch';
-import {
-  AlgHelpInfoIcon,
-  BluetoothIcon,
-  PlayIcon,
-  ScatterIcon,
-  StopIcon,
-} from '../components/Icons';
 import { averageOfFiveTimeNumber, historyTimeString } from '../lib/case-cards';
 import { getBestTime } from '../lib/storage';
 import { patternToPlayerAlg } from '../lib/scramble';
-import { CaseGrid } from './CaseGrid';
 import { MainCubeArea } from './MainCubeArea';
 import { MoveListPanel } from './MoveListPanel';
 import { StatsPanel } from './StatsPanel';
 import { NewAlgView } from './NewAlgView';
+import { Icon, IC, EyeIcon, EyeSlashIcon } from '../components/ui/Icon';
+import { StatChip } from '../components/ui/StatChip';
+import { Toggle } from '../components/ui/Toggle';
+
+function RecentTimesModeToggle({
+  showTimesInsteadOfGraph,
+  onToggle,
+}: {
+  showTimesInsteadOfGraph: boolean;
+  onToggle: () => void;
+}) {
+  const label = showTimesInsteadOfGraph ? 'Show graph' : 'Show times list';
+  return (
+    <button
+      type="button"
+      className="recent-times-toggle"
+      aria-label={label}
+      title={label}
+      onClick={onToggle}
+    >
+      {showTimesInsteadOfGraph ? (
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="currentColor" viewBox="-2 0 19 19" aria-hidden>
+          <path d="M13.55 15.256H1.45a.554.554 0 0 1-.553-.554V3.168a.554.554 0 1 1 1.108 0v10.98h11.544a.554.554 0 0 1 0 1.108zM3.121 13.02V6.888a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v6.132zm2.785 0V3.507a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v9.513zm2.785 0V6.888a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v6.132zm2.786 0v-2.753a.476.476 0 0 1 .475-.475h.785a.476.476 0 0 1 .475.475v2.753z" />
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+          <path d="M11.75 6C7.89 6 4.75 9.14 4.75 13C4.75 16.86 7.89 20 11.75 20C15.61 20 18.75 16.86 18.75 13C18.75 9.14 15.61 6 11.75 6ZM11.75 18.5C8.72 18.5 6.25 16.03 6.25 13C6.25 9.97 8.72 7.5 11.75 7.5C14.78 7.5 17.25 9.97 17.25 13C17.25 16.03 14.78 18.5 11.75 18.5ZM8.5 4.75C8.5 4.34 8.84 4 9.25 4H14.25C14.66 4 15 4.34 15 4.75C15 5.16 14.66 5.5 14.25 5.5H9.25C8.84 5.5 8.5 5.16 8.5 4.75ZM12.5 10V13C12.5 13.41 12.16 13.75 11.75 13.75C11.34 13.75 11 13.41 11 13V10C11 9.59 11.34 9.25 11.75 9.25C12.16 9.25 12.5 9.59 12.5 10ZM19.04 8.27C18.89 8.42 18.7 8.49 18.51 8.49C18.32 8.49 18.13 8.42 17.98 8.27L16.48 6.77C16.19 6.48 16.19 6 16.48 5.71C16.77 5.42 17.25 5.42 17.54 5.71L19.04 7.21C19.33 7.5 19.33 7.98 19.04 8.27Z" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+const ORIENTATION_REMINDER =
+  'Ensure the cube is oriented with WHITE center on top and GREEN center on front.';
+
+/** Matches `.alg-display-moves` sizing so status strips align with the main alg line. */
+const STATUS_BAR_MOVES_LINE_STYLE: CSSProperties = {
+  fontFamily: 'var(--mono)',
+  fontSize: 'clamp(1.0625rem, 2.5vw, 1.1875rem)',
+  lineHeight: 1.35,
+};
+
+const STATUS_BAR_REMINDER_LINE_STYLE: CSSProperties = {
+  fontSize: 'clamp(1.0625rem, 2.5vw, 1.1875rem)',
+  lineHeight: 1.45,
+};
 
 export const PracticeView = memo(function PracticeView({
-  topVisible,
-  practiceVisible,
+  visible,
   options,
   practiceToggles,
-  caseLibrary,
   training,
   scramble,
   smartcube,
@@ -39,16 +74,8 @@ export const PracticeView = memo(function PracticeView({
   mainCubeAlg,
   selectedStickering,
   setAcknowledgedDisconnectToken,
-  setMainCubeStickeringDeferred,
   lastProcessedScrambleMoveRef,
   setScrambleStartAlg,
-  setDeleteMode,
-  deleteMode,
-  deleteSuccessMessage,
-  handleDeleteAlgorithms,
-  handleDeleteTimes,
-  showTimesInsteadOfGraph,
-  setShowTimesInsteadOfGraph,
   isMoveMasked,
   setIsMoveMasked,
   handleEditCurrentAlgorithm,
@@ -60,12 +87,16 @@ export const PracticeView = memo(function PracticeView({
   flashingIndicatorColor,
   smartcubeAppendMoveKey,
   smartcubeAppendMove,
+  isMobile,
+  orientationResetToken,
+  orientationResetAlg,
+  showTimesInsteadOfGraph,
+  setShowTimesInsteadOfGraph,
+  onOpenCaseLibrary,
 }: {
-  topVisible: boolean;
-  practiceVisible: boolean;
+  visible: boolean;
   options: AppSettingsState;
   practiceToggles: PracticeTogglesState;
-  caseLibrary: CaseLibraryState;
   training: TrainingState;
   scramble: ScrambleState;
   smartcube: SmartcubeConnectionState;
@@ -76,16 +107,8 @@ export const PracticeView = memo(function PracticeView({
   mainCubeAlg: string;
   selectedStickering: string;
   setAcknowledgedDisconnectToken: (value: number) => void;
-  setMainCubeStickeringDeferred: (value: boolean) => void;
   lastProcessedScrambleMoveRef: { current: string };
   setScrambleStartAlg: (value: string) => void;
-  setDeleteMode: (value: boolean) => void;
-  deleteMode: boolean;
-  deleteSuccessMessage: string;
-  handleDeleteAlgorithms: () => void;
-  handleDeleteTimes: () => void;
-  showTimesInsteadOfGraph: boolean;
-  setShowTimesInsteadOfGraph: (updater: (value: boolean) => boolean) => void;
   isMoveMasked: boolean;
   setIsMoveMasked: (updater: (value: boolean) => boolean) => void;
   handleEditCurrentAlgorithm: () => void;
@@ -97,581 +120,935 @@ export const PracticeView = memo(function PracticeView({
   flashingIndicatorColor: 'gray' | 'red' | 'green';
   smartcubeAppendMoveKey?: string;
   smartcubeAppendMove?: string;
+  isMobile: boolean;
+  orientationResetToken: number;
+  orientationResetAlg: string | null;
+  showTimesInsteadOfGraph: boolean;
+  setShowTimesInsteadOfGraph: (updater: (value: boolean) => boolean) => void;
+  onOpenCaseLibrary: () => void;
 }) {
-  const {
-    categories,
-    selectedCategory,
-    subsets,
-    selectedSubsets,
-    caseCards,
-    selectAllCases,
-    selectLearningCases,
-    selectLearnedCases,
-    setSelectedCategory,
-    toggleSubset,
-    toggleAllSubsets,
-    setSelectAllCases,
-    setSelectLearningCases,
-    setSelectLearnedCases,
-  } = caseLibrary;
-  const [orientationResetState, setOrientationResetState] = useState<{ token: number; alg: string | null }>({
-    token: 0,
-    alg: null,
-  });
-  const showResetGyro = smartcube.connected && options.gyroscope && smartcube.gyroSupported;
-  const showResetOrientation = smartcube.connected && (!smartcube.gyroSupported || !options.gyroscope);
-
-  /*
-  const lastAutoOrientationResetMoveKeyRef = useRef<string>('');
+  const narrowPracticeDesktopQuery = '(max-width: 1080px)';
+  const [narrowPracticeDesktop, setNarrowPracticeDesktop] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(narrowPracticeDesktopQuery).matches,
+  );
   useEffect(() => {
-    const last = smartcube.lastProcessedMove;
-    if (!last || !smartcube.connected) return;
+    const mql = window.matchMedia(narrowPracticeDesktopQuery);
+    const sync = () => setNarrowPracticeDesktop(mql.matches);
+    sync();
+    mql.addEventListener('change', sync);
+    return () => mql.removeEventListener('change', sync);
+  }, []);
 
-    const moveKey = last.key ?? '';
-    if (!moveKey || lastAutoOrientationResetMoveKeyRef.current === moveKey) {
+  const skipPracticeEnterAnim = useRef(true);
+  const [practiceViewEnter, setPracticeViewEnter] = useState(false);
+  const [practiceTogglesExpanded, setPracticeTogglesExpanded] = useState(false);
+  useEffect(() => {
+    if (!visible) {
       return;
     }
+    if (skipPracticeEnterAnim.current) {
+      skipPracticeEnterAnim.current = false;
+      return;
+    }
+    setPracticeViewEnter(true);
+    const t = window.setTimeout(() => {
+      setPracticeViewEnter(false);
+    }, 130);
+    return () => {
+      window.clearTimeout(t);
+    };
+  }, [visible]);
 
-    const raw = last.rawMoves?.map((m) => m.move) ?? [];
-    const isOppositeUD =
-      raw.length === 2;
-      //&& ((raw[0] === 'U' && raw[1] === "D'") || (raw[0] === "D'" && raw[1] === 'U'));
-    const isNonGyroMode = !options.gyroscope || !smartcube.gyroSupported;
-    const shouldAutoReset = isNonGyroMode && raw.length === 2 && (last.visualMove === 'E' || last.visualMove === "E'" || last.visualMove === "S'" || last.visualMove === "S");
-    if (!shouldAutoReset) return;
+  const statsAlgId = training.statsAlgId;
+  const bestTime = getBestTime(statsAlgId);
+  const ao5 = averageOfFiveTimeNumber(statsAlgId);
+  const lastTime = training.stats.lastFive.at(-1);
 
-    console.log('[auto orientation reset]');
-    lastAutoOrientationResetMoveKeyRef.current = moveKey;
-    smartcube.resetOrientation();
-    setOrientationResetState((current) => ({
-      token: current.token + 1,
-      alg: smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : null,
-    }));
-  }, [options.gyroscope, smartcube, smartcube.connected, smartcube.currentPattern, smartcube.gyroSupported, smartcube.lastProcessedMove]);
-  */
+  const timerCardScale = training.inputMode
+    ? 1
+    : training.timerState === 'IDLE'
+      ? 0.985
+      : training.timerState === 'READY'
+        ? 1.02
+        : 1;
+  const timerTransformStyle: CSSProperties = {
+    transform: `scale(${timerCardScale})`,
+    transformOrigin: '50% 50%',
+    transition: 'transform 0.22s ease, border-color 0.15s, box-shadow 0.15s, color 0.2s',
+  };
 
-  return (
-    <>
-      <div id="app-top" className={topVisible ? '' : 'hidden'}>
-        <div id="container" className="top-grid-shell">
-          <div
-            id="flashing-indicator"
-            className={`${isFlashingIndicatorVisible ? 'flashing-indicator' : 'hidden flashing-indicator'}`}
-            style={{ backgroundColor: flashingIndicatorColor }}
-          />
+  const showingLastSolve =
+    !training.inputMode
+    && training.lastSolveText != null
+    && (training.timerState === 'IDLE' || training.timerState === 'READY');
+  const displayedTimerText = showingLastSolve
+    ? training.lastSolveText!
+    : training.timerState === 'IDLE'
+      ? '0.00'
+      : training.timerText;
+  const timerColor = showingLastSolve
+    ? 'var(--ok)'
+    : training.timerState === 'READY'
+      ? 'var(--ok)'
+      : training.timerState === 'RUNNING'
+        ? 'var(--fg3)'
+        : 'var(--fg)';
+  const showPbBadge =
+    training.lastSolveIsPb
+    && !training.inputMode
+    && training.timerState !== 'RUNNING';
+  const flashAccent =
+    flashingIndicatorColor === 'green'
+      ? 'rgba(34,197,94,0.65)'
+      : flashingIndicatorColor === 'red'
+        ? 'rgba(239,68,68,0.65)'
+        : 'rgba(148,163,184,0.55)';
+  const timerCardFlashStyle = isFlashingIndicatorVisible
+    ? {
+      borderColor: flashAccent,
+      boxShadow: `0 0 0 1px ${flashAccent}, 0 0 24px ${flashAccent}`,
+    }
+    : undefined;
 
-          <div id="left-side" className="top-column left-column">
-            <div
-              id="left-side-inner"
-              className={`${training.stats.hasHistory && practiceVisible ? 'shell-card side-card' : 'hidden shell-card side-card'}`}
+  const timerLabel = training.inputMode
+    ? ''
+    : showingLastSolve
+      ? (training.lastSolveAlgName ?? 'Last')
+      : training.timerState === 'IDLE'
+        ? (smartcube.connected ? 'Train to begin' : 'Hold Space')
+        : training.timerState === 'READY'
+          ? 'Ready'
+          : training.timerState === 'RUNNING'
+            ? 'Solving…'
+            : 'Time';
+
+  const showPracticeTimerCard = training.selectedCases.length > 0;
+
+  const showStatus = scramble.helpTone === 'green' || training.helpTone === 'red' || scramble.scrambleMode;
+  const statusColor =
+    training.helpTone === 'red' ? 'var(--danger)' :
+    scramble.helpTone === 'green' ? 'var(--ok)' :
+    scramble.scrambleMode ? 'var(--ok)' : undefined;
+
+  const isDangerStatus = training.helpTone === 'red';
+  const isScrambleGrowHint = scramble.scrambleMode && scramble.helpTone === 'green';
+  const useWarningStatusIcon = isDangerStatus || isScrambleGrowHint;
+  const mergeFixIntoStatusBar = isDangerStatus && training.fixVisible && Boolean(training.fixText);
+
+  let statusBody: ReactNode;
+  if (isDangerStatus) {
+    if (mergeFixIntoStatusBar) {
+      statusBody = (
+        <>
+          <span style={STATUS_BAR_MOVES_LINE_STYLE}>{training.fixText}</span>
+          <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{ORIENTATION_REMINDER}</span>
+        </>
+      );
+    } else {
+      statusBody = <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{ORIENTATION_REMINDER}</span>;
+    }
+  } else if (isScrambleGrowHint) {
+    statusBody = (
+      <>
+        <span style={STATUS_BAR_MOVES_LINE_STYLE}>{scramble.scrambleText}</span>
+        <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{ORIENTATION_REMINDER}</span>
+      </>
+    );
+  } else if (scramble.scrambleMode) {
+    statusBody = <span style={STATUS_BAR_MOVES_LINE_STYLE}>{scramble.scrambleText}</span>;
+  } else {
+    statusBody = null;
+  }
+
+  const cubeNode = (
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{
+        position: 'relative',
+        width: isMobile ? `min(calc(100vw - 56px), ${options.cubeSizePx}px)` : `min(100%, ${options.cubeSizePx}px)`,
+        height: isMobile ? `min(calc(100vw - 56px), ${options.cubeSizePx}px)` : undefined,
+        aspectRatio: isMobile ? undefined : 1,
+        maxWidth: '100%',
+        overflow: 'visible',
+        flexShrink: 0,
+      }}
+    >
+      <div className={training.countdownActive ? 'cube-area-content cube-area-content--hidden' : 'cube-area-content'}
+        aria-hidden={training.countdownActive}>
+        <MainCubeArea
+          alg={mainCubeAlg}
+          sizePx={options.cubeSizePx}
+          visualization={options.visualization}
+          hintFacelets={options.hintFacelets}
+          controlPanel={options.controlPanel}
+          experimentalStickering={selectedStickering}
+          setupAlg={options.whiteOnBottom ? 'z2' : ''}
+          backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
+          resetToken={`${smartcube.connected}:${training.visualResetKey}`}
+          orientationResetToken={orientationResetToken}
+          orientationResetAlg={orientationResetAlg}
+          appendMoveKey={smartcubeAppendMoveKey}
+          appendMove={smartcubeAppendMove}
+          gyroscopeEnabled={options.gyroscope && smartcube.connected}
+          cubeQuaternionRef={smartcube.cubeQuaternionRef}
+        />
+      </div>
+      {training.countdownActive ? (
+        <div className="cube-countdown-overlay" aria-live="polite" aria-label={`Countdown ${training.countdownValue ?? ''}`}>
+          {training.countdownValue}
+        </div>
+      ) : null}
+    </div>
+  );
+
+  const segHeight = isMobile ? 52 : 48;
+  const segButtonBase = {
+    width: isMobile ? 52 : 48,
+    alignSelf: 'stretch',
+    border: 'none',
+    borderRadius: 0,
+    flexShrink: 0,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 0,
+  } as const;
+  const segDivider = (
+    <div aria-hidden style={{ width: 1, alignSelf: 'stretch', background: 'var(--border-l)', flexShrink: 0 }} />
+  );
+
+  const algBar = (
+    <div
+      id="alg-bar"
+      className="alg-bar alg-bar--segmented"
+      style={{
+        width: '100%',
+        maxWidth: isMobile ? undefined : 'var(--practice-alg-track-max)',
+        height: segHeight,
+        flexShrink: 0,
+        border: '1px solid var(--border)',
+        borderRadius: 12,
+        background: 'var(--raised)',
+        overflow: 'hidden',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+      }}
+    >
+      <button
+        id="train-alg"
+        type="button"
+        title="Train"
+        onClick={() => {
+          setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+          if (scramble.scrambleMode && !options.alwaysScrambleTo) {
+            scramble.clearScramble();
+            lastProcessedScrambleMoveRef.current = '';
+          }
+          if (training.timerState === 'RUNNING') {
+            training.abortRunningAttempt();
+            if (training.timeAttackMode) return;
+          }
+          void training.trainCurrent(smartcube.currentPattern);
+        }}
+        style={{
+          ...segButtonBase,
+          background: 'var(--accent)',
+          color: '#fff',
+        }}
+      >
+        <Icon d={training.timerState === 'RUNNING' ? IC.stop : IC.play} size={isMobile ? 20 : 18} />
+      </button>
+
+      {segDivider}
+
+      <div
+        className="alg-track"
+        style={{
+          borderRadius: 0,
+          border: 'none',
+          background: 'transparent',
+          padding: '0 12px',
+          alignSelf: 'stretch',
+        }}
+      >
+        <input
+          id="alg-input"
+          type="text"
+          placeholder="Enter alg e.g., (R U R' U) (R U2' R')"
+          className={`alg-input alg-input--track ${training.inputMode ? '' : 'hidden'}`.trim()}
+          value={training.algInput}
+          onChange={(event) => training.setAlgInput(event.target.value)}
+        />
+
+        {!training.inputMode ? (
+          <>
+            <MoveListPanel
+              darkMode={options.darkMode}
+              isMoveMasked={isMoveMasked}
+              setIsMoveMasked={setIsMoveMasked}
+              onEditCurrentAlgorithm={handleEditCurrentAlgorithm}
+              showMoves
+              showFix={false}
+              variant="algTrack"
+            />
+            <button
+              type="button"
+              onClick={() => setIsMoveMasked((v) => !v)}
+              title={isMoveMasked ? 'Unmask algorithm' : 'Mask algorithm'}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                color: isMoveMasked ? 'var(--accent)' : 'var(--fg3)',
+                cursor: 'pointer',
+                padding: 4,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
             >
-              <div id="alg-name-display-container" className="alg-name-display-container">
-                <button
-                  id="toggle-display"
-                  className={`${training.stats.hasHistory ? 'icon-button' : 'hidden icon-button'}`}
-                  type="button"
-                  onClick={() => setShowTimesInsteadOfGraph((value) => !value)}
-                >
-                  {showTimesInsteadOfGraph ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="-2 0 19 19">
-                      <path d="M13.55 15.256H1.45a.554.554 0 0 1-.553-.554V3.168a.554.554 0 1 1 1.108 0v10.98h11.544a.554.554 0 0 1 0 1.108zM3.121 13.02V6.888a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v6.132zm2.785 0V3.507a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v9.513zm2.785 0V6.888a.476.476 0 0 1 .475-.475h.786a.476.476 0 0 1 .475.475v6.132zm2.786 0v-2.753a.476.476 0 0 1 .475-.475h.785a.476.476 0 0 1 .475.475v2.753z"/>
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24">
-                      <path d="M11.75 6C7.89 6 4.75 9.14 4.75 13C4.75 16.86 7.89 20 11.75 20C15.61 20 18.75 16.86 18.75 13C18.75 9.14 15.61 6 11.75 6ZM11.75 18.5C8.72 18.5 6.25 16.03 6.25 13C6.25 9.97 8.72 7.5 11.75 7.5C14.78 7.5 17.25 9.97 17.25 13C17.25 16.03 14.78 18.5 11.75 18.5ZM8.5 4.75C8.5 4.34 8.84 4 9.25 4H14.25C14.66 4 15 4.34 15 4.75C15 5.16 14.66 5.5 14.25 5.5H9.25C8.84 5.5 8.5 5.16 8.5 4.75ZM12.5 10V13C12.5 13.41 12.16 13.75 11.75 13.75C11.34 13.75 11 13.41 11 13V10C11 9.59 11.34 9.25 11.75 9.25C12.16 9.25 12.5 9.59 12.5 10ZM19.04 8.27C18.89 8.42 18.7 8.49 18.51 8.49C18.32 8.49 18.13 8.42 17.98 8.27L16.48 6.77C16.19 6.48 16.19 6 16.48 5.71C16.77 5.42 17.25 5.42 17.54 5.71L19.04 7.21C19.33 7.5 19.33 7.98 19.04 8.27Z" fill="currentColor"/>
-                    </svg>
-                  )}
-                </button>
-                <p
-                  id="alg-name-display"
-                  className="alg-name-display"
-                  onClick={() => setShowTimesInsteadOfGraph((value) => !value)}
-                >
-                  {options.showAlgName && !training.countdownActive ? training.currentAlgName : ''}
-                </p>
-              </div>
-              <div
-                id="times-display"
-                className={`${training.stats.hasHistory && showTimesInsteadOfGraph ? 'times-display' : 'hidden times-display'}`}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
+              {isMoveMasked
+                ? <EyeSlashIcon size={isMobile ? 28 : 32} />
+                : <EyeIcon size={isMobile ? 28 : 32} />
+              }
+            </button>
+          </>
+        ) : null}
+      </div>
+
+      {!isMobile && (
+        <>
+          {segDivider}
+          <button
+            type="button"
+            title="Edit algorithm"
+            onClick={handleEditCurrentAlgorithm}
+            style={{
+              ...segButtonBase,
+              background: 'transparent',
+              color: 'var(--fg2)',
+            }}
+          >
+            <Icon d={IC.edit} size={16} />
+          </button>
+        </>
+      )}
+
+      {segDivider}
+
+      <button
+        id="scramble-to"
+        type="button"
+        title="Scramble To..."
+        onClick={() => {
+          const alreadyPreparedAlg = training.displayAlg;
+          void scramble.startScrambleTo(
+            alreadyPreparedAlg || training.algInput,
+            training.currentCase,
+            smartcube.currentPattern,
+            !alreadyPreparedAlg && practiceToggles.randomizeAUF,
+          ).then((started) => {
+            if (!started) return;
+            setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+            setScrambleStartAlg(smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : '');
+            lastProcessedScrambleMoveRef.current = '';
+            training.prepareForScramble();
+          });
+        }}
+        style={{
+          ...segButtonBase,
+          background: 'var(--accent-tint)',
+          color: 'var(--accent)',
+        }}
+      >
+        {scramble.isComputing ? '…' : <Icon d={IC.wand} size={isMobile ? 20 : 18} />}
+      </button>
+    </div>
+  );
+
+  const statusBar = showStatus ? (
+    <div
+      data-testid="practice-status-bar"
+      style={{
+        width: '100%',
+        maxWidth: isMobile ? undefined : 'var(--practice-alg-track-max)',
+        padding: '9px 14px',
+        borderRadius: 10,
+        background: statusColor === 'var(--danger)' ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)',
+        border: `1px solid ${statusColor === 'var(--danger)' ? 'rgba(239,68,68,0.25)' : 'rgba(34,197,94,0.25)'}`,
+        color: statusColor,
+        display: 'flex',
+        gap: 8,
+        alignItems: 'flex-start',
+      }}
+    >
+      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} style={{ flexShrink: 0, marginTop: 3 }}>
+        {useWarningStatusIcon
+          ? <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          : <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>
+        }
+      </svg>
+      <div
+        data-testid="practice-status-bar-body"
+        style={{
+        flex: 1,
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+      }}
+      >
+        {statusBody}
+      </div>
+    </div>
+  ) : null;
+
+  const fixPanel = (
+    <MoveListPanel
+      darkMode={options.darkMode}
+      isMoveMasked={isMoveMasked}
+      setIsMoveMasked={setIsMoveMasked}
+      onEditCurrentAlgorithm={handleEditCurrentAlgorithm}
+      showMoves={false}
+      showFix
+      suppressFixErrorStrip={mergeFixIntoStatusBar}
+    />
+  );
+
+  const activeToggleChipStyle: CSSProperties = {
+    padding: '3px 8px',
+    fontSize: 11,
+    fontWeight: 600,
+    background: 'var(--accent)',
+    color: '#fff',
+    borderRadius: 4,
+    textTransform: 'uppercase',
+    letterSpacing: '0.03em',
+  };
+
+  /** Same grid as mobile — usable on tablet-width desktop where the collapsible strip squeezed into one row. */
+  const practiceTogglesGridInnerStyle: CSSProperties = {
+    padding: '12px 14px',
+    borderRadius: 12,
+    border: '1px solid var(--border)',
+    background: 'var(--surface)',
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '0 16px',
+  };
+
+  const practiceTogglesFields = (
+    <>
+      <Toggle
+        checked={practiceToggles.smartReviewScheduling}
+        disabled={practiceToggles.timeAttack}
+        onChange={(checked) => practiceToggles.setSmartReviewScheduling(checked)}
+        label="Smart Order"
+      />
+      <Toggle
+        checked={practiceToggles.randomizeAUF}
+        onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
+        label="Random AUF"
+      />
+      <Toggle
+        checked={practiceToggles.randomOrder}
+        disabled={practiceToggles.smartReviewScheduling}
+        onChange={(checked) => practiceToggles.setRandomOrder(checked)}
+        label="Random Order"
+      />
+      <Toggle
+        checked={practiceToggles.prioritizeSlowCases}
+        disabled={practiceToggles.smartReviewScheduling}
+        onChange={(checked) => practiceToggles.setPrioritizeSlowCases(checked)}
+        label="Slow First"
+      />
+      <Toggle
+        checked={practiceToggles.prioritizeFailedCases}
+        onChange={(checked) => practiceToggles.setPrioritizeFailedCases(checked)}
+        label="Prioritize Failed"
+      />
+      <Toggle
+        checked={practiceToggles.timeAttack}
+        onChange={(checked) => practiceToggles.setTimeAttack(checked)}
+        label="Time Attack"
+      />
+    </>
+  );
+
+  const practiceTogglesStrip = (
+    <div style={{
+      width: '100%',
+      maxWidth: isMobile ? undefined : 'var(--practice-alg-track-max)',
+      borderRadius: 12,
+      border: '1px solid var(--border)',
+      background: 'var(--surface)',
+      overflow: 'hidden',
+    }}>
+      {/* Collapsed header with active toggles visible */}
+      <div
+        style={{
+          padding: '8px 14px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '6px 12px',
+          alignItems: 'center',
+          cursor: 'pointer',
+        }}
+        onClick={() => setPracticeTogglesExpanded(!practiceTogglesExpanded)}
+        role="button"
+        aria-expanded={practiceTogglesExpanded}
+      >
+        {training.timeAttackMode && !training.inputMode ? (
+          <div style={{
+            padding: '3px 8px',
+            fontSize: 11,
+            fontWeight: 600,
+            background: 'var(--accent)',
+            color: '#fff',
+            borderRadius: 4,
+          }}>
+            Time Attack — Case {training.timeAttackCurrentCaseNumber} of {training.timeAttackTotalCases}
+          </div>
+        ) : (
+          <>
+            {practiceToggles.smartReviewScheduling && !practiceToggles.timeAttack && (
+              <span style={activeToggleChipStyle}>Smart Order</span>
+            )}
+            {practiceToggles.randomizeAUF && (
+              <span style={activeToggleChipStyle}>Random AUF</span>
+            )}
+            {practiceToggles.randomOrder && !practiceToggles.smartReviewScheduling && (
+              <span style={activeToggleChipStyle}>Random Order</span>
+            )}
+            {practiceToggles.prioritizeSlowCases && !practiceToggles.smartReviewScheduling && (
+              <span style={activeToggleChipStyle}>Slow First</span>
+            )}
+            {practiceToggles.prioritizeFailedCases && (
+              <span style={activeToggleChipStyle}>Prioritize Failed</span>
+            )}
+            {practiceToggles.timeAttack && (
+              <span style={activeToggleChipStyle}>Time Attack</span>
+            )}
+            {!practiceToggles.smartReviewScheduling && !practiceToggles.randomizeAUF && !practiceToggles.randomOrder &&
+             !practiceToggles.prioritizeSlowCases && !practiceToggles.prioritizeFailedCases && !practiceToggles.timeAttack && (
+              <span style={{ fontSize: 12, color: 'var(--fg3)' }}>Practice options</span>
+            )}
+          </>
+        )}
+        <span style={{
+          marginLeft: 'auto',
+          fontSize: 11,
+          color: 'var(--fg3)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.05em',
+        }}>
+          {practiceTogglesExpanded ? '▲' : '▼'}
+        </span>
+      </div>
+
+      {/* Expanded toggles list */}
+      {practiceTogglesExpanded && (
+        <div style={{
+          padding: '12px 14px',
+          borderTop: '1px solid var(--border)',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+          gap: '12px 20px',
+          alignItems: 'center',
+        }}>
+          {practiceTogglesFields}
+        </div>
+      )}
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <div
+        className={practiceViewEnter ? 'app-view-fade-in' : undefined}
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          paddingBottom: 'calc(var(--tab-h) + 12px)',
+          display: visible ? 'flex' : 'none',
+          flexDirection: 'column',
+          position: 'relative',
+        }}
+      >
+        {/* Cube */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '16px 16px 8px',
+          gap: 8,
+        }}>
+          <div style={{
+            position: 'relative',
+            width: `min(calc(100vw - 32px), ${options.cubeSizePx + 24}px)`,
+            maxWidth: '100%',
+            borderRadius: 0,
+            border: 'none',
+            background: 'transparent',
+            padding: 5,
+            flexShrink: 0,
+          }}>
+            {cubeNode}
+          </div>
+        </div>
+
+        {/* Timer hero */}
+        {showPracticeTimerCard ? (
+          <div
+            className="mobile-timer-card"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{
+              margin: '0 12px 16px',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: 'var(--border)',
+              background: 'var(--surface)',
+              padding: '20px 20px 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 6,
+              minHeight: 130,
+              boxShadow: '0 4px 16px oklch(0% 0 0/0.2)',
+              ...timerTransformStyle,
+              ...timerCardFlashStyle,
+            }}
+          >
+            {timerLabel ? (
+              <span style={{
+                fontSize: 10,
+                color: 'var(--fg3)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}>{timerLabel}</span>
+            ) : null}
+            <div className="practice-timer-value practice-timer-value--mobile" style={{
+              fontFamily: 'var(--mono)',
+              fontSize: 'clamp(38px, 14vw, 56px)',
+              fontWeight: 500,
+              lineHeight: 1,
+              letterSpacing: '-0.02em',
+              color: timerColor,
+              transition: 'color 0.2s',
+              width: '100%',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+            }}>
+              {displayedTimerText}
+            </div>
+            {showPbBadge ? (
+              <span style={{ fontSize: 12, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
+            ) : null}
+          </div>
+        ) : null}
+        {training.stats.hasHistory ? (
+          <div className="mobile-stat-chip-row" style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'center', flexWrap: 'wrap', margin: '-8px 12px 16px', position: 'relative', zIndex: 1 }}>
+            <StatChip label="Last" value={historyTimeString(lastTime?.value ?? null)} />
+            <StatChip label="Best" value={historyTimeString(bestTime)} />
+            <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
+          </div>
+        ) : null}
+
+        {/* Alg bar */}
+        <div className="mobile-alg-bar-shell" style={{ margin: '0 12px 10px' }}>
+          {algBar}
+        </div>
+
+        {/* Fix panel */}
+        {fixPanel}
+
+        {/* Status */}
+        {statusBar && <div style={{ margin: '0 12px 10px' }}>{statusBar}</div>}
+
+        {/* New alg editor */}
+        <div style={{ margin: '0 12px 10px' }}>
+          <NewAlgView
+            visible={showAlgEditor}
+            algorithmActions={algorithmActions}
+            onSave={onAlgEditorSave}
+            onCancel={onAlgEditorCancel}
+          />
+        </div>
+
+        {/* Mini stats */}
+        {training.stats.hasHistory && (
+          <div style={{
+            margin: '0 12px 10px',
+            padding: '12px 14px',
+            borderRadius: 12,
+            border: '1px solid var(--border)',
+            background: 'var(--surface)',
+          }}
+          >
+            <div className="recent-times-header">
+              <div style={{
+                fontSize: 10,
+                color: 'var(--fg3)',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}
               >
+                {options.showAlgName && !training.countdownActive ? training.currentAlgName : 'Recent times'}
+              </div>
+              <RecentTimesModeToggle
+                showTimesInsteadOfGraph={showTimesInsteadOfGraph}
+                onToggle={() => setShowTimesInsteadOfGraph((v) => !v)}
+              />
+            </div>
+            <div
+              className={`${showTimesInsteadOfGraph ? 'times-display' : 'hidden times-display'}`.trim()}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div className="times-grid">
+                {training.stats.lastFive.map((entry, index) => (
+                  <Fragment key={`time-row-${entry.value}-${entry.label}-${index}`}>
+                    <div className="times-grid-label">{entry.label.split(': ')[0]}:</div>
+                    <div className="times-grid-value">
+                      {entry.label.split(': ').slice(1).join(': ')}{entry.isPb ? ' 🎉' : ''}
+                    </div>
+                  </Fragment>
+                ))}
+              </div>
+            </div>
+            <div
+              id="graph-display"
+              className={`${showTimesInsteadOfGraph ? 'hidden graph-display' : 'graph-display'}`.trim()}
+            >
+              <canvas id="timeGraph" />
+            </div>
+          </div>
+        )}
+
+        {/* Practice toggles */}
+        {!showAlgEditor && (
+        <div style={{ margin: '0 12px 10px' }}>
+          <div style={practiceTogglesGridInnerStyle}>
+            {practiceTogglesFields}
+          </div>
+        </div>
+        )}
+
+        {/* Stats graph */}
+        <div style={{ margin: '0 12px 10px' }}>
+          <StatsPanel
+            visible={!showAlgEditor}
+            showAlgName={options.showAlgName && !training.countdownActive}
+            algName={training.currentAlgName}
+            stats={training.stats}
+            onOpenCaseLibrary={onOpenCaseLibrary}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop layout
+  return (
+    <div
+      className={practiceViewEnter ? 'app-view-fade-in' : undefined}
+      style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '18px 20px',
+        display: visible ? 'flex' : 'none',
+        flexDirection: 'column',
+        gap: 14,
+        alignItems: 'center',
+        position: 'relative',
+      }}
+    >
+      {/* 3-col top area */}
+      <div className="practice-top-grid">
+        {/* LEFT: stats card (hidden until there's solve history) */}
+        <div className="practice-side-column practice-side-column--left">
+          {training.stats.hasHistory ? (
+            <div className="practice-recent-card" style={{
+              padding: '14px 16px',
+              borderRadius: 12,
+              border: '1px solid var(--border)',
+              background: 'var(--surface)',
+            }}
+            >
+              <div className="recent-times-header">
+                <div style={{
+                  fontSize: 10,
+                  color: 'var(--fg3)',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                }}
+                >
+                  {options.showAlgName && !training.countdownActive ? training.currentAlgName : 'Recent times'}
+                </div>
+                <RecentTimesModeToggle
+                  showTimesInsteadOfGraph={showTimesInsteadOfGraph}
+                  onToggle={() => setShowTimesInsteadOfGraph((v) => !v)}
+                />
+              </div>
+              <div className={`${showTimesInsteadOfGraph ? 'times-display' : 'hidden times-display'}`.trim()}>
                 <div className="times-grid">
                   {training.stats.lastFive.map((entry, index) => (
-                    <Fragment key={`time-row-${entry.value}-${entry.label}-${index}`}>
+                    <Fragment key={`time-row-d-${entry.value}-${entry.label}-${index}`}>
                       <div className="times-grid-label">{entry.label.split(': ')[0]}:</div>
                       <div className="times-grid-value">
                         {entry.label.split(': ').slice(1).join(': ')}{entry.isPb ? ' 🎉' : ''}
                       </div>
                     </Fragment>
                   ))}
-                  <div className="times-grid-label times-grid-emphasis">Ao5:</div>
-                  <div className="times-grid-value times-grid-emphasis">{historyTimeString(averageOfFiveTimeNumber(training.statsAlgId))}</div>
-                  <div className="times-grid-label">Best:</div>
-                  <div className="times-grid-value">{historyTimeString(getBestTime(training.statsAlgId))}</div>
                 </div>
               </div>
-              <div id="graph-display" className={`${showTimesInsteadOfGraph ? 'hidden graph-display' : 'graph-display'}`}>
+              <div
+                id="graph-display"
+                className={`${showTimesInsteadOfGraph ? 'hidden graph-display' : 'graph-display'}`.trim()}
+              >
                 <canvas id="timeGraph" />
               </div>
             </div>
-          </div>
+          ) : null}
+        </div>
 
-          <div
-            id="cube"
-            className="cube-area"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            style={{
-              width: `min(100%, ${options.cubeSizePx}px)`,
-              aspectRatio: '1',
-              height: 'auto',
-              maxWidth: '100%',
-              minWidth: 0,
-              overflow: 'visible',
-            }}
-          >
-            <div
-              className={training.countdownActive ? 'cube-area-content cube-area-content--hidden' : 'cube-area-content'}
-              aria-hidden={training.countdownActive}
-            >
-              <MainCubeArea
-                alg={mainCubeAlg}
-                sizePx={options.cubeSizePx}
-                visualization={options.visualization}
-                hintFacelets={options.hintFacelets}
-                controlPanel={options.controlPanel}
-                experimentalStickering={selectedStickering}
-                setupAlg={options.whiteOnBottom ? 'z2' : ''}
-                backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
-                resetToken={`${smartcube.connected}:${training.visualResetKey}`}
-                orientationResetToken={orientationResetState.token}
-                orientationResetAlg={orientationResetState.alg}
-                appendMoveKey={smartcubeAppendMoveKey}
-                appendMove={smartcubeAppendMove}
-                gyroscopeEnabled={options.gyroscope && smartcube.connected}
-                cubeQuaternionRef={smartcube.cubeQuaternionRef}
-              />
-            </div>
-            {training.countdownActive ? (
-              <div className="cube-countdown-overlay" aria-live="polite" aria-label={`Countdown ${training.countdownValue ?? ''}`}>
-                {training.countdownValue}
-              </div>
-            ) : null}
-          </div>
-
-          <div id="right-side" className="top-column right-column">
-            <div className="connect-row">
-              <button
-                id="header-reset-gyro"
-                className={showResetGyro ? 'primary-button' : 'primary-button hidden'}
-                type="button"
-                disabled={!smartcube.connected || !options.gyroscope || !smartcube.gyroSupported}
-                title="Reset gyroscope orientation for the virtual cube"
-                aria-label="Reset gyroscope orientation for the virtual cube"
-                onClick={() => smartcube.resetGyro()}
-              >
-                Reset Gyro
-              </button>
-              <button
-                id="header-reset-orientation"
-                className={showResetOrientation ? 'primary-button' : 'primary-button hidden'}
-                type="button"
-                disabled={!smartcube.connected}
-                title="Reset the virtual cube orientation to its default view"
-                aria-label="Reset the virtual cube orientation to its default view"
-                onClick={() => {
-                  smartcube.resetOrientation();
-                  setOrientationResetState((current) => ({
-                    token: current.token + 1,
-                    alg: smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : null,
-                  }));
-                }}
-              >
-                Reset Orientation
-              </button>
-              <button
-                id="connect-button"
-                className="primary-button connect-button"
-                type="button"
-                onClick={() => void smartcube.connectOrDisconnect()}
-              >
-                <div id="connect">{smartcube.connectLabel}</div>
-                <div id="bluetooth-indicator" className={`${smartcube.connected ? 'hidden indicator-badge' : 'indicator-badge'}`}>
-                  <BluetoothIcon />
-                </div>
-                <div
-                  id="battery-indicator"
-                  className={`${smartcube.connected ? 'indicator-badge' : 'hidden indicator-badge'}`}
-                  title={smartcube.battery.level == null ? '' : `${smartcube.battery.level}%`}
-                  style={{ color: smartcube.battery.color === 'default' ? undefined : smartcube.battery.color }}
-                >
-                  <svg fill="none" className="battery-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18.5 7.5L3.5 7.50001V16.5L18.5 16.5V14.3571H20.5V9.21429H18.5V7.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    {smartcube.battery.level != null && smartcube.battery.level >= 75 ? (
-                      <>
-                        <path d="M5.5 10.5C5.5 9.94772 5.94772 9.5 6.5 9.5H7.5C8.05228 9.5 8.5 9.94772 8.5 10.5V13.5C8.5 14.0523 8.05228 14.5 7.5 14.5H6.5C5.94772 14.5 5.5 14.0523 5.5 13.5V10.5Z" fill="currentColor"/>
-                        <path d="M9.5 10.5C9.5 9.94772 9.94772 9.5 10.5 9.5H11.5C12.0523 9.5 12.5 9.94772 12.5 10.5V13.5C12.5 14.0523 12.0523 14.5 11.5 14.5H10.5C9.94772 14.5 9.5 14.0523 9.5 13.5V10.5Z" fill="currentColor"/>
-                        <path d="M13.5 10.5C13.5 9.94772 13.9477 9.5 14.5 9.5H15.5C16.0523 9.5 16.5 9.94772 16.5 10.5V13.5C16.5 14.0523 16.0523 14.5 15.5 14.5H14.5C13.9477 14.5 13.5 14.0523 13.5 13.5V10.5Z" fill="currentColor"/>
-                      </>
-                    ) : null}
-                    {smartcube.battery.level != null && smartcube.battery.level >= 50 && smartcube.battery.level < 75 ? (
-                      <>
-                        <path d="M5.5 10.5C5.5 9.94772 5.94772 9.5 6.5 9.5H7.5C8.05228 9.5 8.5 9.94772 8.5 10.5V13.5C8.5 14.0523 8.05228 14.5 7.5 14.5H6.5C5.94772 14.5 5.5 14.0523 5.5 13.5V10.5Z" fill="currentColor"/>
-                        <path d="M9.5 10.5C9.5 9.94772 9.94772 9.5 10.5 9.5H11.5C12.0523 9.5 12.5 9.94772 12.5 10.5V13.5C12.5 14.0523 12.0523 14.5 11.5 14.5H10.5C9.94772 14.5 9.5 14.0523 9.5 13.5V10.5Z" fill="currentColor"/>
-                      </>
-                    ) : null}
-                    {smartcube.battery.level != null && smartcube.battery.level >= 20 && smartcube.battery.level < 50 ? (
-                      <path d="M5.5 10.5C5.5 9.94772 5.94772 9.5 6.5 9.5H7.5C8.05228 9.5 8.5 9.94772 8.5 10.5V13.5C8.5 14.0523 8.05228 14.5 7.5 14.5H6.5C5.94772 14.5 5.5 14.0523 5.5 13.5V10.5Z" fill="currentColor"/>
-                    ) : null}
-                    {smartcube.battery.level != null && smartcube.battery.level < 20 ? (
-                      <>
-                        <path d="M11 10V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M11.75 14.25C11.75 14.6642 11.4142 15 11 15C10.5858 15 10.25 14.6642 10.25 14.25C10.25 13.8358 10.5858 13.5 11 13.5C11.4142 13.5 11.75 13.8358 11.75 14.25Z" fill="currentColor"/>
-                      </>
-                    ) : null}
-                  </svg>
-                </div>
-              </button>
-            </div>
-            <div
-              id="touch-timer"
-              className="touch-timer"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              <div className="timer-stack">
-                <div
-                  className={`${training.timeAttackMode && !training.inputMode ? 'time-attack-banner' : 'hidden time-attack-banner'}`}
-                >
-                  <span className="time-attack-banner-title">Complete all cases continuously</span>
-                  {training.timeAttackTotalCases > 0 ? (
-                    <span className="time-attack-banner-progress">
-                      Case {training.timeAttackCurrentCaseNumber} of {training.timeAttackTotalCases}
-                    </span>
-                  ) : null}
-                </div>
-                <div
-                  id="timer"
-                  className={`${!training.inputMode && training.timerState !== 'IDLE' ? 'timer-display' : 'hidden timer-display'}`}
-                  style={{
-                    color:
-                      training.timerState === 'READY'
-                        ? '#080'
-                        : training.timerState === 'RUNNING'
-                          ? '#999'
-                          : options.darkMode
-                            ? '#ccc'
-                            : '#333',
-                  }}
-                >
-                  {training.timerText}
-                </div>
-              </div>
-            </div>
+        {/* CENTER: cube */}
+        <div className="practice-cube-column">
+          <div className="practice-cube-card" style={{
+            position: 'relative',
+            maxWidth: `calc(${options.cubeSizePx}px + 28px)`,
+            padding: 5,
+            borderRadius: 0,
+            border: 'none',
+            background: 'transparent',
+          }}>
+            {cubeNode}
           </div>
         </div>
 
-        <div id="alg-bar" className="alg-bar">
-          <button
-            id="train-alg"
-            title="Train"
-            className="round-button"
-            type="button"
-            onClick={() => {
-              setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-              if (scramble.scrambleMode && !options.alwaysScrambleTo) {
-                scramble.clearScramble();
-                lastProcessedScrambleMoveRef.current = '';
-              }
-
-              if (training.timerState === 'RUNNING') {
-                training.abortRunningAttempt();
-                if (training.timeAttackMode) {
-                  return;
-                }
-              }
-              void training.trainCurrent(smartcube.currentPattern);
+        {/* RIGHT: timer */}
+        <div
+          className="practice-side-column practice-side-column--right"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{
+            gap: 12,
+          }}
+        >
+          {showPracticeTimerCard ? (
+            <div className="practice-timer-card" style={{
+              padding: '18px 22px',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderStyle: 'solid',
+              borderColor: 'var(--border)',
+              background: 'var(--surface)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              gap: 6,
+              width: '100%',
+              minHeight: 140,
+              ...timerTransformStyle,
+              ...timerCardFlashStyle,
             }}
-          >
-            {training.timerState === 'RUNNING' ? <StopIcon /> : <PlayIcon />}
-          </button>
-
-          <input
-            id="alg-input"
-            type="text"
-            placeholder="Enter alg e.g., (R U R' U) (R U2' R')"
-            className={`alg-input ${training.inputMode ? '' : 'hidden'}`.trim()}
-            value={training.algInput}
-            onChange={(event) => training.setAlgInput(event.target.value)}
-          />
-
-          <MoveListPanel
-            className={training.inputMode ? 'hidden' : ''}
-            darkMode={options.darkMode}
-            isMoveMasked={isMoveMasked}
-            setIsMoveMasked={setIsMoveMasked}
-            onEditCurrentAlgorithm={handleEditCurrentAlgorithm}
-            showMoves
-            showFix={false}
-          />
-
-          <button
-            id="scramble-to"
-            title="Scramble To..."
-            className="round-button"
-            type="button"
-            onClick={() => {
-              const alreadyPreparedAlg = training.displayAlg;
-              void scramble.startScrambleTo(
-                alreadyPreparedAlg || training.algInput,
-                training.currentCase,
-                smartcube.currentPattern,
-                !alreadyPreparedAlg && practiceToggles.randomizeAUF,
-              ).then((started) => {
-                if (!started) {
-                  return;
-                }
-
-                setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                setScrambleStartAlg(smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : '');
-                lastProcessedScrambleMoveRef.current = '';
-                training.prepareForScramble();
-              });
-            }}
-          >
-            {scramble.isComputing ? '…' : <ScatterIcon />}
-          </button>
+            >
+              {timerLabel ? (
+                <span style={{
+                  fontSize: 10,
+                  color: 'var(--fg3)',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.07em',
+                }}>{timerLabel}</span>
+              ) : null}
+              <div className="practice-timer-value" style={{
+                fontFamily: 'var(--mono)',
+                fontSize: 'clamp(40px, 3.2vw, 60px)',
+                fontWeight: 500,
+                lineHeight: 1,
+                letterSpacing: '-0.02em',
+                color: timerColor,
+                transition: 'color 0.2s',
+                width: '100%',
+                whiteSpace: 'nowrap',
+              }}>
+                {displayedTimerText}
+              </div>
+              {showPbBadge ? (
+                <span style={{ fontSize: 13, color: 'var(--ok)', fontWeight: 700 }}>New PB!</span>
+              ) : null}
+            </div>
+          ) : null}
+          {training.stats.hasHistory ? (
+            <div style={{
+              display: 'flex',
+              gap: 8,
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: 12,
+              border: 'none',
+              background: 'transparent',
+            }}>
+              <StatChip label="Last" value={historyTimeString(lastTime?.value ?? null)} />
+              <StatChip label="Best" value={historyTimeString(bestTime)} />
+              <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
+            </div>
+          ) : null}
         </div>
+      </div>
 
+      {/* Alg bar */}
+      {algBar}
+
+      {/* Fix panel */}
+      {fixPanel}
+
+      {/* Status */}
+      {statusBar}
+
+      {/* New alg editor inline */}
+      <div style={{ width: '100%', maxWidth: 'var(--practice-alg-track-max)' }}>
         <NewAlgView
           visible={showAlgEditor}
           algorithmActions={algorithmActions}
           onSave={onAlgEditorSave}
           onCancel={onAlgEditorCancel}
         />
-
-        <div
-          id="alg-help-info"
-          className={`${scramble.helpTone === 'green' || training.helpTone === 'red' ? 'info-inline' : 'hidden info-inline'}`}
-          style={{ color: training.helpTone === 'red' ? '#f87171' : scramble.helpTone === 'green' ? '#34d399' : undefined }}
-        >
-          <div className="info-inline-row">
-            <AlgHelpInfoIcon />
-            <p className="info-inline-row-text">Ensure the cube is oriented with WHITE center on top and GREEN center on front.</p>
-          </div>
-        </div>
-        <MoveListPanel
-          darkMode={options.darkMode}
-          isMoveMasked={isMoveMasked}
-          setIsMoveMasked={setIsMoveMasked}
-          onEditCurrentAlgorithm={handleEditCurrentAlgorithm}
-          showMoves={false}
-          showFix
-        />
-        <div id="alg-scramble" className={`${scramble.scrambleMode ? 'status-panel status-success' : 'hidden status-panel status-success'}`}>
-          {scramble.scrambleText}
-        </div>
       </div>
 
-      <StatsPanel
-        visible={practiceVisible}
-        showAlgName={options.showAlgName && !training.countdownActive}
-        algName={training.currentAlgName}
-        stats={training.stats}
-      />
-
-      <div id="load-container" className={`load-panel shell-card ${practiceVisible ? '' : 'hidden'}`.trim()}>
-        <div id="default-alg-id" className="hidden bg-red-400" />
-
-        <div className="control-row">
-          <div id="category-selector" className="selector-card">
-            <label htmlFor="category-select" className="input-label">Category:</label>
-            <select
-              id="category-select"
-              className="select-input"
-              value={selectedCategory}
-              onChange={(event) => {
-                setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                setMainCubeStickeringDeferred(false);
-                setSelectedCategory(event.target.value);
-                training.clearFailedCounts();
-                training.resetDrill();
-                scramble.clearScramble();
-              }}
-            >
-              <option value="">Filter by Category</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div id="options-selector" className="selector-options-card">
-            <p className="input-label">Options:</p>
-            <div className="toggle-grid">
-              <ToggleSwitch
-                id="select-all-toggle"
-                checked={selectAllCases}
-                onChange={(checked) => {
-                  setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                  if (checked) {
-                    setMainCubeStickeringDeferred(false);
-                  }
-                  setSelectAllCases(checked);
-                }}
-                label="Select All"
-              />
-              <ToggleSwitch
-                id="select-learning-toggle"
-                checked={selectLearningCases}
-                onChange={(checked) => {
-                  setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                  if (checked) {
-                    setMainCubeStickeringDeferred(false);
-                  }
-                  setSelectLearningCases(checked);
-                }}
-                label="Select Learning"
-              />
-              <ToggleSwitch
-                id="select-learned-toggle"
-                checked={selectLearnedCases}
-                onChange={(checked) => {
-                  setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                  if (checked) {
-                    setMainCubeStickeringDeferred(false);
-                  }
-                  setSelectLearnedCases(checked);
-                }}
-                label="Select Learned"
-              />
-              <ToggleSwitch
-                id="smart-review-scheduling-toggle"
-                checked={practiceToggles.smartReviewScheduling}
-                disabled={practiceToggles.timeAttack}
-                onChange={(checked) => practiceToggles.setSmartReviewScheduling(checked)}
-                label="Smart Order"
-              />
-              <ToggleSwitch
-                id="random-order-toggle"
-                checked={practiceToggles.randomOrder}
-                disabled={practiceToggles.smartReviewScheduling}
-                onChange={(checked) => practiceToggles.setRandomOrder(checked)}
-                label="Random Order"
-              />
-              <ToggleSwitch
-                id="prioritize-slow-toggle"
-                checked={practiceToggles.prioritizeSlowCases}
-                disabled={practiceToggles.smartReviewScheduling}
-                onChange={(checked) => practiceToggles.setPrioritizeSlowCases(checked)}
-                label="Slow Cases First"
-              />
-              <ToggleSwitch
-                id="random-auf-toggle"
-                checked={practiceToggles.randomizeAUF}
-                onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
-                label="Random AUF"
-              />
-              <ToggleSwitch
-                id="prioritize-failed-toggle"
-                checked={practiceToggles.prioritizeFailedCases}
-                onChange={(checked) => practiceToggles.setPrioritizeFailedCases(checked)}
-                label="Prioritize Failed Cases"
-              />
-              <ToggleSwitch
-                id="time-attack-toggle"
-                checked={practiceToggles.timeAttack}
-                onChange={(checked) => practiceToggles.setTimeAttack(checked)}
-                label="Time Attack"
-              />
-            </div>
-          </div>
+      {/* Practice toggles: full grid at tablet widths (strip squeezed into one unusable row); collapsible strip on wide desktop */}
+      {!showAlgEditor && (!narrowPracticeDesktop ? practiceTogglesStrip : (
+        <div style={{ width: '100%', maxWidth: 'var(--practice-alg-track-max)' }}>
+          <div style={practiceTogglesGridInnerStyle}>{practiceTogglesFields}</div>
         </div>
+      ))}
 
-        <p className="input-label subset-label subset-label-row">
-          <label htmlFor="select-all-subsets-toggle">Subset:</label>
-          <input
-            type="checkbox"
-            id="select-all-subsets-toggle"
-            className="subset-checkbox"
-            checked={subsets.length > 0 && selectedSubsets.length === subsets.length}
-            onChange={(event) => {
-              setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-              toggleAllSubsets(event.target.checked);
-              training.clearFailedCounts();
-              training.resetDrill();
-              scramble.clearScramble();
-            }}
-          />
-        </p>
-
-        <div id="subset-checkboxes" className="subsets-panel">
-          <div id="subset-checkboxes-container" className="subset-grid">
-            {subsets.map((subset) => (
-              <label key={subset} className="toggle-item subset-item">
-                <input
-                  type="checkbox"
-                  className="subset-checkbox"
-                  checked={selectedSubsets.includes(subset)}
-                  onChange={(event) => {
-                    setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-                    toggleSubset(subset, event.target.checked);
-                    training.clearFailedCounts();
-                    training.resetDrill();
-                    scramble.clearScramble();
-                  }}
-                />
-                <span>{subset}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <CaseGrid caseCards={caseCards} />
-
-        <div className="delete-mode-container">
-          <ToggleSwitch
-            id="delete-mode-toggle"
-            className="toggle-switch--inline"
-            checked={deleteMode}
-            onChange={(checked) => {
-              setDeleteMode(checked);
-            }}
-            label="Delete Mode"
-          />
-          <button
-            id="delete-alg"
-            disabled={!deleteMode}
-            className="primary-button"
-            type="button"
-            onClick={handleDeleteAlgorithms}
-          >
-            Delete Algorithm
-          </button>
-          <button
-            id="delete-times"
-            disabled={!deleteMode}
-            className="primary-button"
-            type="button"
-            onClick={handleDeleteTimes}
-          >
-            Delete Times
-          </button>
-        </div>
-
-        <div id="delete-success" className={`${deleteSuccessMessage ? 'status-panel status-success' : 'hidden status-panel status-success'}`}>
-          {deleteSuccessMessage}
-        </div>
+      {/* Big stats graph (#alg-stats) */}
+      <div style={{ width: '100%', maxWidth: 'var(--practice-alg-track-max)' }}>
+        <StatsPanel
+          visible={!showAlgEditor}
+          showAlgName={options.showAlgName && !training.countdownActive}
+          algName={training.currentAlgName}
+          stats={training.stats}
+          onOpenCaseLibrary={onOpenCaseLibrary}
+        />
       </div>
 
       {/* Keep this referenced until timer row is extracted into its own component. */}
       <button type="button" className="hidden" onClick={handleTouchTimerActivation} aria-hidden />
-    </>
+    </div>
   );
 });
-

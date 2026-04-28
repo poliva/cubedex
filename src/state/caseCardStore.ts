@@ -6,7 +6,6 @@ export interface CaseCardStoreState {
   bestTimes: Record<string, number | null>;
   ao5Times: Record<string, number | null>;
   selectedCaseIds: string[];
-  fullStickering: boolean;
   autoUpdateLearningState: boolean;
 }
 
@@ -16,7 +15,6 @@ const initial: CaseCardStoreState = {
   bestTimes: {},
   ao5Times: {},
   selectedCaseIds: [],
-  fullStickering: false,
   autoUpdateLearningState: false,
 };
 
@@ -73,10 +71,6 @@ export function useCaseCardSlice(id: string): CaseCardSlice {
     }),
     shallowEqual,
   );
-}
-
-export function useFullStickering(): boolean {
-  return useStoreSelector(caseCardStore, (s) => s.fullStickering);
 }
 
 export function useAutoUpdateLearningState(): boolean {

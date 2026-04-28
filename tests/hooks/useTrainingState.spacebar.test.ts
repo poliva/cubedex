@@ -113,9 +113,15 @@ describe('useTrainingState spacebar timer flow', () => {
     resetMockState(mockState);
 
     mockState.patterns.solved = createPattern(mockState, 'solved');
-    mockState.patterns['solved:R'] = createPattern(mockState, 'solved:R');
-    mockState.patterns['solved:R:R'] = createPattern(mockState, 'solved:R:R');
-    mockState.patterns['solved:R:R:R'] = createPattern(mockState, 'solved:R:R:R');
+    const patternKeys = ['solved'];
+    let repeatedR = 'solved';
+    for (let index = 0; index < 12; index += 1) {
+      repeatedR = `${repeatedR}:R`;
+      patternKeys.push(repeatedR);
+    }
+    for (const key of patternKeys) {
+      mockState.patterns[key] = createPattern(mockState, key);
+    }
   });
 
   it('stops, records, and advances dumb-cube solves without auto-starting the next case on keyup', async () => {
@@ -382,5 +388,78 @@ describe('useTrainingState spacebar timer flow', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('labels recent times with 1-based session solve index', async () => {
+    vi.spyOn(performance, 'now').mockImplementation(() => 10_000);
+
+    const onlyCase = [selectedCases[0]];
+
+    const { result } = renderHook(() => useTrainingState(onlyCase, 'PLL', {
+      ...defaultOptions,
+    }));
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+      expect(result.current.timerState).toBe('READY');
+    });
+
+    for (let n = 1; n <= 3; n += 1) {
+      act(() => {
+        result.current.stopAndRecordSolve(800 + n);
+      });
+      await waitFor(() => {
+        expect(result.current.practiceCounts['case-1']).toBe(n);
+      });
+    }
+
+    const { lastFive } = result.current.stats;
+    expect(lastFive).toHaveLength(3);
+    expect(lastFive[0]?.label.startsWith('Time 1:')).toBe(true);
+    expect(lastFive[1]?.label.startsWith('Time 2:')).toBe(true);
+    expect(lastFive[2]?.label.startsWith('Time 3:')).toBe(true);
+  });
+
+  it('labels pre-session history rows as Recorded when session counter was reset', async () => {
+    vi.spyOn(performance, 'now').mockImplementation(() => 10_000);
+
+    const priorAttempt = {
+      recordedAt: 1,
+      mode: 'timer',
+      executionMs: 100,
+      recognitionMs: null,
+      totalMs: 100,
+      hadMistake: false,
+      aborted: false,
+      timerOnly: true,
+      grade: 'good' as const,
+    };
+    mockState.attemptHistory.set('case-1', [priorAttempt, { ...priorAttempt, recordedAt: 2, executionMs: 200, totalMs: 200 }]);
+
+    const onlyCase = [selectedCases[0]];
+
+    const { result } = renderHook(() => useTrainingState(onlyCase, 'PLL', {
+      ...defaultOptions,
+    }));
+
+    await waitFor(() => {
+      expect(result.current.stats.lastFive).toHaveLength(2);
+    });
+
+    expect(result.current.stats.lastFive.every((entry) => entry.label.startsWith('Recorded:'))).toBe(true);
+
+    act(() => {
+      result.current.stopAndRecordSolve(300);
+    });
+
+    await waitFor(() => {
+      expect(result.current.practiceCounts['case-1']).toBe(1);
+    });
+
+    const { lastFive } = result.current.stats;
+    expect(lastFive).toHaveLength(3);
+    expect(lastFive[0]?.label.startsWith('Recorded:')).toBe(true);
+    expect(lastFive[1]?.label.startsWith('Recorded:')).toBe(true);
+    expect(lastFive[2]?.label.startsWith('Time 1:')).toBe(true);
   });
 });

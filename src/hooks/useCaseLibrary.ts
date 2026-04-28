@@ -29,6 +29,8 @@ export interface CaseLibraryState {
   toggleSubset: (subset: string, checked: boolean) => void;
   toggleAllSubsets: (checked: boolean) => void;
   toggleCaseSelection: (algId: string, checked: boolean) => void;
+  selectVisibleCases: () => void;
+  clearSelectedCases: () => void;
   setSelectAllCases: (checked: boolean) => void;
   setSelectLearningCases: (checked: boolean) => void;
   setSelectLearnedCases: (checked: boolean) => void;
@@ -54,6 +56,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
   const [selectLearnedCases, setSelectLearnedCasesState] = useState(false);
   const [learnedRefreshToken, setLearnedRefreshToken] = useState(0);
   const previousCategoryRef = useRef('');
+  const caseCardsRef = useRef<CaseCardData[]>([]);
 
   const reloadSavedAlgorithms = useCallback(() => {
     const saved = getSavedAlgorithms();
@@ -139,6 +142,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
   );
 
   useEffect(() => {
+    caseCardsRef.current = caseCards;
     const filteredCards = (selectLearningCases || selectLearnedCases)
       ? caseCards.filter((card) => (
         (selectLearningCases && card.learned === 1)
@@ -193,6 +197,26 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     });
   }, []);
 
+  const selectVisibleCases = useCallback(() => {
+    const filteredCards = (selectLearningCases || selectLearnedCases)
+      ? caseCards.filter((card) => (
+        (selectLearningCases && card.learned === 1)
+        || (selectLearnedCases && card.learned === 2)
+      ))
+      : caseCards;
+
+    setSelectionChangeMode('bulk');
+    setSelectedCaseIds(filteredCards.map((card) => card.id));
+  }, [caseCards, selectLearnedCases, selectLearningCases]);
+
+  const clearSelectedCases = useCallback(() => {
+    setSelectionChangeMode('bulk');
+    setSelectAllCasesState(false);
+    setSelectLearningCasesState(false);
+    setSelectLearnedCasesState(false);
+    setSelectedCaseIds([]);
+  }, []);
+
   const setSelectAllCases = useCallback((checked: boolean) => {
     setSelectionChangeMode('bulk');
     setSelectAllCasesState(checked);
@@ -209,6 +233,12 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     setSelectLearningCasesState(checked);
     if (checked) {
       setSelectAllCasesState(false);
+    } else {
+      // Toggling Learning off: drop only learning cases from the current selection.
+      setSelectedCaseIds((current) => current.filter((id) => {
+        const card = caseCardsRef.current.find((c) => c.id === id);
+        return !card || card.learned !== 1;
+      }));
     }
   }, []);
 
@@ -217,6 +247,12 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     setSelectLearnedCasesState(checked);
     if (checked) {
       setSelectAllCasesState(false);
+    } else {
+      // Toggling Learned off: drop only learned cases from the current selection.
+      setSelectedCaseIds((current) => current.filter((id) => {
+        const card = caseCardsRef.current.find((c) => c.id === id);
+        return !card || card.learned !== 2;
+      }));
     }
   }, []);
 
@@ -226,10 +262,13 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
   }, []);
 
   const handleSetSelectedCategory = useCallback((category: string) => {
+    if (category === selectedCategory) {
+      return;
+    }
     setSelectedCaseIds([]);
     setSelectionChangeMode('bulk');
     setSelectedCategory(category);
-  }, []);
+  }, [selectedCategory]);
 
   return useMemo(() => ({
     isReady,
@@ -248,6 +287,8 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     toggleSubset,
     toggleAllSubsets,
     toggleCaseSelection,
+    selectVisibleCases,
+    clearSelectedCases,
     setSelectAllCases,
     setSelectLearningCases,
     setSelectLearnedCases,
@@ -262,8 +303,10 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     reloadSavedAlgorithms,
     savedAlgorithms,
     selectAllCases,
+    clearSelectedCases,
     selectLearnedCases,
     selectLearningCases,
+    selectVisibleCases,
     selectedCaseIds,
     selectedCategory,
     selectedSubsets,

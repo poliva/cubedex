@@ -196,6 +196,43 @@ describe('useTrainingState time attack counts', () => {
     });
   });
 
+  it('does not reset the time-attack queue when only reviewRefreshToken changes', async () => {
+    const { result, rerender } = renderHook(({ reviewRefreshToken }) => useTrainingState(selectedCases, 'PLL', {
+      selectionChangeMode: 'bulk',
+      countdownMode: false,
+      randomizeAUF: false,
+      randomOrder: false,
+      timeAttack: true,
+      prioritizeSlowCases: false,
+      prioritizeFailedCases: false,
+      smartReviewScheduling: false,
+      smartcubeConnected: true,
+      currentPattern: null,
+      statsRefreshToken: 0,
+      reviewRefreshToken,
+    }), { initialProps: { reviewRefreshToken: 0 } });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+    });
+
+    act(() => {
+      result.current.stopAndRecordSolve(1200);
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-2');
+      expect(result.current.timeAttackCurrentCaseNumber).toBe(2);
+    });
+
+    act(() => {
+      rerender({ reviewRefreshToken: 1 });
+    });
+
+    expect(result.current.currentCase?.id).toBe('case-2');
+    expect(result.current.timeAttackCurrentCaseNumber).toBe(2);
+  });
+
   it('increments solved time-attack cases per card and preserves run-level stats', async () => {
     const { result } = renderTrainingState();
     const scopeId = createTimeAttackScopeId('PLL', selectedCases.map((selectedCase) => selectedCase.id));

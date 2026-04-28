@@ -22,6 +22,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     controlPanel: 'none',
     flashingIndicatorEnabled: true,
     cubeSizePx: 400,
+    showTimesInsteadOfGraph: false,
     setDarkMode: vi.fn(),
     setShowAlgName: vi.fn(),
     setCountdownMode: vi.fn(),
@@ -36,6 +37,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     setControlPanel: vi.fn(),
     setFlashingIndicatorEnabled: vi.fn(),
     setCubeSizePx: vi.fn(),
+    setShowTimesInsteadOfGraph: vi.fn(),
     ...overrides,
   };
 }
@@ -118,7 +120,7 @@ describe('OptionsView', () => {
 
     const whiteOnBottom = screen.getByLabelText('Virtual Cube White on Bottom');
     expect(whiteOnBottom).toBeDisabled();
-    expect(screen.getByText('Requires “Always Show Full Stickers”')).toBeVisible();
+    expect(screen.getByText('Requires "Always Show Full Stickers"')).toBeVisible();
 
     await user.click(screen.getByLabelText('Always Show Full Stickers'));
     expect(options.setFullStickering).toHaveBeenCalledWith(true);
@@ -152,6 +154,42 @@ describe('OptionsView', () => {
     expect(smartcube.setShowAllBluetoothDevices).toHaveBeenCalledWith(true);
   });
 
+  it('opens device info with setInfoVisible(true) and hides other option sections when info is shown', async () => {
+    const user = userEvent.setup();
+    const setInfoVisible = vi.fn();
+    const smartcube = createSmartcube({ connected: true });
+
+    const { rerender } = render(
+      <OptionsView
+        visible
+        infoVisible={false}
+        setInfoVisible={setInfoVisible}
+        options={createOptions()}
+        smartcube={smartcube}
+        algorithmActions={createAlgorithmActions()}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Device Info' }));
+    expect(setInfoVisible).toHaveBeenCalledWith(true);
+
+    rerender(
+      <OptionsView
+        visible
+        infoVisible
+        setInfoVisible={setInfoVisible}
+        options={createOptions()}
+        smartcube={smartcube}
+        algorithmActions={createAlgorithmActions()}
+      />,
+    );
+
+    expect(screen.getByText('Device Name')).toBeVisible();
+    expect(screen.getByText('Cube')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Export' })).toBeNull();
+    expect(screen.queryByLabelText('Countdown Mode')).toBeNull();
+  });
+
   it('forwards non-default visualization settings and cube size changes', async () => {
     const options = createOptions({
       visualization: '2D',
@@ -173,11 +211,11 @@ describe('OptionsView', () => {
       />,
     );
 
-    expect(screen.getByLabelText('Cube Visualization Mode:')).toHaveValue('2D');
-    expect(screen.getByLabelText('Cube Back View:')).toHaveValue('side-by-side');
+    expect(screen.getByDisplayValue('2D')).toBeVisible();
+    expect(screen.getByDisplayValue('Side-by-side')).toBeVisible();
     expect(screen.getByLabelText('Virtual Cube White on Bottom')).toBeEnabled();
 
-    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '480' } });
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '480' } });
     expect(options.setCubeSizePx).toHaveBeenCalledWith(480);
   });
 

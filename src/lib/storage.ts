@@ -52,6 +52,7 @@ export const STORAGE_KEYS = {
   theme: 'theme',
   smartcubeDeviceSelection: 'smartcubeDeviceSelection',
   autoUpdateLearningState: 'autoUpdateLearningState',
+  showTimesInsteadOfGraph: 'showTimesInsteadOfGraph',
 } as const;
 
 export const DEFAULT_ALG_ID = 'default-alg-id';
@@ -325,22 +326,40 @@ let initializePromise: Promise<{ migratedSavedAlgorithmsV1: boolean; alertMessag
 let writeQueue: Promise<void> = Promise.resolve();
 
 export function expandNotation(input: string): string {
-  let output = input
-    .replace(/["´`'\u2018\u2019]/g, "'")
-    .replace(/\[/g, '(')
-    .replace(/\]/g, ')')
-    .replace(/XYZ/g, 'xyz');
+  // Replace characters
+  let output = input.replace(/["´`‘]/g, "'")  // Replace " ´ ` ‘ with '
+                    .replace(/\[/g, "(")      // Replace [ with (
+                    .replace(/\]/g, ")")      // Replace ] with )
+                    .replace(/XYZ/g, "xyz");  // lowercase x y z
 
+  // Remove characters not allowed
   output = output.replace(/[^RLFBUDMESrlfbudxyz2()']/g, '');
+
+  // Before a ( there must always be a space
   output = output.replace(/\(/g, ' (');
+
+  // After a ) there must always be a space
   output = output.replace(/\)(?!\s)/g, ') ');
+
+  // After a ' there must always be a space unless the next character is )
   output = output.replace(/'(?![\s)])/g, "' ");
+
+  // After a 2 there must always be a space unless the next character is ) or '
   output = output.replace(/2(?![\s')])/g, '2 ');
+
+  // After any letter of RLFBUDMESrlfbudxyz there must always be a space unless the next character is ) ' or 2
   output = output.replace(/([RLFBUDMESrlfbudxyz])(?![\s)'2])/g, '$1 ');
-  output = output.replace(/(\s)(?=2)/g, '');
-  output = output.replace(/'2/g, "2'");
+
+  // There can't be a space before a 2
+  output = output.replace(/(\s)(?=2)/g, '');;
+
+  // R'2 must be R2' instead
+  output = output.replace(/'2/g, "2'");;
+
+  // There can't be more than 1 space together
   output = output.replace(/\s+/g, ' ');
 
+  // Trim to ensure no leading or trailing spaces
   return output.trim();
 }
 

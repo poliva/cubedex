@@ -1,12 +1,56 @@
 :root {
-  --border-color: #e5e7eb;
-  /* Match the original #alg-bar max width so graph and metrics stay aligned. */
+  /* Legacy compat */
+  --border-color: #d1d5db;
   --practice-alg-track-max: 1125px;
+
+  /* Design system — light mode defaults */
+  --bg:       #f3f4f6;
+  --surface:  #ffffff;
+  --raised:   #f9fafb;
+  --border:   #9ca3af;
+  --border-l: #d1d5db;
+  --accent:   #3b82f6;
+  --accent-h: #1d4ed8;
+  --ok:       #22c55e;
+  --warn:     #f59e0b;
+  --danger:   #ef4444;
+  --fg:       #111827;
+  --fg2:      #374151;
+  --fg3:      #6b7280;
+  --fg4:      #9ca3af;
+  --mono:     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --sidebar-w: 64px;
+  --tab-h:    60px;
+
+  /* Radii — two scales: containers and controls. */
+  --radius:    12px;   /* containers/cards */
+  --radius-sm: 8px;    /* inputs/buttons/pills */
+  --radius-pill: 9999px;
+
+  /* Elevation — one shadow token per resting/raised level. */
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.06), 0 1px 3px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+  /* Single-blue tint used for "selected" surfaces; derived from --accent. */
+  --accent-tint: rgba(59, 130, 246, 0.12);
+}
+
+html.dark {
+  --border-color: #2d3748;
+  --bg:       #111827;
+  --surface:  #1f2937;
+  --raised:   #374151;
+  --border:   #374151;
+  --border-l: #4b5563;
+  --fg:       #ffffff;
+  --fg2:      #e5e7eb;
+  --fg3:      #9ca3af;
+  --fg4:      #6b7280;
+  --accent-tint: rgba(96, 165, 250, 0.18);
 }
 
 /*
  * Sans stack + preflight-style html defaults from the original static app stylesheet.
- * Omit font-synthesis/text-rendering/font-smoothing tweaks because they change weight/edges.
  */
 html {
   line-height: 1.5;
@@ -17,15 +61,14 @@ html {
   font-feature-settings: normal;
   font-variation-settings: normal;
   -webkit-tap-highlight-color: transparent;
-  background-color: #f3f4f6;
+  background-color: var(--bg);
   min-height: 100%;
   color-scheme: light;
 }
 
 html.dark {
   color-scheme: dark;
-  --border-color: #2d3748;
-  background-color: #111827;
+  background-color: var(--bg);
 }
 
 * {
@@ -40,22 +83,20 @@ body {
 }
 
 #root {
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
-  flex-direction: column;
-  background-color: inherit;
+  overflow: hidden;
+  background-color: var(--bg);
 }
 
 /* Body matches the original font/line-height rhythm. */
 body {
   min-width: 360px;
-  min-height: 100vh;
-  min-height: 100dvh;
   line-height: 1.625;
   font-family: inherit;
-  background-color: #f3f4f6;
-  color: #111827;
+  background-color: var(--bg);
+  color: var(--fg);
   font-size: 0.875rem;
 }
 
@@ -66,8 +107,8 @@ body {
 }
 
 html.dark body {
-  background-color: #111827;
-  color: #ffffff;
+  background-color: var(--bg);
+  color: var(--fg);
 }
 
 a {
@@ -134,7 +175,7 @@ html.dark .app-shell {
   left: 0;
   border: 0;
   background: transparent;
-  color: #3b82f6;
+  color: var(--accent);
   font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;
@@ -268,6 +309,151 @@ html.dark .menu-item.selected {
   }
 }
 
+@keyframes appViewFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.app-view-fade-in {
+  animation: appViewFadeIn 120ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-view-fade-in {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+.app-footer-chrome {
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 -1px 0 var(--border);
+}
+
+html.dark .app-footer-chrome {
+  box-shadow: 0 -1px 0 oklch(100% 0 0 / 0.08);
+}
+
+/* Unified empty state (icon + copy + optional CTA) */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  padding: 20px 16px 22px;
+  max-width: 32rem;
+  margin: 0 auto;
+  color: var(--fg2);
+}
+
+.empty-state--compact {
+  padding: 8px 4px 10px;
+  max-width: none;
+}
+
+.empty-state-icon-wrap {
+  color: var(--fg3);
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+
+.empty-state--compact .empty-state-icon-wrap {
+  margin-bottom: 6px;
+}
+
+.empty-state--compact .empty-state-icon-svg {
+  width: 22px;
+  height: 22px;
+}
+
+.empty-state-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+  line-height: 1.35;
+}
+
+.empty-state--compact .empty-state-title {
+  font-size: 13px;
+}
+
+.empty-state-desc {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fg3);
+  max-width: 28rem;
+}
+
+.empty-state--compact .empty-state-desc {
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.empty-state-cta {
+  margin-top: 14px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: filter 0.15s, opacity 0.15s;
+}
+
+.empty-state-cta:hover {
+  filter: brightness(1.06);
+}
+
+.empty-state-cta:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.empty-state--compact .empty-state-cta {
+  margin-top: 8px;
+  padding: 5px 10px;
+  font-size: 11px;
+}
+
+.alg-cases-empty {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px dashed var(--border);
+  background: var(--raised);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .practice-timer-card,
+  .mobile-timer-card {
+    transition: border-color 0.15s, box-shadow 0.15s !important;
+  }
+
+  .practice-timer-card,
+  .mobile-timer-card,
+  .practice-timer-value,
+  .practice-timer-value--mobile {
+    transform: none !important;
+  }
+}
+
+button:active { opacity: 0.75; }
+button { -webkit-tap-highlight-color: transparent; }
+
 .top-column {
   min-height: 100%;
   width: 100%;
@@ -303,14 +489,14 @@ html.dark .menu-item.selected {
   border-radius: 0.5rem;
   background: #ffffff;
   color: #111827;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 html.dark .shell-card {
   border-color: #374151;
   background-color: #374151;
   color: #ffffff;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .side-card {
@@ -392,9 +578,148 @@ html.dark .alg-name-display-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 200px;
+  width: 100%;
   max-width: 100%;
+  min-height: 200px;
   margin: 0 auto;
+}
+
+.recent-times-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.recent-times-toggle {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: var(--raised);
+  color: var(--fg2);
+  cursor: pointer;
+}
+
+.recent-times-toggle:hover {
+  color: var(--accent);
+}
+
+.practice-top-grid {
+  width: 100%;
+  max-width: 95%;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr) minmax(240px, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+/* When there's no history, center the grid content vertically */
+
+.practice-side-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.practice-side-column--left {
+  align-items: flex-end;
+}
+
+.practice-recent-card,
+.practice-side-column--right {
+  width: min(100%, 360px);
+  min-width: 240px;
+}
+
+.practice-timer-card {
+  overflow: hidden;
+}
+
+.practice-timer-value {
+  max-width: 100%;
+  overflow: hidden;
+  text-align: right;
+  font-size: clamp(2.5rem, 3.2vw, 3.75rem);
+}
+
+.practice-timer-value--mobile {
+  text-align: center;
+  font-size: clamp(2.375rem, 14vw, 3.5rem);
+  overflow: visible;
+}
+
+.practice-recent-card {
+  overflow: hidden;
+}
+
+.practice-recent-card .graph-display {
+  min-height: 130px;
+}
+
+.practice-recent-card .times-display {
+  min-height: 130px;
+  overflow: auto;
+}
+
+.practice-cube-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+}
+
+.practice-cube-card {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 1080px) {
+  .practice-top-grid {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .practice-cube-column {
+    order: 1;
+  }
+
+  .practice-side-column--left {
+    order: 2;
+    width: 100%;
+    align-items: center;
+  }
+
+  .practice-side-column--right {
+    order: 3;
+    width: min(100%, 420px);
+  }
+
+  .practice-recent-card {
+    width: min(100%, 420px);
+  }
+}
+
+@media (max-width: 639px) {
+  .mobile-timer-card {
+    isolation: isolate;
+  }
+
+  .mobile-stat-chip-row {
+    row-gap: 8px;
+  }
 }
 
 .cube-area {
@@ -469,7 +794,7 @@ html.dark .alg-name-display-container {
 .round-button,
 .mask-toggle-button {
   border: 0;
-  background: #3b82f6;
+  background: var(--accent);
   color: #ffffff;
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -478,7 +803,7 @@ html.dark .alg-name-display-container {
 .primary-button:hover,
 .round-button:hover,
 .mask-toggle-button:hover {
-  background: #1d4ed8;
+  background: var(--accent-h);
 }
 
 .round-button:disabled {
@@ -554,7 +879,7 @@ html.dark .primary-button:disabled {
   border: 1px solid #93c5fd;
   border-radius: 0.5rem;
   background: #eff6ff;
-  color: #1d4ed8;
+  color: var(--accent-h);
   text-align: center;
 }
 
@@ -601,19 +926,44 @@ html.dark .timer-display {
 }
 
 html.dark .time-attack-banner {
-  border-color: #1d4ed8;
+  border-color: var(--accent-h);
   background: rgb(30 58 138 / 0.3);
   color: #bfdbfe;
 }
 
-/* Keep the horizontal control row so round buttons align with the input and alg display. */
+/* Keep the horizontal control row; center round buttons with the alg track (mockup). */
 .alg-bar {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  align-items: center;
   width: 100%;
   max-width: var(--practice-alg-track-max);
   margin: 0 auto;
+}
+
+.alg-track {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  gap: 6px;
+}
+
+.alg-bar .alg-input--track {
+  margin-bottom: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.alg-display--embed {
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  flex: 1;
+  min-width: 0;
 }
 
 .round-button {
@@ -622,7 +972,7 @@ html.dark .time-attack-banner {
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0;
   padding: 0;
   border-radius: 9999px;
   flex-shrink: 0;
@@ -641,11 +991,11 @@ html.dark .time-attack-banner {
 }
 
 .alg-bar #train-alg {
-  margin-right: 1rem;
+  margin-right: 0;
 }
 
 .alg-bar #scramble-to {
-  margin-left: 1rem;
+  margin-left: 0;
 }
 
 .alg-bar > .alg-input,
@@ -665,7 +1015,7 @@ html.dark .time-attack-banner {
   border-radius: 0.5rem;
   background: #ffffff;
   color: #111827;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -675,7 +1025,7 @@ html.dark .time-attack-banner {
 .readonly-input:focus,
 .select-input:focus,
 .number-input:focus {
-  border-color: #3b82f6;
+  border-color: var(--accent);
 }
 
 html.dark .alg-input,
@@ -769,6 +1119,15 @@ html.dark .text-input::placeholder {
   margin: 0;
 }
 
+.alg-display-container--embed {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
 /* Inner wrapper only exists to right-align the absolutely positioned mask. */
 .alg-display-mask-row {
   display: flex;
@@ -841,6 +1200,32 @@ html.dark .text-input::placeholder {
     white-space: normal;
     overflow-x: visible;
   }
+}
+
+.alg-track .alg-input--track {
+  height: auto;
+  min-height: calc(1.5 * 1rem);
+  max-height: none;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.alg-display.alg-display--embed {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.alg-display.alg-display--embed .alg-display-moves {
+  background: transparent;
+  line-height: 1.35;
 }
 
 /* Current / next move highlight from the original static app. */
@@ -1008,7 +1393,7 @@ html.dark .status-success {
 }
 
 .help-panel a {
-  color: #3b82f6;
+  color: var(--accent);
 }
 
 .help-panel a:hover {
@@ -1038,7 +1423,7 @@ html.dark .help-panel a {
   border-radius: 0.5rem;
   background: #f9fafb;
   padding: 1rem;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 html.dark .subpanel {
@@ -1087,14 +1472,14 @@ html.dark .subpanel {
   font-weight: 700;
   font-size: inherit;
   line-height: 1.5;
-  background: #3b82f6;
+  background: var(--accent);
   color: #ffffff;
   cursor: pointer;
   transition: background-color 0.3s ease-in-out;
 }
 
 .save-panel-button:hover {
-  background: #1d4ed8;
+  background: var(--accent-h);
 }
 
 .save-panel-button:disabled {
@@ -1319,7 +1704,7 @@ html.dark .stats-panel.shell-card {
   line-height: 1.4;
   font-weight: 700;
   text-align: center;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 @media (min-width: 640px) {
@@ -1455,7 +1840,7 @@ html.dark .selector-card .select-input {
   border: 1px solid #9ca3af;
   border-radius: 0.5rem;
   background: #f9fafb;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 @media (min-width: 1024px) {
@@ -1489,7 +1874,7 @@ html.dark .toggle-grid {
 }
 
 .text-blue-500 {
-  color: #3b82f6;
+  color: var(--accent);
   background: none;
   border: none;
   padding: 0;
@@ -1525,7 +1910,7 @@ html.dark .toggle-grid {
   border: 1px solid #9ca3af;
   border-radius: 0.5rem;
   background: #f9fafb;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 html.dark .subsets-panel {
@@ -1589,11 +1974,15 @@ html.dark .subsets-panel {
   }
 }
 
+.cases-category-strip::-webkit-scrollbar {
+  display: none;
+}
+
 .case-wrapper {
   position: relative;
   padding: 1rem;
   border-radius: 0.5rem;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md);
   border: none;
   /* Rendering optimization: large case lists otherwise cause main-thread jank. */
   content-visibility: auto;
@@ -1730,7 +2119,7 @@ html.dark .case-metric {
 }
 
 .case-toggle-row > input:checked + .toggle-track {
-  background: #3b82f6;
+  background: var(--accent);
 }
 
 .case-toggle-row > input:checked + .toggle-track + .toggle-dot {
@@ -1794,7 +2183,7 @@ html.dark .case-metric {
 }
 
 .toggle-switch input.sr-only:checked + .toggle-switch-track {
-  background-color: #3b82f6;
+  background-color: var(--accent);
 }
 
 .toggle-switch input.sr-only:checked + .toggle-switch-track + .toggle-switch-dot {
@@ -1867,8 +2256,8 @@ html.dark .subset-label-row input[type='checkbox'].subset-checkbox {
 
 .subset-grid input[type='checkbox'].subset-checkbox:checked,
 .subset-label-row input[type='checkbox'].subset-checkbox:checked {
-  background-color: #2563eb;
-  border-color: #2563eb;
+  background-color: var(--accent);
+  border-color: var(--accent);
 }
 
 .subset-grid input[type='checkbox'].subset-checkbox:checked::after,
@@ -1886,7 +2275,7 @@ html.dark .subset-label-row input[type='checkbox'].subset-checkbox {
 
 .subset-grid input[type='checkbox'].subset-checkbox:focus-visible,
 .subset-label-row input[type='checkbox'].subset-checkbox:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -2079,7 +2468,7 @@ html.dark .footer {
 }
 
 .footer a {
-  color: #3b82f6;
+  color: var(--accent);
   text-decoration: none;
 }
 
@@ -2153,12 +2542,12 @@ html.dark .footer {
   }
 
   .alg-bar {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
 
-  .alg-input,
-  .alg-display-container {
-    flex: 1 1 100%;
+  .alg-bar .alg-track {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .panel-header-row,

@@ -12,7 +12,6 @@ import {
   stableActions,
   useAutoUpdateLearningState,
   useCaseCardSlice,
-  useFullStickering,
 } from '../state/caseCardStore';
 
 interface CaseCardProps {
@@ -23,34 +22,36 @@ interface CaseCardProps {
 
 function CaseCardComponent({ card, index, style }: CaseCardProps) {
   const { practiceCount, failedCount, bestTime, ao5, selected } = useCaseCardSlice(card.id);
-  const fullStickering = useFullStickering();
   const autoUpdateLearningState = useAutoUpdateLearningState();
   const successCount = Math.max(0, practiceCount - Math.min(failedCount, practiceCount));
   const isLL = card.category.toLowerCase().includes('ll');
   const visualization = isLL ? 'experimental-2D-LL' : '3D';
-  const stickering = getStickeringForCategory(card.category, fullStickering);
+  const stickering = getStickeringForCategory(card.category, false);
 
-  const wrapperClass = `case-wrapper ${
-    failedCount
-      ? 'bg-red-400 dark:bg-red-400'
-      : index % 2 === 0
-        ? 'case-alt-dark'
-        : 'case-alt-light'
-  }`;
+  const background = failedCount
+    ? 'rgba(239,68,68,0.12)'
+    : index % 2 === 0
+      ? 'var(--surface)'
+      : 'var(--raised)';
 
   return (
     <div
       key={`${card.id}-${card.name}`}
-      className={wrapperClass}
+      className="case-wrapper"
       id={card.id}
       data-name={card.name}
       data-algorithm={card.algorithm}
       data-category={card.category}
       data-subset={card.subset}
-      style={style}
+      style={{
+        ...style,
+        border: `4px solid ${selected ? 'rgba(59,130,246,0.4)' : 'transparent'}`,
+        background,
+        boxShadow: '0 10px 24px oklch(0% 0 0 / 0.12)',
+      }}
     >
       <div className="case-card-header">
-        <div className="case-name" title={card.algorithm}>
+        <div className="case-name" title={card.algorithm} style={{ fontWeight: 700, color: 'var(--fg)' }}>
           {card.name}
         </div>
         <button
@@ -60,6 +61,15 @@ function CaseCardComponent({ card, index, style }: CaseCardProps) {
           className="bookmark-button"
           type="button"
           aria-disabled={autoUpdateLearningState}
+          aria-label={`Learning status for ${card.name}`}
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: 8,
+            border: 'none',
+            background: 'transparent',
+            color: 'var(--fg2)',
+          }}
           onClick={() => {
             if (autoUpdateLearningState) {
               return;
@@ -79,14 +89,14 @@ function CaseCardComponent({ card, index, style }: CaseCardProps) {
         </button>
       </div>
       <label htmlFor={`case-toggle-${card.id}`} className="case-card-body" title={card.algorithm}>
-        <div id={`best-time-${card.id}`} className="case-metric">
+        <div id={`best-time-${card.id}`} className="case-metric" style={{ color: 'var(--fg3)' }}>
           Best: {bestTimeString(bestTime)}
         </div>
-        <div id={`ao5-time-${card.id}`} className="case-metric">
+        <div id={`ao5-time-${card.id}`} className="case-metric" style={{ color: 'var(--fg3)' }}>
           Ao5: {averageTimeString(ao5)}
         </div>
-        <div id={`alg-case-${card.id}`} className="case-preview">
-          <div className="case-preview-inner">
+        <div id={`alg-case-${card.id}`} className="case-preview" style={{ marginTop: 6 }}>
+          <div className="case-preview-inner" style={{ borderRadius: 12, background: 'transparent' }}>
             <CaseCardPreview
               alg={card.algorithm}
               visualization={visualization}
@@ -109,10 +119,10 @@ function CaseCardComponent({ card, index, style }: CaseCardProps) {
           <div className="toggle-track" />
           <div className="toggle-dot dot" />
           <div className="case-results">
-            <div id={`${card.id}-failed`} className="failed-count">
+            <div id={`${card.id}-failed`} className="failed-count" style={{ color: 'var(--danger)' }}>
               {failedCount > 0 ? `❌: ${failedCount}` : ''}
             </div>
-            <div id={`${card.id}-success`} className="success-count">
+            <div id={`${card.id}-success`} className="success-count" style={{ color: 'var(--ok)' }}>
               {practiceCount > 0 ? `✅: ${successCount}` : ''}
             </div>
           </div>
