@@ -262,9 +262,6 @@ export const PracticeView = memo(function PracticeView({
 
   const cubeNode = (
     <div
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
       style={{
         position: 'relative',
         width: isMobile ? `min(calc(100vw - 56px), ${options.cubeSizePx}px)` : `min(100%, ${options.cubeSizePx}px)`,
@@ -753,7 +750,12 @@ export const PracticeView = memo(function PracticeView({
           </div>
         ) : null}
         {training.stats.hasHistory ? (
-          <div className="mobile-stat-chip-row" style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'center', flexWrap: 'wrap', margin: '-8px 12px 16px', position: 'relative', zIndex: 1 }}>
+          <div
+            className="mobile-stat-chip-row"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'center', flexWrap: 'wrap', margin: '-8px 12px 16px', position: 'relative', zIndex: 1 }}>
             <StatChip label="Last" value={historyTimeString(lastTime?.value ?? null)} />
             <StatChip label="Best" value={historyTimeString(bestTime)} />
             <StatChip label="Ao5" value={historyTimeString(ao5)} highlight />
@@ -809,9 +811,6 @@ export const PracticeView = memo(function PracticeView({
             </div>
             <div
               className={showTimesInsteadOfGraph ? 'times-display' : 'times-display hidden'}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
             >
               <div className="times-grid">
                 {training.stats.lastFive.map((entry, index) => (

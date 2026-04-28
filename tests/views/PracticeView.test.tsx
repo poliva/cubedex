@@ -546,6 +546,60 @@ describe('PracticeView', () => {
     expect(screen.getByText('Time Attack — Case 3 of 12')).toBeInTheDocument();
   });
 
+  it('wires timer activation to mobile timer card and stat chip row on mobile, not cube', () => {
+    const base = makeProps();
+    const props = makeProps({
+      isMobile: true,
+      training: {
+        ...base.training,
+        stats: {
+          ...base.training.stats,
+          hasHistory: true,
+          lastFive: [{ value: 1000, label: 'Time 1: 1.00s', isPb: false }],
+        },
+      },
+    });
+
+    render(<PracticeView {...props} />);
+
+    // Mobile timer card triggers handleTouchEnd via native touchend
+    const mobileTimerCard = document.querySelector('.mobile-timer-card');
+    expect(mobileTimerCard).toBeInTheDocument();
+    mobileTimerCard!.dispatchEvent(new Event('touchend', { bubbles: true }));
+    expect(props.handleTouchEnd).toHaveBeenCalled();
+
+    // Stat chip row triggers handleTouchEnd via native touchend
+    props.handleTouchEnd.mockClear();
+    const statChipRow = document.querySelector('.mobile-stat-chip-row');
+    expect(statChipRow).toBeInTheDocument();
+    statChipRow!.dispatchEvent(new Event('touchend', { bubbles: true }));
+    expect(props.handleTouchEnd).toHaveBeenCalled();
+
+    // Cube should NOT trigger handleTouchEnd
+    props.handleTouchEnd.mockClear();
+    const cubeFrame = screen.getByTestId('main-cube-area').parentElement!;
+    cubeFrame.dispatchEvent(new Event('touchend', { bubbles: true }));
+    expect(props.handleTouchEnd).not.toHaveBeenCalled();
+  });
+
+  it('wires timer activation to desktop right column, not cube', () => {
+    const props = makeProps({ isMobile: false });
+
+    render(<PracticeView {...props} />);
+
+    // Desktop right column triggers handleTouchEnd via native touchend
+    const rightColumn = document.querySelector('.practice-side-column--right');
+    expect(rightColumn).toBeInTheDocument();
+    rightColumn!.dispatchEvent(new Event('touchend', { bubbles: true }));
+    expect(props.handleTouchEnd).toHaveBeenCalled();
+
+    // Cube should NOT trigger handleTouchEnd
+    props.handleTouchEnd.mockClear();
+    const cubeFrame = screen.getByTestId('main-cube-area').parentElement!;
+    cubeFrame.dispatchEvent(new Event('touchend', { bubbles: true }));
+    expect(props.handleTouchEnd).not.toHaveBeenCalled();
+  });
+
   it.skip('disables conflicting order toggles when smart order or time attack is active', async () => {
     const user = userEvent.setup();
     const base = makeProps();
