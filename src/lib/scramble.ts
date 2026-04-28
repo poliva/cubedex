@@ -38,6 +38,7 @@ export function fixOrientation(pattern: KPattern) {
     }
   }
 
+  console.warn('fixOrientation: no rotation matches solved-center positions; returning unrotated pattern');
   return pattern;
 }
 

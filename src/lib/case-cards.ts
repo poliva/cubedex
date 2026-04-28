@@ -73,34 +73,23 @@ export function averageTimeString(time: number | null): string {
   return formatTimeWithOptionalMinutes(time);
 }
 
+// ao5: take last 5 solves, drop fastest and slowest, average the middle 3.
+const AO5_WINDOW = 5;
+const AO5_TRIM_START = 1;
+const AO5_TRIM_END = 4;
+const AO5_KEPT = AO5_TRIM_END - AO5_TRIM_START;
+
 export function averageOfFiveTimeNumber(algId: string): number | null {
   const { executionTimes } = getAttemptHistorySummary(algId);
-  if (executionTimes.length < 5) {
+  if (executionTimes.length < AO5_WINDOW) {
     return null;
   }
 
-  const lastTimesTrimmed = executionTimes.slice(-5).sort((a, b) => a - b).slice(1, 4);
-  return lastTimesTrimmed.reduce((sum, time) => sum + time, 0) / 3;
-}
-
-export function learnedLabel(status: number) {
-  if (status === 1) {
-    return 'Learning';
-  }
-  if (status === 2) {
-    return 'Learned';
-  }
-  return 'Not learned';
-}
-
-export function learnedTitle(status: number) {
-  if (status === 1) {
-    return 'Learning';
-  }
-  if (status === 2) {
-    return 'Learned';
-  }
-  return 'Not learned';
+  const lastTimesTrimmed = executionTimes
+    .slice(-AO5_WINDOW)
+    .sort((a, b) => a - b)
+    .slice(AO5_TRIM_START, AO5_TRIM_END);
+  return lastTimesTrimmed.reduce((sum, time) => sum + time, 0) / AO5_KEPT;
 }
 
 export function cycleLearnedStatus(algId: string) {

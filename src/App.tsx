@@ -379,6 +379,8 @@ export function App() {
       setScrambleStartAlg(smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : '');
       lastProcessedScrambleMoveRef.current = '';
       training.prepareForScramble();
+    }).catch((err) => {
+      console.error('startScrambleTo failed', err);
     });
   }, [
     options.alwaysScrambleTo,
@@ -440,8 +442,12 @@ export function App() {
           preserveDisplayedAlgorithm: true,
           statsScopeId: training.timeAttackMode ? training.statsAlgId : training.currentCase?.id,
           trackRecognition: true,
+        }).catch((err) => {
+          console.error('trainCurrent failed', err);
         });
       }
+    }).catch((err) => {
+      console.error('advanceScramble failed', err);
     });
   }, [
     scramble.advanceScramble,
@@ -501,8 +507,8 @@ export function App() {
   ]);
 
   const isTouchScrollingRef = useRef(false);
-  const _handleTouchStart = useCallback(() => { isTouchScrollingRef.current = false; }, []);
-  const _handleTouchMove = useCallback(() => { isTouchScrollingRef.current = true; }, []);
+  const handleTouchStart = useCallback(() => { isTouchScrollingRef.current = false; }, []);
+  const handleTouchMove = useCallback(() => { isTouchScrollingRef.current = true; }, []);
 
   const handleTimerActivation = useCallback(() => {
     if (smartcube.connected || training.inputMode || training.countdownActive) return;
@@ -619,6 +625,8 @@ export function App() {
         setActiveView('practice');
         void training.trainCurrent(smartcube.currentPattern);
       }
+    }).catch((err) => {
+      console.error('submitSave failed', err);
     });
   }, [
     activeView,
@@ -677,6 +685,8 @@ export function App() {
           setAlgEditorVisible(false);
         }, 3100);
       }
+    }).catch((err) => {
+      console.error('submitSave failed', err);
     });
   }, [
     algorithmActions.submitSave,
@@ -717,6 +727,8 @@ export function App() {
           setSelectedCategory(firstCategory);
           setStatsRefreshToken((value) => value + 1);
         }
+      }).catch((err) => {
+        console.error('importFromFile failed', err);
       });
     }
     event.currentTarget.value = '';
@@ -733,6 +745,8 @@ export function App() {
           setSelectedCategory(firstCategory);
           setStatsRefreshToken((value) => value + 1);
         }
+      }).catch((err) => {
+        console.error('importBackupFromFile failed', err);
       });
     }
     event.currentTarget.value = '';
@@ -740,6 +754,11 @@ export function App() {
 
   return (
     <div style={{ display: 'flex', height: '100dvh', width: '100vw', overflow: 'hidden', background: 'var(--bg)' } as React.CSSProperties}>
+      {caseLibrary.initError && (
+        <div role="alert" className="status-panel status-error" style={{ position: 'fixed', top: 8, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, maxWidth: '90vw', padding: '8px 12px' }}>
+          {caseLibrary.initError}
+        </div>
+      )}
       {/* Sidebar: desktop only */}
       {!isMobile && <Sidebar active={activeView} onNav={selectView} />}
 
@@ -802,8 +821,8 @@ export function App() {
             isMoveMasked={isMoveMasked}
             setIsMoveMasked={setIsMoveMasked}
             handleEditCurrentAlgorithm={handleEditCurrentAlgorithm}
-            handleTouchStart={_handleTouchStart}
-            handleTouchMove={_handleTouchMove}
+            handleTouchStart={handleTouchStart}
+            handleTouchMove={handleTouchMove}
             handleTouchEnd={handleTouchEnd}
             handleTouchTimerActivation={handleTimerActivation}
             isFlashingIndicatorVisible={isFlashingIndicatorVisible}

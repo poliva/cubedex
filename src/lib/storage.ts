@@ -319,7 +319,12 @@ const LS_MIGRATION_DONE_KEY = 'lsMigrationDone';
 const LS_MIGRATION_DONE_AT_KEY = 'lsMigrationDoneAt';
 
 let savedAlgorithmsCache: SavedAlgorithms = {};
+let savedAlgorithmsSnapshot: SavedAlgorithms | null = null;
 let statsCache = new Map<string, ScopedStatsRecord>();
+
+function invalidateSavedAlgorithmsSnapshot() {
+  savedAlgorithmsSnapshot = null;
+}
 let attemptSummaryCache = new Map<string, AttemptHistorySummary>();
 let storageReady = false;
 let initializePromise: Promise<{ migratedSavedAlgorithmsV1: boolean; alertMessage: string | null }> | null = null;
@@ -759,6 +764,7 @@ export async function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) 
         const nextStats = buildMigratedStatsRecords(nextSavedAlgorithms);
 
         savedAlgorithmsCache = nextSavedAlgorithms;
+        invalidateSavedAlgorithmsSnapshot();
         loadStatsCache(nextStats);
 
         await replaceLibraryAndStatsInDb(database, nextSavedAlgorithms, nextStats, [
@@ -777,6 +783,7 @@ export async function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) 
 
       const savedAlgorithmsFromDb = await loadSavedAlgorithmsFromDb(database);
       savedAlgorithmsCache = cloneSavedAlgorithms(savedAlgorithmsFromDb ?? defaultAlgs);
+      invalidateSavedAlgorithmsSnapshot();
 
       const statsRecords = await loadAllStatsFromDb(database);
       loadStatsCache(statsRecords);
@@ -795,7 +802,10 @@ export async function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) 
 }
 
 export function getSavedAlgorithms(): SavedAlgorithms {
-  return cloneSavedAlgorithms(savedAlgorithmsCache);
+  if (savedAlgorithmsSnapshot === null) {
+    savedAlgorithmsSnapshot = cloneSavedAlgorithms(savedAlgorithmsCache);
+  }
+  return savedAlgorithmsSnapshot;
 }
 
 async function persistFullState() {
@@ -818,6 +828,7 @@ async function persistStatsRecord(scopeId: string) {
 
 export async function setSavedAlgorithms(savedAlgorithms: SavedAlgorithms) {
   savedAlgorithmsCache = cloneSavedAlgorithms(savedAlgorithms);
+  invalidateSavedAlgorithmsSnapshot();
   pruneOrphanStatsRecords(savedAlgorithmsCache);
   await enqueueWrite(async () => {
     await persistFullState();
@@ -827,7 +838,7 @@ export async function setSavedAlgorithms(savedAlgorithms: SavedAlgorithms) {
 export async function saveAlgorithm(category: string, subset: string, name: string, algorithm: string) {
   await ensureStorageReady();
 
-  const savedAlgorithms = getSavedAlgorithms();
+  const savedAlgorithms = cloneSavedAlgorithms(savedAlgorithmsCache);
   if (!savedAlgorithms[category]) {
     savedAlgorithms[category] = [];
   }
@@ -848,6 +859,7 @@ export async function saveAlgorithm(category: string, subset: string, name: stri
   }
 
   savedAlgorithmsCache = savedAlgorithms;
+  invalidateSavedAlgorithmsSnapshot();
   pruneOrphanStatsRecords(savedAlgorithmsCache);
 
   await enqueueWrite(async () => {
@@ -860,7 +872,7 @@ export async function deleteAlgorithm(category: string, algorithm: string) {
 
   const normalizedAlgorithm = expandNotation(algorithm);
   const normalizedAlgId = algToId(normalizedAlgorithm) || DEFAULT_ALG_ID;
-  const savedAlgorithms = getSavedAlgorithms();
+  const savedAlgorithms = cloneSavedAlgorithms(savedAlgorithmsCache);
 
   if (!savedAlgorithms[category]) {
     return;
@@ -887,6 +899,7 @@ export async function deleteAlgorithm(category: string, algorithm: string) {
   }
 
   savedAlgorithmsCache = savedAlgorithms;
+  invalidateSavedAlgorithmsSnapshot();
   pruneOrphanStatsRecords(savedAlgorithmsCache);
 
   await enqueueWrite(async () => {
@@ -907,6 +920,7 @@ export async function importAlgorithmsFromJson(json: string) {
   await ensureStorageReady();
   const importedAlgs = parseSavedAlgorithms(json);
   savedAlgorithmsCache = cloneSavedAlgorithms(importedAlgs);
+  invalidateSavedAlgorithmsSnapshot();
   pruneOrphanStatsRecords(savedAlgorithmsCache);
 
   await enqueueWrite(async () => {
@@ -928,7 +942,11 @@ export async function exportBackup() {
 }
 
 function parseBackup(json: string) {
-  const backup = JSON.parse(json) as CubedexBackupFile;
+  const parsed = JSON.parse(json) as unknown;
+  if (!parsed || typeof parsed !== 'object') {
+    throw new Error('Invalid backup format');
+  }
+  const backup = parsed as CubedexBackupFile;
   if (
     !Number.isFinite(Number(backup.backupFormatVersion))
     || backup.backupFormatVersion < 1
@@ -936,8 +954,16 @@ function parseBackup(json: string) {
   ) {
     throw new Error('Unsupported backup format version');
   }
-  if (!backup.algorithms || !Array.isArray(backup.stats)) {
-    throw new Error('Invalid backup format');
+  if (!backup.algorithms || typeof backup.algorithms !== 'object' || Array.isArray(backup.algorithms)) {
+    throw new Error('Invalid backup format: algorithms missing or wrong shape');
+  }
+  if (!Array.isArray(backup.stats)) {
+    throw new Error('Invalid backup format: stats must be an array');
+  }
+  for (const entry of backup.stats) {
+    if (!entry || typeof entry !== 'object' || typeof (entry as { scopeId?: unknown }).scopeId !== 'string') {
+      throw new Error('Invalid backup format: stats entry missing scopeId');
+    }
   }
   return backup;
 }
@@ -946,6 +972,7 @@ export async function importBackupFromJson(json: string) {
   await ensureStorageReady();
   const backup = parseBackup(json);
   savedAlgorithmsCache = cloneSavedAlgorithms(backup.algorithms);
+  invalidateSavedAlgorithmsSnapshot();
   loadStatsCache(backup.stats);
   pruneOrphanStatsRecords(savedAlgorithmsCache);
 

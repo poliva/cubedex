@@ -3,6 +3,14 @@ import type { CaseCardData } from '../lib/case-cards';
 import { CaseCard } from '../components/CaseCard';
 import { EmptyState } from '../components/ui/EmptyState';
 
+const GRID_GAP_PX = 16;
+// Sync with `.case-wrapper` padding + inner content height. Virtualization needs a
+// fixed row height; too small causes bottom clipping (toggle flush to card bottom).
+const GRID_ITEM_HEIGHT_PX = 300;
+const GRID_TARGET_ITEM_WIDTH_PX = 260;
+const GRID_MIN_ITEM_WIDTH_PX = 220;
+const GRID_OVERSCAN_ROWS = 4;
+
 function findVerticalScrollParent(el: HTMLElement | null): HTMLElement | null {
   let n = el?.parentElement ?? null;
   while (n) {
@@ -105,13 +113,11 @@ function VirtualizedCaseGrid({ cards }: { cards: CaseCardData[] }) {
     return () => ro.disconnect();
   }, []);
 
-  const gap = 16;
-  // Keep in sync with `.case-wrapper` padding + inner content height.
-  // Virtualization needs a fixed height; too small causes bottom clipping (toggle flush to card bottom).
-  const itemHeight = 300;
-  const overscanRows = 4;
-  const cols = Math.max(1, Math.floor((viewport.width + gap) / (260 + gap)));
-  const itemWidth = cols > 0 ? Math.max(220, Math.floor((viewport.width - gap * (cols - 1)) / cols)) : 220;
+  const gap = GRID_GAP_PX;
+  const itemHeight = GRID_ITEM_HEIGHT_PX;
+  const overscanRows = GRID_OVERSCAN_ROWS;
+  const cols = Math.max(1, Math.floor((viewport.width + gap) / (GRID_TARGET_ITEM_WIDTH_PX + gap)));
+  const itemWidth = cols > 0 ? Math.max(GRID_MIN_ITEM_WIDTH_PX, Math.floor((viewport.width - gap * (cols - 1)) / cols)) : GRID_MIN_ITEM_WIDTH_PX;
   const rowHeight = itemHeight + gap;
   const totalRows = Math.ceil(cards.length / cols);
   const totalHeight = Math.max(0, totalRows * rowHeight - gap);

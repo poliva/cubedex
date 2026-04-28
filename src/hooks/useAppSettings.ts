@@ -112,14 +112,11 @@ export function useAppSettings(): AppSettingsState {
 
   useEffect(() => {
     writeOption('fullStickering', String(fullStickering));
+    writeOption('whiteOnBottom', String(whiteOnBottom && fullStickering));
     if (!fullStickering && whiteOnBottom) {
       setWhiteOnBottomState(false);
     }
   }, [fullStickering, whiteOnBottom]);
-
-  useEffect(() => {
-    writeOption('whiteOnBottom', String(whiteOnBottom && fullStickering));
-  }, [whiteOnBottom, fullStickering]);
 
   useEffect(() => {
     writeOption('gyroscope', gyroscope ? 'enabled' : 'disabled');

@@ -14,6 +14,7 @@ import {
 
 export interface CaseLibraryState {
   isReady: boolean;
+  initError: string | null;
   savedAlgorithms: SavedAlgorithms;
   categories: string[];
   selectedCategory: string;
@@ -46,6 +47,7 @@ export interface CaseLibraryOptions {
 
 export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibraryState {
   const [isReady, setIsReady] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
   const [savedAlgorithms, setSavedAlgorithms] = useState<SavedAlgorithms>({});
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubsets, setSelectedSubsets] = useState<string[]>([]);
@@ -83,7 +85,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
       }
 
       if (result.alertMessage) {
-        window.alert(result.alertMessage);
+        setInitError(result.alertMessage);
       }
 
       reloadSavedAlgorithms();
@@ -91,7 +93,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     }).catch((error) => {
       console.error(error);
       if (active) {
-        window.alert('Failed to initialize persistent storage.');
+        setInitError('Failed to initialize persistent storage. Saved algorithms and times may not be preserved across sessions.');
         setIsReady(true);
       }
     });
@@ -272,6 +274,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
 
   return useMemo(() => ({
     isReady,
+    initError,
     savedAlgorithms,
     categories,
     selectedCategory,
@@ -299,6 +302,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     categories,
     cycleCaseLearnedState,
     handleSetSelectedCategory,
+    initError,
     isReady,
     reloadSavedAlgorithms,
     savedAlgorithms,

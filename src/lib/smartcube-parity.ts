@@ -91,6 +91,7 @@ const SLICE_PAIR_MAP: Record<string, string> = {
 };
 
 export function isSliceCandidate(move: string): boolean {
+  if (!move) return false;
   return 'RLFBUD'.includes(move.charAt(0));
 }
 

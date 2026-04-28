@@ -808,7 +808,7 @@ export const PracticeView = memo(function PracticeView({
               />
             </div>
             <div
-              className={`${showTimesInsteadOfGraph ? 'times-display' : 'hidden times-display'}`.trim()}
+              className={showTimesInsteadOfGraph ? 'times-display' : 'times-display hidden'}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
@@ -826,7 +826,7 @@ export const PracticeView = memo(function PracticeView({
             </div>
             <div
               id="graph-display"
-              className={`${showTimesInsteadOfGraph ? 'hidden graph-display' : 'graph-display'}`.trim()}
+              className={showTimesInsteadOfGraph ? 'graph-display hidden' : 'graph-display'}
             >
               <canvas id="timeGraph" />
             </div>
@@ -913,7 +913,7 @@ export const PracticeView = memo(function PracticeView({
               </div>
               <div
                 id="graph-display"
-                className={`${showTimesInsteadOfGraph ? 'hidden graph-display' : 'graph-display'}`.trim()}
+                className={showTimesInsteadOfGraph ? 'graph-display hidden' : 'graph-display'}
               >
                 <canvas id="timeGraph" />
               </div>

@@ -20,8 +20,6 @@ import {
   getAllAlgorithms,
   getCaseCards,
   getSubsetsForCategory,
-  learnedLabel,
-  learnedTitle,
   makeTimeParts,
 } from '../../src/lib/case-cards';
 import {
@@ -79,13 +77,7 @@ describe('case card helpers', () => {
     expect(mockedSetLearnedStatus).toHaveBeenCalledWith('scope-id', 2);
   });
 
-  it('returns learned labels and titles', () => {
-    expect(learnedLabel(0)).toBe('Not learned');
-    expect(learnedLabel(1)).toBe('Learning');
-    expect(learnedTitle(2)).toBe('Learned');
-  });
-
-  it('builds case cards from selected subsets only', () => {
+it('builds case cards from selected subsets only', () => {
     const savedAlgorithms: SavedAlgorithms = {
       PLL: [
         {

@@ -1,5 +1,5 @@
 import { memo, type CSSProperties } from 'react';
-import { EyeIcon, EyeSlashIcon } from '../components/Icons';
+import { EyeIcon, EyeSlashIcon } from '../components/ui/Icon';
 import { useMoveListSlice } from '../state/trainingViewStore';
 
 function MoveListPanelComponent({
@@ -67,7 +67,7 @@ function MoveListPanelComponent({
                   setIsMoveMasked((value) => !value);
                 }}
               >
-                {isMoveMasked ? <><EyeSlashIcon /> Unmask alg</> : <><EyeIcon /> Mask alg</>}
+                {isMoveMasked ? <><EyeSlashIcon size={24} /> Unmask alg</> : <><EyeIcon size={24} /> Mask alg</>}
               </button>
             </div>
           )}
@@ -135,7 +135,7 @@ function MoveListPanelComponent({
       {showFix && !suppressFixErrorStrip ? (
         <div
           id="alg-fix"
-          className={`${fixVisible && fixText ? 'status-panel status-error' : 'hidden status-panel status-error'}`}
+          className={fixVisible && fixText ? 'status-panel status-error' : 'hidden'}
           style={fixVisible && fixText ? {
             borderRadius: 10,
             border: '1px solid rgba(239,68,68,0.25)',
