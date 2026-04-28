@@ -414,6 +414,43 @@ describe('PracticeView', () => {
     expect(screen.queryByText('Aa')).not.toBeInTheDocument();
   });
 
+  it('shows orientation reminder in green with remaining scramble when scramble-to grows', () => {
+    const base = makeProps();
+    const props = makeProps({
+      scramble: {
+        ...base.scramble,
+        scrambleMode: true,
+        scrambleText: 'U',
+        helpTone: 'green',
+      },
+    });
+
+    render(<PracticeView {...props} />);
+
+    const bar = screen.getByTestId('practice-status-bar');
+    expect(bar).toHaveTextContent(/WHITE center on top/);
+    expect(bar).toHaveTextContent('U');
+    const body = screen.getByTestId('practice-status-bar-body');
+    expect(body.textContent?.indexOf('U')).toBeLessThan(body.textContent?.indexOf('WHITE') ?? -1);
+  });
+
+  it('shows fix moves above orientation when mistake help merges fix into the status bar', () => {
+    const base = makeProps();
+    const props = makeProps({
+      training: {
+        ...base.training,
+        helpTone: 'red',
+        fixVisible: true,
+        fixText: "U R' D'",
+      },
+    });
+
+    render(<PracticeView {...props} />);
+
+    const body = screen.getByTestId('practice-status-bar-body');
+    expect(body.textContent?.indexOf("U R' D'")).toBeLessThan(body.textContent?.indexOf('WHITE') ?? -1);
+  });
+
   it('clears scramble mode on Train when alwaysScrambleTo is disabled', async () => {
     const user = userEvent.setup();
     const props = makeProps({

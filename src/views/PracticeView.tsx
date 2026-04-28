@@ -1,4 +1,4 @@
-import { Fragment, memo, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { Fragment, memo, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { AppSettingsState } from '../hooks/useAppSettings';
 import type { PracticeTogglesState } from '../hooks/usePracticeToggles';
 import type { TrainingState } from '../hooks/useTrainingState';
@@ -44,6 +44,21 @@ function RecentTimesModeToggle({
     </button>
   );
 }
+
+const ORIENTATION_REMINDER =
+  'Ensure the cube is oriented with WHITE center on top and GREEN center on front.';
+
+/** Matches `.alg-display-moves` sizing so status strips align with the main alg line. */
+const STATUS_BAR_MOVES_LINE_STYLE: CSSProperties = {
+  fontFamily: 'var(--mono)',
+  fontSize: 'clamp(1.0625rem, 2.5vw, 1.1875rem)',
+  lineHeight: 1.35,
+};
+
+const STATUS_BAR_REMINDER_LINE_STYLE: CSSProperties = {
+  fontSize: 'clamp(1.0625rem, 2.5vw, 1.1875rem)',
+  lineHeight: 1.45,
+};
 
 export const PracticeView = memo(function PracticeView({
   visible,
@@ -214,14 +229,36 @@ export const PracticeView = memo(function PracticeView({
     training.helpTone === 'red' ? 'var(--danger)' :
     scramble.helpTone === 'green' ? 'var(--ok)' :
     scramble.scrambleMode ? 'var(--ok)' : undefined;
-  const statusText =
-    training.helpTone === 'red'
-      ? 'Ensure the cube is oriented with WHITE center on top and GREEN center on front.'
-      : scramble.scrambleMode
-        ? scramble.scrambleText
-        : scramble.helpTone === 'green'
-          ? 'Scramble complete — cube is ready. Press space to start timer.'
-          : '';
+
+  const isDangerStatus = training.helpTone === 'red';
+  const isScrambleGrowHint = scramble.scrambleMode && scramble.helpTone === 'green';
+  const useWarningStatusIcon = isDangerStatus || isScrambleGrowHint;
+  const mergeFixIntoStatusBar = isDangerStatus && training.fixVisible && Boolean(training.fixText);
+
+  let statusBody: ReactNode;
+  if (isDangerStatus) {
+    if (mergeFixIntoStatusBar) {
+      statusBody = (
+        <>
+          <span style={STATUS_BAR_MOVES_LINE_STYLE}>{training.fixText}</span>
+          <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{ORIENTATION_REMINDER}</span>
+        </>
+      );
+    } else {
+      statusBody = <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{ORIENTATION_REMINDER}</span>;
+    }
+  } else if (isScrambleGrowHint) {
+    statusBody = (
+      <>
+        <span style={STATUS_BAR_MOVES_LINE_STYLE}>{scramble.scrambleText}</span>
+        <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{ORIENTATION_REMINDER}</span>
+      </>
+    );
+  } else if (scramble.scrambleMode) {
+    statusBody = <span style={STATUS_BAR_MOVES_LINE_STYLE}>{scramble.scrambleText}</span>;
+  } else {
+    statusBody = null;
+  }
 
   const cubeNode = (
     <div
@@ -432,26 +469,39 @@ export const PracticeView = memo(function PracticeView({
   );
 
   const statusBar = showStatus ? (
-    <div style={{
-      width: '100%',
-      maxWidth: isMobile ? undefined : 'var(--practice-alg-track-max)',
-      padding: '9px 14px',
-      borderRadius: 10,
-      background: statusColor === 'var(--danger)' ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)',
-      border: `1px solid ${statusColor === 'var(--danger)' ? 'rgba(239,68,68,0.25)' : 'rgba(34,197,94,0.25)'}`,
-      color: statusColor,
-      fontSize: 12,
-      display: 'flex',
-      gap: 8,
-      alignItems: 'center',
-    }}>
-      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-        {statusColor === 'var(--danger)'
+    <div
+      data-testid="practice-status-bar"
+      style={{
+        width: '100%',
+        maxWidth: isMobile ? undefined : 'var(--practice-alg-track-max)',
+        padding: '9px 14px',
+        borderRadius: 10,
+        background: statusColor === 'var(--danger)' ? 'rgba(239,68,68,0.08)' : 'rgba(34,197,94,0.08)',
+        border: `1px solid ${statusColor === 'var(--danger)' ? 'rgba(239,68,68,0.25)' : 'rgba(34,197,94,0.25)'}`,
+        color: statusColor,
+        display: 'flex',
+        gap: 8,
+        alignItems: 'flex-start',
+      }}
+    >
+      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} style={{ flexShrink: 0, marginTop: 3 }}>
+        {useWarningStatusIcon
           ? <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
           : <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>
         }
       </svg>
-      {statusText}
+      <div
+        data-testid="practice-status-bar-body"
+        style={{
+        flex: 1,
+        minWidth: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+      }}
+      >
+        {statusBody}
+      </div>
     </div>
   ) : null;
 
@@ -463,6 +513,7 @@ export const PracticeView = memo(function PracticeView({
       onEditCurrentAlgorithm={handleEditCurrentAlgorithm}
       showMoves={false}
       showFix
+      suppressFixErrorStrip={mergeFixIntoStatusBar}
     />
   );
 

@@ -10,6 +10,7 @@ function MoveListPanelComponent({
   className,
   showMoves = true,
   showFix = false,
+  suppressFixErrorStrip = false,
   inlineStyle = false,
   variant = 'default',
 }: {
@@ -20,6 +21,8 @@ function MoveListPanelComponent({
   className?: string;
   showMoves?: boolean;
   showFix?: boolean;
+  /** When true, the red fix strip is not rendered (e.g. merged into PracticeView status bar). */
+  suppressFixErrorStrip?: boolean;
   inlineStyle?: boolean;
   variant?: 'default' | 'algTrack';
 }) {
@@ -129,7 +132,7 @@ function MoveListPanelComponent({
         </div>
       ) : null}
 
-      {showFix ? (
+      {showFix && !suppressFixErrorStrip ? (
         <div
           id="alg-fix"
           className={`${fixVisible && fixText ? 'status-panel status-error' : 'hidden status-panel status-error'}`}
@@ -140,6 +143,9 @@ function MoveListPanelComponent({
             color: 'var(--danger)',
             padding: '9px 12px',
             marginTop: 8,
+            fontFamily: 'var(--mono)',
+            fontSize: 'clamp(1.0625rem, 2.5vw, 1.1875rem)',
+            lineHeight: 1.35,
           } : undefined}
         >
           {fixText}
