@@ -582,6 +582,7 @@ export const PracticeView = memo(function PracticeView({
       border: '1px solid var(--border)',
       background: 'var(--surface)',
       overflow: 'hidden',
+      flexShrink: 0,
     }}>
       {/* Collapsed header with active toggles visible */}
       <div
@@ -1030,7 +1031,7 @@ export const PracticeView = memo(function PracticeView({
 
       {/* Practice toggles: full grid at tablet widths (strip squeezed into one unusable row); collapsible strip on wide desktop */}
       {!showAlgEditor && (!narrowPracticeDesktop ? practiceTogglesStrip : (
-        <div style={{ width: '100%', maxWidth: 'var(--practice-alg-track-max)' }}>
+        <div style={{ width: '100%', maxWidth: 'var(--practice-alg-track-max)', flexShrink: 0 }}>
           <div style={practiceTogglesGridInnerStyle}>{practiceTogglesFields}</div>
         </div>
       ))}
