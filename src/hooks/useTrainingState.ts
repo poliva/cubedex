@@ -947,21 +947,7 @@ export function useTrainingState(
         hasShownFailureFlashRef.current = true;
       }
 
-      const failedCase = currentCaseRef.current;
-      if (failedCase && !hasFailedCurrentCaseRef.current) {
-        hasFailedCurrentCaseRef.current = true;
-        setFailedCounts((current) => ({
-          ...current,
-          [failedCase.id]: (current[failedCase.id] || 0) + 1,
-        }));
-
-        if (
-          options.prioritizeFailedCases
-          && !selectedQueueCopyRef.current.some((entry) => entry.id === failedCase.id)
-        ) {
-          selectedQueueCopyRef.current.push(failedCase);
-        }
-      }
+      recordCaseFailureIfNotYetCounted();
     }, 300);
 
     return () => {
@@ -986,6 +972,24 @@ export function useTrainingState(
       ...current,
       [scopeId]: (current[scopeId] || 0) + 1,
     }));
+  }
+
+  function recordCaseFailureIfNotYetCounted() {
+    const failedCase = currentCaseRef.current;
+    if (failedCase && !hasFailedCurrentCaseRef.current) {
+      hasFailedCurrentCaseRef.current = true;
+      setFailedCounts((current) => ({
+        ...current,
+        [failedCase.id]: (current[failedCase.id] || 0) + 1,
+      }));
+
+      if (
+        options.prioritizeFailedCases
+        && !selectedQueueCopyRef.current.some((entry) => entry.id === failedCase.id)
+      ) {
+        selectedQueueCopyRef.current.push(failedCase);
+      }
+    }
   }
 
   function buildRecognitionMs() {
@@ -1625,7 +1629,9 @@ export function useTrainingState(
       timeAttackCaseTimesRef.current = [...timeAttackCaseTimesRef.current, finalTime];
       if (completedCaseId) {
         persistCompletedAttempt(completedCaseId, finalTime);
-        incrementPracticeCount(completedCaseId);
+        if (!options.smartcubeConnected || !hasFailedCurrentCaseRef.current) {
+          incrementPracticeCount(completedCaseId);
+        }
       }
       isKeyboardTimerActiveRef.current = false;
 
@@ -1665,7 +1671,9 @@ export function useTrainingState(
     const previousBest = getBestTime(algId);
     const completedCaseName = currentCaseRef.current?.name ?? null;
     const review = persistCompletedAttempt(algId, finalTime);
-    incrementPracticeCount(algId);
+    if (!options.smartcubeConnected || !hasFailedCurrentCaseRef.current) {
+      incrementPracticeCount(algId);
+    }
     const finalTimeText = formatTimerTimestamp(finalTime);
     setTimerText(finalTimeText);
     setLastSolveText(finalTimeText);
@@ -1696,6 +1704,7 @@ export function useTrainingState(
     if (timerState !== 'RUNNING') {
       return;
     }
+    recordCaseFailureIfNotYetCounted();
     const elapsedMs = Math.round(getElapsedMs());
     if (options.timeAttack) {
       if (currentCaseRef.current?.id) {

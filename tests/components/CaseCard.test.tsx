@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CaseCard } from '../../src/components/CaseCard';
+import { useCaseCardSlice } from '../../src/state/caseCardStore';
 
 const mockState = vi.hoisted(() => ({
   autoUpdateLearningState: false,
@@ -36,7 +37,7 @@ vi.mock('../../src/state/caseCardStore', () => ({
     failedCount: 0,
     bestTime: null,
     ao5: null,
-    selected: mockState.selected,
+    selected: false,
   })),
   useAutoUpdateLearningState: vi.fn(() => mockState.autoUpdateLearningState),
 }));
@@ -66,6 +67,13 @@ describe('CaseCard', () => {
     mockState.onBeforeToggleCase.mockReset();
     mockState.toggleCaseSelection.mockReset();
     stickeringSpy.mockClear();
+    vi.mocked(useCaseCardSlice).mockReturnValue({
+      practiceCount: 0,
+      failedCount: 0,
+      bestTime: null,
+      ao5: null,
+      selected: false,
+    });
   });
 
   it('marks the bookmark aria-disabled when auto learning state is enabled', async () => {
@@ -108,6 +116,13 @@ describe('CaseCard', () => {
   it('forwards checkbox deselection changes to the case selection actions', async () => {
     const user = userEvent.setup();
     mockState.selected = true;
+    vi.mocked(useCaseCardSlice).mockReturnValue({
+      practiceCount: 0,
+      failedCount: 0,
+      bestTime: null,
+      ao5: null,
+      selected: true,
+    });
 
     render(<CaseCard card={card} index={0} />);
 
@@ -127,5 +142,20 @@ describe('CaseCard', () => {
       stickering: 'PLL',
       setupAnchor: 'end',
     });
+  });
+
+  it('shows success and fail counts independently (e.g. one stop then one full solve)', () => {
+    vi.mocked(useCaseCardSlice).mockReturnValue({
+      practiceCount: 1,
+      failedCount: 1,
+      bestTime: null,
+      ao5: null,
+      selected: false,
+    });
+
+    render(<CaseCard card={card} index={0} />);
+
+    expect(screen.getByText('❌: 1')).toBeInTheDocument();
+    expect(screen.getByText('✅: 1')).toBeInTheDocument();
   });
 });

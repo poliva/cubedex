@@ -23,7 +23,6 @@ interface CaseCardProps {
 function CaseCardComponent({ card, index, style }: CaseCardProps) {
   const { practiceCount, failedCount, bestTime, ao5, selected } = useCaseCardSlice(card.id);
   const autoUpdateLearningState = useAutoUpdateLearningState();
-  const successCount = Math.max(0, practiceCount - Math.min(failedCount, practiceCount));
   const isLL = card.category.toLowerCase().includes('ll');
   const visualization = isLL ? 'experimental-2D-LL' : '3D';
   const stickering = getStickeringForCategory(card.category, false);
@@ -123,7 +122,7 @@ function CaseCardComponent({ card, index, style }: CaseCardProps) {
               {failedCount > 0 ? `❌: ${failedCount}` : ''}
             </div>
             <div id={`${card.id}-success`} className="success-count" style={{ color: 'var(--ok)' }}>
-              {practiceCount > 0 ? `✅: ${successCount}` : ''}
+              {practiceCount > 0 ? `✅: ${practiceCount}` : ''}
             </div>
           </div>
         </div>

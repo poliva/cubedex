@@ -636,10 +636,12 @@ describe('useTrainingState time attack counts', () => {
     expect(getSolveHistory('case-1')).toEqual([]);
     expect(getBestTime('case-1')).toBeNull();
     expect(result.current.practiceCounts['case-1'] ?? 0).toBe(0);
+    expect(result.current.failedCounts['case-1']).toBe(1);
     expect(getReviewHistory('case-1')).toEqual([
       expect.objectContaining({
         grade: 'again',
         aborted: true,
+        hadMistake: true,
         executionMs: 600,
       }),
     ]);
@@ -672,10 +674,12 @@ describe('useTrainingState time attack counts', () => {
     expect(getSolveHistory('case-1')).toEqual([]);
     expect(getBestTime('case-1')).toBeNull();
     expect(getTimeAttackLastRuns(createTimeAttackScopeId('PLL', selectedCases.map((selectedCase) => selectedCase.id)))).toEqual([]);
+    expect(result.current.failedCounts['case-1']).toBe(1);
     expect(getReviewHistory('case-1')).toEqual([
       expect.objectContaining({
         grade: 'again',
         aborted: true,
+        hadMistake: true,
         executionMs: 450,
       }),
     ]);
@@ -1121,6 +1125,38 @@ describe('useTrainingState time attack counts', () => {
     await waitFor(() => {
       expect(result.current.currentCase?.id).toBe('case-1');
     });
+  });
+
+  it('does not increment case-card success count on smartcube when a fix was shown before the solve', async () => {
+    const cases = makeSmartReviewCases(3);
+    vi.mocked(cubeTimestampLinearFit).mockReturnValue([{ cubeTimestamp: 1000 }] as any);
+    const { result } = renderSmartcubeSmartReviewState(cases);
+    const patternKey = 'solved:R';
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+    });
+
+    act(() => {
+      result.current.handleSmartcubeMove(mockState.patterns['solved:R:U'], 'U');
+    });
+
+    await waitFor(() => {
+      expect(result.current.failedCounts['case-1']).toBe(1);
+    });
+
+    act(() => {
+      result.current.handleSmartcubeMove(
+        mockState.patterns[patternKey],
+        'R',
+        [{ face: 0, direction: 1, move: 'R', localTimestamp: 1500, cubeTimestamp: 1000 }],
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-2');
+    });
+    expect(result.current.practiceCounts['case-1'] ?? 0).toBe(0);
   });
 
   it('does not repeat slow hard reviews in the same pass', async () => {
