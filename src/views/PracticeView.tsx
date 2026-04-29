@@ -127,18 +127,6 @@ export const PracticeView = memo(function PracticeView({
   setShowTimesInsteadOfGraph: (updater: (value: boolean) => boolean) => void;
   onOpenCaseLibrary: () => void;
 }) {
-  const narrowPracticeDesktopQuery = '(max-width: 1080px)';
-  const [narrowPracticeDesktop, setNarrowPracticeDesktop] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia(narrowPracticeDesktopQuery).matches,
-  );
-  useEffect(() => {
-    const mql = window.matchMedia(narrowPracticeDesktopQuery);
-    const sync = () => setNarrowPracticeDesktop(mql.matches);
-    sync();
-    mql.addEventListener('change', sync);
-    return () => mql.removeEventListener('change', sync);
-  }, []);
-
   const skipPracticeEnterAnim = useRef(true);
   const [practiceViewEnter, setPracticeViewEnter] = useState(false);
   const [practiceTogglesExpanded, setPracticeTogglesExpanded] = useState(false);
@@ -525,17 +513,6 @@ export const PracticeView = memo(function PracticeView({
     letterSpacing: '0.03em',
   };
 
-  /** Same grid as mobile — usable on tablet-width desktop where the collapsible strip squeezed into one row. */
-  const practiceTogglesGridInnerStyle: CSSProperties = {
-    padding: '12px 14px',
-    borderRadius: 12,
-    border: '1px solid var(--border)',
-    background: 'var(--surface)',
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '0 16px',
-  };
-
   const practiceTogglesFields = (
     <>
       <Toggle
@@ -836,9 +813,7 @@ export const PracticeView = memo(function PracticeView({
         {/* Practice toggles */}
         {!showAlgEditor && (
         <div style={{ margin: '0 12px 10px' }}>
-          <div style={practiceTogglesGridInnerStyle}>
-            {practiceTogglesFields}
-          </div>
+          {practiceTogglesStrip}
         </div>
         )}
 
@@ -1029,12 +1004,8 @@ export const PracticeView = memo(function PracticeView({
         />
       </div>
 
-      {/* Practice toggles: full grid at tablet widths (strip squeezed into one unusable row); collapsible strip on wide desktop */}
-      {!showAlgEditor && (!narrowPracticeDesktop ? practiceTogglesStrip : (
-        <div style={{ width: '100%', maxWidth: 'var(--practice-alg-track-max)', flexShrink: 0 }}>
-          <div style={practiceTogglesGridInnerStyle}>{practiceTogglesFields}</div>
-        </div>
-      ))}
+      {/* Practice toggles */}
+      {!showAlgEditor && practiceTogglesStrip}
 
       {/* Big stats graph (#alg-stats) */}
       <div style={{ width: '100%', maxWidth: 'var(--practice-alg-track-max)' }}>

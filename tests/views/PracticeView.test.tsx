@@ -379,7 +379,7 @@ describe('PracticeView', () => {
     });
   });
 
-  it('shows a two-column practice toggles grid on narrow desktop widths instead of the collapsible strip', () => {
+  it('uses the collapsible practice toggles strip on narrow desktop widths', () => {
     vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => ({
       matches: query === '(max-width: 1080px)',
       media: query,
@@ -393,8 +393,8 @@ describe('PracticeView', () => {
 
     render(<PracticeView {...makeProps()} />);
 
-    expect(screen.getByRole('checkbox', { name: /smart order/i })).toBeInTheDocument();
-    expect(screen.queryByText('Practice options')).toBeNull();
+    expect(screen.getByText('Practice options')).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /smart order/i })).toBeNull();
   });
 
   it('shows a countdown overlay and hides the cube content while countdown mode is active', () => {
