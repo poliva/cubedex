@@ -1,4 +1,5 @@
 import type { SmartcubeConnectionState } from '../../hooks/useSmartcubeConnection';
+import { batteryLevelTextColor } from '../../lib/batteryLevelColor';
 import { BluetoothIcon } from '../ui/Icon';
 import { Logo } from './Logo';
 
@@ -117,7 +118,11 @@ export function MobileTopbar({
             {statusText}
           </span>
           {smartcube.connected && smartcube.battery.level != null ? (
-            <span style={{ fontSize: 10, color: 'var(--fg3)', fontFamily: 'var(--mono)' }}>
+            <span style={{
+              fontSize: 10,
+              color: batteryLevelTextColor(smartcube.battery.level),
+              fontFamily: 'var(--mono)',
+            }}>
               {smartcube.battery.level}%
             </span>
           ) : null}
@@ -167,22 +172,23 @@ export function MobileTopbar({
 
       <button
         type="button"
+        title={smartcube.connected ? 'Disconnect Smartcube' : 'Connect Smartcube'}
         onClick={() => void smartcube.connectOrDisconnect()}
         style={{
           height: 34,
           paddingLeft: 10,
           paddingRight: 10,
           borderRadius: 8,
-          border: `1.5px solid ${smartcube.connected ? 'rgba(34,197,94,0.35)' : 'var(--border)'}`,
-          background: smartcube.connected ? 'rgba(34,197,94,0.08)' : 'transparent',
-          color: smartcube.connected ? 'var(--ok)' : 'var(--fg2)',
+          border: 'none',
+          background: 'var(--accent)',
+          color: '#fff',
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
           gap: 5,
           fontFamily: 'inherit',
-          fontSize: 11,
-          fontWeight: 600,
+          fontSize: 12,
+          fontWeight: 700,
         }}
       >
         <BluetoothIcon size={21} />

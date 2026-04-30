@@ -1,4 +1,5 @@
 import type { SmartcubeConnectionState } from '../../hooks/useSmartcubeConnection';
+import { batteryLevelTextColor } from '../../lib/batteryLevelColor';
 import { BluetoothIcon } from '../ui/Icon';
 
 type NavView = 'practice' | 'cases' | 'options' | 'help' | 'new-alg';
@@ -132,7 +133,11 @@ export function DesktopTopbar({
               </span>
             </div>
             {smartcube.battery.level != null ? (
-              <span style={{ fontSize: 12, color: 'var(--fg3)', fontFamily: 'var(--mono)' }}>
+              <span style={{
+                fontSize: 12,
+                color: batteryLevelTextColor(smartcube.battery.level),
+                fontFamily: 'var(--mono)',
+              }}>
                 {smartcube.battery.level}%
               </span>
             ) : null}
@@ -148,16 +153,16 @@ export function DesktopTopbar({
             paddingLeft: 12,
             paddingRight: 12,
             borderRadius: 8,
-            border: `1.5px solid ${smartcube.connected ? 'rgba(34,197,94,0.35)' : 'var(--border)'}`,
-            background: smartcube.connected ? 'rgba(34,197,94,0.08)' : 'transparent',
-            color: smartcube.connected ? 'var(--ok)' : 'var(--fg2)',
+            border: 'none',
+            background: 'var(--accent)',
+            color: '#fff',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             gap: 6,
             fontFamily: 'inherit',
             fontSize: 12,
-            fontWeight: 600,
+            fontWeight: 700,
           }}
         >
           <BluetoothIcon size={21} />
