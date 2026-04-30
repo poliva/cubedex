@@ -60,6 +60,9 @@ export const OptionsView = memo(function OptionsView({
       : { border: 'none', background: 'var(--accent)', color: '#fff' }),
   });
 
+  const deviceActionBtnStyle = (active: boolean): React.CSSProperties =>
+    active ? btnStyle() : { ...btnStyle(true), opacity: 0.5, cursor: 'not-allowed' };
+
   const sel: React.CSSProperties = {
     background: 'var(--raised)',
     border: '1px solid var(--border)',
@@ -114,6 +117,9 @@ export const OptionsView = memo(function OptionsView({
       ))}
     </div>
   );
+
+  const deviceActionsEnabled = smartcube.connected;
+  const showGyroReset = options.gyroscope && smartcube.gyroSupported;
 
   return (
     <div
@@ -276,29 +282,37 @@ export const OptionsView = memo(function OptionsView({
               onChange={(v) => smartcube.setShowAllBluetoothDevices(v)}
             />
           </div>
-          <div style={{ ...row(true), flexWrap: 'wrap', gap: 8 }}>
+          <div
+            style={{
+              ...row(true),
+              flexWrap: 'wrap',
+              gap: 8,
+              padding: '8px 14px 8px 14px',
+              minHeight: 'unset',
+            }}
+          >
             <span style={lbl}>Device Actions</span>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <button
-                style={btnStyle(true)}
+                style={deviceActionBtnStyle(deviceActionsEnabled)}
                 type="button"
-                disabled={!smartcube.connected}
+                disabled={!deviceActionsEnabled}
                 onClick={() => void smartcube.resetState()}
               >
                 Reset State
               </button>
               <button
-                style={btnStyle(true)}
+                style={deviceActionBtnStyle(deviceActionsEnabled)}
                 type="button"
-                disabled={!smartcube.connected || !options.gyroscope || !smartcube.gyroSupported}
-                onClick={() => smartcube.resetGyro()}
+                disabled={!deviceActionsEnabled}
+                onClick={() => (showGyroReset ? smartcube.resetGyro() : smartcube.resetOrientation())}
               >
-                Reset Gyro
+                {showGyroReset ? 'Reset Gyro' : 'Reset Orientation'}
               </button>
               <button
-                style={btnStyle(true)}
+                style={deviceActionBtnStyle(deviceActionsEnabled)}
                 type="button"
-                disabled={!smartcube.connected}
+                disabled={!deviceActionsEnabled}
                 onClick={() => setInfoVisible(true)}
               >
                 Device Info

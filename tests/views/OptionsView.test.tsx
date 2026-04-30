@@ -147,11 +147,32 @@ describe('OptionsView', () => {
     );
 
     expect(screen.getByLabelText('Animate Virtual Cube Using Gyroscope')).not.toBeChecked();
-    expect(screen.getByRole('button', { name: 'Reset Gyro' })).toBeDisabled();
+    const resetOrientationBtn = screen.getByRole('button', { name: 'Reset Orientation' });
+    expect(resetOrientationBtn).toBeEnabled();
+    await user.click(resetOrientationBtn);
+    expect(smartcube.resetOrientation).toHaveBeenCalled();
+    expect(smartcube.resetGyro).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Device Info' })).toBeEnabled();
 
     await user.click(screen.getByLabelText('Show all Bluetooth devices when connecting'));
     expect(smartcube.setShowAllBluetoothDevices).toHaveBeenCalledWith(true);
+  });
+
+  it('disables all device action buttons when no cube is connected', () => {
+    render(
+      <OptionsView
+        visible
+        infoVisible={false}
+        setInfoVisible={vi.fn()}
+        options={createOptions()}
+        smartcube={createSmartcube({ connected: false })}
+        algorithmActions={createAlgorithmActions()}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Reset State' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Reset Gyro' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Device Info' })).toBeDisabled();
   });
 
   it('opens device info with setInfoVisible(true) and hides other option sections when info is shown', async () => {
