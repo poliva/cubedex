@@ -6,6 +6,7 @@ type NavView = 'practice' | 'cases' | 'options' | 'help' | 'new-alg';
 const NAV_ITEMS: Array<{ id: NavView; icon: string | string[]; label: string }> = [
   { id: 'practice', icon: IC.practice, label: 'Practice' },
   { id: 'cases', icon: IC.cases, label: 'Cases' },
+  { id: 'new-alg', icon: IC.newAlg, label: 'New' },
   { id: 'options', icon: IC.options, label: 'Options' },
   { id: 'help', icon: IC.help, label: 'Help' },
 ];
@@ -32,8 +33,6 @@ export function Sidebar({ active, onNav }: { active: NavView; onNav: (view: NavV
         {NAV_ITEMS.map((item) => (
           <NavBtn key={item.id} item={item} active={active === item.id} onNav={onNav} />
         ))}
-        <div style={{ width: 28, height: 1, background: 'var(--border)', margin: '6px 8px' }} />
-        <NavBtn item={{ id: 'new-alg', icon: IC.newAlg, label: 'New' }} active={active === 'new-alg'} onNav={onNav} />
       </div>
     </nav>
   );

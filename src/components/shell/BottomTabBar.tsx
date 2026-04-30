@@ -5,9 +5,9 @@ type NavView = 'practice' | 'cases' | 'options' | 'help' | 'new-alg';
 const ITEMS: Array<{ id: NavView; icon: string | string[]; label: string }> = [
   { id: 'practice', icon: IC.practice, label: 'Practice' },
   { id: 'cases', icon: IC.cases, label: 'Cases' },
+  { id: 'new-alg', icon: IC.newAlg, label: 'New' },
   { id: 'options', icon: IC.options, label: 'Options' },
   { id: 'help', icon: IC.help, label: 'Help' },
-  { id: 'new-alg', icon: IC.newAlg, label: 'New' },
 ];
 
 export function BottomTabBar({ active, onNav }: { active: NavView; onNav: (view: NavView) => void }) {
