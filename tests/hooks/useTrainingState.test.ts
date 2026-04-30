@@ -338,6 +338,67 @@ describe('useTrainingState time attack counts', () => {
     });
   });
 
+  it('fires onAttemptStart for each smartcube attempt so slice-orientation drift is reset between cases', async () => {
+    const onAttemptStart = vi.fn();
+
+    const { result } = renderHook(() => useTrainingState(selectedCases, 'PLL', {
+      selectionChangeMode: 'bulk',
+      countdownMode: false,
+      randomizeAUF: false,
+      randomOrder: false,
+      timeAttack: false,
+      prioritizeSlowCases: false,
+      prioritizeFailedCases: false,
+      smartReviewScheduling: false,
+      smartcubeConnected: true,
+      currentPattern: null,
+      statsRefreshToken: 0,
+      onAttemptStart,
+    }));
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-1');
+      expect(result.current.timerState).toBe('READY');
+    });
+    expect(onAttemptStart).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      result.current.handleSmartcubeMove(
+        mockState.patterns['solved:R'],
+        'R',
+        [{ face: 0, direction: 1, move: 'R', localTimestamp: 0, cubeTimestamp: 0 }],
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.currentCase?.id).toBe('case-2');
+    });
+    expect(onAttemptStart).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not fire onAttemptStart when smartcube is disconnected', async () => {
+    const onAttemptStart = vi.fn();
+
+    renderHook(() => useTrainingState(selectedCases, 'PLL', {
+      selectionChangeMode: 'bulk',
+      countdownMode: false,
+      randomizeAUF: false,
+      randomOrder: false,
+      timeAttack: false,
+      prioritizeSlowCases: false,
+      prioritizeFailedCases: false,
+      smartReviewScheduling: false,
+      smartcubeConnected: false,
+      currentPattern: null,
+      statsRefreshToken: 0,
+      onAttemptStart,
+    }));
+
+    await waitFor(() => {
+      expect(onAttemptStart).not.toHaveBeenCalled();
+    });
+  });
+
   it('keeps smartcube recognition tracking after review refresh rerenders', async () => {
     let now = 1000;
     vi.spyOn(performance, 'now').mockImplementation(() => now);

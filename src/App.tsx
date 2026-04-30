@@ -104,6 +104,7 @@ export function App() {
     statsRefreshToken,
     reviewRefreshToken,
     onReviewRecorded: () => setReviewRefreshToken((value) => value + 1),
+    onAttemptStart: smartcube.resetOrientation,
   });
   const scramble = useScrambleState();
   const prevSmartcubeConnectedRef = useRef(smartcube.connected);

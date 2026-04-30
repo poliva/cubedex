@@ -110,6 +110,7 @@ export interface TrainingPracticeOptions {
   statsRefreshToken?: number;
   reviewRefreshToken?: number;
   onReviewRecorded?: () => void;
+  onAttemptStart?: () => void;
 }
 
 interface TrainCurrentOptions {
@@ -1314,6 +1315,9 @@ export function useTrainingState(
   }
 
   function revealTrainingCase(displayAlgorithm: string, normalizedAlgorithm: string, trainOptions?: TrainCurrentOptions) {
+    if (options.smartcubeConnected) {
+      options.onAttemptStart?.();
+    }
     setAlgInputState(normalizedAlgorithm);
     setDisplayAlg(displayAlgorithm);
     setInputMode(false);
