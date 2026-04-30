@@ -18,10 +18,11 @@ import { useAlgorithmImportExport } from './hooks/useAlgorithmImportExport';
 import { useIsMobile } from './hooks/useIsMobile';
 import { getStickeringForCategory } from './lib/stickering';
 import { invalidatePreview } from './lib/preview-cache';
-import { deleteAlgorithm, expandNotation, getBestTime, getSavedAlgorithms, removeAlgorithmTimesStorage } from './lib/storage';
+import { deleteAlgorithm, expandNotation, getAttemptHistorySummary, getBestTime, getLearnedStatus, getSavedAlgorithms, removeAlgorithmTimesStorage } from './lib/storage';
 import { usePracticeToggles } from './hooks/usePracticeToggles';
 import { useTrainingGraphs } from './hooks/useTrainingGraphs';
 import { averageOfFiveTimeNumber } from './lib/case-cards';
+import { deriveAutoLearnedStatus } from './lib/srs';
 import { patternToPlayerAlg } from './lib/scramble';
 import { ImportFileInput } from './components/ImportFileInput';
 import { PracticeView } from './views/PracticeView';
@@ -202,6 +203,16 @@ export function App() {
     training.displayAlg,
     training.inputMode,
   ]);
+
+  const currentCaseLearnedState = useMemo(() => {
+    if (!training.currentCase) return undefined;
+    const scopeId = training.currentCase.id;
+    if (options.autoUpdateLearningState) {
+      const { reviewHistory } = getAttemptHistorySummary(scopeId);
+      return deriveAutoLearnedStatus(reviewHistory) as 0 | 1 | 2;
+    }
+    return getLearnedStatus(scopeId) as 0 | 1 | 2;
+  }, [training.currentCase, options.autoUpdateLearningState]);
 
   const smartcubeAppendMoveKey = smartcube.lastProcessedMove?.key;
   const smartcubeAppendMove = smartcube.lastProcessedMove?.visualMove;
@@ -835,6 +846,8 @@ export function App() {
             showTimesInsteadOfGraph={options.showTimesInsteadOfGraph}
             setShowTimesInsteadOfGraph={options.setShowTimesInsteadOfGraph}
             onOpenCaseLibrary={() => selectView('cases')}
+            onCycleLearnedState={cycleCaseLearnedState}
+            currentCaseLearnedState={currentCaseLearnedState}
           />
 
           {activeView === 'cases' && (

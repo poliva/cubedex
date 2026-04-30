@@ -2,15 +2,10 @@ import { memo, type CSSProperties } from 'react';
 import type { CaseCardData } from '../lib/case-cards';
 import { averageTimeString, bestTimeString } from '../lib/case-cards';
 import { getStickeringForCategory } from '../lib/stickering';
-import {
-  BookClosedGreenIcon,
-  BookClosedOrangeIcon,
-  BookOpenIcon,
-} from './Icons';
+import { BookmarkButton } from './BookmarkButton';
 import { CaseCardPreview } from './CaseCardPreview';
 import {
   stableActions,
-  useAutoUpdateLearningState,
   useCaseCardSlice,
 } from '../state/caseCardStore';
 
@@ -22,7 +17,6 @@ interface CaseCardProps {
 
 function CaseCardComponent({ card, index, style }: CaseCardProps) {
   const { practiceCount, failedCount, bestTime, ao5, selected } = useCaseCardSlice(card.id);
-  const autoUpdateLearningState = useAutoUpdateLearningState();
   const isLL = card.category.toLowerCase().includes('ll');
   const visualization = isLL ? 'experimental-2D-LL' : '3D';
   const stickering = getStickeringForCategory(card.category, false);
@@ -53,39 +47,11 @@ function CaseCardComponent({ card, index, style }: CaseCardProps) {
         <div className="case-name" title={card.algorithm} style={{ fontWeight: 700, color: 'var(--fg)' }}>
           {card.name}
         </div>
-        <button
-          id={`bookmark-${card.id}`}
-          data-value={card.learned}
-          title={autoUpdateLearningState ? 'Learning status is managed automatically' : 'Learning status'}
-          className="bookmark-button"
-          type="button"
-          aria-disabled={autoUpdateLearningState}
-          aria-label={`Learning status for ${card.name}`}
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: 8,
-            border: 'none',
-            background: 'transparent',
-            color: 'var(--fg2)',
-          }}
-          onClick={() => {
-            if (autoUpdateLearningState) {
-              return;
-            }
-            stableActions.cycleCaseLearnedState(card.id);
-          }}
-        >
-          <span aria-hidden="true">
-            {card.learned === 2 ? (
-              <BookClosedGreenIcon />
-            ) : card.learned === 1 ? (
-              <BookClosedOrangeIcon />
-            ) : (
-              <BookOpenIcon />
-            )}
-          </span>
-        </button>
+        <BookmarkButton
+          learnedState={card.learned as 0 | 1 | 2}
+          ariaLabel={`Learning status for ${card.name}`}
+          onCycle={() => stableActions.cycleCaseLearnedState(card.id)}
+        />
       </div>
       <label htmlFor={`case-toggle-${card.id}`} className="case-card-body" title={card.algorithm}>
         <div id={`best-time-${card.id}`} className="case-metric" style={{ color: 'var(--fg3)' }}>

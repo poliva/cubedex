@@ -1,6 +1,7 @@
 import { memo } from 'react';
 import type { TrainingStats } from '../hooks/useTrainingState';
 import { EmptyState } from '../components/ui/EmptyState';
+import { BookmarkButton } from '../components/BookmarkButton';
 
 function StatsPanelComponent({
   visible,
@@ -8,12 +9,16 @@ function StatsPanelComponent({
   algName,
   stats,
   onOpenCaseLibrary,
+  learnedState,
+  onCycleLearnedState,
 }: {
   visible: boolean;
   showAlgName: boolean;
   algName: string;
   stats: TrainingStats;
   onOpenCaseLibrary?: () => void;
+  learnedState?: 0 | 1 | 2;
+  onCycleLearnedState?: () => void;
 }) {
   if (!visible) {
     return <div id="alg-stats" className="hidden stats-panel" />;
@@ -59,8 +64,18 @@ function StatsPanelComponent({
         </div>
       </div>
       <div id="metrics-container" className="metrics-container">
-        <div id="alg-name-display2" className="metrics-title" style={{ marginBottom: 10 }}>
-          {showAlgName ? algName : ''}
+        <div
+          id="alg-name-display2"
+          className="metrics-title"
+          style={{ marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+        >
+          <span>{showAlgName ? algName : (learnedState !== undefined ? 'Case Stats' : '')}</span>
+          {learnedState !== undefined && onCycleLearnedState !== undefined && (
+            <BookmarkButton
+              learnedState={learnedState}
+              onCycle={onCycleLearnedState}
+            />
+          )}
         </div>
         <div id="stats-grid" className="metrics-grid">
           <div id="average-time-box" className="metric-box metric-box--time">

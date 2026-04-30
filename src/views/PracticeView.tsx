@@ -93,6 +93,8 @@ export const PracticeView = memo(function PracticeView({
   showTimesInsteadOfGraph,
   setShowTimesInsteadOfGraph,
   onOpenCaseLibrary,
+  onCycleLearnedState,
+  currentCaseLearnedState,
 }: {
   visible: boolean;
   options: AppSettingsState;
@@ -126,6 +128,8 @@ export const PracticeView = memo(function PracticeView({
   showTimesInsteadOfGraph: boolean;
   setShowTimesInsteadOfGraph: (updater: (value: boolean) => boolean) => void;
   onOpenCaseLibrary: () => void;
+  onCycleLearnedState: (algId: string) => void;
+  currentCaseLearnedState: 0 | 1 | 2 | undefined;
 }) {
   const skipPracticeEnterAnim = useRef(true);
   const [practiceViewEnter, setPracticeViewEnter] = useState(false);
@@ -825,6 +829,8 @@ export const PracticeView = memo(function PracticeView({
             algName={training.currentAlgName}
             stats={training.stats}
             onOpenCaseLibrary={onOpenCaseLibrary}
+            learnedState={currentCaseLearnedState}
+            onCycleLearnedState={training.statsAlgId ? () => onCycleLearnedState(training.statsAlgId) : undefined}
           />
         </div>
       </div>
@@ -1015,6 +1021,8 @@ export const PracticeView = memo(function PracticeView({
           algName={training.currentAlgName}
           stats={training.stats}
           onOpenCaseLibrary={onOpenCaseLibrary}
+          learnedState={currentCaseLearnedState}
+          onCycleLearnedState={training.statsAlgId ? () => onCycleLearnedState(training.statsAlgId) : undefined}
         />
       </div>
 

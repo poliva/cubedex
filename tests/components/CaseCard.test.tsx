@@ -84,10 +84,11 @@ describe('CaseCard', () => {
 
     const bookmark = screen.getByRole('button');
     expect(bookmark).toHaveAttribute('aria-disabled', 'true');
-    expect(bookmark).toHaveAttribute('title', 'Learning status is managed automatically');
 
     await user.click(bookmark);
     expect(mockState.cycleCaseLearnedState).not.toHaveBeenCalled();
+
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
   });
 
   it('keeps manual bookmarking enabled when auto learning state is off', async () => {
