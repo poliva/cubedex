@@ -44,6 +44,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
 
 function createSmartcube(overrides: Partial<SmartcubeConnectionState> = {}): SmartcubeConnectionState {
   return {
+    cubeSize: 3,
     connected: false,
     connecting: false,
     disconnectToken: 0,

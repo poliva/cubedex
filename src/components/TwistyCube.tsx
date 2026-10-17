@@ -1,9 +1,11 @@
 import { useEffect, useRef, type MutableRefObject } from 'react';
 import * as THREE from 'three';
 import { TwistyPlayer } from 'cubing/twisty';
+import type { CubePuzzle } from '../lib/cube-utils';
 import type { SmartcubeQuaternion } from '../hooks/useSmartcubeConnection';
 
 export interface TwistyCubeProps {
+  puzzle?: CubePuzzle;
   alg: string;
   sizePx?: number;
   visualization: string;
@@ -51,6 +53,7 @@ function toVisualization(value: string) {
 }
 
 export function TwistyCube({
+  puzzle = '3x3x3',
   alg,
   sizePx,
   visualization,
@@ -99,7 +102,7 @@ export function TwistyCube({
 
   useEffect(() => {
     forceRefreshRef.current = true;
-  }, [visualization]);
+  }, [visualization, puzzle]);
 
   useEffect(() => {
     if (!hostRef.current || playerRef.current) {
@@ -108,7 +111,7 @@ export function TwistyCube({
 
     const existing = hostRef.current.querySelector('twisty-player') as (TwistyPlayer & HTMLElement) | null;
     const player = existing ?? new TwistyPlayer({
-      puzzle: '3x3x3',
+      puzzle,
       visualization: toVisualization(visualization),
       alg,
       experimentalSetupAnchor: setupAnchor,
@@ -251,6 +254,7 @@ export function TwistyCube({
       return;
     }
 
+    player.puzzle = puzzle;
     player.visualization = toVisualization(visualization);
     player.controlPanel = controlPanel === 'bottom-row' ? 'bottom-row' : 'none';
     player.hintFacelets = hintFacelets === 'floating' ? 'floating' : 'none';
@@ -272,6 +276,7 @@ export function TwistyCube({
     controlPanel,
     dragInput,
     experimentalStickering,
+    puzzle,
     hintFacelets,
     setupAlg,
     setupAnchor,

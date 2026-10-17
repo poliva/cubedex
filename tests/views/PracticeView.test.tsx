@@ -4,7 +4,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { PracticeView } from '../../src/views/PracticeView';
 
 vi.mock('../../src/views/CaseGrid', () => ({ CaseGrid: () => <div data-testid="case-grid" /> }));
-vi.mock('../../src/views/MainCubeArea', () => ({ MainCubeArea: () => <div data-testid="main-cube-area" /> }));
+vi.mock('../../src/views/MainCubeArea', () => ({
+  MainCubeArea: ({ puzzle, experimentalStickering }: { puzzle: string; experimentalStickering: string }) => (
+    <div data-testid="main-cube-area" data-puzzle={puzzle} data-stickering={experimentalStickering} />
+  ),
+}));
 vi.mock('../../src/views/MoveListPanel', () => ({ MoveListPanel: () => <div data-testid="move-list-panel" /> }));
 vi.mock('../../src/views/StatsPanel', () => ({
   StatsPanel: ({ visible = true }: { visible?: boolean }) => (
@@ -180,6 +184,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       clearScramble: vi.fn(),
     },
     smartcube: {
+      cubeSize: 3,
       connected: true,
       connecting: false,
       disconnectToken: 4,
@@ -277,6 +282,15 @@ describe('PracticeView', () => {
       maxWidth: '100%',
     });
     expect(screen.getByText('Train to begin')).toBeInTheDocument();
+  });
+
+  it('switches the practice display to a fully stickered 2×2 for the connected puzzle', () => {
+    const props = makeProps();
+    const { rerender } = render(<PracticeView {...props} />);
+    expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-puzzle', '3x3x3');
+    rerender(<PracticeView {...makeProps({ smartcube: { ...props.smartcube, cubeSize: 2 } })} />);
+    expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-puzzle', '2x2x2');
+    expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stickering', 'full');
   });
 
   it('hides the Last/Best/Ao5 stat chips when there is no solve history', () => {
@@ -428,7 +442,7 @@ describe('PracticeView', () => {
     render(<PracticeView {...props} />);
 
     const bar = screen.getByTestId('practice-status-bar');
-    expect(bar).toHaveTextContent(/WHITE center on top/);
+    expect(bar).toHaveTextContent(/WHITE on top/);
     expect(bar).toHaveTextContent('U');
     const body = screen.getByTestId('practice-status-bar-body');
     expect(body.textContent?.indexOf('U')).toBeLessThan(body.textContent?.indexOf('WHITE') ?? -1);

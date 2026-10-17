@@ -2,16 +2,19 @@ import { Alg } from 'cubing/alg';
 import { KPattern } from 'cubing/kpuzzle';
 import { cube3x3x3 } from 'cubing/puzzles';
 import min2phase from './min2phase/min2phase';
-import { faceletsToPattern, patternToFacelets } from './cube-utils';
+import { patternCubeSize, solverFacelets, solvedPattern } from './cube-utils';
 import { expandNotation } from './storage';
-
-const SOLVED_STATE = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB';
 
 min2phase.initFull();
 
 export function fixOrientation(pattern: KPattern) {
-  const solvedCenters = JSON.stringify([0, 1, 2, 3, 4, 5]);
-  if (JSON.stringify(pattern.patternData.CENTERS.pieces) === solvedCenters) {
+  // A 2×2 has no centers. Anchor the DBL corner to compare training states
+  // modulo whole-cube rotations, including rotations written into algorithms.
+  const isOriented = patternCubeSize(pattern) === 2
+    ? (candidate: KPattern) => candidate.patternData.CORNERS.pieces[6] === 6
+      && candidate.patternData.CORNERS.orientation[6] === 0
+    : (candidate: KPattern) => candidate.patternData.CENTERS.pieces.every((piece, i) => piece === i);
+  if (isOriented(pattern)) {
     return pattern;
   }
 
@@ -22,7 +25,7 @@ export function fixOrientation(pattern: KPattern) {
       }
       const alg = 'x '.repeat(xi).trim() + (xi && yi ? ' ' : '') + 'y '.repeat(yi).trim();
       const result = pattern.applyAlg(alg);
-      if (JSON.stringify(result.patternData.CENTERS.pieces) === solvedCenters) {
+      if (isOriented(result)) {
         return result;
       }
     }
@@ -32,19 +35,25 @@ export function fixOrientation(pattern: KPattern) {
     for (let yi = 0; yi < 4; yi += 1) {
       const alg = zAlg + (yi ? ` ${'y '.repeat(yi).trim()}` : '');
       const result = pattern.applyAlg(alg);
-      if (JSON.stringify(result.patternData.CENTERS.pieces) === solvedCenters) {
+      if (isOriented(result)) {
         return result;
       }
     }
   }
 
-  console.warn('fixOrientation: no rotation matches solved-center positions; returning unrotated pattern');
+  console.warn('fixOrientation: no matching cube orientation; returning unrotated pattern');
   return pattern;
 }
 
+// Keep the sensor's exact color frame for rendering and Scramble To on a 2×2.
+// Training comparisons use fixOrientation to ignore physical cube rotations.
+function orientForSolver(pattern: KPattern): KPattern {
+  return patternCubeSize(pattern) === 2 ? pattern : fixOrientation(pattern);
+}
+
 export function patternToPlayerAlg(pattern: KPattern): string {
-  const oriented = fixOrientation(pattern);
-  const solvedStr = min2phase.solve(patternToFacelets(oriented)).trim();
+  const oriented = orientForSolver(pattern);
+  const solvedStr = min2phase.solve(solverFacelets(oriented)).trim();
   if (!solvedStr || solvedStr.startsWith('Error')) {
     return '';
   }
@@ -53,7 +62,7 @@ export function patternToPlayerAlg(pattern: KPattern): string {
 }
 
 export async function getScrambleToSolution(alg: string, state: KPattern) {
-  const faceCube = patternToFacelets(fixOrientation(state));
+  const faceCube = solverFacelets(orientForSolver(state));
   const solvedCube = min2phase.solve(faceCube);
   const inverseAlg = Alg.fromString(expandNotation(alg).replace(/[()]/g, '')).invert();
   const finalState = Alg.fromString(`${solvedCube} ${inverseAlg.toString()}`).experimentalSimplify({
@@ -61,10 +70,10 @@ export async function getScrambleToSolution(alg: string, state: KPattern) {
     puzzleLoader: cube3x3x3,
   });
 
-  const solvedPattern = await faceletsToPattern(SOLVED_STATE);
-  const targetPattern = solvedPattern.applyAlg(finalState);
+  const solved = await solvedPattern(patternCubeSize(state));
+  const targetPattern = solved.applyAlg(finalState);
   const scramble = Alg.fromString(
-    min2phase.solve(patternToFacelets(fixOrientation(targetPattern))).toString(),
+    min2phase.solve(solverFacelets(orientForSolver(targetPattern))).toString(),
   ).invert();
 
   return scramble

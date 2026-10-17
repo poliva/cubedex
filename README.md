@@ -7,6 +7,7 @@
 ✅ Add Cubedex to your home screen for an app-like experience  
 ✅ You can use it offline - Cubedex works perfectly without an internet connection  
 ✅ Compatible with smartcubes and regular non-Bluetooth cubes!  
+✅ GAN and MoYu 2×2 smartcubes are detected automatically, with a matching 2×2 display, move tracking, reset, and Scramble To support. Use algorithms with 2×2-compatible turns.
 
 📺 Watch the Tutorial Video:  
 [![Watch the Tutorial Video](https://img.youtube.com/vi/AZcFMiT2Vm0/hqdefault.jpg)](https://www.youtube.com/watch?v=AZcFMiT2Vm0)  

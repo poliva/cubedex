@@ -12,7 +12,7 @@ import {
   type SmartCubeEvent,
   type SmartCubeMoveEvent,
 } from 'smartcube-web-bluetooth';
-import { faceletsToPattern, patternToFacelets, solvedPattern } from '../lib/cube-utils';
+import { faceletsToPattern, patternToFacelets, solvedPattern, solvedFacelets, type CubeSize } from '../lib/cube-utils';
 import { readOption, writeOption } from '../lib/storage';
 import {
   getSliceForPair,
@@ -22,8 +22,6 @@ import {
   updateSliceOrientation,
   type FacePerm,
 } from '../lib/smartcube-parity';
-
-const SOLVED_FACELETS = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB';
 
 let wakeLockHandle: WakeLockSentinel | null = null;
 
@@ -99,6 +97,7 @@ interface SmartcubeProcessedMove {
 }
 
 export interface SmartcubeConnectionState {
+  cubeSize: CubeSize;
   connected: boolean;
   connecting: boolean;
   disconnectToken: number;
@@ -150,6 +149,8 @@ function batteryColor(level: number): SmartcubeBatteryState['color'] {
 }
 
 export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConnectionState {
+  const cubeSizeRef = useRef<CubeSize>(3);
+  const [cubeSize, setCubeSize] = useState<CubeSize>(3);
   const connRef = useRef<SmartCubeConnection | null>(null);
   const subscriptionRef = useRef<Subscription | null>(null);
   const connectAbortRef = useRef<AbortController | null>(null);
@@ -254,6 +255,8 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     subscriptionRef.current = null;
     clearSliceBuffer();
     connRef.current = null;
+    cubeSizeRef.current = 3;
+    setCubeSize(3);
     currentPatternRef.current = null;
     sliceOrientationRef.current = { ...IDENTITY };
     recentMovesRef.current = [];
@@ -277,7 +280,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   const processResolvedMove = useCallback(async (event: SmartCubeMoveEvent & { timestamp: number }, rawMoves: SmartCubeMoveEvent[], visualMove?: string) => {
     let trackerPattern = currentPatternRef.current;
     if (!trackerPattern) {
-      trackerPattern = await solvedPattern();
+      trackerPattern = await solvedPattern(cubeSizeRef.current);
     }
 
     const currentFacelets = patternToFacelets(trackerPattern);
@@ -424,6 +427,17 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     }
 
     if (event.type === 'FACELETS') {
+      if (event.facelets.length !== 24 && event.facelets.length !== 54) return;
+      const size = event.facelets.length === 24 ? 2 : 3;
+      if (size !== cubeSizeRef.current) {
+        clearSliceBuffer();
+        sliceOrientationRef.current = { ...IDENTITY };
+        currentPatternRef.current = null;
+        previousFaceletsRef.current = '';
+        isBuggedRef.current = false;
+        cubeSizeRef.current = size;
+        setCubeSize(size);
+      }
       // MoYu32 (and possibly other protocols) may emit FACELETS immediately after each MOVE.
       // If a slice candidate is buffered, leave it alone so the pair-detection window (100 ms
       // timer + next MOVE) can still fire.  Only clear when there is nothing useful buffered.
@@ -442,7 +456,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
         void faceletsToPattern(event.facelets).then((pattern) => {
           currentPatternRef.current = pattern;
           setCurrentPattern(pattern);
-        });
+        }).catch((error) => console.error('Invalid smartcube facelets', error));
       }
       return;
     }
@@ -459,7 +473,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     const currentGyroscopeEnabled = gyroscopeEnabledRef.current;
     const sliceCandidate = isSliceCandidate(event.move);
 
-    if (!currentGyroscopeEnabled) {
+    if (!currentGyroscopeEnabled && cubeSizeRef.current === 3) {
       if (sliceCandidate) {
         if (sliceBufferRef.current?.event.type === 'MOVE') {
           const bufferedEvent = sliceBufferRef.current.event;
@@ -591,8 +605,8 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     }
     clearSliceBuffer();
     sliceOrientationRef.current = { ...IDENTITY };
-    currentPatternRef.current = await solvedPattern();
-    setCurrentFacelets(SOLVED_FACELETS);
+    currentPatternRef.current = await solvedPattern(cubeSizeRef.current);
+    setCurrentFacelets(solvedFacelets(cubeSizeRef.current));
     setCurrentPattern(currentPatternRef.current);
     setLastProcessedMove(null);
   }, [clearSliceBuffer]);
@@ -610,6 +624,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   const gyroscopeToggleDisabled = connected && !gyroSupported;
 
   return useMemo(() => ({
+    cubeSize,
     connected,
     connecting,
     disconnectToken,
@@ -632,6 +647,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     cubeQuaternionRef,
   }), [
     battery,
+    cubeSize,
     connectLabel,
     connectOrDisconnect,
     connected,

@@ -1,10 +1,12 @@
 import { memo } from 'react';
+import type { CubePuzzle } from '../lib/cube-utils';
 import type { MutableRefObject } from 'react';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { TwistyCube } from '../components/TwistyCube';
 import type { SmartcubeQuaternion } from '../hooks/useSmartcubeConnection';
 
 interface MainCubeAreaProps {
+  puzzle?: CubePuzzle;
   alg: string;
   sizePx: number;
   visualization: string;
@@ -23,6 +25,7 @@ interface MainCubeAreaProps {
 }
 
 function MainCubeAreaComponent({
+  puzzle,
   alg,
   sizePx,
   visualization,
@@ -40,8 +43,10 @@ function MainCubeAreaComponent({
   cubeQuaternionRef,
 }: MainCubeAreaProps) {
   return (
-    <ErrorBoundary resetKey={`${resetToken}:${orientationResetToken}:${alg}`}>
+    <ErrorBoundary resetKey={`${puzzle}:${resetToken}:${orientationResetToken}:${alg}`}>
       <TwistyCube
+        key={puzzle}
+        puzzle={puzzle}
         alg={alg}
         sizePx={sizePx}
         visualization={visualization}

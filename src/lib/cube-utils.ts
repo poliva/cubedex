@@ -1,6 +1,18 @@
-import { cube3x3x3 } from 'cubing/puzzles';
+import { cube2x2x2, cube3x3x3 } from 'cubing/puzzles';
 import { KPattern, KPatternData, KPuzzle } from 'cubing/kpuzzle';
 
+export type CubeSize = 2 | 3;
+export type CubePuzzle = '2x2x2' | '3x3x3';
+
+export function patternCubeSize(pattern: KPattern): CubeSize {
+  return pattern.patternData.EDGES ? 3 : 2;
+}
+
+export function solvedFacelets(size: CubeSize = 3): string {
+  return [...'URFDLB'].map((face) => face.repeat(size * size)).join('');
+}
+
+let kpuzzle222Promise: Promise<KPuzzle> | null = null;
 let kpuzzle333Promise: Promise<KPuzzle> | null = null;
 
 function getKPuzzle333(): Promise<KPuzzle> {
@@ -70,6 +82,8 @@ const REID_TO_FACELETS_MAP: [number, number, number][] = [
   [0, 6, 1],
   [1, 6, 2],
 ];
+
+const CORNER_FACELETS_MAP = REID_TO_FACELETS_MAP.filter(([orbit]) => orbit === 1);
 
 const CORNER_MAPPING = [
   [0, 21, 15],
@@ -150,11 +164,41 @@ function toReid333Struct(pattern: KPattern): string[][] {
 }
 
 export function patternToFacelets(pattern: KPattern): string {
+  if (patternCubeSize(pattern) === 2) {
+    const corners = pattern.patternData.CORNERS;
+    const reid = corners.pieces.map((piece, i) =>
+      rotateLeft(REID_CORNER_ORDER[piece], corners.orientation[i]));
+    return CORNER_FACELETS_MAP
+      .map(([, perm, ori]) => reid[perm][ori]).join('');
+  }
   const reid = toReid333Struct(pattern);
   return REID_TO_FACELETS_MAP.map(([orbit, perm, ori]) => reid[orbit][perm][ori]).join('');
 }
 
 export async function faceletsToPattern(facelets: string): Promise<KPattern> {
+  const size = facelets.length === 24 ? 2 : 3;
+  if (![24, 54].includes(facelets.length) || /[^URFDLB]/.test(facelets)
+    || [...FACE_ORDER].some((face) => [...facelets].filter((s) => s === face).length !== size * size)) {
+    throw new Error('Invalid cube facelets');
+  }
+  if (size === 2) {
+    const colors = Array.from({ length: 8 }, () => Array<string>(3));
+    CORNER_FACELETS_MAP.forEach(([, position, orientation], i) => {
+      colors[position][orientation] = facelets[i];
+    });
+    const corners = colors.map((corner) => PIECE_MAP[corner.join('')]);
+    if (corners.some((corner) => !corner) || new Set(corners.map((c) => c.piece)).size !== 8
+      || corners.reduce((sum, c) => sum + c.orientation, 0) % 3 !== 0) {
+      throw new Error('Invalid 2×2 corner state');
+    }
+    kpuzzle222Promise ??= cube2x2x2.kpuzzle();
+    return new KPattern(await kpuzzle222Promise, {
+      CORNERS: {
+        pieces: corners.map((c) => c.piece),
+        orientation: corners.map((c) => c.orientation),
+      },
+    });
+  }
   const stickers: number[] = [];
   facelets.match(/.{9}/g)?.forEach((face) => {
     face.split('').reverse().forEach((s, i) => {
@@ -195,6 +239,24 @@ export async function faceletsToPattern(facelets: string): Promise<KPattern> {
   return new KPattern(await getKPuzzle333(), patternData);
 }
 
-export async function solvedPattern(): Promise<KPattern> {
-  return faceletsToPattern('UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB');
+export async function solvedPattern(size: CubeSize = 3): Promise<KPattern> {
+  return faceletsToPattern(solvedFacelets(size));
+}
+
+/** Give the 3×3 solver legal placeholder edges for a corners-only 2×2 state. */
+export function solverFacelets(pattern: KPattern): string {
+  if (patternCubeSize(pattern) === 3) return patternToFacelets(pattern);
+  const corners = pattern.patternData.CORNERS;
+  let parity = 0;
+  for (let i = 0; i < 8; i += 1) {
+    for (let j = i + 1; j < 8; j += 1) {
+      if (corners.pieces[i] > corners.pieces[j]) parity ^= 1;
+    }
+  }
+  const edges = [...REID_EDGE_ORDER];
+  // A 2×2 permits odd corner permutations. Match that parity with an edge swap.
+  if (parity) [edges[0], edges[1]] = [edges[1], edges[0]];
+  const reid = [edges, corners.pieces.map((piece, i) =>
+    rotateLeft(REID_CORNER_ORDER[piece], corners.orientation[i])), REID_CENTER_ORDER];
+  return REID_TO_FACELETS_MAP.map(([orbit, perm, ori]) => reid[orbit][perm][ori]).join('');
 }

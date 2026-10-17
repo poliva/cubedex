@@ -24,3 +24,31 @@ describe('cube utils', () => {
     expect(patternToFacelets(roundTripped)).toBe(facelets);
   });
 });
+
+
+describe('2×2 cube utils', () => {
+  it('uses a corners-only puzzle and 24 solved facelets', async () => {
+    const pattern = await solvedPattern(2);
+    expect(Object.keys(pattern.patternData)).toEqual(['CORNERS']);
+    expect(patternToFacelets(pattern)).toBe('UUUURRRRFFFFDDDDLLLLBBBB');
+  });
+
+  it.each(['R', 'U', 'F', 'D', 'L', 'B', "R U R' U' F2 D L B'", 'x y z'])
+    ('round-trips %s and agrees with 3×3 corner facelets', async (alg) => {
+      const pattern = (await solvedPattern(2)).applyAlg(alg);
+      const facelets = patternToFacelets(pattern);
+      const restored = await faceletsToPattern(facelets);
+      expect(restored.isIdentical(pattern)).toBe(true);
+      if (!/[xyz]/.test(alg)) {
+        const full = patternToFacelets((await solvedPattern()).applyAlg(alg));
+        const corners = full.match(/.{9}/g)!.map((face) =>
+          [0, 2, 6, 8].map((i) => face[i]).join('')).join('');
+        expect(facelets).toBe(corners);
+      }
+    });
+
+  it.each(['', 'U'.repeat(24), 'UUUURRRRFFFFDDDDLLLLBBBX', 'UUUURRRRFFFFDDDDLLLLBBBBU'])
+    ('rejects invalid facelets %s', async (facelets) => {
+      await expect(faceletsToPattern(facelets)).rejects.toThrow();
+    });
+});

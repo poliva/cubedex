@@ -46,7 +46,7 @@ function RecentTimesModeToggle({
 }
 
 const ORIENTATION_REMINDER =
-  'Ensure the cube is oriented with WHITE center on top and GREEN center on front.';
+  'Ensure the cube is oriented with WHITE on top and GREEN on front.';
 
 /** Matches `.alg-display-moves` sizing so status strips align with the main alg line. */
 const STATUS_BAR_MOVES_LINE_STYLE: CSSProperties = {
@@ -267,12 +267,13 @@ export const PracticeView = memo(function PracticeView({
       <div className={training.countdownActive ? 'cube-area-content cube-area-content--hidden' : 'cube-area-content'}
         aria-hidden={training.countdownActive}>
         <MainCubeArea
+          puzzle={smartcube.cubeSize === 2 ? '2x2x2' : '3x3x3'}
           alg={mainCubeAlg}
           sizePx={options.cubeSizePx}
           visualization={options.visualization}
           hintFacelets={options.hintFacelets}
           controlPanel={options.controlPanel}
-          experimentalStickering={selectedStickering}
+          experimentalStickering={smartcube.cubeSize === 2 ? 'full' : selectedStickering}
           setupAlg={options.whiteOnBottom ? 'z2' : ''}
           backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
           resetToken={`${smartcube.connected}:${training.visualResetKey}`}
