@@ -1,3 +1,4 @@
+import type { PuzzleId } from './puzzles';
 import { TwistyPlayer } from 'cubing/twisty';
 import { Alg } from 'cubing/alg';
 import {
@@ -12,6 +13,7 @@ export type Preview =
   { src: string };
 
 export interface PreviewParams {
+  puzzle?: PuzzleId;
   alg: string;
   visualization: string;
   stickering: string;
@@ -20,7 +22,7 @@ export interface PreviewParams {
 
 export type PreviewKey = string;
 
-export const PREVIEW_CACHE_VERSION = 1;
+export const PREVIEW_CACHE_VERSION = 2;
 const LRU_CAPACITY = 512;
 const PERSISTENT_CACHE_CAPACITY = 1024;
 
@@ -140,7 +142,7 @@ function touch(key: PreviewKey, value: Preview) {
 }
 
 export function previewKey(params: PreviewParams): PreviewKey {
-  return `v${PREVIEW_CACHE_VERSION}|${params.visualization}|${params.stickering}|${params.setupAnchor ?? 'end'}|${params.alg}`;
+  return `v${PREVIEW_CACHE_VERSION}|${params.puzzle ?? '3x3x3'}|${params.visualization}|${params.stickering}|${params.setupAnchor ?? 'end'}|${params.alg}`;
 }
 
 export function getPreview(key: PreviewKey): Preview | undefined {
@@ -296,8 +298,8 @@ async function awaitTwistyIntersectedCallback(player: TwistyPlayer): Promise<voi
   if (fn) await fn.call(player);
 }
 
-function ensureBackend(visualization: string): Backend {
-  const existing = backends.get(visualization);
+function ensureBackend(visualization: string, puzzle: PuzzleId = '3x3x3'): Backend {
+  const existing = backends.get(`${puzzle}:${visualization}`);
   if (existing) return existing;
   const host = ensureHost();
   const container = document.createElement('div');
@@ -325,7 +327,7 @@ function ensureBackend(visualization: string): Backend {
   }
 
   const player = new TwistyPlayer({
-    puzzle: '3x3x3',
+    puzzle,
     visualization: vizValue,
     alg: '',
     background: 'none',
@@ -343,7 +345,7 @@ function ensureBackend(visualization: string): Backend {
   container.appendChild(playerEl);
 
   const backend: Backend = { player, container };
-  backends.set(visualization, backend);
+  backends.set(`${puzzle}:${visualization}`, backend);
   return backend;
 }
 
@@ -393,7 +395,7 @@ async function flushTwistyModel(): Promise<void> {
 }
 
 async function renderSvgPreview(params: PreviewParams): Promise<Preview> {
-  const backend = ensureBackend(params.visualization);
+  const backend = ensureBackend(params.visualization, params.puzzle);
   const { player } = backend;
   await awaitTwistyIntersectedCallback(player);
 
@@ -428,7 +430,7 @@ async function renderSvgPreview(params: PreviewParams): Promise<Preview> {
 }
 
 async function renderImagePreview(params: PreviewParams): Promise<Preview> {
-  const backend = ensureBackend(params.visualization);
+  const backend = ensureBackend(params.visualization, params.puzzle);
   const { player } = backend;
   await awaitTwistyIntersectedCallback(player);
   player.experimentalStickering = params.stickering;

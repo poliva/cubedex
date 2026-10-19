@@ -284,11 +284,11 @@ describe('PracticeView', () => {
     expect(screen.getByText('Train to begin')).toBeInTheDocument();
   });
 
-  it('switches the practice display to a fully stickered 2×2 for the connected puzzle', () => {
+  it('uses the selected puzzle for keyboard practice as well as smartcube practice', () => {
     const props = makeProps();
     const { rerender } = render(<PracticeView {...props} />);
     expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-puzzle', '3x3x3');
-    rerender(<PracticeView {...makeProps({ smartcube: { ...props.smartcube, cubeSize: 2 } })} />);
+    rerender(<PracticeView {...makeProps({ puzzle: '2x2x2' })} />);
     expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-puzzle', '2x2x2');
     expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stickering', 'full');
   });
@@ -541,6 +541,34 @@ describe('PracticeView', () => {
     expect(props.setScrambleStartAlg).toHaveBeenCalledWith("U R U'");
     expect(props.lastProcessedScrambleMoveRef.current).toBe('');
   });
+
+  it.each(['4x4x4', '5x5x5', 'pyraminx', 'megaminx'])(
+    'offers an inverse setup and lets Train dismiss it for %s', async (puzzle) => {
+      const user = userEvent.setup();
+      const base = makeProps();
+      const props = makeProps({
+        puzzle,
+        options: { ...base.options, alwaysScrambleTo: true },
+        scramble: { ...base.scramble, startScrambleTo: vi.fn(async () => true) },
+      });
+      const { rerender } = render(<PracticeView {...props} />);
+      await user.click(screen.getByTitle('Scramble To...'));
+      await waitFor(() => expect(props.training.prepareForScramble).toHaveBeenCalled());
+      expect(props.scramble.startScrambleTo).toHaveBeenCalledWith(
+        props.training.displayAlg || props.training.algInput,
+        props.training.currentCase,
+        null,
+        false,
+      );
+      expect(props.setScrambleStartAlg).toHaveBeenCalledWith('');
+
+      rerender(<PracticeView {...props} scramble={{ ...props.scramble, scrambleMode: true, scrambleText: "U R'" }} />);
+      expect(screen.getByText('Apply from solved, then press Train.')).toBeInTheDocument();
+      await user.click(screen.getByTitle('Train'));
+      expect(props.scramble.clearScramble).toHaveBeenCalled();
+      expect(props.training.trainCurrent).toHaveBeenCalled();
+    },
+  );
 
   it('shows the time attack banner and progress when the mode is active', () => {
     const base = makeProps();

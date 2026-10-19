@@ -1,3 +1,4 @@
+import { categoryName, categoryPuzzle, PUZZLES } from '../lib/puzzles';
 import { memo, type CSSProperties } from 'react';
 import type { CaseCardData } from '../lib/case-cards';
 import { averageTimeString, bestTimeString } from '../lib/case-cards';
@@ -17,9 +18,10 @@ interface CaseCardProps {
 
 function CaseCardComponent({ card, index, style }: CaseCardProps) {
   const { practiceCount, failedCount, bestTime, ao5, selected } = useCaseCardSlice(card.id);
-  const isLL = card.category.toLowerCase().includes('ll');
+  const puzzle = categoryPuzzle(card.category);
+  const isLL = PUZZLES[puzzle].lastLayerPreview && categoryName(card.category).toLowerCase().includes('ll');
   const visualization = isLL ? 'experimental-2D-LL' : '3D';
-  const stickering = getStickeringForCategory(card.category, false);
+  const stickering = getStickeringForCategory(categoryName(card.category), puzzle !== '3x3x3');
 
   const background = failedCount
     ? 'rgba(239,68,68,0.12)'
@@ -63,6 +65,7 @@ function CaseCardComponent({ card, index, style }: CaseCardProps) {
         <div id={`alg-case-${card.id}`} className="case-preview" style={{ marginTop: 6 }}>
           <div className="case-preview-inner" style={{ borderRadius: 12, background: 'transparent' }}>
             <CaseCardPreview
+              puzzle={puzzle}
               alg={card.algorithm}
               visualization={visualization}
               stickering={stickering}

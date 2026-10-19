@@ -1,3 +1,4 @@
+import { categoryPuzzle } from './puzzles';
 import {
   getAttemptHistorySummary,
   createScopeId,
@@ -125,8 +126,8 @@ export function getCaseCards(
     }
 
     for (const alg of subsetData.algorithms) {
-      const normalizedAlgorithm = expandNotation(alg.algorithm);
-      const scopeId = createScopeId(category, subsetData.subset, getAlgorithmId(normalizedAlgorithm));
+      const normalizedAlgorithm = expandNotation(alg.algorithm, categoryPuzzle(category));
+      const scopeId = createScopeId(category, subsetData.subset, getAlgorithmId(normalizedAlgorithm, categoryPuzzle(category)));
       const manualLearned = getLearnedStatus(scopeId);
       const { reviewHistory, executionTimes } = getAttemptHistorySummary(scopeId);
       const srsState = getSrsState(scopeId);

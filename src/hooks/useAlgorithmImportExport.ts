@@ -1,3 +1,5 @@
+import { Alg } from 'cubing/alg';
+import { categoryId, PUZZLES, puzzleLoader, type PuzzleId } from '../lib/puzzles';
 import { useCallback, useMemo, useState } from 'react';
 import {
   expandNotation,
@@ -26,7 +28,7 @@ export interface AlgorithmImportExportState {
   importBackupFromFile: (file: File) => Promise<boolean>;
 }
 
-export function useAlgorithmImportExport(onStorageChanged?: () => void): AlgorithmImportExportState {
+export function useAlgorithmImportExport(onStorageChanged?: () => void, puzzle: PuzzleId = '3x3x3'): AlgorithmImportExportState {
   const [categoryInput, setCategoryInput] = useState('');
   const [subsetInput, setSubsetInput] = useState('');
   const [algNameInput, setAlgNameInput] = useState('');
@@ -52,7 +54,7 @@ export function useAlgorithmImportExport(onStorageChanged?: () => void): Algorit
     const category = categoryInput.trim();
     const subset = subsetInput.trim();
     const name = algNameInput.trim();
-    const normalizedAlgorithm = expandNotation(algorithm.trim());
+    const normalizedAlgorithm = expandNotation(algorithm.trim(), puzzle);
 
     if (!category || !subset || !name || !normalizedAlgorithm) {
       setSaveSuccess('');
@@ -63,7 +65,16 @@ export function useAlgorithmImportExport(onStorageChanged?: () => void): Algorit
       return false;
     }
 
-    await saveAlgorithm(category, subset, name, normalizedAlgorithm);
+    try {
+      // Validate notation against the actual puzzle before storing a broken case.
+      const kpuzzle = await puzzleLoader(puzzle).kpuzzle();
+      kpuzzle.defaultPattern().applyAlg(Alg.fromString(normalizedAlgorithm).invert());
+    } catch {
+      setSaveSuccess('');
+      setSaveError(`Enter a valid ${PUZZLES[puzzle].name} algorithm.`);
+      return false;
+    }
+    await saveAlgorithm(categoryId(puzzle, category), subset, name, normalizedAlgorithm);
     onStorageChanged?.();
     clearAlgNameOnly();
     setSaveError('');
@@ -72,7 +83,7 @@ export function useAlgorithmImportExport(onStorageChanged?: () => void): Algorit
       setSaveSuccess('');
     }, 3000);
     return true;
-  }, [algNameInput, categoryInput, clearAlgNameOnly, onStorageChanged, subsetInput]);
+  }, [algNameInput, categoryInput, clearAlgNameOnly, onStorageChanged, subsetInput, puzzle]);
 
   const exportAll = useCallback(async () => {
     await exportAlgorithms();

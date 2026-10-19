@@ -7321,5 +7321,2954 @@
         }
       ]
     }
+  ],
+  "2x2x2:OLL": [
+    {
+      "subset": "Ortega OLL",
+      "algorithms": [
+        {
+          "name": "Sune",
+          "algorithm": "R U R' U R U2 R'"
+        },
+        {
+          "name": "Anti Sune",
+          "algorithm": "R U2 R' U' R U' R'"
+        },
+        {
+          "name": "Pi",
+          "algorithm": "F R U R' U' R U R' U' F'"
+        },
+        {
+          "name": "P",
+          "algorithm": "F R U R' U' F'"
+        },
+        {
+          "name": "L",
+          "algorithm": "y F' R U R' U' R' F R"
+        },
+        {
+          "name": "T",
+          "algorithm": "R U R' U' R' F R F'"
+        },
+        {
+          "name": "H",
+          "algorithm": "R2 U2 R' U2 R2"
+        }
+      ]
+    }
+  ],
+  "2x2x2:PBL": [
+    {
+      "subset": "Ortega PBL",
+      "algorithms": [
+        {
+          "name": "Adj",
+          "algorithm": "y R U R' F' R U R' U' R' F R2 U' R'"
+        },
+        {
+          "name": "Opp",
+          "algorithm": "R U' R' U' F2 U' R U R' U F2"
+        },
+        {
+          "name": "Opp Opp",
+          "algorithm": "R2 F2 R2"
+        },
+        {
+          "name": "Adj Adj",
+          "algorithm": "R2 U' B2 U2 R2 U' R2"
+        },
+        {
+          "name": "Adj Opp",
+          "algorithm": "R U' R F2 R' U R'"
+        },
+        {
+          "name": "Opp Adj",
+          "algorithm": "y R2 U R2 U' R2 U R2 U' R2"
+        }
+      ]
+    }
+  ],
+  "pyraminx:Last Layer": [
+    {
+      "subset": "Last Three Edges",
+      "algorithms": [
+        {
+          "name": "Sune",
+          "algorithm": "R U R' U R U R'"
+        },
+        {
+          "name": "AntiSune",
+          "algorithm": "R' U' R U' R' U' R"
+        },
+        {
+          "name": "Lefty Bars",
+          "algorithm": "R' U' L' U L R"
+        },
+        {
+          "name": "Righty Bars",
+          "algorithm": "U' R' L' U' L U R"
+        },
+        {
+          "name": "2 Flip",
+          "algorithm": "L R' L' R U' R U R'"
+        }
+      ]
+    }
+  ],
+  "4x4x4:OLL Parity": [
+    {
+      "subset": "OLL Parity",
+      "algorithms": [
+        {
+          "name": "Basic",
+          "algorithm": "Rw U2 x Rw U2 Rw U2 Rw' U2 Lw U2 Rw' U2 Rw U2 Rw' U2 Rw'"
+        },
+        {
+          "name": "Pure",
+          "algorithm": "2R' U2 2L F2 2L' F2 2R2 U2 2R U2 2R' U2 F2 2R2 F2"
+        },
+        {
+          "name": "M",
+          "algorithm": "y2 2R2 U2 2R2 Uw2 2R2 Uw2 Rw U2 x Rw U2 Rw U2 Rw' U2 Lw U2 Rw' U2 Rw U2 Rw' U2 Rw'"
+        }
+      ]
+    }
+  ],
+  "4x4x4:PLL Parity": [
+    {
+      "subset": "Edge Swap",
+      "algorithms": [
+        {
+          "name": "OPP Parity",
+          "algorithm": "2R2 U2 2R2 Uw2 2R2 Uw2"
+        },
+        {
+          "name": "Adj Parity",
+          "algorithm": "R' U R U' 2R2 U2' 2R2 Uw2' 2R2 Uw2' U' R' U' R"
+        },
+        {
+          "name": "CwO",
+          "algorithm": "2L2 2R2 U' 2L2 2R2 U' 2L' 2R U2 2L2 2R2 U2 2L' 2R 2R2 U2 2R2 Uw2 2R2 Uw2"
+        },
+        {
+          "name": "CcwO",
+          "algorithm": "Uw2 2L2 Uw2 2L2 U2 3Rw' Rw2 R' U2 2L2 2R2 U2 2L' 2R U 2L2 2R2 U 2L2 2R2"
+        },
+        {
+          "name": "W",
+          "algorithm": "R' U R' U' R' U' R' U R U Rw2 U2 2R2 Uw2 2R2 Uw2"
+        }
+      ]
+    },
+    {
+      "subset": "Adj Corner Swap",
+      "algorithms": [
+        {
+          "name": "Pj",
+          "algorithm": "R U R' U' R' F R2 U' R' U' R U R' F' U' 2L2 U2 2L2 Uw2 2L2 Uw2"
+        },
+        {
+          "name": "Ba",
+          "algorithm": "Uw2 2L2 Uw2 2L2 U2 2L2 U R U R' F' R U R' U' R' F R2 U' R'"
+        },
+        {
+          "name": "Bb",
+          "algorithm": "y x Rw2 U2 Rw2 Uw2 2R2 Uw2 B 3Rw' U R' U2 L U' R"
+        },
+        {
+          "name": "Ca",
+          "algorithm": "y2 Uw2 2R2 Uw2 2R2 U2 Rw2 F R U R U' R' F' R U2 R' U2 R"
+        },
+        {
+          "name": "Cb",
+          "algorithm": "y R' U2 R U2 R' F R U R' U' R' F' Rw2 U2 2R2 Uw2 2R2 Uw2"
+        },
+        {
+          "name": "Da",
+          "algorithm": "R' U L' U2 R U' 3Rw B Rw2 U2 Rw2 Uw2 2R2 Uw2 x'"
+        },
+        {
+          "name": "Db",
+          "algorithm": "R U R' F' R U R' U' R' F R2 U' R' u2 2R2 u2 2R2 U2 2R2"
+        },
+        {
+          "name": "Ka",
+          "algorithm": "y 3Lw' U R' D2 R U' R' D2 x' Rw2 U2 2R2 Uw2 2R2 Uw2"
+        },
+        {
+          "name": "Kb",
+          "algorithm": "r2 F2 U2 r2 R2 U2 x R' D' R U2 R' D R r2 x' U'"
+        },
+        {
+          "name": "M",
+          "algorithm": "y2 Rw2 F2 U2 2R2 U R' U' R U R' D R D' R F2 U Rw2"
+        },
+        {
+          "name": "Pa",
+          "algorithm": "R U R' F' R U R' U' R' F R2 U' R' U' 2R2 U2 2R2 u2 2R2 u2"
+        },
+        {
+          "name": "Pb",
+          "algorithm": "2R2 U2 2R2 u2 2R2 u2 R U R' F' R U R' U' R' F R2 U' R'"
+        }
+      ]
+    },
+    {
+      "subset": "Diag Corner Swap",
+      "algorithms": [
+        {
+          "name": "Diag C",
+          "algorithm": "F R U' R' U' R U R' F' U' 2R2 U2 2R2 u2 2R2 u2 U' R U R' U' R' F R F'"
+        },
+        {
+          "name": "Q",
+          "algorithm": "z Rw2 Uw2' R2' Uw2' F R U R' U' R U R' U' R U R' U' F' U2' R2 Uw2' Rw2' z'"
+        },
+        {
+          "name": "Sa",
+          "algorithm": "F R U' R' U' R U R' F' R U R' U' R' F R F' U' 2R2 U2 2R2 u2 2R2 u2"
+        },
+        {
+          "name": "Sb",
+          "algorithm": "F R U' R' U' R U R' F' R U R' U' R' F R F' 2R2 U2 2R2 u2 2R2 u2"
+        },
+        {
+          "name": "X",
+          "algorithm": "Rw2 F2 U2 Rw2 F' U' R' U R U' R' U R U' R' U R F R2 U2 F2 Rw2"
+        }
+      ]
+    }
+  ],
+  "5x5x5:Last Two Edges": [
+    {
+      "subset": "Last Two Edges",
+      "algorithms": [
+        {
+          "name": "L2E 1",
+          "algorithm": "Rw' U' R' U R' F R F' Rw"
+        },
+        {
+          "name": "L2E 2",
+          "algorithm": "Lw U' R' U R' F R F' Lw'"
+        },
+        {
+          "name": "L2E 3",
+          "algorithm": "x' M' U' R' U R' F R F' M x"
+        },
+        {
+          "name": "L2E 4",
+          "algorithm": "Rw2 F2 U2 Rw2 U2 F2 Rw2"
+        },
+        {
+          "name": "L2E 5",
+          "algorithm": "Rw2 B2 Rw' U2 Rw' U2' x' U2 Rw' U2' Rw U2 Rw' U2' Rw2 U2 x"
+        },
+        {
+          "name": "L2E 6",
+          "algorithm": "Rw' U2 3Rw U2 3Rw' F2 Rw2 U2 Rw U2 Rw' U2 F2 Rw2 F2"
+        },
+        {
+          "name": "L2E 7",
+          "algorithm": "y2 Rw U2 Rw U2' x U2 Rw U2' 3Rw' U2 Lw U2' Rw2"
+        },
+        {
+          "name": "L2E 8",
+          "algorithm": "Lw2 F2 U2 Lw' U2 Lw2 F2 Lw' U2 Lw2 U2 F2 Lw' F2"
+        },
+        {
+          "name": "L2E 9",
+          "algorithm": "B2 Rw' U2 Rw' U2' Rw B2 Rw U2 Rw U2' Rw' U2 Rw U2' Rw2"
+        },
+        {
+          "name": "L2E 10",
+          "algorithm": "Rw' U2 Rw2 U2 Rw U2 Rw' U2 Rw U2 Rw2 U2 Rw'"
+        },
+        {
+          "name": "L2E 11",
+          "algorithm": "Rw U2 Rw2 U2 Rw' U2 Rw U2 Rw' U2 Rw2 U2 Rw"
+        },
+        {
+          "name": "L2E 12",
+          "algorithm": "Rw' U2 Rw U2 3Lw' U2 Rw U2 Rw U2' Rw' U2 Rw U2' Rw2 D2 F2 U2 D2"
+        },
+        {
+          "name": "L2E 13",
+          "algorithm": "Rw U R U' Rw2 U' R U Rw2 U R U' Rw'"
+        }
+      ]
+    }
+  ],
+  "5x5x5:Last Two Centers": [
+    {
+      "subset": "Last Two Centers",
+      "algorithms": [
+        {
+          "name": "L2C 1",
+          "algorithm": "U2 Rw U Rw' U Rw U2 Rw'"
+        },
+        {
+          "name": "L2C 2",
+          "algorithm": "Rw U M' U2 M U Rw'"
+        },
+        {
+          "name": "L2C 3",
+          "algorithm": "Rw U Rw'"
+        },
+        {
+          "name": "L2C 4",
+          "algorithm": "Rw U Rw' U' Rw U' Rw'"
+        },
+        {
+          "name": "L2C 5",
+          "algorithm": "Rw U' Rw' U' Rw U' Rw'"
+        },
+        {
+          "name": "L2C 6",
+          "algorithm": "Rw U2 Rw' U Rw U2 Rw'"
+        },
+        {
+          "name": "L2C 7",
+          "algorithm": "Rw U' Rw'"
+        },
+        {
+          "name": "L2C 8",
+          "algorithm": "Rw U' Rw' U Rw U Rw'"
+        },
+        {
+          "name": "L2C 9",
+          "algorithm": "Rw U Rw' U Rw U Rw'"
+        },
+        {
+          "name": "L2C 10",
+          "algorithm": "Rw U2 Rw' U' Rw U2 Rw'"
+        },
+        {
+          "name": "L2C 11",
+          "algorithm": "U2 Rw U Rw' U' Rw U Rw' U' Rw U Rw' U'"
+        },
+        {
+          "name": "L2C 12",
+          "algorithm": "Rw U' Rw' U2 Rw U' Rw'"
+        },
+        {
+          "name": "L2C 13",
+          "algorithm": "Rw U2 Rw'"
+        },
+        {
+          "name": "L2C 14",
+          "algorithm": "Rw U Rw' U' Rw U2 Rw'"
+        },
+        {
+          "name": "L2C 15",
+          "algorithm": "Rw U Rw' U Rw U2 Rw'"
+        },
+        {
+          "name": "L2C 16",
+          "algorithm": "Rw U' Rw' U Rw U' Rw'"
+        },
+        {
+          "name": "L2C 17",
+          "algorithm": "Rw U Rw' U' Rw U Rw'"
+        },
+        {
+          "name": "L2C 18",
+          "algorithm": "M' U2 M U Rw U2 Rw'"
+        }
+      ]
+    }
+  ],
+  "megaminx:EO": [
+    {
+      "subset": "Edge Orientation",
+      "algorithms": [
+        {
+          "name": "EO1",
+          "algorithm": "F R U R' U' F'"
+        },
+        {
+          "name": "EO2",
+          "algorithm": "F U R U' R' F'"
+        },
+        {
+          "name": "EO3",
+          "algorithm": "F R U2 R2' F R F' U2' F'"
+        }
+      ]
+    }
+  ],
+  "megaminx:CO": [
+    {
+      "subset": "Corner Orientation",
+      "algorithms": [
+        {
+          "name": "CO 1",
+          "algorithm": "R U R' U R U R' U2' R U' R'"
+        },
+        {
+          "name": "CO 2",
+          "algorithm": "F R U2 R' U' R U' R' F'"
+        },
+        {
+          "name": "CO 3",
+          "algorithm": "R U2 R' U R U2 R'"
+        },
+        {
+          "name": "CO 4",
+          "algorithm": "R U R' U' R' F R U R U' R' F'"
+        },
+        {
+          "name": "CO 5",
+          "algorithm": "R U R' U R U2' R'"
+        },
+        {
+          "name": "CO 6",
+          "algorithm": "R' U' R U' R' U2 R"
+        },
+        {
+          "name": "CO 7",
+          "algorithm": "R U2 R' U' R U' R'"
+        },
+        {
+          "name": "CO 8",
+          "algorithm": "R U R' U2 R U2 R'"
+        },
+        {
+          "name": "CO 9",
+          "algorithm": "R U2 R' U' R U R' U' R U' R'"
+        },
+        {
+          "name": "CO 10",
+          "algorithm": "R U R' U R U' R' U R U2' R'"
+        },
+        {
+          "name": "CO 11",
+          "algorithm": "R U R' U R U R' U' R U2' R'"
+        },
+        {
+          "name": "CO 12",
+          "algorithm": "R U2 R' U' R U' R2' U' R U' R' U2 R"
+        },
+        {
+          "name": "CO 13",
+          "algorithm": "R U2 R2' U' R2 U' R2' U2 R"
+        },
+        {
+          "name": "CO 14",
+          "algorithm": "R' U2' R2 U R2' U R2 U2' R'"
+        },
+        {
+          "name": "CO 15",
+          "algorithm": "R U R' U2 R U2' R' U R U2' R'"
+        },
+        {
+          "name": "CO 16",
+          "algorithm": "R U2 R' U' R U2 R' U2' R U' R'"
+        }
+      ]
+    }
+  ],
+  "megaminx:EP": [
+    {
+      "subset": "Edge Permutation",
+      "algorithms": [
+        {
+          "name": "EP 1",
+          "algorithm": "R2 U2' R2' U' R2 U2' R2'"
+        },
+        {
+          "name": "EP 2",
+          "algorithm": "R2 U2 R2' U R2 U2 R2'"
+        },
+        {
+          "name": "EP 3",
+          "algorithm": "R U R' F' R U R' U' R' F R2 U' R'"
+        },
+        {
+          "name": "EP 4",
+          "algorithm": "R U R' U R' U' R2 U' R' U R' U R U2'"
+        },
+        {
+          "name": "EP 5",
+          "algorithm": "L R U2 L' U R' L U' R U2 L' U2 R'"
+        }
+      ]
+    }
+  ],
+  "megaminx:CP": [
+    {
+      "subset": "Corner Permutation",
+      "algorithms": [
+        {
+          "name": "CP 1",
+          "algorithm": "R' BR' R BR R' F' R BR' R' BR F R"
+        },
+        {
+          "name": "CP 2",
+          "algorithm": "R' F' BR' R BR R' F R BR' R' BR R"
+        },
+        {
+          "name": "CP 3",
+          "algorithm": "BR' R' U L U' R' U L' U' R2 BR"
+        },
+        {
+          "name": "CP 4",
+          "algorithm": "BR' R2' U L U' R U L' U' R BR"
+        },
+        {
+          "name": "CP 5",
+          "algorithm": "L' R U2 R' U' R U R' U' R U R' U' R U' R' L"
+        },
+        {
+          "name": "CP 6",
+          "algorithm": "R U R' U R' U' R F' R U R' U' R' F R2 U' R2' U R U'"
+        },
+        {
+          "name": "CP 7",
+          "algorithm": "R2 U R' U' y R U R' U' R U R' U' R U R' y' R U' R2'"
+        },
+        {
+          "name": "CP 8",
+          "algorithm": "F R U2 R' U' R U' R' F' R' y' R' U' R U' R' U2 R BR U'"
+        },
+        {
+          "name": "CP 9",
+          "algorithm": "R U R' U R' U' R2 U' R' U R' U R U R U R' U R' U' R2 U' R' U R' U R U"
+        },
+        {
+          "name": "CP 10",
+          "algorithm": "R2 U2 R2' U' R2 U' R2' y' R2' U' R2 U' R2' U2 R2"
+        },
+        {
+          "name": "CP 11",
+          "algorithm": "R2' U2' R2 U R2' U R2 y R2 U R2' U R2 U2' R2'"
+        },
+        {
+          "name": "CP 12",
+          "algorithm": "R2 U2' R2' U' R2 U2' R' U R' U' R' F R2 U' R' U' R U R' F'"
+        },
+        {
+          "name": "CP 13",
+          "algorithm": "R' U2 R U' R' U2 R U2' R' U' R U2' R' U R U2' R' U R"
+        },
+        {
+          "name": "CP 14",
+          "algorithm": "R2 U2' R2' U' R2 U R2' U' R2 U R2' U' R2 U2' R2'"
+        },
+        {
+          "name": "CP 15",
+          "algorithm": "R2 U2 R2' U R2 U' R2' U R2 U' R2' U R2 U2 R2'"
+        }
+      ]
+    }
+  ],
+  "2x2x2:CLL": [
+    {
+      "subset": "AS",
+      "algorithms": [
+        {
+          "name": "CLL AS 1",
+          "algorithm": "y R U2 R' U' R U' R'"
+        },
+        {
+          "name": "CLL AS 2",
+          "algorithm": "R U2 R' F R' F' R U' R U' R'"
+        },
+        {
+          "name": "CLL AS 3",
+          "algorithm": "y2 F' L F L' U2 L' U2 L"
+        },
+        {
+          "name": "CLL AS 4",
+          "algorithm": "y2 R' F R F' R U R'"
+        },
+        {
+          "name": "CLL AS 5",
+          "algorithm": "y2 R U2 R' U2 R' F R F'"
+        },
+        {
+          "name": "CLL AS 6",
+          "algorithm": "y' R U2 R' U' R U' R' F R' F' R U R U' R' U'"
+        }
+      ]
+    },
+    {
+      "subset": "H",
+      "algorithms": [
+        {
+          "name": "CLL H 1",
+          "algorithm": "F R2 U' R2 U' R2 U R2 F'"
+        },
+        {
+          "name": "CLL H 2",
+          "algorithm": "R U R' U R U R' F R' F' R"
+        },
+        {
+          "name": "CLL H 3",
+          "algorithm": "y F R U R' U' R U R' U' R U R' U' F'"
+        },
+        {
+          "name": "CLL H 4",
+          "algorithm": "y R2 U2 R' U2 R2"
+        }
+      ]
+    },
+    {
+      "subset": "L",
+      "algorithms": [
+        {
+          "name": "CLL L 1",
+          "algorithm": "y R U2 R' F' R U2 R' U R' F2 R"
+        },
+        {
+          "name": "CLL L 2",
+          "algorithm": "y2 R U2 R2 F2 R U R' F2 R F'"
+        },
+        {
+          "name": "CLL L 3",
+          "algorithm": "y2 R' U R' U2 R U' R' U R U' R2"
+        },
+        {
+          "name": "CLL L 4",
+          "algorithm": "y R U2 R2 F R F' R U2 R'"
+        },
+        {
+          "name": "CLL L 5",
+          "algorithm": "y F R' F' R U R U' R'"
+        },
+        {
+          "name": "CLL L 6",
+          "algorithm": "y2 F' R U R' U' R' F R"
+        }
+      ]
+    },
+    {
+      "subset": "Pi",
+      "algorithms": [
+        {
+          "name": "CLL Pi 1",
+          "algorithm": "y F R' F' R U2 R U' R' U R U2 R'"
+        },
+        {
+          "name": "CLL Pi 2",
+          "algorithm": "R U2 R' U' R U R' U2 R' F R F'"
+        },
+        {
+          "name": "CLL Pi 3",
+          "algorithm": "y F R2 U' R2 U R2 U R2 F'"
+        },
+        {
+          "name": "CLL Pi 4",
+          "algorithm": "y2 R' F R F' R U' R' U' R U' R'"
+        },
+        {
+          "name": "CLL Pi 5",
+          "algorithm": "y' R' U' R' F R F' R U' R' U2 R"
+        },
+        {
+          "name": "CLL Pi 6",
+          "algorithm": "F R U R' U' R U R' U' F'"
+        }
+      ]
+    },
+    {
+      "subset": "Sune",
+      "algorithms": [
+        {
+          "name": "CLL Sune 1",
+          "algorithm": "L' U2 L U2 L F' L' F"
+        },
+        {
+          "name": "CLL Sune 2",
+          "algorithm": "R U R' U' R' F R F' R U R' U R U2 R'"
+        },
+        {
+          "name": "CLL Sune 3",
+          "algorithm": "R U' R' F R' F' R"
+        },
+        {
+          "name": "CLL Sune 4",
+          "algorithm": "F R' F' R U2 R U2 R'"
+        },
+        {
+          "name": "CLL Sune 5",
+          "algorithm": "y2 R U R' U R' F R F' R U2 R'"
+        },
+        {
+          "name": "CLL Sune 6",
+          "algorithm": "R U R' U R U2 R'"
+        }
+      ]
+    },
+    {
+      "subset": "T",
+      "algorithms": [
+        {
+          "name": "CLL T 1",
+          "algorithm": "y' R U R' U' R' F R F'"
+        },
+        {
+          "name": "CLL T 2",
+          "algorithm": "y L' U' L U L F' L' F"
+        },
+        {
+          "name": "CLL T 3",
+          "algorithm": "F U' R U2 R' U' F2 R U R'"
+        },
+        {
+          "name": "CLL T 4",
+          "algorithm": "R' U R U2 R2 F' R U' R' F2 R2"
+        },
+        {
+          "name": "CLL T 5",
+          "algorithm": "y2 F R U R' U' R U' R' U' R U R' F'"
+        },
+        {
+          "name": "CLL T 6",
+          "algorithm": "R' U R U2 R2 F R F' R"
+        }
+      ]
+    },
+    {
+      "subset": "U",
+      "algorithms": [
+        {
+          "name": "CLL U 1",
+          "algorithm": "y' F R U R' U' F'"
+        },
+        {
+          "name": "CLL U 2",
+          "algorithm": "R' U' R2 U R' U2 R U2 R' U R'"
+        },
+        {
+          "name": "CLL U 3",
+          "algorithm": "y2 F R U R' U2 F' R U' R' F"
+        },
+        {
+          "name": "CLL U 4",
+          "algorithm": "y' F R' F' R U' R U' R' U2 R U' R'"
+        },
+        {
+          "name": "CLL U 5",
+          "algorithm": "R U' R2 F R F' R U R' U' R U R'"
+        },
+        {
+          "name": "CLL U 6",
+          "algorithm": "R' U R' F R F' R U2 R' U R"
+        }
+      ]
+    }
+  ],
+  "2x2x2:EG1": [
+    {
+      "subset": "AS",
+      "algorithms": [
+        {
+          "name": "EG1 AS 1",
+          "algorithm": "y U2 B U' R2 F2 U' F"
+        },
+        {
+          "name": "EG1 AS 2",
+          "algorithm": "U R U' R' F' U' F2 R U' R'"
+        },
+        {
+          "name": "EG1 AS 3",
+          "algorithm": "F' R U R' U' R U R2 F' R"
+        },
+        {
+          "name": "EG1 AS 4",
+          "algorithm": "R U' R' F' U' R U R' U' F"
+        },
+        {
+          "name": "EG1 AS 5",
+          "algorithm": "y' R U R' F' U' R U R' U' R U R'"
+        },
+        {
+          "name": "EG1 AS 6",
+          "algorithm": "y2 R U' R2 F R U' R' F R F'"
+        }
+      ]
+    },
+    {
+      "subset": "H",
+      "algorithms": [
+        {
+          "name": "EG1 H 1",
+          "algorithm": "U' R' F R2 U' R' F R U R' F'"
+        },
+        {
+          "name": "EG1 H 2",
+          "algorithm": "U' F' U R U' R2 F2 R U' F"
+        },
+        {
+          "name": "EG1 H 3",
+          "algorithm": "U R' F R F' U2 F R U2 R' F"
+        },
+        {
+          "name": "EG1 H 4",
+          "algorithm": "U' R U R' F' R U R' U' R U R' U'"
+        }
+      ]
+    },
+    {
+      "subset": "L",
+      "algorithms": [
+        {
+          "name": "EG1 L 1",
+          "algorithm": "y R U' R' U R U' R2 F' R F"
+        },
+        {
+          "name": "EG1 L 2",
+          "algorithm": "y' U' R' F R U' R' F R2 U R' F' U2"
+        },
+        {
+          "name": "EG1 L 3",
+          "algorithm": "y R' U R2 U' R2 U' F R2 U' R'"
+        },
+        {
+          "name": "EG1 L 4",
+          "algorithm": "y R' F R2 U R' F' R U2 R'"
+        },
+        {
+          "name": "EG1 L 5",
+          "algorithm": "y2 R U R' F' R U R' U' F R' F' R"
+        },
+        {
+          "name": "EG1 L 6",
+          "algorithm": "y2 R' U2 F R U2 R U' R2 F"
+        }
+      ]
+    },
+    {
+      "subset": "Pi",
+      "algorithms": [
+        {
+          "name": "EG1 Pi 1",
+          "algorithm": "y2 U' F U' R' F R U' F2 R U R'"
+        },
+        {
+          "name": "EG1 Pi 2",
+          "algorithm": "y' R U' R2 F R2 U' R'"
+        },
+        {
+          "name": "EG1 Pi 3",
+          "algorithm": "y' F R' F U' F2 R U R"
+        },
+        {
+          "name": "EG1 Pi 4",
+          "algorithm": "y' R U' R' U R U' R' F R U' R'"
+        },
+        {
+          "name": "EG1 Pi 5",
+          "algorithm": "R U' R2 F R U R U' R' U' R' F R F'"
+        },
+        {
+          "name": "EG1 Pi 6",
+          "algorithm": "U' R' F' R U' R' F R2 U R' F' R U R'"
+        }
+      ]
+    },
+    {
+      "subset": "S",
+      "algorithms": [
+        {
+          "name": "EG1 S 1",
+          "algorithm": "y2 U' L F' L2 U' L F U L' U L"
+        },
+        {
+          "name": "EG1 S 2",
+          "algorithm": "R U R' F2 U F R U R'"
+        },
+        {
+          "name": "EG1 S 3",
+          "algorithm": "y2 F R' F' R U R' F' R2 U R'"
+        },
+        {
+          "name": "EG1 S 4",
+          "algorithm": "U F' R' F R2 U R' U' F R' F' R U"
+        },
+        {
+          "name": "EG1 S 5",
+          "algorithm": "y R U' R' U R U' R' U F R U' R'"
+        },
+        {
+          "name": "EG1 S 6",
+          "algorithm": "R' F R2 U' R' U R U' R' F"
+        }
+      ]
+    },
+    {
+      "subset": "T",
+      "algorithms": [
+        {
+          "name": "EG1 T 1",
+          "algorithm": "F R U' R2 F' R U R' F' R"
+        },
+        {
+          "name": "EG1 T 2",
+          "algorithm": "F' R' F R2 U R' U' R U R'"
+        },
+        {
+          "name": "EG1 T 3",
+          "algorithm": "y R U' R2 F R U R U2 R'"
+        },
+        {
+          "name": "EG1 T 4",
+          "algorithm": "y' U2 R' F R F' U R U' R' U F R U' R'"
+        },
+        {
+          "name": "EG1 T 5",
+          "algorithm": "y' R' F' R2 U R' F' R U R'"
+        },
+        {
+          "name": "EG1 T 6",
+          "algorithm": "y' U' R U' R' U2 F R U2 R' F"
+        }
+      ]
+    },
+    {
+      "subset": "U",
+      "algorithms": [
+        {
+          "name": "EG1 U 1",
+          "algorithm": "y U2 R U R' U R U' R2 F' R2 U R' U"
+        },
+        {
+          "name": "EG1 U 2",
+          "algorithm": "U2 y R' U R' U' R U' R' U' F2 R2"
+        },
+        {
+          "name": "EG1 U 3",
+          "algorithm": "F' U2 R U2 R' U2 F"
+        },
+        {
+          "name": "EG1 U 4",
+          "algorithm": "y R' F R F' R' F R2 U' R'"
+        },
+        {
+          "name": "EG1 U 5",
+          "algorithm": "U2 R U' R' U R U' R' U' F R U' R'"
+        },
+        {
+          "name": "EG1 U 6",
+          "algorithm": "y2 R' F R U' R' F R U' R U R' F' U2"
+        }
+      ]
+    }
+  ],
+  "2x2x2:EG2": [
+    {
+      "subset": "AS",
+      "algorithms": [
+        {
+          "name": "EG2 AS 1",
+          "algorithm": "F R2 U R' U2 R U R2 U F'"
+        },
+        {
+          "name": "EG2 AS 2",
+          "algorithm": "R' U' R U' R' U2 R' F2 R2"
+        },
+        {
+          "name": "EG2 AS 3",
+          "algorithm": "U2 R' F R F' R U R B2 R2"
+        },
+        {
+          "name": "EG2 AS 4",
+          "algorithm": "U2 F' L F L' U2 L' U2 L' B2 L2"
+        },
+        {
+          "name": "EG2 AS 5",
+          "algorithm": "R' U' R U' R' U' R' F2 R F' R"
+        },
+        {
+          "name": "EG2 AS 6",
+          "algorithm": "y2 R2 F2 R F R F' R U R'"
+        }
+      ]
+    },
+    {
+      "subset": "H",
+      "algorithms": [
+        {
+          "name": "EG2 H 1",
+          "algorithm": "R2 F U2 F2 R2 F' R2"
+        },
+        {
+          "name": "EG2 H 2",
+          "algorithm": "y R2 B2 U2 R' U2 R2"
+        },
+        {
+          "name": "EG2 H 3",
+          "algorithm": "R' U' R U2 R2 F' R U' F R"
+        },
+        {
+          "name": "EG2 H 4",
+          "algorithm": "y' R U2 B2 R' U R U' B R'"
+        }
+      ]
+    },
+    {
+      "subset": "L",
+      "algorithms": [
+        {
+          "name": "EG2 L 1",
+          "algorithm": "U L2 B2 L U' L' U L F' L F"
+        },
+        {
+          "name": "EG2 L 2",
+          "algorithm": "y2 F2 R2 F R U R' U' R' F R"
+        },
+        {
+          "name": "EG2 L 3",
+          "algorithm": "y2 R2 U' R U2 R' U2 R U' F2 R2"
+        },
+        {
+          "name": "EG2 L 4",
+          "algorithm": "y' R' U L' U2 R' F R U' R' U' F' x2"
+        },
+        {
+          "name": "EG2 L 5",
+          "algorithm": "y F R' F' R U R U' R B2 R2"
+        },
+        {
+          "name": "EG2 L 6",
+          "algorithm": "y2 F' R U R' U' R' F R' F2 R2"
+        }
+      ]
+    },
+    {
+      "subset": "Pi",
+      "algorithms": [
+        {
+          "name": "EG2 Pi 1",
+          "algorithm": "F U' R U2 R U' R' U R' F'"
+        },
+        {
+          "name": "EG2 Pi 2",
+          "algorithm": "R U2 R2 U R' F2 R2 F'"
+        },
+        {
+          "name": "EG2 Pi 3",
+          "algorithm": "U F R2 U' R2 U R2 U R2 F R2 F2 U2"
+        },
+        {
+          "name": "EG2 Pi 4",
+          "algorithm": "y2 R' F R F' R U' R' U' R U' R F2 R2"
+        },
+        {
+          "name": "EG2 Pi 5",
+          "algorithm": "U' R' F' R' F2 R2 U R' U2 R U"
+        },
+        {
+          "name": "EG2 Pi 6",
+          "algorithm": "U R' U2 R U' R2 F2 R F R U'"
+        }
+      ]
+    },
+    {
+      "subset": "S",
+      "algorithms": [
+        {
+          "name": "EG2 S 1",
+          "algorithm": "R2 F2 R U R U' R' F R' F' R2 U R' U' R"
+        },
+        {
+          "name": "EG2 S 2",
+          "algorithm": "R U R' U R U2 R B2 R2"
+        },
+        {
+          "name": "EG2 S 3",
+          "algorithm": "R U' R' F R' F' R' F2 R2"
+        },
+        {
+          "name": "EG2 S 4",
+          "algorithm": "F R' F' R U2 R U2 R B2 R2"
+        },
+        {
+          "name": "EG2 S 5",
+          "algorithm": "R' U R' F R2 U' F R' F'"
+        },
+        {
+          "name": "EG2 S 6",
+          "algorithm": "R2 B2 R' U' R' F R' F' R"
+        }
+      ]
+    },
+    {
+      "subset": "T",
+      "algorithms": [
+        {
+          "name": "EG2 T 1",
+          "algorithm": "U R' F' R U R U' R' F' R2 B2 U"
+        },
+        {
+          "name": "EG2 T 2",
+          "algorithm": "y' F U' R2 U' R' U R2 F'"
+        },
+        {
+          "name": "EG2 T 3",
+          "algorithm": "R' U R U2 R2 F' R U' R"
+        },
+        {
+          "name": "EG2 T 4",
+          "algorithm": "R2 F2 R U' F R' F' R U R"
+        },
+        {
+          "name": "EG2 T 5",
+          "algorithm": "y' R' U2 R U' R' F R' F R F' R"
+        },
+        {
+          "name": "EG2 T 6",
+          "algorithm": "y R' U2 R' F2 R F2 R"
+        }
+      ]
+    },
+    {
+      "subset": "U",
+      "algorithms": [
+        {
+          "name": "EG2 U 1",
+          "algorithm": "R2 U2 R U R' U F' R U' R"
+        },
+        {
+          "name": "EG2 U 2",
+          "algorithm": "y' F R U R' U' F R2 B2"
+        },
+        {
+          "name": "EG2 U 3",
+          "algorithm": "R' F' U' R U2 R' U F R"
+        },
+        {
+          "name": "EG2 U 4",
+          "algorithm": "R' F' U' F U2 L' U2 R U' L"
+        },
+        {
+          "name": "EG2 U 5",
+          "algorithm": "y2 R2 B2 R' U R' U' R' F R F'"
+        },
+        {
+          "name": "EG2 U 6",
+          "algorithm": "y2 R2 F2 R F' R U L F' L' F"
+        }
+      ]
+    }
+  ],
+  "pyraminx:Last 4 Edges": [
+    {
+      "subset": "Last Layer",
+      "algorithms": [
+        {
+          "name": "Sune",
+          "algorithm": "R U R' U R U R'"
+        },
+        {
+          "name": "AntiSune",
+          "algorithm": "R U' R' U' R U' R'"
+        },
+        {
+          "name": "Lefty Bars",
+          "algorithm": "R' U' L' U L R"
+        },
+        {
+          "name": "Righty Bars",
+          "algorithm": "L U R U' R' L'"
+        }
+      ]
+    },
+    {
+      "subset": "L3E",
+      "algorithms": [
+        {
+          "name": "Sledge",
+          "algorithm": "R' L R L'"
+        },
+        {
+          "name": "Hedge",
+          "algorithm": "L R' L' R"
+        },
+        {
+          "name": "Clockwise",
+          "algorithm": "L R' L' R2 U' R'"
+        },
+        {
+          "name": "Counterclockwise",
+          "algorithm": "R' L R L2' U L"
+        },
+        {
+          "name": "Righty",
+          "algorithm": "R U' R'"
+        },
+        {
+          "name": "Lefty",
+          "algorithm": "L' U L"
+        },
+        {
+          "name": "Sexy",
+          "algorithm": "U' R U R'"
+        },
+        {
+          "name": "Left Sexy",
+          "algorithm": "U L' U' L"
+        }
+      ]
+    },
+    {
+      "subset": "Flipped Edges",
+      "algorithms": [
+        {
+          "name": "2 Flip",
+          "algorithm": "R' L R L' U L' U' L"
+        },
+        {
+          "name": "DR Flip",
+          "algorithm": "L' U L U' R U' R'"
+        },
+        {
+          "name": "DL Flip",
+          "algorithm": "R' L R L' R U' R'"
+        },
+        {
+          "name": "DB Flip",
+          "algorithm": "R U R' U L' U' L"
+        },
+        {
+          "name": "4 Flip",
+          "algorithm": "L' U L R U' R' L' U L R U' R'"
+        }
+      ]
+    },
+    {
+      "subset": "Polish Flip",
+      "algorithms": [
+        {
+          "name": "Right Polish Flip",
+          "algorithm": "R U' R' L' U' L"
+        },
+        {
+          "name": "Left Polish Flip",
+          "algorithm": "L' U L R U R'"
+        },
+        {
+          "name": "SUS",
+          "algorithm": "R' L R L' U' R' L R L'"
+        },
+        {
+          "name": "Anti SUS",
+          "algorithm": "L R' L' R U L R' L' R"
+        }
+      ]
+    },
+    {
+      "subset": "Separated Bar",
+      "algorithms": [
+        {
+          "name": "Good Niky",
+          "algorithm": "R U' R' L' U L"
+        },
+        {
+          "name": "Good Sochi",
+          "algorithm": "L' U L R U' R'"
+        },
+        {
+          "name": "Super Sledge",
+          "algorithm": "R U' R2' L R L'"
+        },
+        {
+          "name": "Super Hedge",
+          "algorithm": "L' U L2' R' L' R"
+        },
+        {
+          "name": "Bad Niky",
+          "algorithm": "R U' R' U' L' U L"
+        },
+        {
+          "name": "Bad Sochi",
+          "algorithm": "L' U L U R U' R'"
+        }
+      ]
+    },
+    {
+      "subset": "Connected Bar",
+      "algorithms": [
+        {
+          "name": "Right Spam",
+          "algorithm": "R U R' U R' L R L'"
+        },
+        {
+          "name": "Left Spam",
+          "algorithm": "L' U' L U' L R' L' R"
+        },
+        {
+          "name": "Bad Sledge",
+          "algorithm": "L R' L' R U' R U' R'"
+        },
+        {
+          "name": "Bad Hedge",
+          "algorithm": "R' L R L' U L' U L"
+        }
+      ]
+    },
+    {
+      "subset": "No Bar",
+      "algorithms": [
+        {
+          "name": "Bad Sexy",
+          "algorithm": "L' U' L U' R U' R'"
+        },
+        {
+          "name": "Bad Ugly",
+          "algorithm": "R U R' U L' U L"
+        },
+        {
+          "name": "Bad Righty",
+          "algorithm": "L' U L U' R U R'"
+        },
+        {
+          "name": "Bad Lefty",
+          "algorithm": "R U' R' U L' U' L"
+        },
+        {
+          "name": "Double Sexy",
+          "algorithm": "R U' R' U' R U R'"
+        },
+        {
+          "name": "Double Ugly",
+          "algorithm": "L' U L U L' U' L"
+        }
+      ]
+    }
+  ],
+  "megaminx:OLL": [
+    {
+      "subset": "EO",
+      "algorithms": [
+        {
+          "name": "1A",
+          "algorithm": "L R U R' U' R' F R F' L'"
+        },
+        {
+          "name": "1B",
+          "algorithm": "L F R' F' R U R U' R' L'"
+        }
+      ]
+    },
+    {
+      "subset": "2 Corner CO",
+      "algorithms": [
+        {
+          "name": "2A",
+          "algorithm": "R U R' U R U R' U2' R U' R'"
+        },
+        {
+          "name": "2B",
+          "algorithm": "R BR R' F R BR' R' F'"
+        },
+        {
+          "name": "2C",
+          "algorithm": "R' U2 R U R' U2 R"
+        },
+        {
+          "name": "2D",
+          "algorithm": "R' F R BR' R' F' R BR"
+        }
+      ]
+    },
+    {
+      "subset": "3 Corner CO",
+      "algorithms": [
+        {
+          "name": "3A-",
+          "algorithm": "R' U' R U' R' U2 R"
+        },
+        {
+          "name": "3A+",
+          "algorithm": "R U R' U R U2' R'"
+        },
+        {
+          "name": "3B-",
+          "algorithm": "R' U2' R U R' U R"
+        },
+        {
+          "name": "3B+",
+          "algorithm": "R U2 R' U' R U' R'"
+        }
+      ]
+    },
+    {
+      "subset": "4 Corner CO",
+      "algorithms": [
+        {
+          "name": "4A",
+          "algorithm": "R U R' U R U' R' U R U2' R'"
+        },
+        {
+          "name": "4B",
+          "algorithm": "y2' R U2 R' U' R U R' U' R U' R'"
+        },
+        {
+          "name": "4C",
+          "algorithm": "R U R' U R U R' U' R U2' R'"
+        },
+        {
+          "name": "4D",
+          "algorithm": "R U2' R' U2' R U2 R' U2' R U' R'"
+        },
+        {
+          "name": "4E-",
+          "algorithm": "R' U2' R2 U R2' U R2 U2' R'"
+        },
+        {
+          "name": "4E+",
+          "algorithm": "R U2 R2' U' R2 U' R2' U2 R"
+        }
+      ]
+    },
+    {
+      "subset": "5 Corner CO",
+      "algorithms": [
+        {
+          "name": "5-",
+          "algorithm": "R U2 R' U' R U2 R' U2' R U' R'"
+        },
+        {
+          "name": "5+",
+          "algorithm": "R U R' U2 R U2' R' U R U2' R'"
+        }
+      ]
+    },
+    {
+      "subset": "Anchor Shapes",
+      "algorithms": [
+        {
+          "name": "6A",
+          "algorithm": "R U2' R' F R' F' R U' R U2' R'"
+        },
+        {
+          "name": "6B",
+          "algorithm": "F R U' R' U2 R U R' F'"
+        }
+      ]
+    },
+    {
+      "subset": "T Shapes",
+      "algorithms": [
+        {
+          "name": "7A",
+          "algorithm": "R U R' U' R' F R F'"
+        },
+        {
+          "name": "7B",
+          "algorithm": "F R U R' U' F'"
+        }
+      ]
+    },
+    {
+      "subset": "C Shapes",
+      "algorithms": [
+        {
+          "name": "8A-",
+          "algorithm": "y2' R U R BR' R' BR U' R'"
+        },
+        {
+          "name": "8A+",
+          "algorithm": "R' U' R' F R F' U R"
+        },
+        {
+          "name": "8B-",
+          "algorithm": "F R U R' U' R U R' U R U2' R' F'"
+        },
+        {
+          "name": "8B+",
+          "algorithm": "R U R2' U' R' F R U R U' F'"
+        }
+      ]
+    },
+    {
+      "subset": "S Shapes",
+      "algorithms": [
+        {
+          "name": "9A-",
+          "algorithm": "R U R' F' U' F U R U2' R'"
+        },
+        {
+          "name": "9A+",
+          "algorithm": "R' F R U R' U' F' U R"
+        },
+        {
+          "name": "9B-",
+          "algorithm": "F U R U R' U2' F'"
+        },
+        {
+          "name": "9B+",
+          "algorithm": "R' U' F' U' F U2 R"
+        }
+      ]
+    },
+    {
+      "subset": "Pi Shapes",
+      "algorithms": [
+        {
+          "name": "10A-",
+          "algorithm": "R' F' U' F U2' R U R' U2 R"
+        },
+        {
+          "name": "10A+",
+          "algorithm": "R U R' U2 R U' R' U2' R' F R F"
+        },
+        {
+          "name": "10B-",
+          "algorithm": "R U2 R' U R' F R F' R U2 R'"
+        },
+        {
+          "name": "10B+",
+          "algorithm": "R U' R' U2' R' F R F' U2 R U R'"
+        }
+      ]
+    },
+    {
+      "subset": "Y Shapes",
+      "algorithms": [
+        {
+          "name": "11A-",
+          "algorithm": "R U2 R' U R' F' U' F U R2 U2 R'"
+        },
+        {
+          "name": "11A+",
+          "algorithm": "R' U' F' U' F R2 U R2' U R2 U2' R'"
+        },
+        {
+          "name": "11B-",
+          "algorithm": "R U2' R' U' R' F R F' U R U2 R'"
+        },
+        {
+          "name": "11B+",
+          "algorithm": "R' U2' R' F R F' R U R' U R"
+        }
+      ]
+    },
+    {
+      "subset": "Hammerhead Shapes",
+      "algorithms": [
+        {
+          "name": "12-",
+          "algorithm": "R' U2' R U' R' U F' U F U R"
+        },
+        {
+          "name": "12+",
+          "algorithm": "F R U' R' U2 R U R' U R U' R' F'"
+        }
+      ]
+    },
+    {
+      "subset": "W Shapes",
+      "algorithms": [
+        {
+          "name": "13-",
+          "algorithm": "F R' F' U2' F R F' R' U2 R"
+        },
+        {
+          "name": "13+",
+          "algorithm": "R' F R U2 R' F' R F U2' F'"
+        }
+      ]
+    },
+    {
+      "subset": "Duckhead Shapes",
+      "algorithms": [
+        {
+          "name": "14A-",
+          "algorithm": "BR' R' U2' R U2 BR"
+        },
+        {
+          "name": "14A+",
+          "algorithm": "F R U2 R' U2' F'"
+        },
+        {
+          "name": "14B-",
+          "algorithm": "R' F' U' F R U2' R' U2' R"
+        },
+        {
+          "name": "14B+",
+          "algorithm": "R' U2 R U2 R' F' U F R"
+        }
+      ]
+    },
+    {
+      "subset": "Megaphone Shapes",
+      "algorithms": [
+        {
+          "name": "15A-",
+          "algorithm": "F R' F' U' F R F' R' U R"
+        },
+        {
+          "name": "15A+",
+          "algorithm": "R' F R U R' F' R F U' F'"
+        },
+        {
+          "name": "15B-",
+          "algorithm": "F R' F' U' F R F' R' U' R U R' U R"
+        },
+        {
+          "name": "15B+",
+          "algorithm": "L' F U R U R' U2' F' L"
+        }
+      ]
+    },
+    {
+      "subset": "Claw Shapes",
+      "algorithms": [
+        {
+          "name": "16A-",
+          "algorithm": "R' U2' R' F R F' R U' R' U2' R"
+        },
+        {
+          "name": "16A+",
+          "algorithm": "R' F R2 U R' U R U2' R2' F' R"
+        },
+        {
+          "name": "16B-",
+          "algorithm": "R' U' R U' R' F U R U' R' F' U2 R"
+        },
+        {
+          "name": "16B+",
+          "algorithm": "F R U2 R' U' F R' F' R U' F'"
+        }
+      ]
+    },
+    {
+      "subset": "Rabbit Shapes",
+      "algorithms": [
+        {
+          "name": "17A-",
+          "algorithm": "R U2 R BR' R' BR U2"
+        },
+        {
+          "name": "17A+",
+          "algorithm": "R' U2' R' F R F' U2 R"
+        },
+        {
+          "name": "17B-",
+          "algorithm": "L F R U R' U' F' L'"
+        },
+        {
+          "name": "17B+",
+          "algorithm": "BL' F R U R' U' F' BL"
+        }
+      ]
+    },
+    {
+      "subset": "Long Block",
+      "algorithms": [
+        {
+          "name": "18A",
+          "algorithm": "R' F U R U' R2' F' R2 U R' U' R"
+        },
+        {
+          "name": "18B",
+          "algorithm": "R' F' U' F U R2 U2 R' U R U2 R'"
+        },
+        {
+          "name": "18C",
+          "algorithm": "F U R U' R' U R U' R' F'"
+        },
+        {
+          "name": "18D",
+          "algorithm": "R' U2' R U R' F R' F' R U R"
+        },
+        {
+          "name": "18E-",
+          "algorithm": "R' F' U' F U' R U R' U R"
+        },
+        {
+          "name": "18E+",
+          "algorithm": "R' F' U2' F R U R' U R"
+        }
+      ]
+    },
+    {
+      "subset": "Fox Head Shapes",
+      "algorithms": [
+        {
+          "name": "19A-",
+          "algorithm": "F U2 R U' R' U' R U R' U' F'"
+        },
+        {
+          "name": "19A+",
+          "algorithm": "F U R U' R' U R U R' U2' F'"
+        },
+        {
+          "name": "19B-",
+          "algorithm": "R' U2' R U R' F' U' F R U R' U R"
+        },
+        {
+          "name": "19B+",
+          "algorithm": "R U2' R' F' U' F U' R U' R'"
+        },
+        {
+          "name": "19C-",
+          "algorithm": "R U2' R' F R' F' R U2' R U' R'"
+        },
+        {
+          "name": "19C+",
+          "algorithm": "F R U' R' U R U2' R' U2' R U R' U' F'"
+        },
+        {
+          "name": "19D-",
+          "algorithm": "BR' U' R' U' R U R' U' R U2 BR"
+        },
+        {
+          "name": "19D+",
+          "algorithm": "F U R U R' U' R U R' U2' F'"
+        },
+        {
+          "name": "19E-",
+          "algorithm": "R' U' R' F R2 U' R' U2 R U R' F' R"
+        },
+        {
+          "name": "19E+",
+          "algorithm": "R U R' U R U' R' U R U' R' U' R' F R F'"
+        },
+        {
+          "name": "19F-",
+          "algorithm": "R' U2' R2 U R2' U R U2' R' F R F'"
+        },
+        {
+          "name": "19F+",
+          "algorithm": "R U2' R' U2' R U R' U2' R' F R F'"
+        }
+      ]
+    },
+    {
+      "subset": "Scorpion Shapes",
+      "algorithms": [
+        {
+          "name": "20A-",
+          "algorithm": "F R U2 R' U2' R U R' U' F'"
+        },
+        {
+          "name": "20A+",
+          "algorithm": "BR' R' U2' R U2 R' U' R U BR"
+        },
+        {
+          "name": "20B-",
+          "algorithm": "R' F' U' F U R2 U2 R' U' R U' R'"
+        },
+        {
+          "name": "20B+",
+          "algorithm": "R' F' U' F U R U2' R' U2' R U R' U R"
+        },
+        {
+          "name": "20C-",
+          "algorithm": "F U2 R U' R' U R U' R' U' F'"
+        },
+        {
+          "name": "20C+",
+          "algorithm": "BR' U2' R' U R U' R' U R U BR"
+        },
+        {
+          "name": "20D-",
+          "algorithm": "F R U' R' U R U2' R' U' R U' R' F'"
+        },
+        {
+          "name": "20D+",
+          "algorithm": "R' F R' F' R2 U' R' F' U' F R"
+        },
+        {
+          "name": "20E-",
+          "algorithm": "R' U2' R F U R' U R2 U2' R' F'"
+        },
+        {
+          "name": "20E+",
+          "algorithm": "F R U R' U' R U2 R' U' R U' R' F'"
+        },
+        {
+          "name": "20F-",
+          "algorithm": "R' U' R F U' R' U2 R U2 R U' R' F'"
+        },
+        {
+          "name": "20F+",
+          "algorithm": "R U2' R' U' R U' R' U' R' F R F'"
+        }
+      ]
+    },
+    {
+      "subset": "Line Shapes",
+      "algorithms": [
+        {
+          "name": "21A-",
+          "algorithm": "BR' U2' R' U2 R U' R' U R BR"
+        },
+        {
+          "name": "21A+",
+          "algorithm": "F U2 R U2' R' U R U' R' F'"
+        },
+        {
+          "name": "21B-",
+          "algorithm": "R' F' U' F R U2' R' U2 R U' R' U2 R"
+        },
+        {
+          "name": "21B+",
+          "algorithm": "R' U2' F' U F U' R U R' U R"
+        },
+        {
+          "name": "21C-",
+          "algorithm": "BR' U' R' U R U2' R' U2 R U' R' U R BR"
+        },
+        {
+          "name": "21C+",
+          "algorithm": "R' F' U2' F2 R U R' U' F' U2 R"
+        },
+        {
+          "name": "21D-",
+          "algorithm": "BR' U2' R' U2 R U2' R' U2 R BR"
+        },
+        {
+          "name": "21D+",
+          "algorithm": "R' F' U' F U2' R U2 R' U R"
+        },
+        {
+          "name": "21E-",
+          "algorithm": "F R U R' U' R U2 R' U2' F'"
+        },
+        {
+          "name": "21E+",
+          "algorithm": "BR' R' U' R U R' U2' R U2 BR"
+        }
+      ]
+    },
+    {
+      "subset": "Flower Shapes",
+      "algorithms": [
+        {
+          "name": "22A",
+          "algorithm": "R U2 R2' F R F' R U2' R'"
+        },
+        {
+          "name": "22B",
+          "algorithm": "F R' F' R U R U' R'"
+        }
+      ]
+    },
+    {
+      "subset": "Chandelier shapes",
+      "algorithms": [
+        {
+          "name": "23A",
+          "algorithm": "R U2 R' U R U' R' U2' R' F R F'"
+        },
+        {
+          "name": "23B",
+          "algorithm": "R U2' R' U' F R' F' R U' R U' R'"
+        }
+      ]
+    },
+    {
+      "subset": "P Shapes",
+      "algorithms": [
+        {
+          "name": "24A-",
+          "algorithm": "R' U' F' U F R"
+        },
+        {
+          "name": "24A+",
+          "algorithm": "F U R U' R' F'"
+        },
+        {
+          "name": "24B-",
+          "algorithm": "R' U' F U R U' R' F' R"
+        },
+        {
+          "name": "24B+",
+          "algorithm": "R U BR' U' R' U R BR R'"
+        }
+      ]
+    },
+    {
+      "subset": "E Shapes",
+      "algorithms": [
+        {
+          "name": "25A-",
+          "algorithm": "R U R2' F' U' F U R2 U2' R'"
+        },
+        {
+          "name": "25A+",
+          "algorithm": "F R U R2' U' F' U F R F'"
+        },
+        {
+          "name": "25B-",
+          "algorithm": "F R U2 R' F' U' F R U' R' F'"
+        },
+        {
+          "name": "25B+",
+          "algorithm": "R' U2 R U2 R' F R' F' R U R"
+        }
+      ]
+    },
+    {
+      "subset": "Sprinter Shapes",
+      "algorithms": [
+        {
+          "name": "26A-",
+          "algorithm": "F R' U2' R F R' F' U2 R F'"
+        },
+        {
+          "name": "26A+",
+          "algorithm": "R U R' U R' F R F' U R U2 R'"
+        },
+        {
+          "name": "26B-",
+          "algorithm": "BR' U' R' U2 R U R' U2' R U BR"
+        },
+        {
+          "name": "26B+",
+          "algorithm": "F U R U' BR R' F' R BR' R'"
+        }
+      ]
+    },
+    {
+      "subset": "Eagle Shapes",
+      "algorithms": [
+        {
+          "name": "27A-",
+          "algorithm": "R2' U' R F R' U R2 U' R' F' R"
+        },
+        {
+          "name": "27A+",
+          "algorithm": "F R' F R2 U' R' U' R U R' F2'"
+        },
+        {
+          "name": "27B-",
+          "algorithm": "R' F R F' R' F R F' R U R' U' R U R'"
+        },
+        {
+          "name": "27B+",
+          "algorithm": "F R' F' R U2' R U' R' U R U2 R'"
+        }
+      ]
+    },
+    {
+      "subset": "Big Block",
+      "algorithms": [
+        {
+          "name": "28-",
+          "algorithm": "x' L' U2' R U R' U L"
+        },
+        {
+          "name": "28+",
+          "algorithm": "x' D R2 U' R' U R' D'"
+        }
+      ]
+    },
+    {
+      "subset": "Lobster Shapes",
+      "algorithms": [
+        {
+          "name": "29-",
+          "algorithm": "BR' U2' R' U R U' R' U2 R BR"
+        },
+        {
+          "name": "29+",
+          "algorithm": "F U2 R U' R' U R U2' R' F'"
+        }
+      ]
+    },
+    {
+      "subset": "Lightning Shapes",
+      "algorithms": [
+        {
+          "name": "30A-",
+          "algorithm": "BR' U2' R' U2 R BR"
+        },
+        {
+          "name": "30A+",
+          "algorithm": "F U2 R U2' R' F'"
+        },
+        {
+          "name": "30B-",
+          "algorithm": "R U' R' U R U' R' U' F R' F' R2 U R'"
+        },
+        {
+          "name": "30B+",
+          "algorithm": "BR' L R' F R' F' R2 L' BR"
+        }
+      ]
+    },
+    {
+      "subset": "Cobra Shapes",
+      "algorithms": [
+        {
+          "name": "31A-",
+          "algorithm": "BR' R' F R' F' R2 BR"
+        },
+        {
+          "name": "31A+",
+          "algorithm": "F R' F' R U2' R U2 R'"
+        },
+        {
+          "name": "31B-",
+          "algorithm": "BR' U' R' U' R U R' U R BR"
+        },
+        {
+          "name": "31B+",
+          "algorithm": "F U R U R' U' R U' R' F'"
+        }
+      ]
+    },
+    {
+      "subset": "Hand Shapes",
+      "algorithms": [
+        {
+          "name": "32A-",
+          "algorithm": "R U R' U F' U F U' R U2' R'"
+        },
+        {
+          "name": "32A+",
+          "algorithm": "R U R' U' R' F R2 U R' U' F'"
+        },
+        {
+          "name": "32B-",
+          "algorithm": "R U R' U R' F R F' R U2' R'"
+        },
+        {
+          "name": "32B+",
+          "algorithm": "R U2' R2' F R F' R U2 R'"
+        }
+      ]
+    },
+    {
+      "subset": "Magic Lamp Shapes",
+      "algorithms": [
+        {
+          "name": "33A-",
+          "algorithm": "R' U' R U' R' U F' U' F R U R' U R"
+        },
+        {
+          "name": "33A+",
+          "algorithm": "F U R U' R' F' R' U2' R U R' U R"
+        },
+        {
+          "name": "33B-",
+          "algorithm": "BR' U' R' U' R U R' U' R U R' U R BR"
+        },
+        {
+          "name": "33B+",
+          "algorithm": "F U R U R' U' R U R' U' R U' R' F'"
+        }
+      ]
+    },
+    {
+      "subset": "Human Shapes",
+      "algorithms": [
+        {
+          "name": "34A",
+          "algorithm": "F R' F' R U R U R' U R U' R' U R U2 R'"
+        },
+        {
+          "name": "34B",
+          "algorithm": "F R' F' R U2' R U' R' U' R U' R'"
+        },
+        {
+          "name": "34C",
+          "algorithm": "R U R' U R' F R F' U R U2' R' U R U2' R'"
+        },
+        {
+          "name": "34D",
+          "algorithm": "F R' F' R U R U R' U R U2 R'"
+        },
+        {
+          "name": "34E-",
+          "algorithm": "F R' F' R U R U' R2' U2' R U R' U R"
+        },
+        {
+          "name": "34E+",
+          "algorithm": "F R U' R' U' R U R' F' R U2 R' U' R U' R'"
+        }
+      ]
+    },
+    {
+      "subset": "Axe Shapes",
+      "algorithms": [
+        {
+          "name": "35A-",
+          "algorithm": "F R' F' R U R U R' U' R U' R'"
+        },
+        {
+          "name": "35A+",
+          "algorithm": "x' D R U' R U R' U' R U R2' D'"
+        },
+        {
+          "name": "35B-",
+          "algorithm": "R U2' R2' F' U' F R2 U2' R2' U2' R"
+        },
+        {
+          "name": "35B+",
+          "algorithm": "R' F R F' U' F R' F' R2 U' R'"
+        },
+        {
+          "name": "35C-",
+          "algorithm": "R BR' R2' F R2 Br R2' F' R"
+        },
+        {
+          "name": "35C+",
+          "algorithm": "R' F R2 BR' R2' F' R2 BR R'"
+        },
+        {
+          "name": "35D-",
+          "algorithm": "BR' R' U' R U R' U' R U BR"
+        },
+        {
+          "name": "35D+",
+          "algorithm": "F R U R' U' R U R' U' F'"
+        },
+        {
+          "name": "35E-",
+          "algorithm": "F R' F' U2' R U R' U R2 U2' R'"
+        },
+        {
+          "name": "35E+",
+          "algorithm": "R' U' R' F R F' R' F R F' U R"
+        },
+        {
+          "name": "35F-",
+          "algorithm": "R U R2' F R F' U F R' F' R"
+        },
+        {
+          "name": "35F+",
+          "algorithm": "F' U' F2 R' F' R U' R' F R F'"
+        }
+      ]
+    },
+    {
+      "subset": "Parrot Shapes",
+      "algorithms": [
+        {
+          "name": "36A-",
+          "algorithm": "R U R' U2 R' F R F' R U2 R'"
+        },
+        {
+          "name": "36A+",
+          "algorithm": "F U2' F' U' R' F R U2' R' F' R"
+        },
+        {
+          "name": "36B-",
+          "algorithm": "BR' U2' R' U2' R U R' U2' R U BR"
+        },
+        {
+          "name": "36B+",
+          "algorithm": "F R' F' U' F U R2 U R' U' R U' R' F'"
+        },
+        {
+          "name": "36C-",
+          "algorithm": "R U R' U2 R U' BR U' BR' U' R'"
+        },
+        {
+          "name": "36C+",
+          "algorithm": "R' U' R U2' R' U F' U F U R"
+        },
+        {
+          "name": "36D-",
+          "algorithm": "R' U2 R U2 R2' F R F' U R"
+        },
+        {
+          "name": "36D+",
+          "algorithm": "R U2' R' U' F R' F' R2 U2' R'"
+        },
+        {
+          "name": "36E-",
+          "algorithm": "R U2' R' U F' U' F U2 R' F R F'"
+        },
+        {
+          "name": "36E+",
+          "algorithm": "R U2 R' U R U' R2' F R F' R U2' R'"
+        },
+        {
+          "name": "36F-",
+          "algorithm": "F' R U2' R2' F R F' R U2 R' F"
+        },
+        {
+          "name": "36F+",
+          "algorithm": "R U2' R2' U2' R U' R' U2' F R F'"
+        }
+      ]
+    },
+    {
+      "subset": "L Shapes",
+      "algorithms": [
+        {
+          "name": "37A-",
+          "algorithm": "R U2' R2' F R F' U2' R U' R'"
+        },
+        {
+          "name": "37A+",
+          "algorithm": "R' U2' F R' F' R2 U R' U R"
+        },
+        {
+          "name": "37B-",
+          "algorithm": "y R U2' R' F' U' F U2' R' F R F'"
+        },
+        {
+          "name": "37B+",
+          "algorithm": "F R' F' R U2 R U' R' U R U2' R'"
+        },
+        {
+          "name": "37C-",
+          "algorithm": "R' U' R U' R2' F R F' U2 R"
+        },
+        {
+          "name": "37C+",
+          "algorithm": "R U R' U2 F R' F' R2 U2 R'"
+        },
+        {
+          "name": "37D-",
+          "algorithm": "R U2 R' U' R U2 R' F' U' F R U2' R'"
+        },
+        {
+          "name": "37D+",
+          "algorithm": "F R' F' U' R U2' R U2 R2' U R"
+        },
+        {
+          "name": "37E-",
+          "algorithm": "R' U' R U' R' U F' U' F U2 R"
+        },
+        {
+          "name": "37E+",
+          "algorithm": "F R' F' R U2' R U2' R' U R U2' R'"
+        }
+      ]
+    }
+  ],
+  "megaminx:PLL": [
+    {
+      "subset": "3 corner CP",
+      "algorithms": [
+        {
+          "name": "A1-",
+          "algorithm": "R' F' R U R U' R2' F R U R' F' R F U'"
+        },
+        {
+          "name": "A1+",
+          "algorithm": "F' R' F R U' R' F' R2 U R' U' R' F R"
+        },
+        {
+          "name": "A2-",
+          "algorithm": "BR' R2' U L U' R U L' U' R BR"
+        },
+        {
+          "name": "A2+",
+          "algorithm": "BR' R' U L U' R' U L' U' R2 BR"
+        }
+      ]
+    },
+    {
+      "subset": "Double R block",
+      "algorithms": [
+        {
+          "name": "B1-",
+          "algorithm": "R' U' R U R U2 R' U' R' U R2 U2' R'"
+        },
+        {
+          "name": "B1+",
+          "algorithm": "R U R' U' R' U2' R U R U' R2' U2 R"
+        },
+        {
+          "name": "B2-",
+          "algorithm": "R2' U' R2 U2' R' U2 R' U' R U R' U R2 U2' R' U' R"
+        },
+        {
+          "name": "B2+",
+          "algorithm": "R2 U R2' U2 R U2' R U R' U' R U' R2' U2 R U R'"
+        }
+      ]
+    },
+    {
+      "subset": "2 2x1s touching",
+      "algorithms": [
+        {
+          "name": "C1-",
+          "algorithm": "R' U2' R U R' U2 R U' R' U' R2 U R' U R' U' R2 U' R'"
+        },
+        {
+          "name": "C1+",
+          "algorithm": "R U2 R' U' R U2' R' U R U R2' U' R U' R U R2' U R"
+        },
+        {
+          "name": "C2-",
+          "algorithm": "R U R' U R' U2' R2 U R2' U R2 U2 R' U' R U2' R'"
+        },
+        {
+          "name": "C2+",
+          "algorithm": "R' U' R U' R U2 R2' U' R2 U' R2' U2' R U R' U2 R"
+        },
+        {
+          "name": "C3-",
+          "algorithm": "R2 U2' R2' U' R2 U R2' U2 R2 U R2' U2' R2 U2 R2'"
+        },
+        {
+          "name": "C3+",
+          "algorithm": "R2' U2 R2 U R2' U' R2 U2' R2' U' R2 U2 R2' U2' R2"
+        },
+        {
+          "name": "C4-",
+          "algorithm": "R2' U2 R2 U R2' U2 R2 U R2' U2' R2 U' R2' U2' R2"
+        },
+        {
+          "name": "C4+",
+          "algorithm": "R2' U2' R2 U' R2' U2' R2 U' R2' U2 R2 U R2' U2 R2"
+        },
+        {
+          "name": "C5-",
+          "algorithm": "R' U2' R U2' R' U2' R' U2' R U' R U R2' U2 R U R"
+        },
+        {
+          "name": "C5+",
+          "algorithm": "R U2 R' U2 R U2 R U2 R' U R' U' R2 U2' R' U' R'"
+        },
+        {
+          "name": "C6-",
+          "algorithm": "R' U R U2' R2' U' R U2' R' U R U R' U R U R"
+        },
+        {
+          "name": "C6+",
+          "algorithm": "R U' R' U2 R2 U R' U2 R U' R' U' R U' R' U' R'"
+        }
+      ]
+    },
+    {
+      "subset": "3x1 and 2x2",
+      "algorithms": [
+        {
+          "name": "D-",
+          "algorithm": "R' U2' R U R' U' R U' R' U2 R U2' R' U2' R"
+        },
+        {
+          "name": "D+",
+          "algorithm": "R U2 R' U' R U R' U R U2' R' U2 R U2 R'"
+        }
+      ]
+    },
+    {
+      "subset": "4 corner CP",
+      "algorithms": [
+        {
+          "name": "E1",
+          "algorithm": "R U R' U R' U' R F' R U R' U' R' F R2 U' R2' U R"
+        },
+        {
+          "name": "E2",
+          "algorithm": "y' R2 U R' U' y R U R' U' R U R' U' R U R' F U' F2'"
+        },
+        {
+          "name": "E3",
+          "algorithm": "L' R U2 R' U' R U R' U' R U R' U' R U' R' L"
+        }
+      ]
+    },
+    {
+      "subset": "3x1 and 2x1s",
+      "algorithms": [
+        {
+          "name": "F1-",
+          "algorithm": "R2 U2' R2' U' R2 U2' R2'"
+        },
+        {
+          "name": "F1+",
+          "algorithm": "R2 U2 R2' U R2 U2 R2'"
+        },
+        {
+          "name": "F2-",
+          "algorithm": "R' U' R U2' R U2 R2' U R U' R U2' R'"
+        },
+        {
+          "name": "F2+",
+          "algorithm": "R U R' U2 R' U2' R2 U' R' U R' U2 R"
+        },
+        {
+          "name": "F3-",
+          "algorithm": "R U2 R' U R' U' R2 U2' R' U2 R' U R"
+        },
+        {
+          "name": "F3+",
+          "algorithm": "R' U2' R U' R U R2' U2 R U2' R U' R'"
+        },
+        {
+          "name": "F4-",
+          "algorithm": "R' U' R U' R2' U2 R2 U2 R' U2' R' U2' R U2 R"
+        },
+        {
+          "name": "F4+",
+          "algorithm": "R U R' U R2 U2' R2' U2' R U2 R U2 R' U2' R'"
+        },
+        {
+          "name": "F5-",
+          "algorithm": "R' U2' R' U2 R U2 R U2' R2' U2' R2 U R' U R"
+        },
+        {
+          "name": "F5+",
+          "algorithm": "R U2 R U2' R' U2' R' U2 R2 U2 R2' U' R U' R'"
+        }
+      ]
+    },
+    {
+      "subset": "2x1 and headlights",
+      "algorithms": [
+        {
+          "name": "G1-",
+          "algorithm": "R U2' R2' U2 R U2' R U' R' U2' R U' R2' U2' R2 U2 R'"
+        },
+        {
+          "name": "G1+",
+          "algorithm": "R' U2 R2 U2' R' U2 R' U R U2 R' U R2 U2 R2' U2' R"
+        },
+        {
+          "name": "G2-",
+          "algorithm": "F U2' R' U' R F' R' U' R F U' R' U2' R U2 F'"
+        },
+        {
+          "name": "G2+",
+          "algorithm": "R U2' R' U' R U2' R2' U2 L U' R U L' R' U2' R"
+        }
+      ]
+    },
+    {
+      "subset": "5 piece EP/CP",
+      "algorithms": [
+        {
+          "name": "H1-",
+          "algorithm": "R U R' U R' U' R2 U' R' U R' U R U R U R' U R' U' R2 U' R' U R' U R"
+        },
+        {
+          "name": "H1+",
+          "algorithm": "R' dR R U R' dR' R U R' dR R U R' dR' R U R' dR R U R' dR' R"
+        },
+        {
+          "name": "H2-",
+          "algorithm": "R2' U2' R2 U R2' U R2 y R2 U R2' U R2 U2' R2'"
+        },
+        {
+          "name": "H2+",
+          "algorithm": "R2 U2 R2' U' R2 U' R2' y' R2' U' R2 U' R2' U2 R2"
+        }
+      ]
+    },
+    {
+      "subset": "2x1",
+      "algorithms": [
+        {
+          "name": "I1-",
+          "algorithm": "R2 U2' R2' U' R2 BR2' U R2' U' R2 U' BR2 U' R2'"
+        },
+        {
+          "name": "I1+",
+          "algorithm": "R2' U2 R2 U R2' F2 U' R2 U R2' U F2' U R2"
+        },
+        {
+          "name": "I2-",
+          "algorithm": "R2 U BR2' U R2' U R2 U' BR2 R2' U R2 U2 R2'"
+        },
+        {
+          "name": "I2+",
+          "algorithm": "R2' U' F2 U' R2 U' R2' U F2' R2 U' R2' U2' R2"
+        },
+        {
+          "name": "I3-",
+          "algorithm": "R U2' R2' U2' R U2 R U2 R' U2' R' U' R U2 R' U R"
+        },
+        {
+          "name": "I3+",
+          "algorithm": "R' U2 R2 U2 R' U2' R' U2' R U2 R U R' U2' R U' R'"
+        },
+        {
+          "name": "I4-",
+          "algorithm": "R' U2 R U R' U R' U2' R U R' U R2 U' R' U2 R"
+        },
+        {
+          "name": "I4+",
+          "algorithm": "R' U' R' U2' F' R U R U' R' F R' U2 R U R"
+        },
+        {
+          "name": "I5-",
+          "algorithm": "R' U2' R U R2' U' R U' R' U2 R U' R U' R' U2' R"
+        },
+        {
+          "name": "I5+",
+          "algorithm": "R' U' R' U2' R F' R U R' U' R' F U2 R U R"
+        },
+        {
+          "name": "I6-",
+          "algorithm": "R2' F2 R2 U' R2' F2' R2 U2 R2' F2 R2 U' R2' F2' R2"
+        },
+        {
+          "name": "I6+",
+          "algorithm": "R2 BR2' R2' U' R2 BR2 R2' U2 R2 BR2' R2' U' R2 BR2 R2'"
+        }
+      ]
+    },
+    {
+      "subset": "J Block",
+      "algorithms": [
+        {
+          "name": "J1-",
+          "algorithm": "F U' R' F R2 U' R' U' R U R' F' R U R' F'"
+        },
+        {
+          "name": "J1+",
+          "algorithm": "R U R' F' R U R' U' R' F R2 U' R'"
+        },
+        {
+          "name": "J2-",
+          "algorithm": "R U2 R' U2' R U' R' U' R' U2' R U R' U R2 U R'"
+        },
+        {
+          "name": "J2+",
+          "algorithm": "R' U2' R U2 R' U R U R U2 R' U' R U' R2' U' R"
+        },
+        {
+          "name": "J3-",
+          "algorithm": "F U F' R2' F U' F U' R2 U R2' U F2' R2"
+        },
+        {
+          "name": "J3+",
+          "algorithm": "R U R' U' R' U2' R U R U R2' U R2 U2 R2' U2' R"
+        }
+      ]
+    },
+    {
+      "subset": "5 corner CP",
+      "algorithms": [
+        {
+          "name": "K1-",
+          "algorithm": "R2 U2' R2' U' R2 U R2' U' R2 U R2' U' R2 U2' R2'"
+        },
+        {
+          "name": "K1+",
+          "algorithm": "R2' U2 R2 U R2' U' R2 U R2' U' R2 U R2' U2 R2"
+        },
+        {
+          "name": "K2-",
+          "algorithm": "R2 U2' R2' U' R2 U2' R' U R' U' R' F R2 U' R' U' R U R' F'"
+        },
+        {
+          "name": "K2+",
+          "algorithm": "R' U2 R U' R' U2 R U2' R' U' R U2' R' U R U2' R' U R"
+        }
+      ]
+    },
+    {
+      "subset": "Double headlights, no blocks",
+      "algorithms": [
+        {
+          "name": "L1",
+          "algorithm": "R' U2 R U R' U R U' R' U2 R U' R U R' U R U2' R'"
+        },
+        {
+          "name": "L2",
+          "algorithm": "R U2 R' U R U' R' U' R U' R2' U' R U' R' U' R U R' U2 R"
+        },
+        {
+          "name": "L3-",
+          "algorithm": "R U R' U' R' U2 R U R U R2' U R U' R U R' U' R U2' R'"
+        },
+        {
+          "name": "L3+",
+          "algorithm": "F U2' F' U2' R F R' U' R F' U2' R' U' R U2' R'"
+        },
+        {
+          "name": "L4-",
+          "algorithm": "R U2' R' U R U2 R U2 R' U R' U' R U' R U' R' U' R'"
+        },
+        {
+          "name": "L4+",
+          "algorithm": "R U R U R' U R' U R U' R U2' R' U2' R' U' R U2 R'"
+        },
+        {
+          "name": "L5-",
+          "algorithm": "R U2 R' U' R U' R2' U2 R U R' U' R U2 R' U R"
+        },
+        {
+          "name": "L5+",
+          "algorithm": "R' U2' R U R' U R2 U2' R' U' R U R' U2' R U' R'"
+        },
+        {
+          "name": "L6-",
+          "algorithm": "R' U' R U2' R' U R U' R' U2' R2 U R' U R U2' R'"
+        },
+        {
+          "name": "L6+",
+          "algorithm": "R U R' U2 R U' R' U R U2 R2' U' R U' R' U2 R"
+        }
+      ]
+    },
+    {
+      "subset": "2 3x1s",
+      "algorithms": [
+        {
+          "name": "M",
+          "algorithm": "R U R' U2' R' U2' R U R' U R2 U' R' U2 R U' R' U R U' R'"
+        }
+      ]
+    },
+    {
+      "subset": "5 2x1s",
+      "algorithms": [
+        {
+          "name": "N1-",
+          "algorithm": "R' U2 R' U2' R U' R' U2' R U2 R"
+        },
+        {
+          "name": "N1+",
+          "algorithm": "y2' R U2 R U2' R' U' R U2' R' U2 R'"
+        },
+        {
+          "name": "N2-",
+          "algorithm": "R' L' U2' R U' L R' U L' U2' R U2' L"
+        },
+        {
+          "name": "N2-",
+          "algorithm": "R L U2 L' U R' L U' R U2 L' U2 R'"
+        }
+      ]
+    },
+    {
+      "subset": "Skip",
+      "algorithms": []
+    },
+    {
+      "subset": "R Block",
+      "algorithms": [
+        {
+          "name": "P1-",
+          "algorithm": "R' U' R' F R U R U' R' y' R2' U' R U' R' U2 R BR"
+        },
+        {
+          "name": "P1+",
+          "algorithm": "R' F R2 U R' U R U2' R' U R' F' R F U' F'"
+        },
+        {
+          "name": "P2-",
+          "algorithm": "BR' R' U2' R U R' U R2 BR BL' BR' R' BR BL"
+        },
+        {
+          "name": "P2+",
+          "algorithm": "F U F' R' F R U' R U2 R' U' R U' R2' F' R"
+        },
+        {
+          "name": "P3-",
+          "algorithm": "R' U' R2 U' R2' U2 R U R U2' R U R2' U R2 U2' R2'"
+        },
+        {
+          "name": "P3+",
+          "algorithm": "R U R2' U R2 U2' R' U' R' U2 R' U' R2 U' R2' U2 R2"
+        },
+        {
+          "name": "P4-",
+          "algorithm": "R2 U2 R2' U' R2 U' R' U2 R' U' R' U2' R2 U R2' U R"
+        },
+        {
+          "name": "P4+",
+          "algorithm": "R2' U2' R2 U R2' U R U2' R U R U2 R2' U' R2 U' R'"
+        }
+      ]
+    },
+    {
+      "subset": "5 edge EP",
+      "algorithms": [
+        {
+          "name": "Q1-",
+          "algorithm": "R2 U2' R2' U' R2 U2' R2' U R2 U2' R2' U' R2 U2' R2'"
+        },
+        {
+          "name": "Q1+",
+          "algorithm": "R2' U2 R2 U R2' U2 R2 U' R2' U2 R2 U R2' U2 R2"
+        },
+        {
+          "name": "Q2-",
+          "algorithm": "R U2 R' U R U2 R2' U2 R U R' U2 R"
+        },
+        {
+          "name": "Q2+",
+          "algorithm": "R' U2' R U' R' U2' R2 U2' R' U' R U2' R'"
+        }
+      ]
+    },
+    {
+      "subset": "R block and 2x1",
+      "algorithms": [
+        {
+          "name": "R1-",
+          "algorithm": "R U2' R' U R2 U2' R2' U' R U R U2 R' U R'"
+        },
+        {
+          "name": "R1+",
+          "algorithm": "R' U2 R U' R2' U2 R2 U R' U' R' U2' R U' R"
+        },
+        {
+          "name": "R2-",
+          "algorithm": "R U' R U2' R' U' R' U R2 U2 R2' U' R U2 R'"
+        },
+        {
+          "name": "R2+",
+          "algorithm": "R' U R' U2 R U R U' R2' U2' R2 U R' U2' R"
+        },
+        {
+          "name": "R3-",
+          "algorithm": "R' U' R2 U' R' U' R' U R U R' U R2 U R' U R U' R'"
+        },
+        {
+          "name": "R3+",
+          "algorithm": "R U R2' U R U R U' R' U' R U' R2' U' R U' R' U R"
+        },
+        {
+          "name": "R4-",
+          "algorithm": "R U R' U' R U' R2' U' R U' R' U' R U R U R2' U R"
+        },
+        {
+          "name": "R4+",
+          "algorithm": "R' U' R U R' U R2 U R' U R U R' U' R' U' R2 U' R'"
+        }
+      ]
+    },
+    {
+      "subset": "2 2x1s, not touching",
+      "algorithms": [
+        {
+          "name": "S1-",
+          "algorithm": "R' U' R U2' R' U2' R U R U R' U R U2' R'"
+        },
+        {
+          "name": "S1+",
+          "algorithm": "R U R' U2 R U2 R' U' R' U' R U' R' U2 R"
+        },
+        {
+          "name": "S2-",
+          "algorithm": "R2' U2 R2 U2 R2' U R U2' R U R U2 R2' U' R2 U' R'"
+        },
+        {
+          "name": "S2+",
+          "algorithm": "R2 U2' R2' U2' R2 U' R' U2 R' U' R' U2' R2 U R2' U R"
+        },
+        {
+          "name": "S3-",
+          "algorithm": "R U R2' U R2 U2' R' U' R' U2 R' U' R2 U2' R2' U2' R2"
+        },
+        {
+          "name": "S3+",
+          "algorithm": "R' U' R2 U' R2' U2 R U R U2' R U R2' U2 R2 U2 R2'"
+        },
+        {
+          "name": "S4-",
+          "algorithm": "R2' U2 R2 U R2' U2 R2 U' R2' U2' R2 U' R2' U2' R2"
+        },
+        {
+          "name": "S4+",
+          "algorithm": "R2' U2' R2 U' R2' U2' R2 U R2' U2 R2 U R2' U2 R2"
+        },
+        {
+          "name": "S5-",
+          "algorithm": "R' U' R' U2' R2 U' R' U R' U2 R U2 R U2 R' U2 R"
+        },
+        {
+          "name": "S5+",
+          "algorithm": "R U R U2 R2' U R U' R U2' R' U2' R' U2' R U2' R'"
+        },
+        {
+          "name": "S6-",
+          "algorithm": "R' U' R' U' R U' R' U' R U2 R' U R2 U2 R' U' R"
+        },
+        {
+          "name": "S6+",
+          "algorithm": "R U R U R' U R U R' U2' R U' R2' U2' R U R'"
+        }
+      ]
+    },
+    {
+      "subset": "2,3 or 4 2x1s in these patterns",
+      "algorithms": [
+        {
+          "name": "T1",
+          "algorithm": "R U R' U' R' F R2 U' R' U' R U R' F'"
+        },
+        {
+          "name": "T2-",
+          "algorithm": "R2' F R U R U' R' F' R U2' R' U2 R"
+        },
+        {
+          "name": "T2+",
+          "algorithm": "R' U2' R U2 R' F R U R' U' R' F' R2"
+        },
+        {
+          "name": "T3-",
+          "algorithm": "R2 U2' R2' U' R2 U R2' U' R2 U2' R2'"
+        },
+        {
+          "name": "T3+",
+          "algorithm": "R2' U2 R2 U R2' U' R2 U R2' U2 R2"
+        },
+        {
+          "name": "T4-",
+          "algorithm": "R' U' R U2' R2' U2' R2 U' R2' U2' R2 U R' U R"
+        },
+        {
+          "name": "T4+",
+          "algorithm": "R U R' F' R U R' U' R' F R U' R' F R2 U' R' U' R U R' F'"
+        }
+      ]
+    },
+    {
+      "subset": "3 edge EP",
+      "algorithms": [
+        {
+          "name": "U1-",
+          "algorithm": "R U R' U R' U' R2 U' R' U R' U R"
+        },
+        {
+          "name": "U1+",
+          "algorithm": "R' U' R U' R U R2' U R U' R U' R'"
+        },
+        {
+          "name": "U2-",
+          "algorithm": "R U2 R' U R' U' R2 U' R' U R' U R U2' R U' R'"
+        },
+        {
+          "name": "U2+",
+          "algorithm": "R U R' U2 R' U' R U' R U R2' U R U' R U2' R'"
+        }
+      ]
+    },
+    {
+      "subset": "2x2 and 2x1",
+      "algorithms": [
+        {
+          "name": "V1-",
+          "algorithm": "R U2 R2' F R F' R U' R' F' U F R U' R'"
+        },
+        {
+          "name": "V1+",
+          "algorithm": "R' U2 R' dR' R U' R' dR R U R U' R' U' R"
+        },
+        {
+          "name": "V2-",
+          "algorithm": "R U' R' F U R U' R' F' R U R' F' U' F R U R'"
+        },
+        {
+          "name": "V2+",
+          "algorithm": "R' U R U R' U' R' dR' R U R' dR R U2' R"
+        },
+        {
+          "name": "V3-",
+          "algorithm": "R' U' R2' U R U R' U' R U R U' R2 U' R' U R'"
+        },
+        {
+          "name": "V3+",
+          "algorithm": "R U R2 U' R' U' R U R' U' R' U R2' U R U' R"
+        },
+        {
+          "name": "V4-",
+          "algorithm": "R U' R U R2' U R' U' R' U R U' R' U' R2 U R"
+        },
+        {
+          "name": "V4+",
+          "algorithm": "R' U R' U' R2 U' R U R U' R' U R U R2' U' R'"
+        }
+      ]
+    },
+    {
+      "subset": "2 2x2s",
+      "algorithms": [
+        {
+          "name": "W",
+          "algorithm": "R' U2' R' U2 R U2 R U' R2' U2 R2 U2 R' U R"
+        }
+      ]
+    },
+    {
+      "subset": "No blocks or headlights",
+      "algorithms": [
+        {
+          "name": "X1",
+          "algorithm": "F U2 R U2' R' U R U R' U2' F' R' U' R U2' R' U2' R"
+        },
+        {
+          "name": "X2",
+          "algorithm": "F R U R' F U R' U' F' U R2 U2' R' F'"
+        },
+        {
+          "name": "X3",
+          "algorithm": "R' U' R U' R' U2 R2 U R' U2 R' U2' R2 U' R' U2 R' U R"
+        },
+        {
+          "name": "X4",
+          "algorithm": "R' U' R2 U' R' U R U' R2' U' R2 U R' U' R U R2' U2 R"
+        },
+        {
+          "name": "X5-",
+          "algorithm": "R2' U' R U2' R' U R U R' U R2 U' R' U2' R U2' R' U' R"
+        },
+        {
+          "name": "X5+",
+          "algorithm": "R' U R U2 R' U2 R U R2' U' R U' R' U' R U2 R' U R2"
+        },
+        {
+          "name": "X6-",
+          "algorithm": "R U2' R U R2' U R U R' U' R U' R U' R2' U R U2 R'"
+        },
+        {
+          "name": "X6+",
+          "algorithm": "R' U2 R' U' R2 U' R' U' R U R' U R' U R2 U' R' U2' R"
+        },
+        {
+          "name": "X7-",
+          "algorithm": "R U R2' F' R U2' R U' R' U2' R' F R U R U R' U2' R U' R'"
+        },
+        {
+          "name": "X7+",
+          "algorithm": "R U R' U' F' U' F U R U R' U R U2' F R' F' R U R U' R2'"
+        }
+      ]
+    },
+    {
+      "subset": "2 2x1s in Y pattern and other stuff",
+      "algorithms": [
+        {
+          "name": "Y1-",
+          "algorithm": "F R' F' R U R U' R' F R U' R' U R U R' F'"
+        },
+        {
+          "name": "Y1+",
+          "algorithm": "F R U' R' U' R U R' F' R U R' U' R' F R F'"
+        },
+        {
+          "name": "Y2-",
+          "algorithm": "R2' U2 R2 U2' R2' U R2 U2' R2' U2 R2"
+        },
+        {
+          "name": "Y2+",
+          "algorithm": "R2 U2' R2' U2 R2 U' R2' U2 R2 U2' R2'"
+        },
+        {
+          "name": "Y3-",
+          "algorithm": "R2' U' R2 U' R2' U2 R2 U2' R2' U' R2 U' R2' U2 R2"
+        },
+        {
+          "name": "Y3+",
+          "algorithm": "y R2 U R2' U R2 U2' R2' U2 R2 U R2' U R2 U2' R2'"
+        }
+      ]
+    },
+    {
+      "subset": "4 edge EP",
+      "algorithms": [
+        {
+          "name": "Z1",
+          "algorithm": "R' U' F R U' R' U' R U2 R' F' R F U' F' R' U2 R"
+        },
+        {
+          "name": "Z2",
+          "algorithm": "R' U2' R' U' R F R' F' U R F' U' F U2' R"
+        },
+        {
+          "name": "Z3",
+          "algorithm": "R' L' U2 L U R BR F U2' BR' U' F'"
+        }
+      ]
+    }
   ]
 }

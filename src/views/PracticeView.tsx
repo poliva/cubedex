@@ -1,3 +1,4 @@
+import { PUZZLES, type PuzzleId } from '../lib/puzzles';
 import { Fragment, memo, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { AppSettingsState } from '../hooks/useAppSettings';
 import type { PracticeTogglesState } from '../hooks/usePracticeToggles';
@@ -61,6 +62,7 @@ const STATUS_BAR_REMINDER_LINE_STYLE: CSSProperties = {
 };
 
 export const PracticeView = memo(function PracticeView({
+  puzzle = '3x3x3',
   visible,
   options,
   practiceToggles,
@@ -96,6 +98,7 @@ export const PracticeView = memo(function PracticeView({
   onCycleLearnedState,
   currentCaseLearnedState,
 }: {
+  puzzle?: PuzzleId;
   visible: boolean;
   options: AppSettingsState;
   practiceToggles: PracticeTogglesState;
@@ -247,7 +250,14 @@ export const PracticeView = memo(function PracticeView({
       </>
     );
   } else if (scramble.scrambleMode) {
-    statusBody = <span style={STATUS_BAR_MOVES_LINE_STYLE}>{scramble.scrambleText}</span>;
+    statusBody = (
+      <>
+        <span style={STATUS_BAR_MOVES_LINE_STYLE}>{scramble.scrambleText}</span>
+        {!PUZZLES[puzzle].smartcube && (
+          <span style={STATUS_BAR_REMINDER_LINE_STYLE}>Apply from solved, then press Train.</span>
+        )}
+      </>
+    );
   } else {
     statusBody = null;
   }
@@ -267,14 +277,14 @@ export const PracticeView = memo(function PracticeView({
       <div className={training.countdownActive ? 'cube-area-content cube-area-content--hidden' : 'cube-area-content'}
         aria-hidden={training.countdownActive}>
         <MainCubeArea
-          puzzle={smartcube.cubeSize === 2 ? '2x2x2' : '3x3x3'}
+          puzzle={puzzle}
           alg={mainCubeAlg}
           sizePx={options.cubeSizePx}
-          visualization={options.visualization}
+          visualization={!PUZZLES[puzzle].lastLayerPreview && options.visualization.includes('LL') ? '3D' : options.visualization}
           hintFacelets={options.hintFacelets}
           controlPanel={options.controlPanel}
-          experimentalStickering={smartcube.cubeSize === 2 ? 'full' : selectedStickering}
-          setupAlg={options.whiteOnBottom ? 'z2' : ''}
+          experimentalStickering={puzzle !== '3x3x3' ? 'full' : selectedStickering}
+          setupAlg={PUZZLES[puzzle].cube && options.whiteOnBottom ? 'z2' : ''}
           backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
           resetToken={`${smartcube.connected}:${training.visualResetKey}`}
           orientationResetToken={orientationResetToken}
@@ -332,7 +342,7 @@ export const PracticeView = memo(function PracticeView({
         title="Train"
         onClick={() => {
           setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-          if (scramble.scrambleMode && !options.alwaysScrambleTo) {
+          if (scramble.scrambleMode && (!options.alwaysScrambleTo || !PUZZLES[puzzle].smartcube)) {
             scramble.clearScramble();
             lastProcessedScrambleMoveRef.current = '';
           }
@@ -428,7 +438,7 @@ export const PracticeView = memo(function PracticeView({
 
       {segDivider}
 
-      <button
+      {PUZZLES[puzzle].available && <button
         id="scramble-to"
         type="button"
         title="Scramble To..."
@@ -437,12 +447,12 @@ export const PracticeView = memo(function PracticeView({
           void scramble.startScrambleTo(
             alreadyPreparedAlg || training.algInput,
             training.currentCase,
-            smartcube.currentPattern,
-            !alreadyPreparedAlg && practiceToggles.randomizeAUF,
+            PUZZLES[puzzle].smartcube ? smartcube.currentPattern : null,
+            !alreadyPreparedAlg && PUZZLES[puzzle].randomAUF && practiceToggles.randomizeAUF,
           ).then((started) => {
             if (!started) return;
             setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-            setScrambleStartAlg(smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : '');
+            setScrambleStartAlg(PUZZLES[puzzle].smartcube && smartcube.currentPattern ? patternToPlayerAlg(smartcube.currentPattern) : '');
             lastProcessedScrambleMoveRef.current = '';
             training.prepareForScramble();
           });
@@ -454,7 +464,7 @@ export const PracticeView = memo(function PracticeView({
         }}
       >
         {scramble.isComputing ? '…' : <Icon d={IC.wand} size={isMobile ? 20 : 18} />}
-      </button>
+      </button>}
     </div>
   );
 
@@ -527,7 +537,8 @@ export const PracticeView = memo(function PracticeView({
         label="Smart Order"
       />
       <Toggle
-        checked={practiceToggles.randomizeAUF}
+        checked={PUZZLES[puzzle].randomAUF && practiceToggles.randomizeAUF}
+        disabled={!PUZZLES[puzzle].randomAUF}
         onChange={(checked) => practiceToggles.setRandomizeAUF(checked)}
         label="Random AUF"
       />
@@ -596,7 +607,7 @@ export const PracticeView = memo(function PracticeView({
             {practiceToggles.smartReviewScheduling && !practiceToggles.timeAttack && (
               <span style={activeToggleChipStyle}>Smart Order</span>
             )}
-            {practiceToggles.randomizeAUF && (
+            {PUZZLES[puzzle].randomAUF && practiceToggles.randomizeAUF && (
               <span style={activeToggleChipStyle}>Random AUF</span>
             )}
             {practiceToggles.randomOrder && !practiceToggles.smartReviewScheduling && (
@@ -759,6 +770,7 @@ export const PracticeView = memo(function PracticeView({
         {/* New alg editor */}
         <div style={{ margin: '0 12px 10px' }}>
           <NewAlgView
+        puzzle={puzzle}
             visible={showAlgEditor}
             algorithmActions={algorithmActions}
             onSave={onAlgEditorSave}
@@ -1004,6 +1016,7 @@ export const PracticeView = memo(function PracticeView({
       {/* New alg editor inline */}
       <div style={{ width: '100%', maxWidth: 'var(--practice-alg-track-max)' }}>
         <NewAlgView
+        puzzle={puzzle}
           visible={showAlgEditor}
           algorithmActions={algorithmActions}
           onSave={onAlgEditorSave}

@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useState } from 'react';
+import { PUZZLES, type PuzzleId } from '../lib/puzzles';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Alg } from 'cubing/alg';
 import type { KPattern } from 'cubing/kpuzzle';
 import { cube3x3x3 } from 'cubing/puzzles';
@@ -7,6 +8,7 @@ import { solvedPattern } from '../lib/cube-utils';
 import { getScrambleToSolution } from '../lib/scramble';
 import { prepareTrainingAlgorithm } from '../lib/auf';
 import { countMovesETM } from '../lib/charts';
+import { expandNotation } from '../lib/storage';
 
 /** First half of a planned face double (e.g. B of B2); excludes wide/slice tokens like Rw2. */
 function isFirstQuarterOfPlannedDouble(plannedFirst: string, move: string): boolean {
@@ -68,7 +70,8 @@ export interface ScrambleState {
   clearScramble: () => void;
 }
 
-export function useScrambleState(): ScrambleState {
+export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
+  const generationRef = useRef(0);
   const [scrambleMode, setScrambleMode] = useState(false);
   const [scrambleText, setScrambleText] = useState('');
   const [isComputing, setIsComputing] = useState(false);
@@ -81,7 +84,9 @@ export function useScrambleState(): ScrambleState {
     currentPattern?: KPattern | null,
     randomizeAUF = false,
   ) => {
-    if (!algorithm.trim()) {
+    const generation = ++generationRef.current;
+    if (!PUZZLES[puzzle].available || !algorithm.trim()) {
+      setIsComputing(false);
       setScrambleMode(false);
       setScrambleText('');
       setTargetAlgorithm('');
@@ -91,20 +96,27 @@ export function useScrambleState(): ScrambleState {
 
     setIsComputing(true);
     try {
-      const pattern = currentPattern ?? await solvedPattern();
-
       let aufModifiedAlgorithm = algorithm;
       if (randomizeAUF && currentCase?.category) {
         const prepared = await prepareTrainingAlgorithm(
           algorithm.split(/\s+/).filter(Boolean),
           currentCase.category,
           true,
+          [],
+          puzzle,
         );
         aufModifiedAlgorithm = prepared.displayAlgorithm;
       }
 
-      const scramble = await getScrambleToSolution(aufModifiedAlgorithm, pattern);
+      // Puzzles without live state tracking use a setup from solved.
+      const scramble = PUZZLES[puzzle].smartcube
+        ? await getScrambleToSolution(
+          aufModifiedAlgorithm,
+          currentPattern ?? await solvedPattern(puzzle === '2x2x2' ? 2 : 3),
+        )
+        : Alg.fromString(expandNotation(aufModifiedAlgorithm, puzzle)).invert().toString().trim();
 
+      if (generation !== generationRef.current) return false;
       if (scramble.length > 0) {
         setScrambleMode(true);
         setScrambleText(scramble);
@@ -119,16 +131,18 @@ export function useScrambleState(): ScrambleState {
         return false;
       }
     } finally {
-      setIsComputing(false);
+      if (generation === generationRef.current) setIsComputing(false);
     }
-  }, []);
+  }, [puzzle]);
 
   const advanceScramble = useCallback(async (move: string, currentPattern: KPattern | null) => {
-    if (!scrambleMode || !scrambleText.trim() || !currentPattern || !targetAlgorithm.trim()) {
+    if (!PUZZLES[puzzle].smartcube || !scrambleMode || !scrambleText.trim() || !currentPattern || !targetAlgorithm.trim()) {
       return false;
     }
 
+    const generation = generationRef.current;
     const rawNextScramble = await getScrambleToSolution(targetAlgorithm, currentPattern);
+    if (generation !== generationRef.current) return false;
     let nextScramble = rawNextScramble;
     const currentScrambleMoves = scrambleText.split(' ').filter(Boolean);
     const recomputedMoves = nextScramble.split(' ').filter(Boolean);
@@ -181,9 +195,11 @@ export function useScrambleState(): ScrambleState {
       setHelpTone('hidden');
     }
     return completed;
-  }, [scrambleMode, scrambleText, targetAlgorithm]);
+  }, [puzzle, scrambleMode, scrambleText, targetAlgorithm]);
 
   const clearScramble = useCallback(() => {
+    generationRef.current += 1;
+    setIsComputing(false);
     setScrambleMode(false);
     setScrambleText('');
     setTargetAlgorithm('');

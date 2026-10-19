@@ -156,10 +156,20 @@ describe('preview cache', () => {
     await previewCache.requestPreview(firstParams);
     await previewCache.requestPreview(secondParams);
 
-    expect(firstKey).toBe(`v${previewCache.PREVIEW_CACHE_VERSION}|3D|PLL|end|R U R'`);
-    expect(secondKey).toBe(`v${previewCache.PREVIEW_CACHE_VERSION}|3D|full|end|R U R'`);
+    expect(firstKey).toBe(`v${previewCache.PREVIEW_CACHE_VERSION}|3x3x3|3D|PLL|end|R U R'`);
+    expect(secondKey).toBe(`v${previewCache.PREVIEW_CACHE_VERSION}|3x3x3|3D|full|end|R U R'`);
     expect(firstKey).not.toBe(secondKey);
     expect(experimentalScreenshotMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('never reuses another puzzle’s image for the same algorithm', async () => {
+    const previewCache = await loadPreviewCacheModule();
+    const params = { alg: "R U R'", visualization: '3D', stickering: 'full' };
+    await previewCache.requestPreview({ ...params, puzzle: '3x3x3' });
+    await previewCache.requestPreview({ ...params, puzzle: '2x2x2' });
+    expect(experimentalScreenshotMock).toHaveBeenCalledTimes(2);
+    expect(previewCache.previewKey({ ...params, puzzle: '3x3x3' }))
+      .not.toBe(previewCache.previewKey({ ...params, puzzle: '2x2x2' }));
   });
 
   it('does not persist or retain empty previews', async () => {

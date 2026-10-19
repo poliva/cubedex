@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { Alg } from 'cubing/alg';
 import { patternToFacelets, solvedPattern } from '../../src/lib/cube-utils';
 import { fixOrientation, getScrambleToSolution, patternToPlayerAlg } from '../../src/lib/scramble';
 
@@ -43,14 +44,45 @@ describe('2×2 scramble helpers', () => {
       expect(fixOrientation(pattern.applyAlg('x y')).isIdentical(fixOrientation(pattern))).toBe(true);
     });
 
-  it.each(['', 'R', "R U R' F D2"])
+  it.each(['', 'R', "R U R' F D2", 'x y', "F U2 R' F2 U R2"])
     ('scrambles from %s to the requested case and completes', async (initialAlg) => {
       const solved = await solvedPattern(2);
       const start = solved.applyAlg(initialAlg);
       const algorithm = "R U R' U'";
       const scramble = await getScrambleToSolution(algorithm, start);
       const target = start.applyAlg(scramble);
-      expect(target.applyAlg(algorithm).isIdentical(solved)).toBe(true);
+      expect(scramble.split(/\s+/).filter(Boolean).every((move) => /^[URF](2|')?$/.test(move))).toBe(true);
+      const expected = solved.applyAlg("U R U' R'");
+      expect(fixOrientation(target).isIdentical(fixOrientation(expected))).toBe(true);
+      if (!initialAlg || /^[URF2' ]+$/.test(initialAlg)) {
+        expect(target.applyAlg(algorithm).isIdentical(solved)).toBe(true);
+      }
       expect(await getScrambleToSolution(algorithm, target)).toBe('');
     });
+});
+
+
+describe('2×2 sensor setup notation', () => {
+  it.each([
+    "R U R' U'",
+    "L D B' U2 R",
+    "x y R U2 R' F2",
+    "R2 F2 R2",
+  ])('reaches the case for %s using only U/R/F, including intermediate recomputations', async (algorithm) => {
+    const solved = await solvedPattern(2);
+    const expected = solved.applyAlg(Alg.fromString(algorithm).invert());
+    let state = solved.applyAlg("R F' U2");
+    const setup = await getScrambleToSolution(algorithm, state);
+    const moves = setup.split(/\s+/).filter(Boolean);
+    expect(moves.length).toBeGreaterThan(0);
+    expect(moves.every((move) => /^[URF](2|')?$/.test(move))).toBe(true);
+    for (const move of moves) {
+      state = state.applyMove(move);
+      const remaining = await getScrambleToSolution(algorithm, state);
+      expect(remaining.split(/\s+/).filter(Boolean).every((turn) => /^[URF](2|')?$/.test(turn))).toBe(true);
+      expect(fixOrientation(state.applyAlg(remaining)).isIdentical(fixOrientation(expected))).toBe(true);
+    }
+    expect(fixOrientation(state).isIdentical(fixOrientation(expected))).toBe(true);
+    expect(await getScrambleToSolution(algorithm, state)).toBe('');
+  });
 });

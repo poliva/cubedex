@@ -1,3 +1,4 @@
+import { categoryPuzzle, PUZZLES, type PuzzleId } from '../lib/puzzles';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alg } from 'cubing/alg';
 import type { KPattern } from 'cubing/kpuzzle';
@@ -97,6 +98,7 @@ interface TrainingFlashRequest {
 }
 
 export interface TrainingPracticeOptions {
+  puzzle?: PuzzleId;
   selectionChangeMode: 'bulk' | 'manual';
   countdownMode: boolean;
   randomizeAUF: boolean;
@@ -616,6 +618,7 @@ export function useTrainingState(
   const countdownGenerationRef = useRef(0);
   const isKeyboardTimerActiveRef = useRef(false);
   const ignoreNextSpaceKeyUpRef = useRef(false);
+  const trainingGenerationRef = useRef(0);
   const initialPatternRef = useRef<KPattern | null>(null);
   const patternStatesRef = useRef<KPattern[]>([]);
   // Hash of each pattern in `patternStatesRef` → index in that array.
@@ -1298,6 +1301,7 @@ export function useTrainingState(
   }
 
   function enterInputMode(algorithm = algInput || displayAlg) {
+    trainingGenerationRef.current += 1;
     cancelCountdown();
     clearProgressState();
     clearRecognitionTracking();
@@ -1311,7 +1315,7 @@ export function useTrainingState(
     setLastSolveIsPb(false);
     setLastSolveAlgName(null);
     setTimerStateInternal('IDLE');
-    setAlgInputState(expandNotation(algorithm.trim()));
+    setAlgInputState(expandNotation(algorithm.trim(), options.puzzle ?? categoryPuzzle(category)));
   }
 
   function revealTrainingCase(displayAlgorithm: string, normalizedAlgorithm: string, trainOptions?: TrainCurrentOptions) {
@@ -1332,8 +1336,9 @@ export function useTrainingState(
   }
 
   async function trainCurrent(initialPattern?: KPattern | null, trainOptions?: TrainCurrentOptions) {
+    const generation = ++trainingGenerationRef.current;
     const rawAlgorithm = trainOptions?.algorithm ?? algInput;
-    const normalizedAlgorithm = expandNotation(rawAlgorithm.trim());
+    const normalizedAlgorithm = expandNotation(rawAlgorithm.trim(), options.puzzle ?? categoryPuzzle(category));
     cancelCountdown();
     if (!normalizedAlgorithm) {
       setInputMode(true);
@@ -1355,22 +1360,28 @@ export function useTrainingState(
           normalizedAlgorithm.split(/\s+/).filter(Boolean),
           category,
           options.randomizeAUF,
+          [],
+          options.puzzle ?? categoryPuzzle(category),
         );
 
-    let basePattern: KPattern;
-    if (keepInitialStateRef.current && initialPattern) {
-      basePattern = initialPattern;
-      keepInitialStateRef.current = false;
-    } else {
-      basePattern = initialPattern
-        ?? (options.smartcubeConnected ? options.currentPattern ?? initialPatternRef.current : initialPatternRef.current ?? options.currentPattern)
-        ?? await solvedPattern();
+    const puzzle = options.puzzle ?? categoryPuzzle(category);
+    let basePattern: KPattern | null = null;
+    if (PUZZLES[puzzle].smartcube) {
+      if (keepInitialStateRef.current && initialPattern) {
+        basePattern = initialPattern;
+        keepInitialStateRef.current = false;
+      } else {
+        basePattern = initialPattern
+          ?? (options.smartcubeConnected ? options.currentPattern ?? initialPatternRef.current : initialPatternRef.current ?? options.currentPattern)
+          ?? await solvedPattern(puzzle === '2x2x2' ? 2 : 3);
+      }
     }
+    if (generation !== trainingGenerationRef.current) return;
     initialPatternRef.current = basePattern;
     originalAlgTextRef.current = normalizedAlgorithm;
     originalAlgIdRef.current = trainOptions?.statsScopeId
       ?? currentCaseRef.current?.id
-      ?? createGlobalScopeId(normalizedAlgorithm);
+      ?? createGlobalScopeId(normalizedAlgorithm, options.puzzle ?? categoryPuzzle(category));
 
     clearProgressState();
     clearRecognitionTracking();
@@ -1378,11 +1389,15 @@ export function useTrainingState(
     setScrambleMode(false);
 
     expectedMovesRef.current = prepared.moves.map(sanitizeMove);
-    let previousPattern = basePattern;
-    patternStatesRef.current = expectedMovesRef.current.map((move) => {
-      previousPattern = previousPattern.applyMove(move);
-      return fixOrientation(previousPattern);
-    });
+    // Keyboard-only puzzles do not need the cube-specific Bluetooth state matcher.
+    patternStatesRef.current = [];
+    if (basePattern) {
+      let previousPattern = basePattern;
+      patternStatesRef.current = expectedMovesRef.current.map((move) => {
+        previousPattern = previousPattern.applyMove(move);
+        return fixOrientation(previousPattern);
+      });
+    }
     // Rebuild the hash index in lockstep so `handleSmartcubeMove` can do O(1) lookups
     // instead of an O(n) `isIdentical` scan across pattern states.
     patternHashMapRef.current.clear();
@@ -1458,6 +1473,7 @@ export function useTrainingState(
       clearStatsIdentity();
       initialPatternRef.current = null;
       clearProgressState();
+      trainingGenerationRef.current += 1;
       logCurrentSmartQueue('selected cases were cleared');
       return;
     }
@@ -1920,6 +1936,7 @@ export function useTrainingState(
   }
 
   function resetDrill() {
+    trainingGenerationRef.current += 1;
     cancelCountdown();
     clearProgressState();
     clearRecognitionTracking();

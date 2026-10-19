@@ -1,12 +1,12 @@
 import { memo } from 'react';
-import type { CubePuzzle } from '../lib/cube-utils';
+import type { PuzzleId } from '../lib/puzzles';
 import type { MutableRefObject } from 'react';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { TwistyCube } from '../components/TwistyCube';
 import type { SmartcubeQuaternion } from '../hooks/useSmartcubeConnection';
 
 interface MainCubeAreaProps {
-  puzzle?: CubePuzzle;
+  puzzle?: PuzzleId;
   alg: string;
   sizePx: number;
   visualization: string;

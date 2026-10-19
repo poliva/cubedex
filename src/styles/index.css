@@ -2571,3 +2571,32 @@ html.dark .footer {
     grid-template-columns: 1fr;
   }
 }
+
+/* Shared puzzle context stays visible across practice, library and editor. */
+.puzzle-selector {
+  flex-shrink: 0;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.puzzle-selector-control { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.puzzle-selector label { font-size: 11px; font-weight: 700; color: var(--fg3); }
+.puzzle-selector select {
+  min-width: 120px;
+  padding: 6px 30px 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--raised);
+  color: var(--fg);
+  font: 600 13px var(--font, sans-serif);
+  cursor: pointer;
+}
+.puzzle-selector select:disabled { opacity: 1; cursor: default; }
+.puzzle-selector select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.puzzle-selector p { margin: 6px 0 0; color: var(--fg3); font-size: 11px; line-height: 1.5; }
+.puzzle-mode-badge { display: inline-flex; align-items: center; gap: 6px; color: var(--fg3); font-size: 11px; }
+.puzzle-mode-badge.is-connected { color: var(--ok); }
+@media (max-width: 767px) { .puzzle-selector { padding: 8px 12px; } }
+.puzzle-library-empty { margin: 20px auto; padding: 32px 24px; max-width: 430px; text-align: center; border: 1px dashed var(--border); border-radius: 16px; color: var(--fg3); }
+.puzzle-library-empty h2 { color: var(--fg); font-size: 18px; margin: 12px 0 8px; }
+.puzzle-library-empty p { font-size: 13px; line-height: 1.6; margin-bottom: 20px; }

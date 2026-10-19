@@ -1,3 +1,5 @@
+import { Alg } from 'cubing/alg';
+import { categoryPuzzle, type PuzzleId } from './puzzles';
 import {
   BACKUP_FORMAT_VERSION,
   type AttemptHistoryEntry,
@@ -330,7 +332,14 @@ let storageReady = false;
 let initializePromise: Promise<{ migratedSavedAlgorithmsV1: boolean; alertMessage: string | null }> | null = null;
 let writeQueue: Promise<void> = Promise.resolve();
 
-export function expandNotation(input: string): string {
+export function expandNotation(input: string, puzzle: PuzzleId = '3x3x3'): string {
+  // Preserve wide/layer turns, multi-letter Megaminx faces and puzzle-specific syntax.
+  // The legacy formatter remains unchanged for 2×2/3×3 to preserve stored case IDs.
+  if ((puzzle !== '2x2x2' && puzzle !== '3x3x3') || /[,/]/.test(input)) {
+    const normalized = input.replace(/["´`‘’]/g, "'").replace(/'2/g, "2'").trim();
+    try { return Alg.fromString(normalized).toString(); }
+    catch { return normalized; } // Keep invalid input visible so the editor can report it.
+  }
   // Replace characters
   let output = input.replace(/["´`‘]/g, "'")  // Replace " ´ ` ‘ with '
                     .replace(/\[/g, "(")      // Replace [ with (
@@ -372,8 +381,8 @@ export function algToId(alg: string): string {
   return alg?.trim().replace(/\s+/g, '-').replace(/[']/g, 'p').replace(/[(/]/g, 'o').replace(/[)]/g, 'c');
 }
 
-export function getAlgorithmId(algorithm: string) {
-  return algToId(expandNotation(algorithm)) || DEFAULT_ALG_ID;
+export function getAlgorithmId(algorithm: string, puzzle: PuzzleId = '3x3x3') {
+  return algToId(expandNotation(algorithm, puzzle)) || DEFAULT_ALG_ID;
 }
 
 function cloneSavedAlgorithms(savedAlgorithms: SavedAlgorithms): SavedAlgorithms {
@@ -405,8 +414,9 @@ export function createScopeId(category: string, subset: string, algId: string) {
   return `${CASE_SCOPE_PREFIX}${encodeURIComponent(category)}:${encodeURIComponent(subset)}:${algId || DEFAULT_ALG_ID}`;
 }
 
-export function createGlobalScopeId(algorithm: string) {
-  return `${GLOBAL_SCOPE_PREFIX}${getAlgorithmId(algorithm)}`;
+export function createGlobalScopeId(algorithm: string, puzzle: PuzzleId = '3x3x3') {
+  const puzzlePrefix = puzzle === '3x3x3' ? '' : `${puzzle}:`;
+  return `${GLOBAL_SCOPE_PREFIX}${puzzlePrefix}${getAlgorithmId(algorithm, puzzle)}`;
 }
 
 export function createTimeAttackScopeId(category: string, selectedCaseIds: string[]) {
@@ -597,7 +607,7 @@ function buildScopeIdsFromLibrary(savedAlgorithms: SavedAlgorithms) {
   for (const [category, subsets] of Object.entries(savedAlgorithms)) {
     for (const subset of subsets) {
       for (const algorithm of subset.algorithms) {
-        scopeIds.add(createScopeId(category, subset.subset, getAlgorithmId(algorithm.algorithm)));
+        scopeIds.add(createScopeId(category, subset.subset, getAlgorithmId(algorithm.algorithm, categoryPuzzle(category))));
       }
     }
   }
@@ -715,7 +725,7 @@ function buildMigratedStatsRecords(savedAlgorithms: SavedAlgorithms) {
   for (const [category, subsets] of Object.entries(savedAlgorithms)) {
     for (const subset of subsets) {
       for (const algorithm of subset.algorithms) {
-        const algId = getAlgorithmId(algorithm.algorithm);
+        const algId = getAlgorithmId(algorithm.algorithm, categoryPuzzle(category));
         const scopeId = createScopeId(category, subset.subset, algId);
         records.push({
           scopeId,
@@ -756,6 +766,9 @@ export async function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) 
     initializePromise = (async () => {
       const database = await openCubedexDatabase();
       const migrated = await getMetaValue<boolean>(database, LS_MIGRATION_DONE_KEY);
+      const bundledCategories = Object.keys(defaultAlgs)
+        .filter((category) => categoryPuzzle(category) !== '3x3x3');
+      const categoryDefaultsKey = (category: string) => `algSetDefaults:${category}:v1`;
 
       if (!migrated) {
         migrateLastFiveTimesToLastTimes();
@@ -770,6 +783,7 @@ export async function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) 
         await replaceLibraryAndStatsInDb(database, nextSavedAlgorithms, nextStats, [
           { key: LS_MIGRATION_DONE_KEY, value: true },
           { key: LS_MIGRATION_DONE_AT_KEY, value: new Date().toISOString() },
+          ...bundledCategories.map((category) => ({ key: categoryDefaultsKey(category), value: true })),
         ]);
 
         removeLegacyStorageKeys();
@@ -783,12 +797,22 @@ export async function initializeDefaultAlgorithms(defaultAlgs: SavedAlgorithms) 
 
       const savedAlgorithmsFromDb = await loadSavedAlgorithmsFromDb(database);
       savedAlgorithmsCache = cloneSavedAlgorithms(savedAlgorithmsFromDb ?? defaultAlgs);
+      // Track sets individually so a new set can be added to an existing puzzle.
+      const puzzleDefaultsMeta: Array<{ key: string; value: boolean }> = [];
+      for (const category of bundledCategories) {
+        const key = categoryDefaultsKey(category);
+        if (await getMetaValue<boolean>(database, key)) continue;
+        if (!savedAlgorithmsCache[category]) {
+          savedAlgorithmsCache[category] = cloneSavedAlgorithms({ [category]: defaultAlgs[category] })[category];
+        }
+        puzzleDefaultsMeta.push({ key, value: true });
+      }
       invalidateSavedAlgorithmsSnapshot();
 
       const statsRecords = await loadAllStatsFromDb(database);
       loadStatsCache(statsRecords);
       pruneOrphanStatsRecords(savedAlgorithmsCache);
-      await replaceLibraryAndStatsInDb(database, savedAlgorithmsCache, snapshotStatsRecords());
+      await replaceLibraryAndStatsInDb(database, savedAlgorithmsCache, snapshotStatsRecords(), puzzleDefaultsMeta);
       storageReady = true;
 
       return {
@@ -870,7 +894,7 @@ export async function saveAlgorithm(category: string, subset: string, name: stri
 export async function deleteAlgorithm(category: string, algorithm: string) {
   await ensureStorageReady();
 
-  const normalizedAlgorithm = expandNotation(algorithm);
+  const normalizedAlgorithm = expandNotation(algorithm, categoryPuzzle(category));
   const normalizedAlgId = algToId(normalizedAlgorithm) || DEFAULT_ALG_ID;
   const savedAlgorithms = cloneSavedAlgorithms(savedAlgorithmsCache);
 
@@ -882,7 +906,7 @@ export async function deleteAlgorithm(category: string, algorithm: string) {
     .map((subset) => ({
       subset: subset.subset,
       algorithms: subset.algorithms.filter(
-        (entry) => expandNotation(entry.algorithm) !== normalizedAlgorithm,
+        (entry) => expandNotation(entry.algorithm, categoryPuzzle(category)) !== normalizedAlgorithm,
       ),
     }))
     .filter((subset) => subset.algorithms.length > 0);

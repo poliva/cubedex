@@ -1,3 +1,4 @@
+import type { PuzzleId } from '../lib/puzzles';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import {
   getPreview,
@@ -8,6 +9,7 @@ import {
 } from '../lib/preview-cache';
 
 interface Props {
+  puzzle?: PuzzleId;
   alg: string;
   visualization: string;
   stickering: string;
@@ -16,6 +18,7 @@ interface Props {
 }
 
 export function CaseCardPreview({
+  puzzle = '3x3x3',
   alg,
   visualization,
   stickering,
@@ -24,7 +27,7 @@ export function CaseCardPreview({
 }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
-  const key = previewKey({ alg, visualization, stickering, setupAnchor });
+  const key = previewKey({ puzzle, alg, visualization, stickering, setupAnchor });
   const [preview, setPreview] = useState<Preview | undefined>(() => getPreview(key));
 
   // Reset cached preview when key changes.
@@ -104,8 +107,8 @@ export function CaseCardPreview({
   useEffect(() => {
     if (!visible) return;
     if (getPreview(key)) return;
-    void requestPreview({ alg, visualization, stickering, setupAnchor });
-  }, [visible, key, alg, visualization, stickering, setupAnchor]);
+    void requestPreview({ puzzle, alg, visualization, stickering, setupAnchor });
+  }, [visible, key, puzzle, alg, visualization, stickering, setupAnchor]);
 
   const wrapperStyle: CSSProperties = {
     width: '100%',

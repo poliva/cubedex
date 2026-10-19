@@ -7,7 +7,8 @@ import {
   type ChangeEventHandler,
 } from 'react';
 import { Alg } from 'cubing/alg';
-import { cube3x3x3 } from 'cubing/puzzles';
+import { categoryId, categoryName, isPuzzleId, PUZZLES, puzzleLoader, type PuzzleId } from './lib/puzzles';
+import { PuzzleSelector } from './components/PuzzleSelector';
 import { caseCardStore, setCaseCardActions } from './state/caseCardStore';
 import { useCaseLibrary } from './hooks/useCaseLibrary';
 import { useTrainingState } from './hooks/useTrainingState';
@@ -54,6 +55,7 @@ export function App() {
   const [algEditorVisible, setAlgEditorVisible] = useState(false);
   const hideAlgEditorTimeoutRef = useRef<number | null>(null);
   const lastAutoScrambleKeyRef = useRef('');
+  const manualSetupRef = useRef({ puzzle: '', active: false, key: '' });
   const lastProcessedScrambleMoveRef = useRef('');
   const lastProcessedInputMoveRef = useRef('');
   const lastProcessedPracticeMoveRef = useRef('');
@@ -67,7 +69,14 @@ export function App() {
   const isMobile = useIsMobile();
   const options = useAppSettings();
   const practiceToggles = usePracticeToggles();
+  const smartcube = useSmartcubeConnection(options.gyroscope);
+  const [manualPuzzle, setManualPuzzle] = useState<PuzzleId>(() => {
+    const saved = window.localStorage.getItem('practicePuzzle') ?? '';
+    return isPuzzleId(saved) ? saved : '3x3x3';
+  });
+  const puzzle: PuzzleId = smartcube.connected ? (smartcube.cubeSize === 2 ? '2x2x2' : '3x3x3') : manualPuzzle;
   const caseLibrary = useCaseLibrary({
+    puzzle,
     autoUpdateLearningState: options.autoUpdateLearningState,
     smartReviewScheduling: practiceToggles.smartReviewScheduling,
     reviewRefreshToken,
@@ -89,11 +98,11 @@ export function App() {
       .filter((card): card is (typeof caseCards)[number] => card !== null),
     [caseCards, selectedCaseIds],
   );
-  const smartcube = useSmartcubeConnection(options.gyroscope);
   const training = useTrainingState(selectedCases, selectedCategory, {
+    puzzle,
     selectionChangeMode,
     countdownMode: options.countdownMode,
-    randomizeAUF: practiceToggles.randomizeAUF,
+    randomizeAUF: PUZZLES[puzzle].randomAUF && practiceToggles.randomizeAUF,
     randomOrder: practiceToggles.randomOrder,
     timeAttack: practiceToggles.timeAttack,
     prioritizeSlowCases: practiceToggles.prioritizeSlowCases,
@@ -106,7 +115,7 @@ export function App() {
     onReviewRecorded: () => setReviewRefreshToken((value) => value + 1),
     onAttemptStart: smartcube.resetOrientation,
   });
-  const scramble = useScrambleState();
+  const scramble = useScrambleState(puzzle);
   const prevSmartcubeConnectedRef = useRef(smartcube.connected);
   const pendingPhysicalTrainingRetrainRef = useRef(false);
 
@@ -139,8 +148,28 @@ export function App() {
     training.trainCurrent,
   ]);
 
-  const algorithmActions = useAlgorithmImportExport(reloadSavedAlgorithms);
-  const selectedStickering = mainCubeStickeringDeferred && !options.fullStickering
+  const algorithmActions = useAlgorithmImportExport(reloadSavedAlgorithms, puzzle);
+  const previousPuzzleRef = useRef(puzzle);
+  useEffect(() => {
+    if (previousPuzzleRef.current === puzzle) return;
+    previousPuzzleRef.current = puzzle;
+    training.resetDrill();
+    training.clearFailedCounts();
+    scramble.clearScramble();
+    algorithmActions.clearForm();
+    algorithmActions.clearMessages();
+    setAlgEditorVisible(activeView === 'new-alg');
+    setDeleteMode(false);
+    setMainCubeStickeringDeferred(true);
+    setScrambleStartAlg('');
+    setInputModeSmartcubeSeed(null);
+    setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+    setOrientationResetState({ token: 0, alg: null });
+    lastAutoScrambleKeyRef.current = '';
+    lastProcessedAnyMoveKeyRef.current = '';
+  }, [puzzle, training.resetDrill, training.clearFailedCounts, scramble.clearScramble,
+    algorithmActions.clearForm, algorithmActions.clearMessages, activeView, smartcube.disconnectToken]);
+  const selectedStickering = puzzle !== '3x3x3' ? 'full' : mainCubeStickeringDeferred && !options.fullStickering
     ? 'full'
     : getStickeringForCategory(selectedCategory || 'PLL', options.fullStickering);
   const optionsVisible = activeView === 'options';
@@ -367,8 +396,42 @@ export function App() {
     return () => window.clearTimeout(timeoutId);
   }, [deleteSuccessMessage]);
 
+  // Once requested, keep manual setups in sync with each revealed case, including
+  // repeat attempts and time attack. Do not reset the timer when refreshing them.
   useEffect(() => {
-    if (!options.alwaysScrambleTo) {
+    if (smartcube.connected || training.inputMode || manualSetupRef.current.puzzle !== puzzle) {
+      manualSetupRef.current = { puzzle, active: false, key: '' };
+      if (smartcube.connected || training.inputMode) return;
+    }
+    const setup = manualSetupRef.current;
+    const algorithm = training.displayAlg;
+    if (!algorithm.trim()) return;
+    const key = `${training.visualResetKey}:${training.currentCase?.id ?? ''}:${algorithm}`;
+    if (!setup.active && scramble.scrambleMode) {
+      setup.active = true;
+      setup.key = key;
+    }
+    if (!setup.active && !options.alwaysScrambleTo) return;
+    setup.active = true;
+    if (setup.key === key) return;
+    setup.key = key;
+    void scramble.startScrambleTo(algorithm, training.currentCase, null, false).catch((err) => {
+      console.error('startScrambleTo failed', err);
+    });
+  }, [
+    puzzle,
+    smartcube.connected,
+    training.inputMode,
+    training.displayAlg,
+    training.currentCase,
+    training.visualResetKey,
+    options.alwaysScrambleTo,
+    scramble.scrambleMode,
+    scramble.startScrambleTo,
+  ]);
+
+  useEffect(() => {
+    if (!options.alwaysScrambleTo || !smartcube.connected) {
       lastAutoScrambleKeyRef.current = '';
       return;
     }
@@ -395,10 +458,12 @@ export function App() {
       console.error('startScrambleTo failed', err);
     });
   }, [
+    puzzle,
     options.alwaysScrambleTo,
     practiceToggles.randomizeAUF,
     practiceToggles.timeAttack,
     scramble.startScrambleTo,
+    smartcube.connected,
     smartcube.currentPattern,
     smartcube.disconnectToken,
     training.algInput,
@@ -422,7 +487,7 @@ export function App() {
       lastProcessedPracticeMoveRef.current = '';
       const currentValue = training.algInput.trim();
       const nextValue = Alg.fromString(`${currentValue} ${smartcube.lastProcessedMove.rawMoves.map((entry) => entry.move).join(' ')}`.trim())
-        .experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 })
+        .experimentalSimplify({ cancel: true, puzzleLoader: puzzleLoader(puzzle) })
         .toString();
       training.setAlgInput(nextValue);
       return;
@@ -462,6 +527,7 @@ export function App() {
       console.error('advanceScramble failed', err);
     });
   }, [
+    puzzle,
     scramble.advanceScramble,
     scramble.scrambleMode,
     scramble.targetAlgorithm,
@@ -495,7 +561,7 @@ export function App() {
 
     if (view === 'practice') {
       setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-      if (scramble.scrambleMode && !options.alwaysScrambleTo) {
+      if (scramble.scrambleMode && (!options.alwaysScrambleTo || !PUZZLES[puzzle].smartcube)) {
         scramble.clearScramble();
         lastProcessedScrambleMoveRef.current = '';
       }
@@ -507,6 +573,7 @@ export function App() {
     }
   }, [
     algorithmActions.clearMessages,
+    puzzle,
     options.alwaysScrambleTo,
     scramble.clearScramble,
     scramble.scrambleMode,
@@ -588,7 +655,7 @@ export function App() {
     if (!algorithm.trim()) return;
 
     if (training.currentCase) {
-      algorithmActions.setCategoryInput(training.currentCase.category);
+      algorithmActions.setCategoryInput(categoryName(training.currentCase.category));
       algorithmActions.setSubsetInput(training.currentCase.subset);
       algorithmActions.setAlgNameInput(training.currentCase.name);
       algorithmActions.clearMessages();
@@ -613,9 +680,9 @@ export function App() {
 
   const handleNewAlgSave = useCallback(() => {
     const savingFromNewAlgTab = activeView === 'new-alg';
-    const nextCategory = algorithmActions.categoryInput.trim();
+    const nextCategory = categoryId(puzzle, algorithmActions.categoryInput.trim());
     const algToSave = activeView === 'new-alg' ? training.algInput : (training.displayAlg || training.algInput);
-    const algToSaveNormalized = expandNotation(algToSave);
+    const algToSaveNormalized = expandNotation(algToSave, puzzle);
     // Invalidate previews before saving - this ensures fresh previews after algorithm changes
     invalidatePreview(algToSaveNormalized);
     void algorithmActions.submitSave(algToSave).then((saved) => {
@@ -642,6 +709,7 @@ export function App() {
     });
   }, [
     activeView,
+    puzzle,
     algorithmActions.categoryInput,
     algorithmActions.submitSave,
     reloadSavedAlgorithms,
@@ -673,9 +741,9 @@ export function App() {
   ]);
 
   const handleInlineAlgSave = useCallback(() => {
-    const nextCategory = algorithmActions.categoryInput.trim();
+    const nextCategory = categoryId(puzzle, algorithmActions.categoryInput.trim());
     const algToSave = training.algInput;
-    const algToSaveNormalized = expandNotation(algToSave);
+    const algToSaveNormalized = expandNotation(algToSave, puzzle);
     // Invalidate previews before saving - this ensures fresh previews after algorithm changes
     invalidatePreview(algToSaveNormalized);
     void algorithmActions.submitSave(algToSave).then((ok) => {
@@ -701,6 +769,7 @@ export function App() {
       console.error('submitSave failed', err);
     });
   }, [
+    puzzle,
     algorithmActions.submitSave,
     algorithmActions.categoryInput,
     reloadSavedAlgorithms,
@@ -793,7 +862,7 @@ export function App() {
           : (
             <DesktopTopbar
               screen={activeView}
-              selectedCategory={selectedCategory ?? ''}
+              selectedCategory={categoryName(selectedCategory ?? '')}
               selectedCount={selectedCaseIds.length}
               smartcube={smartcube}
               showResetGyro={smartcube.connected && options.gyroscope && smartcube.gyroSupported}
@@ -811,10 +880,18 @@ export function App() {
           <div style={{ padding: '1rem', color: 'var(--fg3)', fontSize: 13 }}>Loading saved data…</div>
         ) : null}
 
+        {(activeView === 'practice' || activeView === 'cases' || activeView === 'new-alg') && (
+          <PuzzleSelector puzzle={puzzle} connected={smartcube.connected} onChange={(nextPuzzle) => {
+            setManualPuzzle(nextPuzzle);
+            window.localStorage.setItem('practicePuzzle', nextPuzzle);
+          }} />
+        )}
+
         {/* Content area */}
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
           {/* PracticeView always mounted (training state + cube continuity) */}
           <PracticeView
+            puzzle={puzzle}
             visible={activeView === 'practice'}
             options={options}
             practiceToggles={practiceToggles}
@@ -853,6 +930,8 @@ export function App() {
 
           {activeView === 'cases' && (
             <CasesView
+              puzzle={puzzle}
+              onAddAlgorithm={() => selectView('new-alg')}
               caseLibrary={caseLibrary}
               training={training}
               scramble={scramble}
@@ -877,6 +956,7 @@ export function App() {
               onSave={handleNewAlgSave}
               onCancel={handleNewAlgCancel}
               isMobile={isMobile}
+              puzzle={puzzle}
               algInput={training.algInput}
               setAlgInput={training.setAlgInput}
             />

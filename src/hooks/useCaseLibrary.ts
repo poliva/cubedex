@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { categoryPuzzle, type PuzzleId } from '../lib/puzzles';
 import defaultAlgs from '../data/defaultAlgs.json';
 import {
   cycleLearnedStatus,
@@ -40,12 +41,14 @@ export interface CaseLibraryState {
 }
 
 export interface CaseLibraryOptions {
+  puzzle?: PuzzleId;
   autoUpdateLearningState?: boolean;
   smartReviewScheduling?: boolean;
   reviewRefreshToken?: number;
 }
 
 export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibraryState {
+  const puzzle = options.puzzle ?? '3x3x3';
   const [isReady, setIsReady] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
   const [savedAlgorithms, setSavedAlgorithms] = useState<SavedAlgorithms>({});
@@ -62,19 +65,19 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
 
   const reloadSavedAlgorithms = useCallback(() => {
     const saved = getSavedAlgorithms();
-    const initialCategory = Object.keys(saved)[0] ?? '';
+    const initialCategory = Object.keys(saved).find((id) => categoryPuzzle(id) === puzzle) ?? '';
 
     setSavedAlgorithms(saved);
     setSelectedCaseIds([]);
     setSelectionChangeMode('bulk');
-    setSelectedCategory((current) => (current && saved[current] ? current : initialCategory));
+    setSelectedCategory((current) => (current && saved[current] && categoryPuzzle(current) === puzzle ? current : initialCategory));
     setSelectedSubsets((current) => {
-      const activeCategory = (selectedCategory && saved[selectedCategory]) ? selectedCategory : initialCategory;
+      const activeCategory = (selectedCategory && saved[selectedCategory] && categoryPuzzle(selectedCategory) === puzzle) ? selectedCategory : initialCategory;
       const available = getSubsetsForCategory(saved, activeCategory).map((entry) => entry.subset);
       const retained = current.filter((subset) => available.includes(subset));
       return retained;
     });
-  }, [selectedCategory]);
+  }, [selectedCategory, puzzle]);
 
   useEffect(() => {
     let active = true;
@@ -103,11 +106,19 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     };
   }, []);
 
-  const categories = useMemo(() => Object.keys(savedAlgorithms), [savedAlgorithms]);
+  const categories = useMemo(() => Object.keys(savedAlgorithms).filter((id) => categoryPuzzle(id) === puzzle), [savedAlgorithms, puzzle]);
+  // Derive a safe category immediately: no render can expose cases from the old puzzle.
+  const activeCategory = categories.includes(selectedCategory) ? selectedCategory : categories[0] ?? '';
+  useEffect(() => {
+    setSelectedCategory(activeCategory);
+    setSelectedSubsets([]);
+    setSelectedCaseIds([]);
+    setSelectionChangeMode('bulk');
+  }, [puzzle, activeCategory]);
 
   const subsets = useMemo(
-    () => getSubsetsForCategory(savedAlgorithms, selectedCategory).map((entry) => entry.subset),
-    [savedAlgorithms, selectedCategory],
+    () => getSubsetsForCategory(savedAlgorithms, activeCategory).map((entry) => entry.subset),
+    [savedAlgorithms, activeCategory],
   );
 
   useEffect(() => {
@@ -130,7 +141,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
   }, [savedAlgorithms, selectedCategory]);
 
   const caseCards = useMemo(
-    () => getCaseCards(savedAlgorithms, selectedCategory, selectedSubsets, {
+    () => activeCategory !== selectedCategory ? [] : getCaseCards(savedAlgorithms, activeCategory, selectedSubsets, {
       autoUpdateLearningState: options.autoUpdateLearningState,
     }),
     [
@@ -138,6 +149,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
       options.reviewRefreshToken,
       savedAlgorithms,
       selectedCategory,
+      activeCategory,
       selectedSubsets,
       learnedRefreshToken,
     ],
@@ -264,20 +276,20 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
   }, []);
 
   const handleSetSelectedCategory = useCallback((category: string) => {
-    if (category === selectedCategory) {
+    if (categoryPuzzle(category) !== puzzle || category === selectedCategory) {
       return;
     }
     setSelectedCaseIds([]);
     setSelectionChangeMode('bulk');
     setSelectedCategory(category);
-  }, [selectedCategory]);
+  }, [selectedCategory, puzzle]);
 
   return useMemo(() => ({
     isReady,
     initError,
     savedAlgorithms,
     categories,
-    selectedCategory,
+    selectedCategory: activeCategory,
     subsets,
     selectedSubsets,
     caseCards,
@@ -299,6 +311,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     reloadSavedAlgorithms,
   }), [
     caseCards,
+    activeCategory,
     categories,
     cycleCaseLearnedState,
     handleSetSelectedCategory,

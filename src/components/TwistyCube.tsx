@@ -1,11 +1,11 @@
 import { useEffect, useRef, type MutableRefObject } from 'react';
 import * as THREE from 'three';
 import { TwistyPlayer } from 'cubing/twisty';
-import type { CubePuzzle } from '../lib/cube-utils';
+import type { PuzzleId } from '../lib/puzzles';
 import type { SmartcubeQuaternion } from '../hooks/useSmartcubeConnection';
 
 export interface TwistyCubeProps {
-  puzzle?: CubePuzzle;
+  puzzle?: PuzzleId;
   alg: string;
   sizePx?: number;
   visualization: string;

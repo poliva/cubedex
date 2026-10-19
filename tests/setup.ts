@@ -1,6 +1,16 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
+import type {} from 'vitest/jsdom';
+
+// Node's native storage globals can shadow jsdom's storage in Vitest 3.
+// Always use the browser environment's storage, including on newer Node versions.
+for (const key of ['localStorage', 'sessionStorage'] as const) {
+  Object.defineProperty(globalThis, key, {
+    configurable: true,
+    value: jsdom.window[key],
+  });
+}
 
 class ResizeObserverMock {
   observe() {}

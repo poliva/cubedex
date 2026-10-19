@@ -1,3 +1,4 @@
+import { categoryPuzzle, PUZZLES, puzzleLoader, type PuzzleId } from './puzzles';
 import { Alg } from 'cubing/alg';
 import { cube3x3x3 } from 'cubing/puzzles';
 import type { KPattern } from 'cubing/kpuzzle';
@@ -14,8 +15,8 @@ function arraysEqual(arr1: number[], arr2: number[]): boolean {
   return true;
 }
 
-export async function isSymmetricOLL(alg: string): Promise<boolean> {
-  const pattern = await faceletsToPattern(SOLVED_STATE);
+export async function isSymmetricOLL(alg: string, puzzle: PuzzleId = '3x3x3'): Promise<boolean> {
+  const pattern = puzzle === '3x3x3' ? await faceletsToPattern(SOLVED_STATE) : (await puzzleLoader(puzzle).kpuzzle()).defaultPattern();
 
   const algWithStartU = Alg.fromString(`U ${alg}`);
   const algWithStartUp = Alg.fromString(`U' ${alg}`);
@@ -25,9 +26,9 @@ export async function isSymmetricOLL(alg: string): Promise<boolean> {
   const scramble = pattern.applyAlg(Alg.fromString(alg).invert());
   for (const item of algs) {
     const candidate = scramble.applyAlg(item);
-    const edgesOriented = arraysEqual(candidate.patternData.EDGES.orientation, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const edgesOriented = !candidate.patternData.EDGES || arraysEqual(candidate.patternData.EDGES.orientation, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     const cornersOriented = arraysEqual(candidate.patternData.CORNERS.orientation, [0, 0, 0, 0, 0, 0, 0, 0]);
-    const centersOriented = arraysEqual(candidate.patternData.CENTERS.orientation, [0, 0, 0, 0, 0, 0]);
+    const centersOriented = !candidate.patternData.CENTERS || arraysEqual(candidate.patternData.CENTERS.orientation, [0, 0, 0, 0, 0, 0]);
     if (edgesOriented && cornersOriented && centersOriented) {
       return true;
     }
@@ -55,14 +56,16 @@ export async function prepareTrainingAlgorithm(
   category: string,
   randomizeAUF: boolean,
   scrambleToMoves: string[] = [],
+  puzzle: PuzzleId = categoryPuzzle(category),
 ): Promise<PreparedTrainingAlgorithm> {
+  randomizeAUF = randomizeAUF && PUZZLES[puzzle].randomAUF;
   let userAlg = [...inputMoves];
   const originalMoves = [...inputMoves];
 
   if (randomizeAUF && scrambleToMoves.length === 0) {
     const randomPreAUF = randomAuf();
     if (randomPreAUF.length > 0) {
-      const kpattern = await solvedPattern();
+      const kpattern = puzzle === '3x3x3' ? await solvedPattern() : (await puzzleLoader(puzzle).kpuzzle()).defaultPattern();
 
       const algWithStartU = Alg.fromString(`U ${userAlg.join(' ')}`);
       const resultWithStartU = kpattern.applyAlg(algWithStartU);
@@ -89,10 +92,10 @@ export async function prepareTrainingAlgorithm(
         }
       }
 
-      if ((areNotIdentical && !isOLL) || (isOLL && !(await isSymmetricOLL(userAlg.join(' '))))) {
+      if ((areNotIdentical && !isOLL) || (isOLL && !(await isSymmetricOLL(userAlg.join(' '), puzzle)))) {
         userAlg.unshift(randomPreAUF);
         userAlg = Alg.fromString(userAlg.join(' '))
-          .experimentalSimplify({ cancel: true, puzzleLoader: cube3x3x3 })
+          .experimentalSimplify({ cancel: true, puzzleLoader: puzzle === '3x3x3' ? cube3x3x3 : puzzleLoader(puzzle) })
           .toString()
           .split(/\s+/);
       }

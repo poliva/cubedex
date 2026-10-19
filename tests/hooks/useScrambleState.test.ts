@@ -13,6 +13,8 @@ vi.mock('../../src/lib/auf', () => ({
   prepareTrainingAlgorithm: vi.fn(),
 }));
 
+import { puzzles } from 'cubing/puzzles';
+import type { PuzzleId } from '../../src/lib/puzzles';
 import { useScrambleState } from '../../src/hooks/useScrambleState';
 import { prepareTrainingAlgorithm } from '../../src/lib/auf';
 import { getScrambleToSolution } from '../../src/lib/scramble';
@@ -29,6 +31,34 @@ describe('useScrambleState', () => {
       moves: ['U', 'R', 'U', "R'"],
       originalMoves: ['R', 'U', "R'"],
     });
+  });
+
+  it.each([
+    ['4x4x4', "(Rw U2 Rw')2"],
+    ['5x5x5', "3Rw U Rw' U'"],
+    ['pyraminx', "R U R' U' r"],
+    ['megaminx', "[R, U] DR2 DL'"],
+  ] as const)('creates a setup from solved for %s without using the cube solver', async (puzzle, algorithm) => {
+    const { result } = renderHook(() => useScrambleState(puzzle as PuzzleId));
+    await act(async () => {
+      await expect(result.current.startScrambleTo(algorithm, null, {} as never)).resolves.toBe(true);
+    });
+
+    const kpuzzle = await puzzles[puzzle].kpuzzle();
+    const solved = kpuzzle.defaultPattern();
+    expect(solved.applyAlg(result.current.scrambleText).applyAlg(algorithm).isIdentical(solved)).toBe(true);
+    expect(result.current.scrambleMode).toBe(true);
+    expect(result.current.targetAlgorithm).toBe(algorithm);
+    expect(result.current.isComputing).toBe(false);
+    expect(mockedGetScrambleToSolution).not.toHaveBeenCalled();
+
+    await act(async () => {
+      await expect(result.current.advanceScramble('R', {} as never)).resolves.toBe(false);
+    });
+    expect(mockedGetScrambleToSolution).not.toHaveBeenCalled();
+    act(() => result.current.clearScramble());
+    expect(result.current.scrambleMode).toBe(false);
+    expect(result.current.scrambleText).toBe('');
   });
 
   it('returns false and clears state for blank scramble requests', async () => {
@@ -55,7 +85,7 @@ describe('useScrambleState', () => {
       ).resolves.toBe(true);
     });
 
-    expect(mockedPrepareTrainingAlgorithm).toHaveBeenCalledWith(['R', 'U', "R'"], 'PLL', true);
+    expect(mockedPrepareTrainingAlgorithm).toHaveBeenCalledWith(['R', 'U', "R'"], 'PLL', true, [], '3x3x3');
     expect(result.current.scrambleMode).toBe(true);
     expect(result.current.scrambleText).toBe('R U');
     expect(result.current.targetAlgorithm).toBe("U R U R'");

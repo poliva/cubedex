@@ -1,3 +1,4 @@
+import { categoryName, PUZZLES, type PuzzleId } from '../lib/puzzles';
 import { memo, useEffect, useRef, useState } from 'react';
 import type { CaseLibraryState } from '../hooks/useCaseLibrary';
 import type { TrainingState } from '../hooks/useTrainingState';
@@ -6,6 +7,8 @@ import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
 import { CaseGrid } from './CaseGrid';
 
 export const CasesView = memo(function CasesView({
+  puzzle = '3x3x3',
+  onAddAlgorithm,
   caseLibrary,
   training,
   scramble,
@@ -20,6 +23,8 @@ export const CasesView = memo(function CasesView({
   isMobile,
   onPracticeSelected,
 }: {
+  puzzle?: PuzzleId;
+  onAddAlgorithm?: () => void;
   caseLibrary: CaseLibraryState;
   training: TrainingState;
   scramble: ScrambleState;
@@ -107,10 +112,12 @@ export const CasesView = memo(function CasesView({
       }}
     >
       {/* Header: scrollable category tabs + practice button + overflow menu */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {categories.length > 0 && <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
           <div
             className="cases-category-strip"
+            role="group"
+            aria-label="Algorithm sets"
             style={{
               display: 'flex',
               gap: 4,
@@ -122,7 +129,7 @@ export const CasesView = memo(function CasesView({
           >
             {categories.map((cat) => (
               <button
-                key={cat}
+                key={categoryName(cat)}
                 type="button"
                 onClick={() => {
                   setAcknowledgedDisconnectToken(smartcube.disconnectToken);
@@ -148,7 +155,7 @@ export const CasesView = memo(function CasesView({
                   whiteSpace: 'nowrap',
                 }}
               >
-                {cat}
+                {categoryName(cat)}
               </button>
             ))}
           </div>
@@ -328,7 +335,7 @@ export const CasesView = memo(function CasesView({
             </div>
           )}
         </div>
-      </div>
+      </div>}
 
       {/* Subset chips — horizontally scrollable like the category strip */}
       {subsets.length > 0 && (
@@ -427,7 +434,7 @@ export const CasesView = memo(function CasesView({
       )}
 
       {/* Filter row: All/Learning/Learned independent toggles. */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+      {categories.length > 0 && <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
         <div style={{
           display: 'flex',
           background: 'var(--raised)',
@@ -451,10 +458,17 @@ export const CasesView = memo(function CasesView({
             setSelectLearnedCases(!selectLearnedCases);
           })}
         </div>
-      </div>
+      </div>}
 
       {/* Case grid */}
-      <CaseGrid caseCards={caseCards} />
+      {categories.length === 0 ? (
+        <div className="puzzle-library-empty">
+          <div style={{ fontSize: 28 }} aria-hidden="true">◇</div>
+          <h2>Your {PUZZLES[puzzle].name} library starts here</h2>
+          <p>Add your first algorithm to create a practice set for this puzzle. You can also import alg sets in Options.</p>
+          <button type="button" className="save-panel-button" onClick={onAddAlgorithm}>Add an algorithm</button>
+        </div>
+      ) : <CaseGrid caseCards={caseCards} />}
 
       {deleteSuccessMessage ? (
         <div style={{

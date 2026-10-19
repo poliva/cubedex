@@ -14,8 +14,12 @@ const alwaysScrambleRegressDyn = vi.hoisted(() => ({
   startScrambleToSpyB: vi.fn(async () => true),
 }));
 
+const connectionDyn = vi.hoisted(() => ({ connected: false, cubeSize: 3 }));
+
 const trainingRegressDyn = vi.hoisted(() => ({
   timerState: 'IDLE' as string,
+  visualResetKey: 1,
+  inputMode: false,
   statsAlgId: 'time-attack-scope',
   timeAttackMode: true,
   displayAlg: "R U R'",
@@ -81,13 +85,13 @@ const mocks = vi.hoisted(() => ({
     _options: options,
   })),
   useTrainingState: vi.fn(() => ({
-    inputMode: false,
+    inputMode: trainingRegressDyn.inputMode,
     scrambleMode: false,
     timerState: trainingRegressDyn.timerState,
     timerText: '0.000',
     countdownActive: false,
     countdownValue: null,
-    visualResetKey: 1,
+    visualResetKey: trainingRegressDyn.visualResetKey,
     algInput: '',
     displayAlg: trainingRegressDyn.displayAlg,
     currentCase: mockState.caseCards[0],
@@ -249,7 +253,8 @@ vi.mock('../src/hooks/useScrambleState', () => ({
 
 vi.mock('../src/hooks/useSmartcubeConnection', () => ({
   useSmartcubeConnection: vi.fn(() => ({
-    connected: false,
+    connected: connectionDyn.connected,
+    cubeSize: connectionDyn.cubeSize,
     connecting: false,
     disconnectToken: 0,
     connectLabel: 'Connect',
@@ -431,6 +436,7 @@ describe('App alwaysScrambleTo auto scramble-to', () => {
   });
 
   it('does not call startScrambleTo again after scramble ends when alwaysScrambleTo is on', async () => {
+    connectionDyn.connected = true;
     alwaysScrambleRegressDyn.alwaysScrambleTo = true;
     alwaysScrambleRegressDyn.practiceTimeAttack = false;
     trainingRegressDyn.timerState = 'READY';
@@ -453,5 +459,96 @@ describe('App alwaysScrambleTo auto scramble-to', () => {
 
     expect(alwaysScrambleRegressDyn.startScrambleToSpyA.mock.calls.length).toBe(callsAfterInitial);
     expect(alwaysScrambleRegressDyn.startScrambleToSpyB).not.toHaveBeenCalled();
+  });
+});
+
+
+describe('App puzzle context', () => {
+  beforeEach(() => {
+    connectionDyn.connected = false;
+    connectionDyn.cubeSize = 3;
+    alwaysScrambleRegressDyn.alwaysScrambleTo = false;
+  });
+
+  it.each(['pyraminx', '4x4x4', '5x5x5', 'megaminx'])('remembers %s, follows a connected 2×2 and restores the manual choice on disconnect', async (manualPuzzle) => {
+    const { rerender } = render(<App />);
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Puzzle' }), manualPuzzle);
+    expect(window.localStorage.getItem('practicePuzzle')).toBe(manualPuzzle);
+    expect(mocks.useCaseLibrary).toHaveBeenLastCalledWith(expect.objectContaining({ puzzle: manualPuzzle }));
+    expect(mocks.useTrainingState).toHaveBeenLastCalledWith(expect.anything(), expect.anything(), expect.objectContaining({ puzzle: manualPuzzle, randomizeAUF: false }));
+    connectionDyn.connected = true;
+    connectionDyn.cubeSize = 2;
+    rerender(<App />);
+    expect(screen.getByRole('combobox', { name: 'Puzzle' })).toHaveValue('2x2x2');
+    expect(screen.getByRole('combobox', { name: 'Puzzle' })).toBeDisabled();
+    expect(mocks.useCaseLibrary).toHaveBeenLastCalledWith(expect.objectContaining({ puzzle: '2x2x2' }));
+    connectionDyn.connected = false;
+    rerender(<App />);
+    expect(screen.getByRole('combobox', { name: 'Puzzle' })).toHaveValue(manualPuzzle);
+    expect(screen.getByRole('combobox', { name: 'Puzzle' })).toBeEnabled();
+  });
+});
+
+
+describe('App manual setup follows displayed cases', () => {
+  beforeEach(() => {
+    connectionDyn.connected = false;
+    alwaysScrambleRegressDyn.alwaysScrambleTo = false;
+    alwaysScrambleRegressDyn.practiceTimeAttack = false;
+    alwaysScrambleRegressDyn.scrambleMode = false;
+    alwaysScrambleRegressDyn.startScrambleToSpyPick = 0;
+    alwaysScrambleRegressDyn.startScrambleToSpyA.mockClear();
+    trainingRegressDyn.displayAlg = "R U R'";
+    trainingRegressDyn.visualResetKey = 1;
+    trainingRegressDyn.inputMode = false;
+    trainingRegressDyn.timerState = 'READY';
+  });
+
+  it.each(['3x3x3', '4x4x4', '5x5x5', 'pyraminx', 'megaminx'])(
+    'refreshes a requested setup on the next case and repeat attempt for %s', (puzzle) => {
+      window.localStorage.setItem('practicePuzzle', puzzle);
+      const { rerender } = render(<App />);
+      expect(alwaysScrambleRegressDyn.startScrambleToSpyA).not.toHaveBeenCalled();
+      // The wand has been used, then Train dismisses its current setup.
+      alwaysScrambleRegressDyn.scrambleMode = true;
+      rerender(<App />);
+      alwaysScrambleRegressDyn.scrambleMode = false;
+      rerender(<App />);
+      expect(alwaysScrambleRegressDyn.startScrambleToSpyA).not.toHaveBeenCalled();
+
+      trainingRegressDyn.displayAlg = "F R U R' U' F'";
+      trainingRegressDyn.visualResetKey += 1;
+      rerender(<App />);
+      expect(alwaysScrambleRegressDyn.startScrambleToSpyA).toHaveBeenLastCalledWith(
+        trainingRegressDyn.displayAlg, mockState.caseCards[0], null, false,
+      );
+      expect(alwaysScrambleRegressDyn.startScrambleToSpyA).toHaveBeenCalledTimes(1);
+      rerender(<App />);
+      expect(alwaysScrambleRegressDyn.startScrambleToSpyA).toHaveBeenCalledTimes(1);
+
+      // A repeat case still needs its setup restored after the timer advances.
+      trainingRegressDyn.visualResetKey += 1;
+      trainingRegressDyn.timerState = 'RUNNING';
+      rerender(<App />);
+      expect(alwaysScrambleRegressDyn.startScrambleToSpyA).toHaveBeenCalledTimes(2);
+    },
+  );
+
+  it('leaves manual setups off until requested', () => {
+    const { rerender } = render(<App />);
+    trainingRegressDyn.displayAlg = "F R U R' U' F'";
+    trainingRegressDyn.visualResetKey += 1;
+    rerender(<App />);
+    expect(alwaysScrambleRegressDyn.startScrambleToSpyA).not.toHaveBeenCalled();
+  });
+
+  it('refreshes setups in manual time attack when Always Scramble To is enabled', () => {
+    window.localStorage.setItem('practicePuzzle', 'megaminx');
+    alwaysScrambleRegressDyn.alwaysScrambleTo = true;
+    alwaysScrambleRegressDyn.practiceTimeAttack = true;
+    render(<App />);
+    expect(alwaysScrambleRegressDyn.startScrambleToSpyA).toHaveBeenCalledWith(
+      trainingRegressDyn.displayAlg, mockState.caseCards[0], null, false,
+    );
   });
 });

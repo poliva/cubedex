@@ -1,9 +1,20 @@
+import { PUZZLES, type PuzzleId } from '../lib/puzzles';
 import { memo } from 'react';
 import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
 import { EmptyState } from '../components/ui/EmptyState';
 import { expandNotation } from '../lib/storage';
 
+const PRESET_CATEGORIES: Partial<Record<PuzzleId, string[]>> = {
+  '3x3x3': ['PLL', 'OLL', 'F2L', 'Custom'],
+  '2x2x2': ['OLL', 'PBL', 'CLL', 'Custom'],
+  '4x4x4': ['OLL Parity', 'PLL Parity', 'Custom'],
+  '5x5x5': ['Last Two Edges', 'Last Two Centers', 'Custom'],
+  pyraminx: ['Last Layer', 'Custom'],
+  megaminx: ['EO', 'CO', 'EP', 'CP', 'Custom'],
+};
+
 export const NewAlgView = memo(function NewAlgView({
+  puzzle = '3x3x3',
   visible,
   algorithmActions,
   onSave,
@@ -13,6 +24,7 @@ export const NewAlgView = memo(function NewAlgView({
   algInput = '',
   setAlgInput,
 }: {
+  puzzle?: PuzzleId;
   visible: boolean;
   algorithmActions: AlgorithmImportExportState;
   onSave: () => void;
@@ -78,9 +90,13 @@ export const NewAlgView = memo(function NewAlgView({
   // Standalone view (new design)
   const pad = isMobile ? 12 : 20;
   const pb = isMobile ? 'calc(var(--tab-h) + 12px)' : 16;
-  const presetCategories = ['PLL', 'OLL', 'F2L', 'Custom'] as const;
-  const expandedAlg = algInput.trim() ? expandNotation(algInput.trim()) : '';
+  const presetCategories = PRESET_CATEGORIES[puzzle] ?? ['Custom'];
+  const expandedAlg = algInput.trim() ? expandNotation(algInput.trim(), puzzle) : '';
   const parsedMoves = expandedAlg ? expandedAlg.split(/\s+/).filter(Boolean) : [];
+  const algorithmExample = puzzle === 'megaminx' ? "e.g. R' BR' R BR R' F' R BR' R' BR F R"
+    : puzzle === '4x4x4' || puzzle === '5x5x5' ? "e.g. Rw U2 Rw' U2"
+    : puzzle === 'pyraminx' ? "e.g. R U R' U R U R'"
+    : "e.g. (R U R' U) (R U2 R')";
   const activeCategory = algorithmActions.categoryInput.trim();
 
   const inputStyle: React.CSSProperties = {
@@ -130,7 +146,7 @@ export const NewAlgView = memo(function NewAlgView({
         <div style={cardStyle}>
           <div>
             <div style={{ ...labelStyle, marginBottom: 6 }}>Algorithm Input</div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--fg)' }}>Build a new case</div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--fg)' }}>Build a new {PUZZLES[puzzle].name} case</div>
             <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--fg3)', lineHeight: 1.5 }}>
               Type moves manually or use a connected smartcube. The raw algorithm is saved exactly as entered.
             </p>
@@ -178,7 +194,7 @@ export const NewAlgView = memo(function NewAlgView({
             <label htmlFor="alg-input" style={labelStyle}>Raw Algorithm</label>
             <textarea
               id="alg-input"
-              placeholder="Enter alg e.g., (R U R' U) (R U2' R')"
+              placeholder={algorithmExample}
               value={algInput}
               onChange={(e) => setAlgInput?.(e.target.value)}
               rows={isMobile ? 4 : 5}
@@ -284,7 +300,7 @@ export const NewAlgView = memo(function NewAlgView({
             color: 'var(--fg3)',
             lineHeight: 1.5,
           }}>
-            Save tip: if the category or subset does not already exist, Cubedex will create it.
+            Saved to {PUZZLES[puzzle].name}. New categories and subsets are created automatically.
           </div>
         </div>
 

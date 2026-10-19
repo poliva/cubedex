@@ -29,3 +29,42 @@ describe('2×2 smartcube training', () => {
     expect(result.current.fixText).toBe('');
   });
 });
+
+// Non-cube notation must never enter the cube-only Bluetooth pattern matcher.
+describe('keyboard puzzle training', () => {
+  it.each([
+    ['pyraminx', "R U R' u"],
+    ['4x4x4', "2R2 U2 2R2 Uw2 2R2 Uw2"],
+    ['5x5x5', "Rw U2 3Rw U2 3Rw' Rw'"],
+    ['megaminx', "R' BR' R BR R' F' R BR' R' BR F R"],
+  ] as const)('prepares and times %s algorithms', async (puzzle, algorithm) => {
+    const { result } = renderHook(() => useTrainingState([], `${puzzle}:Custom`, {
+      puzzle, selectionChangeMode: 'manual', countdownMode: false, randomizeAUF: true,
+      randomOrder: false, timeAttack: false, prioritizeSlowCases: false,
+      prioritizeFailedCases: false, smartReviewScheduling: false, smartcubeConnected: false,
+    }));
+    await act(async () => { await result.current.trainCurrent(null, { algorithm }); });
+    expect(result.current.displayAlg).toBe(algorithm);
+    expect(result.current.timerState).toBe('READY');
+    act(() => result.current.activateTimer());
+    expect(result.current.timerState).toBe('RUNNING');
+    act(() => result.current.resetDrill());
+    expect(result.current.timerState).toBe('IDLE');
+    expect(result.current.displayAlg).toBe('');
+  });
+
+  it('does not reveal an old case after a puzzle switch resets the drill', async () => {
+    const { result } = renderHook(() => useTrainingState([], 'Custom', {
+      selectionChangeMode: 'manual', countdownMode: false, randomizeAUF: false,
+      randomOrder: false, timeAttack: false, prioritizeSlowCases: false,
+      prioritizeFailedCases: false, smartReviewScheduling: false, smartcubeConnected: false,
+    }));
+    await act(async () => {
+      const pending = result.current.trainCurrent(null, { algorithm: 'R U' });
+      result.current.resetDrill();
+      await pending;
+    });
+    expect(result.current.timerState).toBe('IDLE');
+    expect(result.current.displayAlg).toBe('');
+  });
+});
