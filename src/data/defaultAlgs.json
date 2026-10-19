@@ -7328,31 +7328,31 @@
       "algorithms": [
         {
           "name": "Sune",
-          "algorithm": "R U R' U R U2 R'"
+          "algorithm": "(R U R' U) (R U2' R')"
         },
         {
           "name": "Anti Sune",
-          "algorithm": "R U2 R' U' R U' R'"
+          "algorithm": "(R U2') (R' U' R U' R')"
         },
         {
           "name": "Pi",
-          "algorithm": "F R U R' U' R U R' U' F'"
+          "algorithm": "R U2' (R2' U' R2 U' R2') U2' R"
         },
         {
           "name": "P",
-          "algorithm": "F R U R' U' F'"
+          "algorithm": "F (R U R' U') F'"
         },
         {
           "name": "L",
-          "algorithm": "y F' R U R' U' R' F R"
+          "algorithm": "F' (R U R' U') (R' F R)"
         },
         {
           "name": "T",
-          "algorithm": "R U R' U' R' F R F'"
+          "algorithm": "(R U R' U') (R' F R F')"
         },
         {
           "name": "H",
-          "algorithm": "R2 U2 R' U2 R2"
+          "algorithm": "(R U R' U) (R U' R' U) (R U2' R')"
         }
       ]
     }
@@ -7362,28 +7362,28 @@
       "subset": "Ortega PBL",
       "algorithms": [
         {
-          "name": "Adj",
-          "algorithm": "y R U R' F' R U R' U' R' F R2 U' R'"
+          "name": "Adj - Tperm",
+          "algorithm": "(R U R' U') (R' F R2) (U' R' U') (R U R' F')"
         },
         {
-          "name": "Opp",
-          "algorithm": "R U' R' U' F2 U' R U R' U F2"
+          "name": "Opp - Yperm",
+          "algorithm": "(F R U' R' U' R U R' F') (R U R' U') (R' F R F')"
         },
         {
-          "name": "Opp Opp",
-          "algorithm": "R2 F2 R2"
+          "name": "Opp Opp - No bars",
+          "algorithm": "R2 F2' R2'"
         },
         {
-          "name": "Adj Adj",
-          "algorithm": "R2 U' B2 U2 R2 U' R2"
+          "name": "Adj Adj - 2 bars",
+          "algorithm": "R2 U' B2' U2' R2' U' R2"
         },
         {
-          "name": "Adj Opp",
-          "algorithm": "R U' R F2 R' U R'"
+          "name": "Adj Opp - Bar on top",
+          "algorithm": "(R U' R) F2' (R' U R')"
         },
         {
-          "name": "Opp Adj",
-          "algorithm": "y R2 U R2 U' R2 U R2 U' R2"
+          "name": "Opp Adj - Bar on bottom",
+          "algorithm": "(R' D R') F2 (R D' R)"
         }
       ]
     }
@@ -7393,12 +7393,43 @@
       "subset": "Last Three Edges",
       "algorithms": [
         {
-          "name": "Sune",
-          "algorithm": "R U R' U R U R'"
+          "name": "AntiSune",
+          "algorithm": "(R U' R') U' (R U' R')"
         },
         {
+          "name": "Sune",
+          "algorithm": "(L' U L) U (L' U L)"
+        },
+        {
+          "name": "Lefty Bars",
+          "algorithm": "(R' L R L') U' (L' U L)"
+        },
+        {
+          "name": "Righty Bars",
+          "algorithm": "(L R' L' R) U (R U' R')"
+        },
+        {
+          "name": "2 Flip",
+          "algorithm": "(R' L R L') (U L' U' L)"
+        }
+      ]
+    }
+  ],
+  "pyraminx:Last 4 Edges": [
+    {
+      "subset": "Down edge Solved",
+      "algorithms": [
+        {
           "name": "AntiSune",
-          "algorithm": "R' U' R U' R' U' R"
+          "algorithm": "(R U' R') U' (R U' R')"
+        },
+        {
+          "name": "Sune",
+          "algorithm": "(L' U L) U (L' U L)"
+        },
+        {
+          "name": "2 Flip",
+          "algorithm": "R' L R L' U L' U' L"
         },
         {
           "name": "Lefty Bars",
@@ -7406,11 +7437,147 @@
         },
         {
           "name": "Righty Bars",
-          "algorithm": "U' R' L' U' L U R"
+          "algorithm": "L U R U' R' L'"
+        }
+      ]
+    },
+    {
+      "subset": "Upper Edge Solved",
+      "algorithms": [
+        {
+          "name": "Righty",
+          "algorithm": "R U' R'"
         },
         {
-          "name": "2 Flip",
-          "algorithm": "L R' L' R U' R U R'"
+          "name": "Lefty",
+          "algorithm": "L' U L"
+        },
+        {
+          "name": "Hedge",
+          "algorithm": "L R' L' R"
+        },
+        {
+          "name": "Sledge",
+          "algorithm": "R' L R L'"
+        },
+        {
+          "name": "Left Sexy",
+          "algorithm": "U L' U' L"
+        },
+        {
+          "name": "Sexy",
+          "algorithm": "U' R U R'"
+        },
+        {
+          "name": "Counterclockwise",
+          "algorithm": "R' L R L2' U L"
+        },
+        {
+          "name": "Clockwise",
+          "algorithm": "L R' L' R2 U' R'"
+        }
+      ]
+    },
+    {
+      "subset": "Down Edge Flipped",
+      "algorithms": [
+        {
+          "name": "4 Flip",
+          "algorithm": "(R' L R L') U (R' L R L') U (R' L R L')"
+        },
+        {
+          "name": "Anti SUS",
+          "algorithm": "(L R' L' R) U (L R' L' R)"
+        },
+        {
+          "name": "SUS",
+          "algorithm": "(R' L R L') U' (R' L R L')"
+        },
+        {
+          "name": "DB Flip",
+          "algorithm": "R U R' U L' U' L"
+        },
+        {
+          "name": "Right Polish Flip",
+          "algorithm": "(R U' R') (L' U' L)"
+        },
+        {
+          "name": "Left Polish Flip",
+          "algorithm": "(L' U L) (R U R')"
+        }
+      ]
+    },
+    {
+      "subset": "Upper Edge Flipped",
+      "algorithms": [
+        {
+          "name": "Right Spam",
+          "algorithm": "(R U' R') U (R' L R L')"
+        },
+        {
+          "name": "Left Spam",
+          "algorithm": "(L' U' L) U' (L R' L' R)"
+        },
+        {
+          "name": "Bad Righty",
+          "algorithm": "U (L' U L) (U' R U R')"
+        },
+        {
+          "name": "Bad Lefty",
+          "algorithm": "U' (R U' R') (U L' U' L)"
+        },
+        {
+          "name": "Bad Ugly",
+          "algorithm": "(R U R') U (L' U L)"
+        },
+        {
+          "name": "Bad Sexy",
+          "algorithm": "(L' U' L) U' (R U' R')"
+        },
+        {
+          "name": "Bad Sledge",
+          "algorithm": "U (L' U L) (L R' L' R2 U' R')"
+        },
+        {
+          "name": "Bad Hedge",
+          "algorithm": "U' (R U' R') (R' L R L2' U L)"
+        }
+      ]
+    },
+    {
+      "subset": "Nothing Placed",
+      "algorithms": [
+        {
+          "name": "Super Sledge",
+          "algorithm": "U (R U' R') (R' L R L')"
+        },
+        {
+          "name": "Super Hedge",
+          "algorithm": "U' (L' U L) (L R' L' R)"
+        },
+        {
+          "name": "Bad Sochi",
+          "algorithm": "U' (L' U L) (R' L R L2' U L)"
+        },
+        {
+          "name": "Bad Niky",
+          "algorithm": "U (R U' R') (L R' L' R2 U' R')"
+        },
+        {
+          "name": "Double Sexy",
+          "algorithm": "U (R U' R') (U' R U R')"
+        },
+        {
+          "name": "Double Ugly",
+          "algorithm": "U' (L' U L) (U L' U' L)"
+        },
+        {
+          "name": "Good Sochi",
+          "algorithm": "U' (L' U L) (R U' R')"
+        },
+        {
+          "name": "Good Niky",
+          "algorithm": "U (R U' R') (L' U L)"
         }
       ]
     }
@@ -8448,191 +8615,6 @@
         {
           "name": "EG2 U 6",
           "algorithm": "y2 R2 F2 R F' R U L F' L' F"
-        }
-      ]
-    }
-  ],
-  "pyraminx:Last 4 Edges": [
-    {
-      "subset": "Last Layer",
-      "algorithms": [
-        {
-          "name": "Sune",
-          "algorithm": "R U R' U R U R'"
-        },
-        {
-          "name": "AntiSune",
-          "algorithm": "R U' R' U' R U' R'"
-        },
-        {
-          "name": "Lefty Bars",
-          "algorithm": "R' U' L' U L R"
-        },
-        {
-          "name": "Righty Bars",
-          "algorithm": "L U R U' R' L'"
-        }
-      ]
-    },
-    {
-      "subset": "L3E",
-      "algorithms": [
-        {
-          "name": "Sledge",
-          "algorithm": "R' L R L'"
-        },
-        {
-          "name": "Hedge",
-          "algorithm": "L R' L' R"
-        },
-        {
-          "name": "Clockwise",
-          "algorithm": "L R' L' R2 U' R'"
-        },
-        {
-          "name": "Counterclockwise",
-          "algorithm": "R' L R L2' U L"
-        },
-        {
-          "name": "Righty",
-          "algorithm": "R U' R'"
-        },
-        {
-          "name": "Lefty",
-          "algorithm": "L' U L"
-        },
-        {
-          "name": "Sexy",
-          "algorithm": "U' R U R'"
-        },
-        {
-          "name": "Left Sexy",
-          "algorithm": "U L' U' L"
-        }
-      ]
-    },
-    {
-      "subset": "Flipped Edges",
-      "algorithms": [
-        {
-          "name": "2 Flip",
-          "algorithm": "R' L R L' U L' U' L"
-        },
-        {
-          "name": "DR Flip",
-          "algorithm": "L' U L U' R U' R'"
-        },
-        {
-          "name": "DL Flip",
-          "algorithm": "R' L R L' R U' R'"
-        },
-        {
-          "name": "DB Flip",
-          "algorithm": "R U R' U L' U' L"
-        },
-        {
-          "name": "4 Flip",
-          "algorithm": "L' U L R U' R' L' U L R U' R'"
-        }
-      ]
-    },
-    {
-      "subset": "Polish Flip",
-      "algorithms": [
-        {
-          "name": "Right Polish Flip",
-          "algorithm": "R U' R' L' U' L"
-        },
-        {
-          "name": "Left Polish Flip",
-          "algorithm": "L' U L R U R'"
-        },
-        {
-          "name": "SUS",
-          "algorithm": "R' L R L' U' R' L R L'"
-        },
-        {
-          "name": "Anti SUS",
-          "algorithm": "L R' L' R U L R' L' R"
-        }
-      ]
-    },
-    {
-      "subset": "Separated Bar",
-      "algorithms": [
-        {
-          "name": "Good Niky",
-          "algorithm": "R U' R' L' U L"
-        },
-        {
-          "name": "Good Sochi",
-          "algorithm": "L' U L R U' R'"
-        },
-        {
-          "name": "Super Sledge",
-          "algorithm": "R U' R2' L R L'"
-        },
-        {
-          "name": "Super Hedge",
-          "algorithm": "L' U L2' R' L' R"
-        },
-        {
-          "name": "Bad Niky",
-          "algorithm": "R U' R' U' L' U L"
-        },
-        {
-          "name": "Bad Sochi",
-          "algorithm": "L' U L U R U' R'"
-        }
-      ]
-    },
-    {
-      "subset": "Connected Bar",
-      "algorithms": [
-        {
-          "name": "Right Spam",
-          "algorithm": "R U R' U R' L R L'"
-        },
-        {
-          "name": "Left Spam",
-          "algorithm": "L' U' L U' L R' L' R"
-        },
-        {
-          "name": "Bad Sledge",
-          "algorithm": "L R' L' R U' R U' R'"
-        },
-        {
-          "name": "Bad Hedge",
-          "algorithm": "R' L R L' U L' U L"
-        }
-      ]
-    },
-    {
-      "subset": "No Bar",
-      "algorithms": [
-        {
-          "name": "Bad Sexy",
-          "algorithm": "L' U' L U' R U' R'"
-        },
-        {
-          "name": "Bad Ugly",
-          "algorithm": "R U R' U L' U L"
-        },
-        {
-          "name": "Bad Righty",
-          "algorithm": "L' U L U' R U R'"
-        },
-        {
-          "name": "Bad Lefty",
-          "algorithm": "R U' R' U L' U' L"
-        },
-        {
-          "name": "Double Sexy",
-          "algorithm": "R U' R' U' R U R'"
-        },
-        {
-          "name": "Double Ugly",
-          "algorithm": "L' U L U L' U' L"
         }
       ]
     }

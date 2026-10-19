@@ -21,7 +21,7 @@ const expectedCaseCounts = {
   '2x2x2:CLL': 40,
   '2x2x2:EG1': 40,
   '2x2x2:EG2': 40,
-  'pyraminx:Last 4 Edges': 37,
+  'pyraminx:Last 4 Edges': 35,
   'megaminx:OLL': 178,
   'megaminx:PLL': 151,
 };
