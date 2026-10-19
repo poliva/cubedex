@@ -19,8 +19,9 @@ If you enjoy using Cubedex, please consider supporting the development on [Ko-fi
 **2×2 recovery:** Undo recent turns to return to the last correct algorithm
 position. “Help me recover” reads the current stickers, asks you to rotate the
 whole cube to match a fixed picture, and demonstrates one U/R/F correction at a
-time. An unexpected turn updates the picture and asks for alignment again. The
-same timed attempt continues throughout recovery.
+time. Recovery finds the shortest path in U/R/F quarter turns directly to the
+last correct position. An unexpected turn updates the picture and asks for
+alignment again. The same timed attempt continues throughout recovery.
 
 2×2 progress uses device facelet snapshots because GAN 251 UI and MoYu MY22 axis
 codes alone cannot reliably represent opposite-face turns. Reads may add latency;

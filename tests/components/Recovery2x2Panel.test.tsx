@@ -52,7 +52,9 @@ describe('guided visual recovery', () => {
     const { rerender } = render(<Recovery2x2Panel {...f} />);
     await user.click(await screen.findByRole('button', { name: 'My cube matches' }));
     await screen.findByRole('button', { name: 'Show turn again' });
+    expect(screen.getByTestId('reference').dataset.turn).toBe("F'");
     let completed = false;
+    let turnCount = 0;
     for (let i = 0; i < 40; i++) {
       const ref = screen.getByTestId('reference');
       const move = ref.dataset.turn!;
@@ -61,12 +63,14 @@ describe('guided visual recovery', () => {
       const before = f.solved.applyAlg(ref.dataset.setup!);
       expect(equivalent(before, f.smartcube.currentPattern!)).toBe(true);
       const actual = before.applyMove(move).applyAlg('x y');
+      turnCount++;
       f.smartcube = { ...f.smartcube, currentPattern: actual, lastProcessedMove: { key: `${i}` } as never };
       rerender(<Recovery2x2Panel {...f} />);
       if (equivalent(actual, f.target)) { completed = true; break; }
       expect(screen.queryByRole('button', { name: 'My cube matches' })).toBeNull();
     }
     expect(completed).toBe(true);
+    expect(turnCount).toBe(3); // Undo F, then R2 as two quarter-turn packets.
     expect(f.onRecovered).toHaveLastReturnedWith(true);
   });
 

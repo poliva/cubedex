@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { patternToFacelets, solvedPattern } from '../../src/lib/cube-utils';
-import { fixOrientation, getScrambleToSolution, patternToPlayerAlg } from '../../src/lib/scramble';
+import { fixOrientation, get2x2RecoveryMoves, getScrambleToSolution, patternToPlayerAlg } from '../../src/lib/scramble';
 
 const SOLVED_FACELETS = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB';
 
@@ -97,6 +97,66 @@ describe('2×2 sensor setup notation', () => {
 });
 
 describe('2×2 physical recovery frame', () => {
+  it.each(['U', "U'", 'U2', 'R', "R'", 'R2', 'F', "F'", 'F2',
+    'D', "D'", 'D2', 'L', "L'", 'L2', 'B', "B'", 'B2'])
+    ('recovers a single %s error directly, even with a rotated target', async error => {
+      const solved = await solvedPattern(2);
+      const target = solved.applyAlg("R U F2 R' U2 F R2 x y");
+      const current = target.applyMove(error);
+      const moves = await get2x2RecoveryMoves(current, target.applyAlg('z x'));
+      expect(moves.length).toBe(error.endsWith('2') ? 2 : 1);
+      expect(moves.every(move => /^[URF]'?$/.test(move))).toBe(true);
+      expect(fixOrientation(current.applyAlg(moves.join(' '))).isIdentical(fixOrientation(target))).toBe(true);
+    });
+
+  it('recovers pairs of mistaken face turns in at most two quarter turns', async () => {
+    const target = (await solvedPattern(2)).applyAlg("F2 R U' R2 F U x");
+    for (const first of ['U', "R'", 'F', "D'", 'L', "B'"]) {
+      for (const second of ["U'", 'R', "F'", 'D', "L'", 'B']) {
+        const current = target.applyAlg(`${first} ${second} y z`);
+        const moves = await get2x2RecoveryMoves(current, target);
+        expect(moves.length, `${first} ${second}`).toBeLessThanOrEqual(2);
+        expect(fixOrientation(current.applyAlg(moves.join(' '))).isIdentical(fixOrientation(target))).toBe(true);
+      }
+    }
+  });
+
+  it('matches independently enumerated shortest distances around a scrambled target', async () => {
+    const target = (await solvedPattern(2)).applyAlg("R U R' F2 U R2 F");
+    const key = (pattern: typeof target) => JSON.stringify(pattern.patternData);
+    const seen = new Set([key(target)]);
+    let frontier = [target];
+    for (let depth = 1; depth <= 3; depth++) {
+      const next = [];
+      for (const state of frontier) {
+        for (const move of ['U', "U'", 'R', "R'", 'F', "F'"]) {
+          const current = state.applyMove(move);
+          if (seen.has(key(current))) continue;
+          seen.add(key(current));
+          next.push(current);
+        }
+      }
+      // Sample each breadth-first layer, whose first visits establish minima.
+      for (let i = 0; i < next.length; i += 7) {
+        const moves = await get2x2RecoveryMoves(next[i], target);
+        expect(moves.length).toBe(depth);
+        expect(next[i].applyAlg(moves.join(' ')).isIdentical(target)).toBe(true);
+      }
+      frontier = next;
+    }
+  });
+
+  it.each([
+    "R U F R' U' F' R U F R' U' F' R U",
+    "R2 U2 F2 U' R F' R2 U F2 R' U2 F",
+  ])('finds a short direct path for a distant state: %s', async error => {
+    const target = (await solvedPattern(2)).applyAlg("L U F2 D' R B2 x y");
+    const current = target.applyAlg(error);
+    const moves = await get2x2RecoveryMoves(current, target);
+    expect(moves.length).toBeLessThanOrEqual(14);
+    expect(fixOrientation(current.applyAlg(moves.join(' '))).isIdentical(fixOrientation(target))).toBe(true);
+  });
+
   it('does not mistake opposite-axis codes for physical sticker states', async () => {
     const solved = await solvedPattern(2);
     // Real MY22 capture: physical D is reported U′; L/B are reported R/F.
@@ -107,7 +167,6 @@ describe('2×2 physical recovery frame', () => {
 
   it.each(['R', 'x y R F2', "L U B D' F R2"])
     ('corrects an exact refreshed %s state using the frame shown in the picture', async alg => {
-      const { get2x2RecoveryMoves } = await import('../../src/lib/scramble');
       const solved = await solvedPattern(2);
       const current = solved.applyAlg(alg);
       const target = solved.applyAlg("R U F R'");

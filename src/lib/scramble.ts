@@ -4,6 +4,7 @@ import { cube2x2x2, cube3x3x3 } from 'cubing/puzzles';
 import min2phase from './min2phase/min2phase';
 import { patternCubeSize, solverFacelets, solvedPattern } from './cube-utils';
 import { expandNotation } from './storage';
+import { shortest2x2Solution } from './solve2x2';
 
 min2phase.initFull();
 
@@ -89,7 +90,7 @@ async function build2x2SensorFrame() {
       }
     }
   }
-  return { identity, turns, key };
+  return { identity, rotations, turns, key };
 }
 
 /** Rewrite six-face turns in the sensor's U/R/F frame, carrying rotations forward. */
@@ -166,11 +167,22 @@ export async function getScrambleToSolution(alg: string, state: KPattern) {
 /** U/R/F corrections applied directly to the exact state used by the picture. */
 export async function get2x2RecoveryMoves(current: KPattern, target: KPattern): Promise<string[]> {
   if (fixOrientation(current).isIdentical(fixOrientation(target))) return [];
-  const from = patternToPlayerAlg(current);
-  const to = patternToPlayerAlg(target);
-  const relative = new Alg(`${new Alg(from).invert()} ${to}`);
-  const correction = await to2x2SensorMoves(relative);
-  const moves = correction.split(/\s+/).filter(Boolean);
+  const { rotations } = await (sensorFramePromise ??= build2x2SensorFrame());
+  const anchor = current.patternData.CORNERS;
+  // Choose the equivalent target in the picture's frame. U/R/F cannot change
+  // DBL, so this orientation is the only reachable one without a regrip.
+  const alignedTarget = rotations.map(rotation => target.applyTransformation(rotation)).find(candidate => {
+    const corners = candidate.patternData.CORNERS;
+    return corners.pieces[6] === anchor.pieces[6] && corners.orientation[6] === anchor.orientation[6];
+  });
+  const from = current.experimentalToTransformation();
+  const to = alignedTarget?.experimentalToTransformation();
+  if (!from || !to) throw new Error('Invalid 2×2 recovery pattern');
+  // Solving target^-1 * current produces current^-1 * target directly, without
+  // taking the physical cube through solved or remapping a 3×3 solution.
+  const relative = current.kpuzzle.defaultPattern().applyTransformation(to.invert().applyTransformation(from));
+  const moves = await shortest2x2Solution(relative);
+  const correction = moves.join(' ');
   if (!fixOrientation(current.applyAlg(correction)).isIdentical(fixOrientation(target))) {
     throw new Error('Could not calculate recovery. Refresh the picture and retry.');
   }
