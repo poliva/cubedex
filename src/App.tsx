@@ -109,6 +109,7 @@ export function App() {
     prioritizeFailedCases: practiceToggles.prioritizeFailedCases,
     smartReviewScheduling: practiceToggles.smartReviewScheduling,
     smartcubeConnected: smartcube.connected,
+    alwaysScrambleTo: options.alwaysScrambleTo,
     currentPattern: smartcube.currentPattern,
     statsRefreshToken,
     reviewRefreshToken,

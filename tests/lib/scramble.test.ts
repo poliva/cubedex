@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { Alg } from 'cubing/alg';
 import { patternToFacelets, solvedPattern } from '../../src/lib/cube-utils';
 import { fixOrientation, getScrambleToSolution, patternToPlayerAlg } from '../../src/lib/scramble';
 
@@ -52,8 +51,7 @@ describe('2×2 scramble helpers', () => {
       const scramble = await getScrambleToSolution(algorithm, start);
       const target = start.applyAlg(scramble);
       expect(scramble.split(/\s+/).filter(Boolean).every((move) => /^[URF](2|')?$/.test(move))).toBe(true);
-      const expected = solved.applyAlg("U R U' R'");
-      expect(fixOrientation(target).isIdentical(fixOrientation(expected))).toBe(true);
+      expect(fixOrientation(target.applyAlg(algorithm)).isIdentical(solved)).toBe(true);
       if (!initialAlg || /^[URF2' ]+$/.test(initialAlg)) {
         expect(target.applyAlg(algorithm).isIdentical(solved)).toBe(true);
       }
@@ -63,6 +61,18 @@ describe('2×2 scramble helpers', () => {
 
 
 describe('2×2 sensor setup notation', () => {
+  it.each(['', 'x y R U', "z R F' U2", "R2 U' B2' U2' R2' U' R2"])
+    ('sets up Adj Adj from %s so its authored algorithm solves without a regrip', async initialAlg => {
+      const solved = await solvedPattern(2);
+      const algorithm = "R2 U' B2' U2' R2' U' R2";
+      const start = solved.applyAlg(initialAlg);
+      const setup = await getScrambleToSolution(algorithm, start);
+      expect(setup.split(/\s+/).filter(Boolean).every(move => /^[URF](2|')?$/.test(move))).toBe(true);
+      const prepared = start.applyAlg(setup);
+      expect(fixOrientation(prepared.applyAlg(algorithm)).isIdentical(solved)).toBe(true);
+      expect(await getScrambleToSolution(algorithm, prepared)).toBe('');
+    });
+
   it.each([
     "R U R' U'",
     "L D B' U2 R",
@@ -70,7 +80,6 @@ describe('2×2 sensor setup notation', () => {
     "R2 F2 R2",
   ])('reaches the case for %s using only U/R/F, including intermediate recomputations', async (algorithm) => {
     const solved = await solvedPattern(2);
-    const expected = solved.applyAlg(Alg.fromString(algorithm).invert());
     let state = solved.applyAlg("R F' U2");
     const setup = await getScrambleToSolution(algorithm, state);
     const moves = setup.split(/\s+/).filter(Boolean);
@@ -80,9 +89,9 @@ describe('2×2 sensor setup notation', () => {
       state = state.applyMove(move);
       const remaining = await getScrambleToSolution(algorithm, state);
       expect(remaining.split(/\s+/).filter(Boolean).every((turn) => /^[URF](2|')?$/.test(turn))).toBe(true);
-      expect(fixOrientation(state.applyAlg(remaining)).isIdentical(fixOrientation(expected))).toBe(true);
+      expect(fixOrientation(state.applyAlg(`${remaining} ${algorithm}`)).isIdentical(solved)).toBe(true);
     }
-    expect(fixOrientation(state).isIdentical(fixOrientation(expected))).toBe(true);
+    expect(fixOrientation(state.applyAlg(algorithm)).isIdentical(solved)).toBe(true);
     expect(await getScrambleToSolution(algorithm, state)).toBe('');
   });
 });

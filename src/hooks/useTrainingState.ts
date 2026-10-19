@@ -17,6 +17,7 @@ import { countMovesETM } from '../lib/charts';
 import { prepareTrainingAlgorithm } from '../lib/auf';
 import { patternCubeSize, solvedPattern } from '../lib/cube-utils';
 import { fixOrientation } from '../lib/scramble';
+import { prepared2x2CasePicture } from '../lib/training-visual';
 import { getInverseMove, getOppositeMove, sanitizeMove, trailingWholeCubeRotationMoveCount } from '../lib/move-helpers';
 import {
   TIME_ATTACK_SCOPE_PREFIX,
@@ -108,6 +109,7 @@ export interface TrainingPracticeOptions {
   prioritizeFailedCases: boolean;
   smartReviewScheduling: boolean;
   smartcubeConnected: boolean;
+  alwaysScrambleTo?: boolean;
   currentPattern?: KPattern | null;
   statsRefreshToken?: number;
   reviewRefreshToken?: number;
@@ -135,6 +137,7 @@ export interface TrainingState {
   countdownValue: number | null;
   visualResetKey: number;
   caseStartPattern: KPattern | null;
+  casePicturePattern: KPattern | null;
   algInput: string;
   displayAlg: string;
   currentCase: CaseCardData | null;
@@ -599,6 +602,7 @@ export function useTrainingState(
   const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const [visualResetKey, setVisualResetKey] = useState(0);
   const [caseStartPattern, setCaseStartPattern] = useState<KPattern | null>(null);
+  const [casePicturePattern, setCasePicturePattern] = useState<KPattern | null>(null);
   const [algInput, setAlgInputState] = useState('');
   const [displayAlg, setDisplayAlg] = useState('');
   const [currentCase, setCurrentCase] = useState<CaseCardData | null>(null);
@@ -702,6 +706,11 @@ export function useTrainingState(
     ),
     [displayAlg, failedCounts, options.statsRefreshToken, practiceCounts, selectedCases, statsAlgId, timerState],
   );
+
+  useEffect(() => {
+    if (!options.alwaysScrambleTo || !options.smartcubeConnected || !caseStartPattern || !displayAlg) return;
+    setCasePicturePattern(prepared2x2CasePicture(displayAlg, caseStartPattern, true));
+  }, [options.alwaysScrambleTo, options.smartcubeConnected, caseStartPattern, displayAlg]);
 
   function getTimeAttackStatsScopeId() {
     return createTimeAttackScopeId(
@@ -1239,6 +1248,7 @@ export function useTrainingState(
 
   function clearProgressState() {
     setCaseStartPattern(null);
+    setCasePicturePattern(null);
     recoveryTargetRef.current = null;
     setRecoveryTarget(null);
     setRecoveryMoveCount(0);
@@ -1417,6 +1427,10 @@ export function useTrainingState(
 
     clearProgressState();
     setCaseStartPattern(basePattern);
+    setCasePicturePattern(basePattern && options.smartcubeConnected
+      ? prepared2x2CasePicture(prepared.displayAlgorithm, basePattern,
+        Boolean(options.alwaysScrambleTo || trainOptions?.preserveDisplayedAlgorithm))
+      : null);
     clearRecognitionTracking();
     setInputMode(false);
     setScrambleMode(false);
@@ -2067,6 +2081,7 @@ export function useTrainingState(
     countdownValue,
     visualResetKey,
     caseStartPattern,
+    casePicturePattern,
     algInput,
     displayAlg,
     currentCase,
@@ -2106,6 +2121,7 @@ export function useTrainingState(
     setKeepInitialState: stableSetKeepInitialState,
   }), [
     caseStartPattern,
+    casePicturePattern,
     recoveryTarget,
     recoveryMoveCount,
     recoveredAt,

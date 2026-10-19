@@ -295,9 +295,9 @@ export const PracticeView = memo(function PracticeView({
   const trainingPicture = useMemo(() => {
     if (puzzle !== '2x2x2' || !smartcube.connected || training.inputMode || scramble.scrambleMode
       || !training.displayAlg || !training.caseStartPattern || !smartcube.currentPattern) return null;
-    return project2x2TrainingPattern(training.displayAlg, training.caseStartPattern, smartcube.currentPattern);
+    return project2x2TrainingPattern(training.displayAlg, training.caseStartPattern, smartcube.currentPattern, training.casePicturePattern);
   }, [puzzle, smartcube.connected, smartcube.currentPattern, training.inputMode, scramble.scrambleMode,
-    training.displayAlg, training.caseStartPattern]);
+    training.displayAlg, training.caseStartPattern, training.casePicturePattern]);
 
   const cubeNode = showingGuidedRecovery ? (
     <Recovery2x2Panel

@@ -1,17 +1,28 @@
 import { Alg } from 'cubing/alg';
 import type { KPattern } from 'cubing/kpuzzle';
+import { patternCubeSize } from './cube-utils';
+import { fixOrientation } from './scramble';
 
 /** Keep case colors while expressing its progress in the device's exact frame. */
-export function project2x2TrainingPattern(algorithm: string, caseStart: KPattern, sensor: KPattern): KPattern {
+export function project2x2TrainingPattern(
+  algorithm: string, caseStart: KPattern, sensor: KPattern, casePicture?: KPattern | null,
+): KPattern {
   const startTransformation = caseStart.experimentalToTransformation();
   const sensorTransformation = sensor.experimentalToTransformation();
   if (!startTransformation || !sensorTransformation) throw new Error('Invalid 2×2 training pattern');
   const relative = startTransformation.invert().applyTransformation(sensorTransformation);
-  const selectedCase = caseStart.kpuzzle.defaultPattern().applyAlg(new Alg(algorithm).invert());
+  const selectedCase = casePicture ?? caseStart.kpuzzle.defaultPattern().applyAlg(new Alg(algorithm).invert());
   // This replaces the physical starting stickers with the selected case's
   // stickers. Progress and whole-cube rotation are retained, without assuming
   // that a normalized device report describes the user's physical grip.
   return selectedCase.applyTransformation(relative);
+}
+
+/** A setup is ready only when the displayed turns solve it without a regrip. */
+export function prepared2x2CasePicture(algorithm: string, start: KPattern, prepared: boolean): KPattern | null {
+  if (!prepared || patternCubeSize(start) !== 2) return null;
+  const solved = start.kpuzzle.defaultPattern();
+  return fixOrientation(start.applyAlg(algorithm)).isIdentical(solved) ? start : null;
 }
 
 const rotations = ['', 'x', 'x2', "x'", 'z', "z'"].flatMap(x =>

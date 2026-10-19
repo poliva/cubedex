@@ -810,3 +810,31 @@ it.each([false, true])('renders the selected case in the carried frame with gyro
   rerender(<PracticeView {...props} />);
   expect(screen.getByTestId('main-cube-area')).not.toHaveAttribute('data-target');
 });
+
+
+it('shows the verified physical setup frame after Always Scramble To, then restores ordinary case previews', async () => {
+  const solved = await solvedPattern(2);
+  const algorithm = "R U R' U'";
+  const target = solved.applyAlg(new Alg(algorithm).invert());
+  const setup = solved.applyAlg("y'").applyAlg(new Alg(algorithm).invert());
+  const props = makeProps({ puzzle: '2x2x2' });
+  props.options.alwaysScrambleTo = true;
+  props.training.displayAlg = algorithm;
+  props.training.caseStartPattern = setup;
+  props.training.casePicturePattern = setup;
+  props.smartcube.currentPattern = setup;
+  const { rerender } = render(<PracticeView {...props} />);
+  const shownData = () => JSON.parse(screen.getByTestId('main-cube-area').dataset.target!);
+  expect(shownData()).toEqual(setup.patternData);
+  expect(shownData()).not.toEqual(target.patternData);
+  props.smartcube = { ...props.smartcube, currentPattern: setup.applyMove('R') };
+  rerender(<PracticeView {...props} />);
+  expect(shownData()).toEqual(props.smartcube.currentPattern.patternData);
+
+  const other = solved.applyAlg('R F U2');
+  props.training = { ...props.training, caseStartPattern: other, casePicturePattern: null, visualResetKey: 2 };
+  props.smartcube = { ...props.smartcube, currentPattern: other };
+  rerender(<PracticeView {...props} />);
+  expect(shownData()).toEqual(target.patternData);
+  expect(shownData()).not.toEqual(other.patternData);
+});

@@ -153,7 +153,7 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
     if (recomputedMoves.length >= currentScrambleMoves.length && recomputedMoves.length > 2) {
       if (move === firstCurrentScrambleMove || (move.charAt(0) === firstCurrentScrambleMove.charAt(0) && isDoubleTurn)) {
         nextScramble = currentScrambleMoves.slice(1).join(' ');
-        if (isDoubleTurn) {
+        if (isDoubleTurn && !move.includes('2')) {
           nextScramble = `${move} ${nextScramble}`.trim();
         }
       }

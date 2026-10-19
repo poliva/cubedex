@@ -113,11 +113,32 @@ async function to2x2SensorMoves(alg: Alg): Promise<string> {
 }
 
 export async function getScrambleToSolution(alg: string, state: KPattern) {
-  const is2x2 = patternCubeSize(state) === 2;
-  // Sensor setups may finish in a different whole-cube orientation.
-  if (is2x2) {
-    const target = (await solvedPattern(2)).applyAlg(Alg.fromString(expandNotation(alg)).invert());
-    if (fixOrientation(state).isIdentical(fixOrientation(target))) return '';
+  if (patternCubeSize(state) === 2) {
+    const solved = await solvedPattern(2);
+    const inverse = Alg.fromString(expandNotation(alg)).invert();
+    const anchor = state.patternData.CORNERS;
+    // U/R/F turns leave DBL untouched. Choose the solved color orientation
+    // BEFORE applying the inverse algorithm so that its DBL matches the device.
+    // Rotating the case AFTER the inverse changes which faces the algorithm
+    // must turn, even though the case still looks equivalent modulo rotations.
+    for (const x of ['', 'x', 'x2', "x'", 'z', "z'"]) {
+      for (const y of ['', 'y', 'y2', "y'"]) {
+        const target = solved.applyAlg(`${x} ${y}`).applyAlg(inverse);
+        const corners = target.patternData.CORNERS;
+        if (corners.pieces[6] !== anchor.pieces[6] || corners.orientation[6] !== anchor.orientation[6]) continue;
+        if (state.isIdentical(target)) return '';
+        const from = state.experimentalToTransformation();
+        const to = target.experimentalToTransformation();
+        if (!from || !to) throw new Error('Invalid 2×2 setup pattern');
+        const relative = solved.applyTransformation(from.invert().applyTransformation(to));
+        const setup = await to2x2SensorMoves(new Alg(min2phase.solve(solverFacelets(relative))).invert());
+        if (!state.applyAlg(setup).isIdentical(target)) {
+          throw new Error('Could not calculate a 2×2 setup in the current turn frame');
+        }
+        return setup;
+      }
+    }
+    throw new Error('Could not find a 2×2 setup orientation');
   }
   const faceCube = solverFacelets(orientForSolver(state));
   const solvedCube = min2phase.solve(faceCube);
@@ -132,8 +153,6 @@ export async function getScrambleToSolution(alg: string, state: KPattern) {
   const scramble = Alg.fromString(
     min2phase.solve(solverFacelets(orientForSolver(targetPattern))).toString(),
   ).invert();
-
-  if (is2x2) return to2x2SensorMoves(scramble);
 
   return scramble
     .experimentalSimplify({
