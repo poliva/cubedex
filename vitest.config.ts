@@ -7,6 +7,12 @@ export default defineConfig({
     exclude: ['cubing'],
   },
   test: {
+    server: {
+      deps: {
+        // Transform the Bluetooth package so its CommonJS crypto imports interoperate.
+        inline: ['smartcube-web-bluetooth'],
+      },
+    },
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/**/*.test.{ts,tsx}'],
