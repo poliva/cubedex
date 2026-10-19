@@ -111,6 +111,9 @@ export interface SmartcubeConnectionState {
   setShowAllBluetoothDevices: (value: boolean) => void;
   connectOrDisconnect: () => Promise<void>;
   resetState: () => Promise<void>;
+  refreshPattern: (signal?: AbortSignal) => Promise<KPattern>;
+  stateSyncError: string | null;
+  stateSyncing: boolean;
   resetGyro: () => void;
   resetOrientation: () => void;
   gyroSupported: boolean;
@@ -152,6 +155,54 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   const cubeSizeRef = useRef<CubeSize>(3);
   const [cubeSize, setCubeSize] = useState<CubeSize>(3);
   const connRef = useRef<SmartCubeConnection | null>(null);
+  const pending2x2MovesRef = useRef<Array<SmartCubeMoveEvent & { timestamp: number }>>([]);
+  const snapshotVersionRef = useRef(0);
+  const refreshRef = useRef<{ promise: Promise<KPattern>; resolve: (pattern: KPattern) => void; reject: (error: Error) => void; timer: number } | null>(null);
+  const [stateSyncing, setStateSyncing] = useState(false);
+  const [stateSyncError, setStateSyncError] = useState<string | null>(null);
+
+  const refreshPattern = useCallback((signal?: AbortSignal): Promise<KPattern> => {
+    const connection = connRef.current;
+    if (!connection?.capabilities.facelets) return Promise.reject(new Error('Current sticker state is unavailable. Reconnect the cube and retry.'));
+    if (!refreshRef.current) {
+      setStateSyncing(true);
+      setStateSyncError(null);
+      let resolve!: (pattern: KPattern) => void;
+      let reject!: (error: Error) => void;
+      const promise = new Promise<KPattern>((yes, no) => { resolve = yes; reject = no; });
+      const fail = (error: Error) => {
+        if (refreshRef.current?.promise !== promise) return;
+        window.clearTimeout(refreshRef.current.timer);
+        refreshRef.current = null;
+        setStateSyncing(false);
+        setStateSyncError(error.message);
+        reject(error);
+      };
+      const timer = window.setTimeout(() => fail(new Error('Could not read the cube. Keep it still and retry.')), 5000);
+      refreshRef.current = { promise, resolve, reject, timer };
+      void connection.sendCommand({ type: 'REQUEST_FACELETS' }).catch((error: unknown) => fail(new Error(error instanceof Error ? error.message : 'Could not read the cube.')));
+    }
+    const promise = refreshRef.current!.promise;
+    if (!signal) return promise;
+    return new Promise((resolve, reject) => {
+      const abort = () => reject(new DOMException('Recovery cancelled', 'AbortError'));
+      if (signal.aborted) { abort(); return; }
+      signal.addEventListener('abort', abort, { once: true });
+      void promise.then(resolve, reject).finally(() => signal.removeEventListener('abort', abort));
+    });
+  }, []);
+
+  useEffect(() => () => {
+    snapshotVersionRef.current += 1;
+    subscriptionRef.current?.unsubscribe();
+    pending2x2MovesRef.current = [];
+    if (sliceBufferRef.current) window.clearTimeout(sliceBufferRef.current.timer);
+    if (refreshRef.current) {
+      window.clearTimeout(refreshRef.current.timer);
+      refreshRef.current.reject(new Error('Cube disconnected.'));
+      refreshRef.current = null;
+    }
+  }, []);
   const subscriptionRef = useRef<Subscription | null>(null);
   const connectAbortRef = useRef<AbortController | null>(null);
   const currentPatternRef = useRef<KPattern | null>(null);
@@ -251,6 +302,15 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   }, [clearSliceBuffer]);
 
   const disconnect = useCallback(() => {
+    snapshotVersionRef.current += 1;
+    pending2x2MovesRef.current = [];
+    if (refreshRef.current) {
+      window.clearTimeout(refreshRef.current.timer);
+      refreshRef.current.reject(new Error('Cube disconnected.'));
+      refreshRef.current = null;
+    }
+    setStateSyncError(null);
+    setStateSyncing(false);
     subscriptionRef.current?.unsubscribe();
     subscriptionRef.current = null;
     clearSliceBuffer();
@@ -438,6 +498,15 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
         cubeSizeRef.current = size;
         setCubeSize(size);
       }
+      // Sticker count identifies the puzzle even when this report cannot be
+      // used as a physical state. Never leave a MY22 at the 3×3 default just
+      // because a cached/older driver omits snapshot provenance.
+      if (size === 2 && event.source !== 'device') {
+        if (event.source == null) {
+          setStateSyncError('The Bluetooth driver needs updating. Restart the dev server, reload Cubedex, and reconnect the cube.');
+        }
+        return;
+      }
       // MoYu32 (and possibly other protocols) may emit FACELETS immediately after each MOVE.
       // If a slice candidate is buffered, leave it alone so the pair-detection window (100 ms
       // timer + next MOVE) can still fire.  Only clear when there is nothing useful buffered.
@@ -453,9 +522,34 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       // incorrectly apply the first raw move a second time.  processResolvedMove tracks
       // the pattern itself and will call setCurrentPattern when the pair resolves.
       if (!hasBufferedMove) {
+        const version = ++snapshotVersionRef.current;
+        const connection = connRef.current;
         void faceletsToPattern(event.facelets).then((pattern) => {
+          if (version !== snapshotVersionRef.current || connection !== connRef.current) return;
           currentPatternRef.current = pattern;
           setCurrentPattern(pattern);
+          setStateSyncError(null);
+          setStateSyncing(false);
+          const pending = refreshRef.current;
+          if (pending) {
+            window.clearTimeout(pending.timer);
+            refreshRef.current = null;
+            pending.resolve(pattern);
+          }
+          if (size === 2) {
+            const queue = pending2x2MovesRef.current;
+            const end = event.serial == null ? queue.length - 1 : queue.findIndex(move => move.serial != null && (move.serial & 0xff) === (event.serial! & 0xff));
+            const moves = end < 0 ? [] : queue.splice(0, end + 1);
+            const last = moves.at(-1);
+            if (last) {
+              // Each batch represents the actual snapshot, including recovered history.
+              flushSync(() => setLastProcessedMove({
+                key: `${event.timestamp}:${version}`, move: last.move, rawMoves: moves,
+                visualMove: moves.map(move => move.move).join(' '), currentPattern: pattern, isBugged: false,
+              }));
+            }
+            if (queue.length) void refreshPattern().catch(() => {});
+          }
         }).catch((error) => console.error('Invalid smartcube facelets', error));
       }
       return;
@@ -467,6 +561,13 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     }
 
     if (event.type !== 'MOVE') {
+      return;
+    }
+
+    if (cubeSizeRef.current === 2) {
+      pending2x2MovesRef.current.push(event);
+      // Do not infer a physical state from ambiguous U/R/F axis telemetry.
+      void refreshPattern().catch(() => {});
       return;
     }
 
@@ -519,7 +620,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       return;
     }
     void processResolvedMove(event, [event]);
-  }, [clearSliceBuffer, disconnect, flushBufferedMove, processResolvedMove]);
+  }, [clearSliceBuffer, disconnect, flushBufferedMove, processResolvedMove, refreshPattern]);
 
   const connectOrDisconnect = useCallback(async () => {
     if (connRef.current) {
@@ -569,6 +670,12 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     }
 
     connRef.current = newConn;
+    // Known 2×2 models can be identified before the first requested snapshot
+    // arrives. Facelet reports still determine size for other device names.
+    if (/^(?:WCU_MY22_|gan(?:251ui|ic251)(?:[_-]|$))/i.test(newConn.deviceName)) {
+      cubeSizeRef.current = 2;
+      setCubeSize(2);
+    }
     subscriptionRef.current = connRef.current.events$.subscribe(handleCubeEvent);
 
     if (connRef.current.capabilities.hardware) {
@@ -638,6 +745,9 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     setShowAllBluetoothDevices,
     connectOrDisconnect,
     resetState,
+    refreshPattern,
+    stateSyncError,
+    stateSyncing,
     resetGyro,
     resetOrientation,
     gyroSupported,
@@ -664,6 +774,9 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     resetGyro,
     resetOrientation,
     resetState,
+    refreshPattern,
+    stateSyncError,
+    stateSyncing,
     setShowAllBluetoothDevices,
     showAllBluetoothDevices,
   ]);

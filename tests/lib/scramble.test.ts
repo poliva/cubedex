@@ -86,3 +86,27 @@ describe('2×2 sensor setup notation', () => {
     expect(await getScrambleToSolution(algorithm, state)).toBe('');
   });
 });
+
+describe('2×2 physical recovery frame', () => {
+  it('does not mistake opposite-axis codes for physical sticker states', async () => {
+    const solved = await solvedPattern(2);
+    // Real MY22 capture: physical D is reported U′; L/B are reported R/F.
+    for (const [physical, reported] of [['D', "U'"], ['L U', 'R U'], ['B R', 'F R']]) {
+      expect(fixOrientation(solved.applyAlg(physical)).isIdentical(fixOrientation(solved.applyAlg(reported)))).toBe(false);
+    }
+  });
+
+  it.each(['R', 'x y R F2', "L U B D' F R2"])
+    ('corrects an exact refreshed %s state using the frame shown in the picture', async alg => {
+      const { get2x2RecoveryMoves } = await import('../../src/lib/scramble');
+      const solved = await solvedPattern(2);
+      const current = solved.applyAlg(alg);
+      const target = solved.applyAlg("R U F R'");
+      const moves = await get2x2RecoveryMoves(current, target);
+      expect(moves.length).toBeGreaterThan(0);
+      expect(moves.every(move => /^[URF](2|')?$/.test(move))).toBe(true);
+      expect(solved.applyAlg(patternToPlayerAlg(current)).isIdentical(current)).toBe(true);
+      expect(fixOrientation(current.applyAlg(moves.join(' '))).isIdentical(fixOrientation(target))).toBe(true);
+      expect(await get2x2RecoveryMoves(target.applyAlg('z x'), target)).toEqual([]);
+    });
+});

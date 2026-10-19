@@ -1,5 +1,5 @@
 import { PUZZLES, type PuzzleId } from '../lib/puzzles';
-import { Fragment, memo, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { Fragment, memo, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { AppSettingsState } from '../hooks/useAppSettings';
 import type { PracticeTogglesState } from '../hooks/usePracticeToggles';
 import type { TrainingState } from '../hooks/useTrainingState';
@@ -9,6 +9,8 @@ import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExpo
 import { averageOfFiveTimeNumber, historyTimeString } from '../lib/case-cards';
 import { getBestTime } from '../lib/storage';
 import { patternToPlayerAlg } from '../lib/scramble';
+import { project2x2TrainingPattern } from '../lib/training-visual';
+import { Recovery2x2Panel } from '../components/Recovery2x2Panel';
 import { MainCubeArea } from './MainCubeArea';
 import { MoveListPanel } from './MoveListPanel';
 import { StatsPanel } from './StatsPanel';
@@ -172,6 +174,23 @@ export const PracticeView = memo(function PracticeView({
     transition: 'transform 0.22s ease, border-color 0.15s, box-shadow 0.15s, color 0.2s',
   };
 
+  const [guidedRecovery, setGuidedRecovery] = useState(false);
+  const [showBackOnTrack, setShowBackOnTrack] = useState(false);
+  const undo2x2 = puzzle === '2x2x2' && Boolean(training.recoveryTarget);
+  useEffect(() => {
+    setShowBackOnTrack(Boolean(training.recoveredAt));
+    if (!training.recoveredAt) return;
+    const timer = window.setTimeout(() => setShowBackOnTrack(false), 1600);
+    return () => window.clearTimeout(timer);
+  }, [training.recoveredAt]);
+  useEffect(() => {
+    setGuidedRecovery(false);
+  }, [puzzle, visible, showAlgEditor, training.visualResetKey, training.currentCase?.id, training.inputMode, smartcube.connected, training.recoveryTarget]);
+  const showingGuidedRecovery = guidedRecovery && undo2x2 && smartcube.connected && !showAlgEditor && visible;
+  const orientationReminder = puzzle === '2x2x2'
+    ? 'Use U/R/F turns in the cube’s reference frame. If the setup does not match, reconnect and retry.'
+    : ORIENTATION_REMINDER;
+
   const showingLastSolve =
     !training.inputMode
     && training.lastSolveText != null
@@ -219,34 +238,45 @@ export const PracticeView = memo(function PracticeView({
 
   const showPracticeTimerCard = training.selectedCases.length > 0;
 
-  const showStatus = scramble.helpTone === 'green' || training.helpTone === 'red' || scramble.scrambleMode;
+  const showStatus = !showingGuidedRecovery && (undo2x2 || showBackOnTrack || Boolean(smartcube.stateSyncError) || scramble.helpTone === 'green' || training.helpTone === 'red' || scramble.scrambleMode);
   const statusColor =
-    training.helpTone === 'red' ? 'var(--danger)' :
+    undo2x2 || smartcube.stateSyncError || training.helpTone === 'red' ? 'var(--danger)' :
     scramble.helpTone === 'green' ? 'var(--ok)' :
     scramble.scrambleMode ? 'var(--ok)' : undefined;
 
-  const isDangerStatus = training.helpTone === 'red';
+  const isDangerStatus = undo2x2 || training.helpTone === 'red';
   const isScrambleGrowHint = scramble.scrambleMode && scramble.helpTone === 'green';
   const useWarningStatusIcon = isDangerStatus || isScrambleGrowHint;
   const mergeFixIntoStatusBar = isDangerStatus && training.fixVisible && Boolean(training.fixText);
 
   let statusBody: ReactNode;
-  if (isDangerStatus) {
+  if (undo2x2) {
+    statusBody = <>
+      <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{training.recoveryMoveCount > 1
+        ? 'Undo your recent turns to get back on track, or use visual recovery.'
+        : 'Turned the wrong way? Undo your last turn.'}</span>
+      <button type="button" className="recovery-button" onClick={() => setGuidedRecovery(true)}>Help me recover</button>
+    </>;
+  } else if (smartcube.stateSyncError) {
+    statusBody = <><span>{smartcube.stateSyncError}</span><button type="button" className="recovery-button" onClick={() => { void smartcube.refreshPattern().catch(() => {}); }}>Retry reading cube</button></>;
+  } else if (showBackOnTrack) {
+    statusBody = <span role="status">Back on track</span>;
+  } else if (isDangerStatus) {
     if (mergeFixIntoStatusBar) {
       statusBody = (
         <>
           <span style={STATUS_BAR_MOVES_LINE_STYLE}>{training.fixText}</span>
-          <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{ORIENTATION_REMINDER}</span>
+          <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{orientationReminder}</span>
         </>
       );
     } else {
-      statusBody = <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{ORIENTATION_REMINDER}</span>;
+      statusBody = <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{orientationReminder}</span>;
     }
   } else if (isScrambleGrowHint) {
     statusBody = (
       <>
         <span style={STATUS_BAR_MOVES_LINE_STYLE}>{scramble.scrambleText}</span>
-        <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{ORIENTATION_REMINDER}</span>
+        <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{orientationReminder}</span>
       </>
     );
   } else if (scramble.scrambleMode) {
@@ -262,7 +292,22 @@ export const PracticeView = memo(function PracticeView({
     statusBody = null;
   }
 
-  const cubeNode = (
+  const trainingPicture = useMemo(() => {
+    if (puzzle !== '2x2x2' || !smartcube.connected || training.inputMode || scramble.scrambleMode
+      || !training.displayAlg || !training.caseStartPattern || !smartcube.currentPattern) return null;
+    return project2x2TrainingPattern(training.displayAlg, training.caseStartPattern, smartcube.currentPattern);
+  }, [puzzle, smartcube.connected, smartcube.currentPattern, training.inputMode, scramble.scrambleMode,
+    training.displayAlg, training.caseStartPattern]);
+
+  const cubeNode = showingGuidedRecovery ? (
+    <Recovery2x2Panel
+      key={`${training.visualResetKey}:${training.currentCase?.id ?? ''}`}
+      smartcube={smartcube}
+      target={training.recoveryTarget!}
+      onRecovered={training.checkRecovery}
+      onCancel={() => setGuidedRecovery(false)}
+    />
+  ) : (
     <div
       style={{
         position: 'relative',
@@ -279,6 +324,7 @@ export const PracticeView = memo(function PracticeView({
         <MainCubeArea
           puzzle={puzzle}
           alg={mainCubeAlg}
+          targetPattern={trainingPicture}
           sizePx={options.cubeSizePx}
           visualization={!PUZZLES[puzzle].lastLayerPreview && options.visualization.includes('LL') ? '3D' : options.visualization}
           hintFacelets={options.hintFacelets}
@@ -505,7 +551,7 @@ export const PracticeView = memo(function PracticeView({
     </div>
   ) : null;
 
-  const fixPanel = (
+  const fixPanel = puzzle === '2x2x2' ? null : (
     <MoveListPanel
       darkMode={options.darkMode}
       isMoveMasked={isMoveMasked}

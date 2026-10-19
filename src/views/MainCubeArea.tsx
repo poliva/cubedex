@@ -1,4 +1,5 @@
 import { memo } from 'react';
+import type { KPattern } from 'cubing/kpuzzle';
 import type { PuzzleId } from '../lib/puzzles';
 import type { MutableRefObject } from 'react';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -8,6 +9,7 @@ import type { SmartcubeQuaternion } from '../hooks/useSmartcubeConnection';
 interface MainCubeAreaProps {
   puzzle?: PuzzleId;
   alg: string;
+  targetPattern?: KPattern | null;
   sizePx: number;
   visualization: string;
   hintFacelets: string;
@@ -27,6 +29,7 @@ interface MainCubeAreaProps {
 function MainCubeAreaComponent({
   puzzle,
   alg,
+  targetPattern,
   sizePx,
   visualization,
   hintFacelets,
@@ -48,6 +51,7 @@ function MainCubeAreaComponent({
         key={puzzle}
         puzzle={puzzle}
         alg={alg}
+        targetPattern={targetPattern}
         sizePx={sizePx}
         visualization={visualization}
         hintFacelets={hintFacelets}

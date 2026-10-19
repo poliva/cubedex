@@ -1,12 +1,18 @@
 import { useEffect, useRef, type MutableRefObject } from 'react';
 import * as THREE from 'three';
 import { TwistyPlayer } from 'cubing/twisty';
+import type { KPattern } from 'cubing/kpuzzle';
+import { patternToPlayerAlg } from '../lib/scramble';
+import { get2x2VisualDelta } from '../lib/training-visual';
 import type { PuzzleId } from '../lib/puzzles';
 import type { SmartcubeQuaternion } from '../hooks/useSmartcubeConnection';
 
 export interface TwistyCubeProps {
   puzzle?: PuzzleId;
   alg: string;
+  targetPattern?: KPattern | null;
+  autoplay?: boolean;
+  tempoScale?: number;
   sizePx?: number;
   visualization: string;
   hintFacelets: string;
@@ -55,6 +61,9 @@ function toVisualization(value: string) {
 export function TwistyCube({
   puzzle = '3x3x3',
   alg,
+  targetPattern = null,
+  autoplay = false,
+  tempoScale = 5,
   sizePx,
   visualization,
   hintFacelets,
@@ -82,6 +91,8 @@ export function TwistyCube({
   const hostRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<TwistyPlayer | null>(null);
   const appendedMoveKeyRef = useRef('');
+  const targetPatternRef = useRef<KPattern | null>(null);
+  const targetSeedRef = useRef<{ alg: string; resetToken: string | number | undefined } | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const puzzleObjectRef = useRef<THREE.Object3D | null>(null);
   const vantageRef = useRef<{ render?: () => void } | null>(null);
@@ -120,7 +131,7 @@ export function TwistyCube({
       viewerLink: 'none',
       hintFacelets: hintFacelets === 'floating' ? 'floating' : 'none',
       experimentalDragInput: dragInput,
-      tempoScale: 5,
+      tempoScale,
       experimentalStickering,
       backView,
     });
@@ -205,6 +216,7 @@ export function TwistyCube({
       vantageRef.current = null;
       // Important: do NOT manually detach `player` from the DOM here.
       // React will remove the subtree during unmount; manual removal can race and trigger NotFoundError.
+      player.pause();
       playerRef.current = null;
     };
   }, []);
@@ -289,7 +301,7 @@ export function TwistyCube({
       return;
     }
 
-    if (orientationResetAlg != null) {
+    if (orientationResetAlg != null && !targetPattern) {
       player.alg = orientationResetAlg;
     }
     if (cameraLatitude != null) {
@@ -304,6 +316,12 @@ export function TwistyCube({
   useEffect(() => {
     const player = playerRef.current;
     const duplicateMove = Boolean(appendMoveKey) && appendedMoveKeyRef.current === appendMoveKey;
+    if (targetPattern) {
+      // The target already includes this event. Do not replay it if the user
+      // leaves training for the editor before another physical turn arrives.
+      appendedMoveKeyRef.current = appendMoveKey ?? '';
+      return;
+    }
     if (!player || !appendMove || !appendMoveKey) {
       return;
     }
@@ -318,7 +336,40 @@ export function TwistyCube({
       }
       player.experimentalAddMove(move, { cancel: false });
     }
-  }, [appendMove, appendMoveKey]);
+  }, [appendMove, appendMoveKey, targetPattern]);
+
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player || !targetPattern) {
+      targetPatternRef.current = null;
+      targetSeedRef.current = null;
+      return;
+    }
+    const previous = targetPatternRef.current;
+    const seed = targetSeedRef.current;
+    const delta = previous && seed?.alg === alg && seed.resetToken === resetToken
+      ? get2x2VisualDelta(previous, targetPattern) : null;
+    targetPatternRef.current = targetPattern;
+    targetSeedRef.current = { alg, resetToken };
+    if (delta === null) {
+      // Case changes and batched turns replace the picture exactly. Never
+      // animate a stale raw axis sequence over a different reference frame.
+      player.pause();
+      player.alg = patternToPlayerAlg(targetPattern);
+    } else {
+      for (const move of delta.split(/\s+/).filter(Boolean)) {
+        player.experimentalAddMove(move, { cancel: false });
+      }
+    }
+  }, [targetPattern, alg, resetToken]);
+
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!autoplay || !player || !alg) return;
+    player.jumpToStart();
+    player.play();
+    return () => player.pause();
+  }, [autoplay, alg, resetToken]);
 
   return <div ref={hostRef} className={className} />;
 }

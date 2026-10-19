@@ -143,3 +143,17 @@ export async function getScrambleToSolution(alg: string, state: KPattern) {
     .toString()
     .trim();
 }
+
+/** U/R/F corrections applied directly to the exact state used by the picture. */
+export async function get2x2RecoveryMoves(current: KPattern, target: KPattern): Promise<string[]> {
+  if (fixOrientation(current).isIdentical(fixOrientation(target))) return [];
+  const from = patternToPlayerAlg(current);
+  const to = patternToPlayerAlg(target);
+  const relative = new Alg(`${new Alg(from).invert()} ${to}`);
+  const correction = await to2x2SensorMoves(relative);
+  const moves = correction.split(/\s+/).filter(Boolean);
+  if (!fixOrientation(current.applyAlg(correction)).isIdentical(fixOrientation(target))) {
+    throw new Error('Could not calculate recovery. Refresh the picture and retry.');
+  }
+  return moves;
+}

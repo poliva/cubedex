@@ -46,6 +46,7 @@ vi.mock('../../src/lib/auf', () => ({
 }));
 
 vi.mock('../../src/lib/cube-utils', () => ({
+  patternCubeSize: (pattern: any) => pattern.patternData.EDGES ? 3 : 2,
   solvedPattern: vi.fn(async () => mockState.patterns.solved),
 }));
 

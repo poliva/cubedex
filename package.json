@@ -17,7 +17,7 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "rxjs": "^7.8.2",
-    "smartcube-web-bluetooth": "github:poliva/smartcube-web-bluetooth",
+    "smartcube-web-bluetooth": "file:../smartcube-web-bluetooth",
     "three": "0.170.0"
   },
   "devDependencies": {

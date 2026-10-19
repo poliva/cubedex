@@ -1,12 +1,18 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+import { Alg } from 'cubing/alg';
+import type { ComponentProps } from 'react';
+import { solvedPattern } from '../../src/lib/cube-utils';
 import { PracticeView } from '../../src/views/PracticeView';
 
+vi.mock('../../src/components/TwistyCube', () => ({ TwistyCube: () => <div data-testid="recovery-cube" /> }));
 vi.mock('../../src/views/CaseGrid', () => ({ CaseGrid: () => <div data-testid="case-grid" /> }));
 vi.mock('../../src/views/MainCubeArea', () => ({
-  MainCubeArea: ({ puzzle, experimentalStickering }: { puzzle: string; experimentalStickering: string }) => (
-    <div data-testid="main-cube-area" data-puzzle={puzzle} data-stickering={experimentalStickering} />
+  MainCubeArea: ({ puzzle, experimentalStickering, alg, appendMoveKey, appendMove, targetPattern, gyroscopeEnabled }: ComponentProps<typeof import('../../src/views/MainCubeArea').MainCubeArea>) => (
+    <div data-testid="main-cube-area" data-puzzle={puzzle} data-stickering={experimentalStickering}
+      data-alg={alg} data-append-key={appendMoveKey} data-append-move={appendMove} data-target={targetPattern ? JSON.stringify(targetPattern.patternData) : undefined}
+      data-gyro={String(gyroscopeEnabled)} />
   ),
 }));
 vi.mock('../../src/views/MoveListPanel', () => ({ MoveListPanel: () => <div data-testid="move-list-panel" /> }));
@@ -687,4 +693,120 @@ describe('PracticeView', () => {
     expect(smartOrder.compareDocumentPosition(randomAuf)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(prioritizeFailed.compareDocumentPosition(timeAttack)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
+});
+
+
+describe('puzzle-specific mistake guidance', () => {
+  it.each([false, true])('offers immediate 2×2 undo and visual help (mobile %s)', async isMobile => {
+    const props = makeProps();
+    props.puzzle = '2x2x2';
+    props.isMobile = isMobile;
+    props.training.recoveryTarget = await solvedPattern(2);
+    props.training.recoveryMoveCount = 1;
+    render(<PracticeView {...props} />);
+    expect(screen.getByText('Turned the wrong way? Undo your last turn.')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Help me recover' })).toBeVisible();
+    expect(screen.queryByText(/WHITE on top/)).toBeNull();
+  });
+
+  it('explains multiple errors and retains 3×3 orientation guidance', async () => {
+    const props = makeProps();
+    props.puzzle = '2x2x2';
+    props.training.recoveryTarget = await solvedPattern(2);
+    props.training.recoveryMoveCount = 3;
+    const { rerender } = render(<PracticeView {...props} />);
+    expect(screen.getByText(/Undo your recent turns/)).toBeVisible();
+    props.puzzle = '3x3x3';
+    props.training.helpTone = 'red';
+    rerender(<PracticeView {...props} training={{ ...props.training }} />);
+    expect(screen.getByText(/WHITE on top and GREEN on front/)).toBeVisible();
+  });
+});
+
+
+it.each(['disconnect', 'case', 'puzzle', 'editor', 'reset', 'cancel'])('cleans up visual recovery on %s', async reason => {
+  const props = makeProps();
+  const target = await solvedPattern(2);
+  const current = target.applyAlg('R F');
+  props.puzzle = '2x2x2';
+  props.training.recoveryTarget = target;
+  props.training.recoveryMoveCount = 2;
+  props.training.checkRecovery = vi.fn(() => false);
+  props.smartcube.currentPattern = current;
+  props.smartcube.refreshPattern = vi.fn(async () => current);
+  const user = userEvent.setup();
+  const { rerender } = render(<PracticeView {...props} />);
+  await user.click(screen.getByRole('button', { name: 'Help me recover' }));
+  await screen.findByRole('button', { name: 'My cube matches' });
+  if (reason === 'cancel') {
+    await user.click(screen.getByRole('button', { name: 'Back to undo help' }));
+    expect(screen.getByRole('button', { name: 'Help me recover' })).toBeVisible();
+  } else {
+    if (reason === 'disconnect') props.smartcube = { ...props.smartcube, connected: false };
+    if (reason === 'case') props.training = { ...props.training, currentCase: { ...props.training.currentCase, id: 'new-case' } };
+    if (reason === 'puzzle') props.puzzle = '3x3x3';
+    if (reason === 'editor') props.showAlgEditor = true;
+    if (reason === 'reset') props.training = { ...props.training, visualResetKey: 2, recoveryTarget: null };
+    rerender(<PracticeView {...props} />);
+  }
+  expect(screen.queryByRole('region', { name: '2×2 visual recovery' })).toBeNull();
+});
+
+
+it.each([false, true])('keeps the selected 2×2 case preview when sensor stickers change (mobile %s)', async isMobile => {
+  const solved = await solvedPattern(2);
+  const algorithm = "R U R'";
+  const setup = new Alg(algorithm).invert().toString();
+  const props = makeProps({ puzzle: '2x2x2', isMobile, mainCubeAlg: setup });
+  props.smartcube.currentPattern = solved.applyAlg('R2 F');
+  const { rerender } = render(<PracticeView {...props} />);
+  const shownPattern = () => solved.applyAlg(screen.getByTestId('main-cube-area').dataset.alg!);
+
+  expect(shownPattern().isIdentical(solved.applyAlg(setup))).toBe(true);
+  expect(shownPattern().isIdentical(props.smartcube.currentPattern)).toBe(false);
+
+  props.smartcube = { ...props.smartcube, currentPattern: solved.applyAlg('F U2') };
+  props.smartcubeAppendMoveKey = 'received-turn';
+  props.smartcubeAppendMove = 'U';
+  rerender(<PracticeView {...props} />);
+  expect(shownPattern().isIdentical(solved.applyAlg(setup))).toBe(true);
+  expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-append-key', 'received-turn');
+  expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-append-move', 'U');
+
+  const nextAlgorithm = "F R U R' F'";
+  const nextSetup = new Alg(nextAlgorithm).invert().toString();
+  props.mainCubeAlg = nextSetup;
+  props.training = { ...props.training, displayAlg: nextAlgorithm, visualResetKey: 2,
+    currentCase: { ...props.training.currentCase, id: 'next-case', algorithm: nextAlgorithm } };
+  rerender(<PracticeView {...props} />);
+  expect(shownPattern().isIdentical(solved.applyAlg(nextSetup))).toBe(true);
+  expect(shownPattern().isIdentical(props.smartcube.currentPattern)).toBe(false);
+});
+
+
+it.each([false, true])('renders the selected case in the carried frame with gyro %s', async gyroscope => {
+  const solved = await solvedPattern(2);
+  const algorithm = "R U R'";
+  const selectedCase = solved.applyAlg(new Alg(algorithm).invert());
+  const start = solved.applyAlg('R2 F U');
+  const props = makeProps({ puzzle: '2x2x2', mainCubeAlg: new Alg(algorithm).invert().toString() });
+  props.training.caseStartPattern = start;
+  props.training.displayAlg = algorithm;
+  props.options.gyroscope = gyroscope;
+  props.smartcube = { ...props.smartcube, currentPattern: start.applyAlg("y'") };
+  const { rerender } = render(<PracticeView {...props} />);
+  const shownData = () => JSON.parse(screen.getByTestId('main-cube-area').dataset.target!);
+  expect(shownData()).toEqual(selectedCase.applyAlg("y'").patternData);
+  expect(shownData()).not.toEqual(props.smartcube.currentPattern.patternData);
+  expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-gyro', String(gyroscope));
+
+  props.smartcube = { ...props.smartcube, currentPattern: start.applyAlg("R y'") };
+  props.smartcubeAppendMoveKey = 'turn';
+  props.smartcubeAppendMove = 'F';
+  rerender(<PracticeView {...props} />);
+  expect(shownData()).toEqual(selectedCase.applyAlg("R y'").patternData);
+
+  props.scramble = { ...props.scramble, scrambleMode: true };
+  rerender(<PracticeView {...props} />);
+  expect(screen.getByTestId('main-cube-area')).not.toHaveAttribute('data-target');
 });

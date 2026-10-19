@@ -15,7 +15,7 @@ import {
 } from '../lib/case-cards';
 import { countMovesETM } from '../lib/charts';
 import { prepareTrainingAlgorithm } from '../lib/auf';
-import { solvedPattern } from '../lib/cube-utils';
+import { patternCubeSize, solvedPattern } from '../lib/cube-utils';
 import { fixOrientation } from '../lib/scramble';
 import { getInverseMove, getOppositeMove, sanitizeMove, trailingWholeCubeRotationMoveCount } from '../lib/move-helpers';
 import {
@@ -134,6 +134,7 @@ export interface TrainingState {
   countdownActive: boolean;
   countdownValue: number | null;
   visualResetKey: number;
+  caseStartPattern: KPattern | null;
   algInput: string;
   displayAlg: string;
   currentCase: CaseCardData | null;
@@ -143,6 +144,10 @@ export interface TrainingState {
   statsAlgId: string;
   displayMoves: TrainingDisplayMove[];
   fixText: string;
+  recoveryTarget: KPattern | null;
+  recoveryMoveCount: number;
+  recoveredAt: number;
+  checkRecovery: (pattern: KPattern) => boolean;
   fixVisible: boolean;
   helpTone: 'hidden' | 'red';
   failedCounts: Record<string, number>;
@@ -593,11 +598,27 @@ export function useTrainingState(
   const [timerText, setTimerText] = useState('');
   const [countdownValue, setCountdownValue] = useState<number | null>(null);
   const [visualResetKey, setVisualResetKey] = useState(0);
+  const [caseStartPattern, setCaseStartPattern] = useState<KPattern | null>(null);
   const [algInput, setAlgInputState] = useState('');
   const [displayAlg, setDisplayAlg] = useState('');
   const [currentCase, setCurrentCase] = useState<CaseCardData | null>(null);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
   const [badMoves, setBadMoves] = useState<string[]>([]);
+  const [recoveryTarget, setRecoveryTarget] = useState<KPattern | null>(null);
+  const recoveryTargetRef = useRef<KPattern | null>(null);
+  const [recoveryMoveCount, setRecoveryMoveCount] = useState(0);
+  const [recoveredAt, setRecoveredAt] = useState(0);
+
+  function checkRecovery(pattern: KPattern) {
+    const target = recoveryTargetRef.current;
+    if (!target || !fixOrientation(pattern).isIdentical(fixOrientation(target))) return false;
+    recoveryTargetRef.current = null;
+    setRecoveryTarget(null);
+    setRecoveryMoveCount(0);
+    setBadMoves([]);
+    setRecoveredAt(performance.now());
+    return true;
+  }
   const [fixVisible, setFixVisible] = useState(false);
   const [helpTone, setHelpTone] = useState<'hidden' | 'red'>('hidden');
   const [failedCounts, setFailedCounts] = useState<Record<string, number>>({});
@@ -621,6 +642,10 @@ export function useTrainingState(
   const trainingGenerationRef = useRef(0);
   const initialPatternRef = useRef<KPattern | null>(null);
   const patternStatesRef = useRef<KPattern[]>([]);
+  // Comparison states discard whole-cube rotation; these retain the frame in
+  // which the displayed algorithm was executed, across automatic case changes.
+  const patternStatesInTrainingFrameRef = useRef<KPattern[]>([]);
+  const halfTurnStatesRef = useRef<KPattern[][]>([]);
   // Hash of each pattern in `patternStatesRef` → index in that array.
   // Used to replace an O(n) `isIdentical` scan per smartcube move with an O(1) lookup.
   const patternHashMapRef = useRef<Map<string, number>>(new Map());
@@ -854,7 +879,7 @@ export function useTrainingState(
     syncTimeAttackProgress(false, selectedQueueRef.current.length > 0 ? 1 : 0, timeAttackTotalCasesRef.current);
   }
 
-  function prepareNextTimeAttack(totalTimeText?: string) {
+  function prepareNextTimeAttack(totalTimeText?: string, completedPattern?: KPattern | null) {
     clearTimeAttackSession();
     resetTimeAttackQueue();
     if (totalTimeText == null) {
@@ -866,7 +891,7 @@ export function useTrainingState(
       return;
     }
 
-    void trainCurrent(undefined, {
+    void trainCurrent(completedPattern, {
       algorithm: firstCase.algorithm,
       statsScopeId: getTimeAttackStatsScopeId(),
     }).then(() => {
@@ -927,7 +952,7 @@ export function useTrainingState(
       fixTimeoutRef.current = null;
     }
 
-    if (!displayState.fixText || displayState.suppressedFix) {
+    if (!recoveryTarget && (!displayState.fixText || displayState.suppressedFix)) {
       setFixVisible(false);
       setHelpTone('hidden');
       hasShownFailureFlashRef.current = false;
@@ -938,7 +963,7 @@ export function useTrainingState(
       setFixVisible(true);
 
       const fixMoveLength = countMovesETM(displayState.fixText);
-      if (fixMoveLength > previousFixLengthRef.current && fixMoveLength > 1) {
+      if (recoveryTarget || (fixMoveLength > previousFixLengthRef.current && fixMoveLength > 1)) {
         setHelpTone('red');
       } else {
         setHelpTone('hidden');
@@ -960,7 +985,7 @@ export function useTrainingState(
         fixTimeoutRef.current = null;
       }
     };
-  }, [displayState.fixText, displayState.suppressedFix, options.prioritizeFailedCases]);
+  }, [displayState.fixText, displayState.suppressedFix, recoveryTarget, options.prioritizeFailedCases]);
 
   function setAlgInput(value: string) {
     setAlgInputState(value);
@@ -1213,8 +1238,15 @@ export function useTrainingState(
   }
 
   function clearProgressState() {
+    setCaseStartPattern(null);
+    recoveryTargetRef.current = null;
+    setRecoveryTarget(null);
+    setRecoveryMoveCount(0);
+    setRecoveredAt(0);
     expectedMovesRef.current = [];
     patternStatesRef.current = [];
+    patternStatesInTrainingFrameRef.current = [];
+    halfTurnStatesRef.current = [];
     patternHashMapRef.current.clear();
     lastMovesRef.current = [];
     solutionMovesRef.current = [];
@@ -1384,6 +1416,7 @@ export function useTrainingState(
       ?? createGlobalScopeId(normalizedAlgorithm, options.puzzle ?? categoryPuzzle(category));
 
     clearProgressState();
+    setCaseStartPattern(basePattern);
     clearRecognitionTracking();
     setInputMode(false);
     setScrambleMode(false);
@@ -1391,10 +1424,17 @@ export function useTrainingState(
     expectedMovesRef.current = prepared.moves.map(sanitizeMove);
     // Keyboard-only puzzles do not need the cube-specific Bluetooth state matcher.
     patternStatesRef.current = [];
+    patternStatesInTrainingFrameRef.current = [];
+    halfTurnStatesRef.current = [];
     if (basePattern) {
       let previousPattern = basePattern;
       patternStatesRef.current = expectedMovesRef.current.map((move) => {
+        const face = patternCubeSize(basePattern) === 2 && /^[URFDLB]2'?$/i.test(move) ? move[0] : null;
+        halfTurnStatesRef.current.push(face
+          ? [fixOrientation(previousPattern.applyMove(face)), fixOrientation(previousPattern.applyMove(`${face}'`))]
+          : []);
         previousPattern = previousPattern.applyMove(move);
+        patternStatesInTrainingFrameRef.current.push(previousPattern);
         return fixOrientation(previousPattern);
       });
     }
@@ -1632,7 +1672,7 @@ export function useTrainingState(
     selectedCases,
   ]);
 
-  function stopAndRecordSolve(timeMs: number): CaseReviewEntry | null {
+  function stopAndRecordSolve(timeMs: number, completedPattern?: KPattern): CaseReviewEntry | null {
     const algId = originalAlgIdRef.current || 'default-alg-id';
     const completedCaseId = currentCaseRef.current?.id;
     let finalTime = Math.round(timeMs);
@@ -1655,7 +1695,7 @@ export function useTrainingState(
       }
       isKeyboardTimerActiveRef.current = false;
 
-      const nextInitialPattern = patternStatesRef.current.at(-1) ?? initialPatternRef.current;
+      const nextInitialPattern = completedPattern ?? patternStatesRef.current.at(-1) ?? initialPatternRef.current;
       const nextCase = advanceTimeAttackQueue();
       if (nextCase) {
         void trainCurrent(nextInitialPattern, {
@@ -1684,7 +1724,7 @@ export function useTrainingState(
       setLastSolveIsPb(previousTimeAttackBest == null || totalWallTime < previousTimeAttackBest);
       setLastSolveAlgName('Time Attack');
       setTimerStateInternal('STOPPED');
-      prepareNextTimeAttack(totalTimeText);
+      prepareNextTimeAttack(totalTimeText, nextInitialPattern);
       return null;
     }
 
@@ -1834,8 +1874,24 @@ export function useTrainingState(
     }
 
     const patternAfterMove = fixOrientation(currentPattern);
-    if (patternStatesRef.current.length > 0 && currentMoveIndex === 0 && initialPatternRef.current?.isIdentical(patternAfterMove)) {
-      resetAttemptStateKeepAlgorithm();
+    const is2x2 = patternCubeSize(currentPattern) === 2;
+    if (is2x2 && recoveryTargetRef.current) {
+      // Only the last correct position ends recovery. Visiting a later training
+      // state while correcting must never finish or restart the attempt.
+      if (!checkRecovery(currentPattern)) {
+        setBadMoves([...badMoves, ...capturedMoves.map(entry => entry.move)]);
+        setRecoveryMoveCount(count => count + capturedMoves.length);
+      }
+      return false;
+    }
+    if (is2x2 && initialPatternRef.current && currentMoveIndex < 0
+      && patternAfterMove.isIdentical(fixOrientation(initialPatternRef.current))) return false;
+    if (patternStatesRef.current.length > 0 && currentMoveIndex === 0 && initialPatternRef.current
+      && (is2x2 ? fixOrientation(initialPatternRef.current) : initialPatternRef.current).isIdentical(patternAfterMove)) {
+      if (is2x2) {
+        setCurrentMoveIndex(-1);
+        setBadMoves([]);
+      } else resetAttemptStateKeepAlgorithm();
       return false;
     }
 
@@ -1870,10 +1926,16 @@ export function useTrainingState(
         && matchedIndex === lastLayerMoveIndex;
 
       if (matchedIndex === expectedMovesRef.current.length - 1 || finishedIncludingIgnoredRotations) {
-        const completedPattern = patternAfterMove;
+        // Both a normalized comparison and the device's equivalent snapshot
+        // may be rotated relative to the grip used for this algorithm. Carry
+        // the matched state in the algorithm's original frame so the next
+        // case keeps the same physical turn axes, including on queue wrap.
+        const completedPattern = is2x2
+          ? patternStatesInTrainingFrameRef.current[matchedIndex]
+          : patternAfterMove;
         initialPatternRef.current = completedPattern;
         setCurrentMoveIndex(0);
-        const review = stopAndRecordSolve(getElapsedMs());
+        const review = stopAndRecordSolve(getElapsedMs(), completedPattern);
 
         if (options.smartcubeConnected && !options.timeAttack) {
           switchToNextAlgorithm(review ?? undefined);
@@ -1889,6 +1951,22 @@ export function useTrainingState(
         return true;
       }
       return false;
+    }
+
+    if (is2x2) {
+      if (halfTurnStatesRef.current[nextExpectedIdx]?.some(pattern => pattern.isIdentical(patternAfterMove))) {
+        setBadMoves(capturedMoves.map(entry => entry.move));
+        return false;
+      }
+      const anchor = currentMoveIndex < 0 ? initialPatternRef.current : patternStatesRef.current[currentMoveIndex];
+      if (anchor) {
+        recoveryTargetRef.current = anchor;
+        setRecoveryTarget(anchor);
+        setRecoveryMoveCount(capturedMoves.length);
+        setRecoveredAt(0);
+        setBadMoves(capturedMoves.map(entry => entry.move));
+        return false;
+      }
     }
 
     const wrongMoves = capturedMoves.map((entry) => entry.move);
@@ -1960,6 +2038,7 @@ export function useTrainingState(
     keepInitialStateRef.current = value;
   }
 
+  const stableCheckRecovery = useStableCallback(checkRecovery);
   const stableSetAlgInput = useStableCallback(setAlgInput);
   const stableClearFailedCounts = useStableCallback(clearFailedCounts);
   const stableEnterInputMode = useStableCallback(enterInputMode);
@@ -1987,6 +2066,7 @@ export function useTrainingState(
     countdownActive,
     countdownValue,
     visualResetKey,
+    caseStartPattern,
     algInput,
     displayAlg,
     currentCase,
@@ -1996,6 +2076,10 @@ export function useTrainingState(
     statsAlgId,
     displayMoves: displayState.moves,
     fixText: displayState.fixText,
+    recoveryTarget,
+    recoveryMoveCount,
+    recoveredAt,
+    checkRecovery: stableCheckRecovery,
     fixVisible,
     helpTone,
     failedCounts,
@@ -2021,6 +2105,11 @@ export function useTrainingState(
     resetDrill: stableResetDrill,
     setKeepInitialState: stableSetKeepInitialState,
   }), [
+    caseStartPattern,
+    recoveryTarget,
+    recoveryMoveCount,
+    recoveredAt,
+    stableCheckRecovery,
     algInput,
     currentCase,
     displayAlg,
