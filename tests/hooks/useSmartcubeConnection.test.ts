@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react';
 import { Subject } from 'rxjs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SmartCubeCommand, SmartCubeEvent } from 'smartcube-web-bluetooth';
 
 vi.mock('smartcube-web-bluetooth', () => ({
@@ -16,6 +16,7 @@ import { faceletsToPattern, patternToFacelets, solvedFacelets, solvedPattern } f
 let events: Subject<SmartCubeEvent>;
 let size: 2 | 3;
 let deviceName: string;
+let batterySupported: boolean;
 let timestamp: number;
 let physicalFacelets: string;
 let sendCommand: ReturnType<typeof vi.fn>;
@@ -31,6 +32,7 @@ beforeEach(() => {
   events = new Subject<SmartCubeEvent>();
   size = 2;
   deviceName = 'Smart cube';
+  batterySupported = false;
   timestamp = 0;
   physicalFacelets = solvedFacelets(2);
   sendCommand = vi.fn(async (command: SmartCubeCommand) => {
@@ -40,9 +42,92 @@ beforeEach(() => {
   });
   vi.mocked(connectSmartCube).mockImplementation(async () => ({
     deviceName, deviceMAC: '', protocol: { id: 'test', name: 'Test' },
-    capabilities: { gyroscope: false, battery: false, facelets: true, hardware: false, reset: true },
+    capabilities: { gyroscope: false, battery: batterySupported, facelets: true, hardware: false, reset: true },
     events$: events.asObservable(), sendCommand, disconnect: vi.fn(async () => undefined),
   }));
+});
+
+describe('smartcube battery refresh', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    deviceName = 'GAN16ui_FF89';
+    batterySupported = true;
+    // Keep these tests focused on battery traffic, without asynchronous facelet conversion.
+    sendCommand.mockImplementation(async () => {});
+  });
+  afterEach(() => vi.useRealTimers());
+
+  const batteryRequests = () => sendCommand.mock.calls.filter(([c]) => c.type === 'REQUEST_BATTERY').length;
+
+  it('recovers a missing startup reply and refreshes the displayed level every minute', async () => {
+    const { result } = renderHook(() => useSmartcubeConnection(false));
+    await act(async () => { await result.current.connectOrDisconnect(); });
+    expect(batteryRequests()).toBe(1);
+    expect(result.current.battery.level).toBeNull();
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+    expect(batteryRequests()).toBe(2);
+    act(() => events.next({ type: 'BATTERY', batteryLevel: 100, timestamp: ++timestamp }));
+    expect(result.current.battery.level).toBe(100);
+    expect(result.current.info.batteryLevel).toBe('100%');
+    await act(async () => { await vi.advanceTimersByTimeAsync(59_999); });
+    expect(batteryRequests()).toBe(2);
+    sendCommand.mockImplementation(async command => {
+      if (command.type === 'REQUEST_BATTERY') events.next({ type: 'BATTERY', batteryLevel: 99, timestamp: ++timestamp });
+    });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(result.current.battery.level).toBe(99);
+    expect(result.current.info.batteryLevel).toBe('99%');
+  });
+
+  it('bounds startup retries and backs off to once a minute without a reply', async () => {
+    const { result } = renderHook(() => useSmartcubeConnection(false));
+    await act(async () => { await result.current.connectOrDisconnect(); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(6000); });
+    expect(batteryRequests()).toBe(4);
+    await act(async () => { await vi.advanceTimersByTimeAsync(59_999); });
+    expect(batteryRequests()).toBe(4);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(batteryRequests()).toBe(5);
+  });
+
+  it('keeps the connection usable after a battery write failure and retries', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    sendCommand.mockImplementation(async command => {
+      if (command.type === 'REQUEST_BATTERY') throw new Error('GATT busy');
+    });
+    const { result } = renderHook(() => useSmartcubeConnection(false));
+    await act(async () => { await result.current.connectOrDisconnect(); });
+    expect(result.current.connected).toBe(true);
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+    expect(batteryRequests()).toBe(2);
+    sendCommand.mockImplementation(async command => {
+      if (command.type === 'REQUEST_BATTERY') events.next({ type: 'BATTERY', batteryLevel: 0, timestamp: ++timestamp });
+    });
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+    expect(result.current.battery.level).toBe(0);
+    expect(result.current.battery.color).toBe('red');
+  });
+
+  it.each(['disconnect', 'unmount'] as const)('stops battery requests on %s', async action => {
+    const { result, unmount } = renderHook(() => useSmartcubeConnection(false));
+    await act(async () => { await result.current.connectOrDisconnect(); });
+    if (action === 'disconnect') {
+      await act(async () => { await result.current.connectOrDisconnect(); });
+      expect(result.current.battery.level).toBeNull();
+    } else {
+      unmount();
+    }
+    await act(async () => { await vi.advanceTimersByTimeAsync(120_000); });
+    expect(batteryRequests()).toBe(1);
+  });
+
+  it('does not request battery from devices without battery support', async () => {
+    batterySupported = false;
+    const { result } = renderHook(() => useSmartcubeConnection(false));
+    await act(async () => { await result.current.connectOrDisconnect(); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(120_000); });
+    expect(batteryRequests()).toBe(0);
+  });
 });
 
 describe('smartcube puzzle size', () => {

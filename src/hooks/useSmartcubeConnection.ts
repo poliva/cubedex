@@ -219,6 +219,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   const [disconnectToken, setDisconnectToken] = useState(0);
   const [connectLabel, setConnectLabel] = useState('Connect');
   const [batteryLevel, setBatteryLevel] = useState<number | null>(null);
+
   const [info, setInfo] = useState<SmartcubeDeviceInfo>(EMPTY_INFO);
   const [currentFacelets, setCurrentFacelets] = useState<string | null>(null);
   const [currentPattern, setCurrentPattern] = useState<KPattern | null>(null);
@@ -231,6 +232,34 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   const cubeQuaternionRefMirrorThrottleRef = useRef<number>(0);
   const gyroInfoThrottleRef = useRef<number>(0);
   const gyroInfoRef = useRef<{ quaternionText: string; velocityText: string | null }>({ quaternionText: '', velocityText: null });
+
+  useEffect(() => {
+    const connection = connRef.current;
+    if (!connected || !connection?.capabilities.battery) return;
+
+    // A completed GATT write does not guarantee a battery reply. Retry missing
+    // startup replies, then refresh while connected so the display stays current.
+    let cancelled = false;
+    let retries = 0;
+    const nextDelay = () => batteryLevel == null && retries < 3 ? 2000 : 60_000;
+    const requestBattery = async () => {
+      if (cancelled || connRef.current !== connection) return;
+      retries++;
+      try {
+        await connection.sendCommand({ type: 'REQUEST_BATTERY' });
+      } catch (error) {
+        console.warn('Could not refresh smartcube battery', error);
+      }
+      if (!cancelled && connRef.current === connection) {
+        timer = window.setTimeout(() => void requestBattery(), nextDelay());
+      }
+    };
+    let timer = window.setTimeout(() => void requestBattery(), nextDelay());
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [connected, batteryLevel]);
 
   useEffect(() => {
     writeOption(
@@ -685,7 +714,11 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       await connRef.current.sendCommand({ type: 'REQUEST_FACELETS' });
     }
     if (connRef.current.capabilities.battery) {
-      await connRef.current.sendCommand({ type: 'REQUEST_BATTERY' });
+      try {
+        await connRef.current.sendCommand({ type: 'REQUEST_BATTERY' });
+      } catch (error) {
+        console.warn('Could not read smartcube battery', error);
+      }
     }
 
     setInfo((current) => ({
