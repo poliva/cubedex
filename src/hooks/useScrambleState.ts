@@ -114,7 +114,8 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
           aufModifiedAlgorithm,
           currentPattern ?? await solvedPattern(puzzle === '2x2x2' ? 2 : 3),
         )
-        : Alg.fromString(expandNotation(aufModifiedAlgorithm, puzzle)).invert().toString().trim();
+        // Show individual setup moves, including inverses of groups and repetitions.
+        : Alg.fromString(expandNotation(aufModifiedAlgorithm, puzzle)).invert().expand().toString().trim();
 
       if (generation !== generationRef.current) return false;
       if (scramble.length > 0) {

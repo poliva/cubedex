@@ -33,6 +33,19 @@ describe('useScrambleState', () => {
     });
   });
 
+  it.each(['4x4x4', '5x5x5', 'pyraminx', 'megaminx'] as const)(
+    'shows the same individual setup moves with or without parentheses for %s', async (puzzle) => {
+      const { result } = renderHook(() => useScrambleState(puzzle));
+      const expected = "R U R' U R U R'";
+      for (const algorithm of ["R U' R' U' R U' R'", "(R U' R') U' (R U' R')"]) {
+        await act(async () => {
+          await expect(result.current.startScrambleTo(algorithm, null)).resolves.toBe(true);
+        });
+        expect(result.current.scrambleText).toBe(expected);
+      }
+    },
+  );
+
   it.each([
     ['4x4x4', "(Rw U2 Rw')2"],
     ['5x5x5', "3Rw U Rw' U'"],
@@ -50,6 +63,7 @@ describe('useScrambleState', () => {
     expect(result.current.scrambleMode).toBe(true);
     expect(result.current.targetAlgorithm).toBe(algorithm);
     expect(result.current.isComputing).toBe(false);
+    expect(result.current.scrambleText).not.toMatch(/[()[\],:]/);
     expect(mockedGetScrambleToSolution).not.toHaveBeenCalled();
 
     await act(async () => {
