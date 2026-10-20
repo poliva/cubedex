@@ -12,7 +12,7 @@ import { useTrainingState } from '../../src/hooks/useTrainingState';
 import { useScrambleState } from '../../src/hooks/useScrambleState';
 import { getCaseCards } from '../../src/lib/case-cards';
 import { align2x2RecoveryPattern, alignForGuidance, fixOrientation, get2x2RecoveryMoves } from '../../src/lib/scramble';
-import { HOME_ORIENTATION } from '../../src/lib/cube-orientation';
+import { guidanceFrameRotation, HOME_ORIENTATION } from '../../src/lib/cube-orientation';
 
 const drawing = vi.hoisted(() => ({
   solved: null as KPattern | null,
@@ -177,6 +177,49 @@ describe('TwistyCube training frame', () => {
       orientationResetAlg={null} gyroscopeEnabled cubeQuaternionRef={cubeQuaternionRef} />);
     await frames.advance(24);
     expect(drawing.object!.quaternion.angleTo(rotation)).toBeLessThan(.001);
+  });
+
+  it.each([false, true])('keeps the next PBL view and R turn steady while preserving hand tilts (guided %s)', async fixedOrientation => {
+    const frames = orientationFrames();
+    const { default: defaults } = await import('../../src/data/defaultAlgs.json');
+    const cards = getCaseCards(defaults, '2x2x2:PBL', ['Ortega PBL']);
+    const solved = await solvedPattern(2);
+    drawing.solved = solved;
+    drawing.moves = [];
+    let physical = solved;
+    for (const card of cards.slice(0, 4)) physical = physical.applyAlg(card.algorithm);
+    expect(cards[3].name).toBe('Adj Adj - 2 bars');
+    const sensorFrame = (pattern: KPattern) => guidanceFrameRotation(pattern, fixOrientation(pattern))!;
+    const gyroFrame = sensorFrame(physical);
+    const cubeQuaternionRef = { current: HOME_ORIENTATION.clone().multiply(gyroFrame.clone().invert()) };
+    const picture = solved.applyAlg(new Alg(cards[4].algorithm).invert());
+    const props = {
+      puzzle: '2x2x2' as const, alg: '', targetPattern: picture, fixedOrientation,
+      sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      experimentalStickering: 'full', setupAlg: '', backView: 'none' as const,
+      resetToken: 'after-adj-adj', orientationResetToken: 0, orientationResetAlg: null,
+      gyroscopeEnabled: true, cubeQuaternionRef, gyroFrameQuaternion: gyroFrame,
+    };
+    const { rerender } = render(<MainCubeArea {...props} />);
+    await frames.advance(64);
+    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
+    expect(drawing.current!.isIdentical(picture)).toBe(true);
+    physical = physical.applyMove('R');
+    const nextFrame = sensorFrame(physical);
+    cubeQuaternionRef.current = HOME_ORIENTATION.clone().multiply(nextFrame.clone().invert());
+    rerender(<MainCubeArea {...props} targetPattern={picture.applyMove('R')} gyroFrameQuaternion={nextFrame} />);
+    await frames.advance(64);
+    expect(drawing.moves).toEqual(['R']);
+    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
+    // Keep real hand motion; only the sticker report's frame is compensated.
+    const tilt = new THREE.Quaternion().setFromEuler(new THREE.Euler(.2, -.3, .1));
+    cubeQuaternionRef.current = HOME_ORIENTATION.clone().multiply(tilt).multiply(nextFrame.clone().invert());
+    await frames.advance(64);
+    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION.clone().multiply(tilt))).toBeLessThan(1e-6);
+    // New sticker packets may briefly arrive before training reconciles them.
+    rerender(<MainCubeArea {...props} targetPattern={picture.applyMove('R')} gyroFrameQuaternion={null} />);
+    await frames.advance();
+    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION.clone().multiply(tilt))).toBeLessThan(1e-6);
   });
 
   it('renders a guided OLL-4 f turn as a back-layer turn plus one physical gyro rotation', async () => {

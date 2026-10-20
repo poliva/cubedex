@@ -25,6 +25,7 @@ interface MainCubeAreaProps {
   appendMoveKey?: string;
   appendMove?: string;
   gyroscopeEnabled: boolean;
+  gyroFrameQuaternion?: SmartcubeQuaternion | null;
   cubeQuaternionRef: MutableRefObject<SmartcubeQuaternion | null>;
 }
 
@@ -46,6 +47,7 @@ function MainCubeAreaComponent({
   appendMoveKey,
   appendMove,
   gyroscopeEnabled,
+  gyroFrameQuaternion,
   cubeQuaternionRef,
 }: MainCubeAreaProps) {
   return (
@@ -73,6 +75,7 @@ function MainCubeAreaComponent({
         appendMove={appendMove}
         gyroscopeEnabled={gyroscopeEnabled}
         gyroscopeRelativeToGrip={fixedOrientation}
+        gyroFrameQuaternion={gyroFrameQuaternion}
         cubeQuaternionRef={cubeQuaternionRef}
         className="twisty-cube-host"
       />

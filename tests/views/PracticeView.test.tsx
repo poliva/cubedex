@@ -2,12 +2,16 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { Alg } from 'cubing/alg';
+import { KPattern } from 'cubing/kpuzzle';
+import { Quaternion } from 'three';
 import type { ComponentProps } from 'react';
 import { patternToFacelets, solvedPattern } from '../../src/lib/cube-utils';
 import { alignForGuidance, fixOrientation, patternToPlayerAlg } from '../../src/lib/scramble';
 import { useScrambleState } from '../../src/hooks/useScrambleState';
 import { useTrainingState, type TrainingState } from '../../src/hooks/useTrainingState';
 import { PracticeView } from '../../src/views/PracticeView';
+import { getTrainingVisualDelta } from '../../src/lib/training-visual';
+import { guidanceFrameRotation, HOME_ORIENTATION } from '../../src/lib/cube-orientation';
 
 vi.mock('../../src/components/TwistyCube', () => ({
   TwistyCube: (props: ComponentProps<typeof import('../../src/components/TwistyCube').TwistyCube>) =>
@@ -15,10 +19,12 @@ vi.mock('../../src/components/TwistyCube', () => ({
 }));
 vi.mock('../../src/views/CaseGrid', () => ({ CaseGrid: () => <div data-testid="case-grid" /> }));
 vi.mock('../../src/views/MainCubeArea', () => ({
-  MainCubeArea: ({ puzzle, experimentalStickering, alg, appendMoveKey, appendMove, targetPattern, gyroscopeEnabled }: ComponentProps<typeof import('../../src/views/MainCubeArea').MainCubeArea>) => (
+  MainCubeArea: ({ puzzle, experimentalStickering, alg, appendMoveKey, appendMove, targetPattern, gyroscopeEnabled, gyroFrameQuaternion }: ComponentProps<typeof import('../../src/views/MainCubeArea').MainCubeArea>) => (
     <div data-testid="main-cube-area" data-puzzle={puzzle} data-stickering={experimentalStickering}
       data-alg={alg} data-append-key={appendMoveKey} data-append-move={appendMove} data-target={targetPattern ? JSON.stringify(targetPattern.patternData) : undefined}
-      data-gyro={String(gyroscopeEnabled)} />
+      data-gyro={String(gyroscopeEnabled)} data-gyro-frame={gyroFrameQuaternion ? JSON.stringify({
+        x: gyroFrameQuaternion.x, y: gyroFrameQuaternion.y, z: gyroFrameQuaternion.z, w: gyroFrameQuaternion.w,
+      }) : undefined} />
   ),
 }));
 vi.mock('../../src/views/MoveListPanel', () => ({ MoveListPanel: () => <div data-testid="move-list-panel" /> }));
@@ -1013,6 +1019,70 @@ it('shows the verified physical setup frame after Always Scramble To, then resto
   rerender(<PracticeView {...props} />);
   expect(shownData()).toEqual(target.patternData);
   expect(shownData()).not.toEqual(other.patternData);
+});
+
+it.each([false, true])('preserves the next PBL view and R turn after Adj Adj with changing 2×2 reports (gyro %s)', async gyroscope => {
+  const { default: defaults } = await import('../../src/data/defaultAlgs.json');
+  const { getCaseCards } = await import('../../src/lib/case-cards');
+  const cards = getCaseCards(defaults, '2x2x2:PBL', ['Ortega PBL'])
+    .map(card => ({ ...card, id: `pbl-view-${gyroscope}-${card.id}` }));
+  let physical = await solvedPattern(2);
+  const props = makeProps({ puzzle: '2x2x2' });
+  props.options.gyroscope = gyroscope;
+  props.smartcube.gyroSupported = gyroscope;
+  props.smartcube.currentPattern = fixOrientation(physical);
+  props.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone();
+  let trainingState!: TrainingState;
+  function PblPractice() {
+    const training = useTrainingState(cards, '2x2x2:PBL', {
+      puzzle: '2x2x2', selectionChangeMode: 'bulk', countdownMode: false,
+      randomizeAUF: false, randomOrder: false, timeAttack: false, prioritizeSlowCases: false,
+      prioritizeFailedCases: false, smartReviewScheduling: false, smartcubeConnected: true,
+      currentPattern: props.smartcube.currentPattern,
+    });
+    const scramble = useScrambleState('2x2x2');
+    trainingState = training;
+    return <PracticeView {...props} training={training} scramble={scramble} />;
+  }
+  const { rerender } = render(<PblPractice />);
+  await act(async () => { await trainingState.trainCurrent(physical, { algorithm: cards[0].algorithm }); });
+  let event = 0;
+  async function turn(move: string) {
+    physical = physical.applyMove(move);
+    props.smartcube = { ...props.smartcube, currentPattern: fixOrientation(physical),
+      lastProcessedMove: { key: `pbl-${++event}`, move: 'F' } };
+    // A normalized report and its gyro describe the sensor's frame together.
+    const sensorFrame = guidanceFrameRotation(physical, props.smartcube.currentPattern)!;
+    props.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone().multiply(sensorFrame.clone().invert());
+    await act(async () => {
+      trainingState.handleSmartcubeMove(props.smartcube.currentPattern, 'F');
+      rerender(<PblPractice />);
+    });
+    expect(trainingState.recoveryTarget).toBeNull();
+  }
+  for (const card of cards.slice(0, 4)) {
+    expect(trainingState.currentCase?.id).toBe(card.id);
+    const moves = new Alg(card.algorithm).expand().toString().split(/\s+/)
+      .flatMap(move => /2'?$/.test(move) ? [move[0], move[0]] : [move]);
+    for (const move of moves) await turn(move);
+  }
+  expect(cards[3].name).toBe('Adj Adj - 2 bars');
+  expect(trainingState.currentCase?.name).toBe('Adj Opp - Bar on top');
+  const shown = () => new KPattern(physical.kpuzzle,
+    JSON.parse(screen.getByTestId('main-cube-area').dataset.target!));
+  const assertViewingAngle = () => {
+    if (!gyroscope) return;
+    const frame = JSON.parse(screen.getByTestId('main-cube-area').dataset.gyroFrame ?? 'null');
+    const displayed = props.smartcube.cubeQuaternionRef.current.clone()
+      .multiply(frame ? new Quaternion(frame.x, frame.y, frame.z, frame.w) : new Quaternion());
+    expect(displayed.angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
+  };
+  const before = shown();
+  assertViewingAngle();
+  await turn('R');
+  assertViewingAngle();
+  expect(getTrainingVisualDelta(before, shown())).toBe('R');
+  expect(shown().isIdentical(before.applyMove('R'))).toBe(true);
 });
 
 it.each([false, true])('guides the 2×2 wand into the algorithm grip with rotated device reports (already prepared %s)', async prepared => {

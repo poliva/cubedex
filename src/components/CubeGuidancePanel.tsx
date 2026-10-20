@@ -205,7 +205,6 @@ export function CubeGuidancePanel({ smartcube, target, onRecovered, onCancel, mo
     </div>
     {rotateFirst && orientation && <GripRotationWarning rotation={orientation.rotation} setupAlg={setup}
       size={size} onResetGyro={smartcube.resetGyro} />}
-    {orientation && !rotateFirst && orientation.rotation.angle <= 18 && <p className="grip-aligned" role="status">✓ Grip aligned</p>}
     {expert && (guiding || state.phase === 'ready') && state.steps.length > 0 && <>
       <ol className={`guidance-sequence${rotateFirst ? ' guidance-sequence--paused' : ''}`} aria-label={mode === 'setup' ? 'Setup algorithm' : 'Recovery algorithm'}>
         {sequence.map(({ move, start, end }) => <li key={start}

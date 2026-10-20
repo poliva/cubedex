@@ -33,6 +33,8 @@ export interface TwistyCubeProps {
   appendMove?: string;
   gyroscopeEnabled?: boolean;
   gyroscopeRelativeToGrip?: boolean;
+  /** Rendered sticker frame into the device frame; null waits for reconciliation. */
+  gyroFrameQuaternion?: SmartcubeQuaternion | null;
   cubeQuaternion?: SmartcubeQuaternion | null;
   cubeQuaternionRef?: MutableRefObject<SmartcubeQuaternion | null>;
   enableExternalOrientationLoop?: boolean;
@@ -85,6 +87,7 @@ export function TwistyCube({
   appendMove,
   gyroscopeEnabled = false,
   gyroscopeRelativeToGrip = false,
+  gyroFrameQuaternion,
   cubeQuaternion = null,
   cubeQuaternionRef,
   enableExternalOrientationLoop = true,
@@ -105,6 +108,17 @@ export function TwistyCube({
   const gripInverseRef = useRef<THREE.Quaternion | null>(null);
   const gripBasisVersionRef = useRef<number | undefined>(undefined);
   const targetQuaternionRef = useRef(new THREE.Quaternion());
+  const gyroFrameRef = useRef(new THREE.Quaternion());
+
+  useEffect(() => {
+    // A new sticker packet can precede its tracked training state. Keep the
+    // last known frame until those stickers can be matched again.
+    if (gyroFrameQuaternion === null) return;
+    if (gyroFrameQuaternion) {
+      const { x, y, z, w } = gyroFrameQuaternion;
+      gyroFrameRef.current.set(x, y, z, w).normalize();
+    } else gyroFrameRef.current.identity();
+  }, [gyroFrameQuaternion]);
 
   useEffect(() => {
     latestGyroscopeEnabledRef.current = gyroscopeEnabled;
@@ -118,7 +132,7 @@ export function TwistyCube({
     // The renderer adds the same home tilt used by a fresh connection.
     const q = cubeQuaternionRef ? cubeQuaternionRef.current : cubeQuaternion;
     gripInverseRef.current = gyroscopeRelativeToGrip && gyroscopeEnabled && q
-      ? new THREE.Quaternion(q.x, q.y, q.z, q.w).normalize().invert() : null;
+      ? new THREE.Quaternion(q.x, q.y, q.z, q.w).normalize().multiply(gyroFrameRef.current).invert() : null;
     gripBasisVersionRef.current = q?.basisVersion;
   }, [gyroscopeRelativeToGrip, gyroscopeEnabled, orientationResetToken]);
 
@@ -216,7 +230,8 @@ export function TwistyCube({
       if (puzzleObject) {
         const liveQuaternion = cubeQuaternionRef ? cubeQuaternionRef.current : latestQuaternionRef.current;
         if (latestGyroscopeEnabledRef.current && liveQuaternion) {
-          targetQuaternionRef.current.set(liveQuaternion.x, liveQuaternion.y, liveQuaternion.z, liveQuaternion.w);
+          targetQuaternionRef.current.set(liveQuaternion.x, liveQuaternion.y, liveQuaternion.z, liveQuaternion.w)
+            .multiply(gyroFrameRef.current);
           if (gyroscopeRelativeToGrip) {
             if (!gripInverseRef.current || gripBasisVersionRef.current !== liveQuaternion.basisVersion) {
               gripInverseRef.current = targetQuaternionRef.current.clone().normalize().invert();

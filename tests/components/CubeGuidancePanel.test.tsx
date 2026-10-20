@@ -372,7 +372,6 @@ describe('gyro grip warnings', () => {
       f.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone();
       act(() => vi.advanceTimersByTime(100));
       expect(screen.queryByRole('alert')).toBeNull();
-      expect(screen.getByText('✓ Grip aligned')).toBeVisible();
       expect(main()).toHaveAttribute('data-autoplay', String(!expert));
       expect(main().getAttribute('data-setup')).toBe(setup);
       if (!expert) expect(main()).toHaveAttribute('data-turn', "F'");

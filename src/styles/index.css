@@ -2703,6 +2703,5 @@ html.dark .footer {
 .grip-warning__reset { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--border-l); padding-top: 8px; color: var(--fg3); font-size: 12px; line-height: 1.4; }
 .grip-warning__reset span { flex: 1; }
 .grip-warning__reset button { flex-shrink: 0; }
-.grip-aligned { color: var(--ok); font-size: 13px; margin: 8px 0; }
 .guidance-sequence--paused { opacity: .5; }
 .recovery-picture--regrip { border: 2px dashed var(--warn); border-radius: 12px; }

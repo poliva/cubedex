@@ -10,6 +10,7 @@ import { averageOfFiveTimeNumber, historyTimeString } from '../lib/case-cards';
 import { getBestTime } from '../lib/storage';
 import { alignForGuidance, fixOrientation, patternToPlayerAlg } from '../lib/scramble';
 import { projectTrainingPattern } from '../lib/training-visual';
+import { guidanceFrameRotation } from '../lib/cube-orientation';
 import { CubeGuidancePanel } from '../components/CubeGuidancePanel';
 import { MainCubeArea } from './MainCubeArea';
 import { MoveListPanel } from './MoveListPanel';
@@ -307,7 +308,9 @@ export const PracticeView = memo(function PracticeView({
     if (!PUZZLES[puzzle].smartcube || !smartcube.connected || training.inputMode || scramble.scrambleMode
       || !training.displayAlg || !training.caseStartPattern || !smartcube.currentPattern) return null;
     if (puzzle === '3x3x3' && !training.casePicturePattern && !training.recoveredAt) return null;
-    const current = (training.casePicturePattern || training.recoveredAt) && training.caseCurrentPattern
+    // A 2×2 report can choose a different corner frame between cases. Use
+    // tracked progress so a physical R stays R in ordinary previews too.
+    const current = (puzzle === '2x2x2' || training.casePicturePattern || training.recoveredAt) && training.caseCurrentPattern
       ? training.caseCurrentPattern : smartcube.currentPattern;
     if (puzzle === '3x3x3') {
       // Wide and slice turns rotate the algorithm's centers. The gyro already
@@ -321,6 +324,12 @@ export const PracticeView = memo(function PracticeView({
     training.displayAlg, training.caseStartPattern, training.casePicturePattern, training.caseCurrentPattern, training.recoveredAt,
     options.gyroscope, smartcube.gyroSupported]);
   const fixedTrainingGrip = Boolean(trainingPicture && ((training.casePicturePattern && training.caseCurrentPattern) || training.recoveredAt));
+  // Compensate the device frame in the gyro, leaving sticker turns in the
+  // tracked grip. Otherwise a frame change is visible as a second rotation.
+  const gyroFrameQuaternion = useMemo(() => puzzle === '2x2x2' && options.gyroscope && smartcube.gyroSupported
+    && trainingPicture && training.caseCurrentPattern && smartcube.currentPattern
+    ? guidanceFrameRotation(training.caseCurrentPattern, smartcube.currentPattern) : undefined,
+  [puzzle, options.gyroscope, smartcube.gyroSupported, trainingPicture, training.caseCurrentPattern, smartcube.currentPattern]);
   const caseNavigationDisabled = caseNavigationBusy || training.countdownActive || training.timeAttackActive || scramble.isComputing;
 
   async function changeCase(direction: -1 | 1) {
@@ -428,6 +437,7 @@ export const PracticeView = memo(function PracticeView({
           appendMoveKey={smartcubeAppendMoveKey}
           appendMove={smartcubeAppendMove}
           gyroscopeEnabled={options.gyroscope && smartcube.connected}
+          gyroFrameQuaternion={gyroFrameQuaternion}
           cubeQuaternionRef={smartcube.cubeQuaternionRef}
         />
       </div>
