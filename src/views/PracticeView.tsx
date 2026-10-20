@@ -8,7 +8,7 @@ import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
 import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
 import { averageOfFiveTimeNumber, historyTimeString } from '../lib/case-cards';
 import { getBestTime } from '../lib/storage';
-import { fixOrientation, patternToPlayerAlg } from '../lib/scramble';
+import { alignForGuidance, fixOrientation, patternToPlayerAlg } from '../lib/scramble';
 import { projectTrainingPattern } from '../lib/training-visual';
 import { CubeGuidancePanel } from '../components/CubeGuidancePanel';
 import { MainCubeArea } from './MainCubeArea';
@@ -139,6 +139,7 @@ export const PracticeView = memo(function PracticeView({
   const skipPracticeEnterAnim = useRef(true);
   const [practiceViewEnter, setPracticeViewEnter] = useState(false);
   const [practiceTogglesExpanded, setPracticeTogglesExpanded] = useState(false);
+  const [caseNavigationBusy, setCaseNavigationBusy] = useState(false);
   useEffect(() => {
     if (!visible) {
       return;
@@ -308,11 +309,49 @@ export const PracticeView = memo(function PracticeView({
     if (puzzle === '3x3x3' && !training.casePicturePattern && !training.recoveredAt) return null;
     const current = (training.casePicturePattern || training.recoveredAt) && training.caseCurrentPattern
       ? training.caseCurrentPattern : smartcube.currentPattern;
-    if (puzzle === '3x3x3') return current;
+    if (puzzle === '3x3x3') {
+      // Wide and slice turns rotate the algorithm's centers. The gyro already
+      // supplies that physical rotation, so render stickers in the starting
+      // center frame rather than applying the rotation a second time.
+      return options.gyroscope && smartcube.gyroSupported
+        ? alignForGuidance(current, training.caseStartPattern) : current;
+    }
     return projectTrainingPattern(training.displayAlg, training.caseStartPattern, current, training.casePicturePattern);
   }, [puzzle, smartcube.connected, smartcube.currentPattern, training.inputMode, scramble.scrambleMode,
-    training.displayAlg, training.caseStartPattern, training.casePicturePattern, training.caseCurrentPattern, training.recoveredAt]);
+    training.displayAlg, training.caseStartPattern, training.casePicturePattern, training.caseCurrentPattern, training.recoveredAt,
+    options.gyroscope, smartcube.gyroSupported]);
   const fixedTrainingGrip = Boolean(trainingPicture && ((training.casePicturePattern && training.caseCurrentPattern) || training.recoveredAt));
+  const caseNavigationDisabled = caseNavigationBusy || training.countdownActive || training.timeAttackActive || scramble.isComputing;
+
+  async function changeCase(direction: -1 | 1) {
+    if (caseNavigationDisabled) return;
+    setCaseNavigationBusy(true);
+    setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+    scramble.clearScramble();
+    lastProcessedScrambleMoveRef.current = '';
+    try {
+      await training.navigateCase(direction);
+    } finally {
+      setCaseNavigationBusy(false);
+    }
+  }
+
+  const caseNavigation = training.selectedCases.length > 1 && training.currentCase && !training.inputMode && !showAlgEditor && (
+    <div className="case-navigation" role="group" aria-label="Case navigation"
+      onKeyDown={event => { if (event.code === 'Space') event.stopPropagation(); }}
+      onKeyUp={event => { if (event.code === 'Space') event.stopPropagation(); }}>
+      <button type="button" aria-label="Previous case" title="Previous case — repeat the last case"
+        disabled={caseNavigationDisabled || !training.canGoToPreviousCase} onClick={() => void changeCase(-1)}>
+        <Icon d="M15 18l-6-6 6-6" size={18} />
+        <span>Previous</span>
+      </button>
+      <button type="button" aria-label="Next case" title="Next case — skip this case"
+        disabled={caseNavigationDisabled} onClick={() => void changeCase(1)}>
+        <span>Next</span>
+        <Icon d="M9 6l6 6-6 6" size={18} />
+      </button>
+    </div>
+  );
 
   const cubeNode = showingGuidedSetup ? (
     <CubeGuidancePanel
@@ -321,6 +360,7 @@ export const PracticeView = memo(function PracticeView({
       expertScrambler={options.expertScrambler}
       smartcube={smartcube}
       target={scramble.setupTarget!}
+      pictureControls={caseNavigation}
       onRecovered={pattern => {
         const target = scramble.setupTarget!;
         if (!fixOrientation(pattern).isIdentical(fixOrientation(target))) return false;
@@ -349,6 +389,7 @@ export const PracticeView = memo(function PracticeView({
       key={`${training.visualResetKey}:${training.currentCase?.id ?? ''}`}
       smartcube={smartcube}
       target={training.recoveryTarget!}
+      pictureControls={caseNavigation}
       expertScrambler={options.expertScrambler}
       onRecovered={training.checkRecovery}
       onGripCheck={training.setRecoveryGripCheck}
@@ -366,6 +407,7 @@ export const PracticeView = memo(function PracticeView({
         flexShrink: 0,
       }}
     >
+      {caseNavigation}
       <div className={training.countdownActive ? 'cube-area-content cube-area-content--hidden' : 'cube-area-content'}
         aria-hidden={training.countdownActive}>
         <MainCubeArea
@@ -377,7 +419,7 @@ export const PracticeView = memo(function PracticeView({
           visualization={fixedTrainingGrip || (!PUZZLES[puzzle].lastLayerPreview && options.visualization.includes('LL')) ? '3D' : options.visualization}
           hintFacelets={fixedTrainingGrip ? 'none' : options.hintFacelets}
           controlPanel={options.controlPanel}
-          experimentalStickering={fixedTrainingGrip || puzzle !== '3x3x3' ? 'full' : selectedStickering}
+          experimentalStickering={puzzle !== '3x3x3' ? 'full' : selectedStickering}
           setupAlg={PUZZLES[puzzle].cube && options.whiteOnBottom ? 'z2' : ''}
           backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
           resetToken={`${smartcube.connected}:${training.visualResetKey}`}

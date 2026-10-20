@@ -11,7 +11,7 @@ import { MainCubeArea } from '../../src/views/MainCubeArea';
 import { useTrainingState } from '../../src/hooks/useTrainingState';
 import { useScrambleState } from '../../src/hooks/useScrambleState';
 import { getCaseCards } from '../../src/lib/case-cards';
-import { align2x2RecoveryPattern, fixOrientation, get2x2RecoveryMoves } from '../../src/lib/scramble';
+import { align2x2RecoveryPattern, alignForGuidance, fixOrientation, get2x2RecoveryMoves } from '../../src/lib/scramble';
 import { HOME_ORIENTATION } from '../../src/lib/cube-orientation';
 
 const drawing = vi.hoisted(() => ({
@@ -177,6 +177,35 @@ describe('TwistyCube training frame', () => {
       orientationResetAlg={null} gyroscopeEnabled cubeQuaternionRef={cubeQuaternionRef} />);
     await frames.advance(24);
     expect(drawing.object!.quaternion.angleTo(rotation)).toBeLessThan(.001);
+  });
+
+  it('renders a guided OLL-4 f turn as a back-layer turn plus one physical gyro rotation', async () => {
+    const frames = orientationFrames();
+    const { default: defaults } = await import('../../src/data/defaultAlgs.json');
+    const oll4 = defaults.OLL.flatMap(subset => subset.algorithms).find(card => card.name.startsWith('OLL-4 '))!;
+    const solved = await solvedPattern(3);
+    drawing.solved = solved;
+    drawing.moves = [];
+    const start = solved.applyAlg('z2').applyAlg(new Alg(oll4.algorithm).invert());
+    const cubeQuaternionRef = { current: HOME_ORIENTATION.clone() };
+    const props = {
+      puzzle: '3x3x3' as const, alg: '', targetPattern: start, fixedOrientation: true,
+      sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      experimentalStickering: 'OLL', setupAlg: '', backView: 'none' as const,
+      resetToken: 'oll4-wand', orientationResetToken: 0, orientationResetAlg: null,
+      gyroscopeEnabled: true, cubeQuaternionRef,
+    };
+    const { rerender } = render(<MainCubeArea {...props} />);
+    await frames.advance(48);
+    const physical = start.applyMove('f');
+    const gyroTurn = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -Math.PI / 2);
+    cubeQuaternionRef.current = HOME_ORIENTATION.clone().multiply(gyroTurn);
+    rerender(<MainCubeArea {...props} targetPattern={alignForGuidance(physical, start)} />);
+    await frames.advance(64);
+    expect(drawing.moves).toEqual(['B']);
+    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION.clone().multiply(gyroTurn))).toBeLessThan(1e-6);
+    expect(drawing.current!.applyMove('z').isIdentical(physical)).toBe(true);
+    expect(drawing.current!.applyAlg('z2').isIdentical(physical)).toBe(false);
   });
 
   it('preserves the wand setup when returning to training after the first three Ortega PBL cases', async () => {

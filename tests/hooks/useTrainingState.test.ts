@@ -1261,3 +1261,110 @@ describe('useTrainingState time attack counts', () => {
     }
   });
 });
+
+describe('case navigation', () => {
+  beforeEach(() => {
+    resetMockState(mockState);
+    let key = 'solved';
+    for (let i = 0; i < 12; i++) {
+      mockState.patterns[key] = createPattern(mockState, key);
+      key += ':R';
+    }
+  });
+
+  function renderNavigationState(randomOrder = false, smartcubeConnected = false) {
+    return renderHook(({ cases, currentPattern }) => useTrainingState(cases, 'PLL', {
+      selectionChangeMode: 'bulk', countdownMode: false, randomizeAUF: false,
+      randomOrder, timeAttack: false, prioritizeSlowCases: false,
+      prioritizeFailedCases: false, smartReviewScheduling: false,
+      smartcubeConnected, currentPattern,
+    }), { initialProps: { cases: makeSmartReviewCases(3), currentPattern: mockState.patterns.solved } });
+  }
+
+  it('skips, goes back through visited cases, and wraps without recording attempts', async () => {
+    const { result } = renderNavigationState();
+    await waitFor(() => expect(result.current.timerState).toBe('READY'));
+    expect(result.current.canGoToPreviousCase).toBe(false);
+    for (const id of ['case-2', 'case-3', 'case-1']) {
+      await act(async () => { await result.current.navigateCase(1); });
+      expect(result.current.currentCase?.id).toBe(id);
+      expect(result.current.statsAlgId).toBe(id);
+    }
+    for (const id of ['case-3', 'case-2', 'case-1']) {
+      await act(async () => { await result.current.navigateCase(-1); });
+      expect(result.current.currentCase?.id).toBe(id);
+    }
+    expect(result.current.canGoToPreviousCase).toBe(false);
+    expect(mockState.attemptHistory.size).toBe(0);
+    expect(result.current.practiceCounts).toEqual({});
+    expect(result.current.failedCounts).toEqual({});
+    expect(result.current.flashRequest).toBeNull();
+  });
+
+  it('can repeat the previous completed case while preserving its recorded solve', async () => {
+    const { result } = renderNavigationState();
+    await waitFor(() => expect(result.current.timerState).toBe('READY'));
+    act(() => { result.current.stopAndRecordSolve(1200); });
+    await waitFor(() => expect(result.current.currentCase?.id).toBe('case-2'));
+    await act(async () => { await result.current.navigateCase(-1); });
+    expect(result.current.currentCase?.id).toBe('case-1');
+    expect(result.current.lastSolveText).toBeNull();
+    expect(getLastTimes('case-1')).toEqual([1200]);
+    await act(async () => { await result.current.navigateCase(1); });
+    expect(result.current.currentCase?.id).toBe('case-2');
+    expect(getLastTimes('case-1')).toEqual([1200]);
+    expect(getLastTimes('case-2')).toEqual([]);
+  });
+
+  it('uses actual visit history in random order and always skips to a different case', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(.99);
+    const { result } = renderNavigationState(true);
+    await waitFor(() => expect(result.current.timerState).toBe('READY'));
+    for (let i = 0; i < 5; i++) {
+      const previous = result.current.currentCase?.id;
+      await act(async () => { await result.current.navigateCase(1); });
+      expect(result.current.currentCase?.id).not.toBe(previous);
+      await act(async () => { await result.current.navigateCase(-1); });
+      expect(result.current.currentCase?.id).toBe(previous);
+    }
+  });
+
+  it('drops navigation history when the selection changes', async () => {
+    const { result, rerender } = renderNavigationState();
+    await waitFor(() => expect(result.current.timerState).toBe('READY'));
+    await act(async () => { await result.current.navigateCase(1); });
+    expect(result.current.canGoToPreviousCase).toBe(true);
+    await act(async () => {
+      rerender({ cases: makeSmartReviewCases(3).slice(1), currentPattern: mockState.patterns.solved });
+    });
+    expect(result.current.canGoToPreviousCase).toBe(false);
+    const current = result.current.currentCase?.id;
+    await act(async () => { await result.current.navigateCase(-1); });
+    expect(result.current.currentCase?.id).toBe(current);
+  });
+
+  it('starts from the live smartcube state when skipping an unfinished attempt', async () => {
+    const { result, rerender } = renderNavigationState(false, true);
+    await waitFor(() => expect(result.current.timerState).toBe('READY'));
+    act(() => { result.current.setTimerState('RUNNING'); });
+    const physical = mockState.patterns['solved:R'];
+    rerender({ cases: makeSmartReviewCases(3), currentPattern: physical });
+    await act(async () => { await result.current.navigateCase(1); });
+    expect(result.current.currentCase?.id).toBe('case-2');
+    expect(result.current.caseStartPattern).toBe(physical);
+    expect(result.current.timerState).toBe('READY');
+    expect(result.current.recoveryTarget).toBeNull();
+    expect(result.current.failedCounts).toEqual({});
+    expect(mockState.attemptHistory.size).toBe(0);
+  });
+
+  it('keeps an active time attack intact', async () => {
+    const { result } = renderTrainingState();
+    await waitFor(() => expect(result.current.timerState).toBe('READY'));
+    act(() => { result.current.activateTimer(); });
+    expect(result.current.timeAttackActive).toBe(true);
+    await act(async () => { await result.current.navigateCase(1); });
+    expect(result.current.currentCase?.id).toBe('case-1');
+    expect(result.current.timerState).toBe('RUNNING');
+  });
+});

@@ -142,6 +142,8 @@ export interface TrainingState {
   algInput: string;
   displayAlg: string;
   currentCase: CaseCardData | null;
+  canGoToPreviousCase: boolean;
+  navigateCase: (direction: -1 | 1) => Promise<void>;
   currentAlgName: string;
   selectedCases: CaseCardData[];
   stats: TrainingStats;
@@ -610,6 +612,8 @@ export function useTrainingState(
   const [algInput, setAlgInputState] = useState('');
   const [displayAlg, setDisplayAlg] = useState('');
   const [currentCase, setCurrentCase] = useState<CaseCardData | null>(null);
+  const [caseHistory, setCaseHistory] = useState<string[]>([]);
+  const navigatingCaseRef = useRef(false);
   const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
   const [badMoves, setBadMoves] = useState<string[]>([]);
   const [recoveryTarget, setRecoveryTarget] = useState<KPattern | null>(null);
@@ -1184,7 +1188,11 @@ export function useTrainingState(
     return review;
   }
 
-  function selectQueueHead(nextCase: CaseCardData | null) {
+  function selectQueueHead(nextCase: CaseCardData | null, rememberCurrent = false) {
+    const previousCase = currentCaseRef.current;
+    if (rememberCurrent && previousCase && nextCase && previousCase.id !== nextCase.id) {
+      setCaseHistory(history => [...history, previousCase.id]);
+    }
     setCurrentCase(nextCase);
     if (nextCase) {
       setAlgInputState(nextCase.algorithm);
@@ -1201,9 +1209,11 @@ export function useTrainingState(
     return nextCase?.id;
   }
 
-  function switchToNextAlgorithm(review?: CaseReviewEntry) {
-    flashKeyRef.current += 1;
-    setFlashRequest({ key: flashKeyRef.current, color: 'green', durationMs: 200 });
+  function switchToNextAlgorithm(review?: CaseReviewEntry, skipped = false) {
+    if (!skipped) {
+      flashKeyRef.current += 1;
+      setFlashRequest({ key: flashKeyRef.current, color: 'green', durationMs: 200 });
+    }
 
     const currentAlg = selectedQueueRef.current.shift() ?? null;
     if (currentAlg) {
@@ -1221,7 +1231,56 @@ export function useTrainingState(
       selectedQueueRef.current = shuffleCases(selectedQueueRef.current);
     }
 
-    selectQueueHead(selectedQueueRef.current[0] ?? currentCaseRef.current);
+    if (skipped && selectedCaseStateRef.current.length > 1) {
+      // A smart-review pass may end with retries of just the skipped case.
+      if (!selectedQueueRef.current.some(entry => entry.id !== currentAlg?.id)) rebuildQueueFromLatestSelectedCases();
+      const nextIndex = selectedQueueRef.current.findIndex(entry => entry.id !== currentAlg?.id);
+      selectedQueueRef.current = [...selectedQueueRef.current.slice(nextIndex), ...selectedQueueRef.current.slice(0, nextIndex)];
+    }
+    selectQueueHead(selectedQueueRef.current[0] ?? currentCaseRef.current, true);
+  }
+
+  async function navigateCase(direction: -1 | 1) {
+    if (navigatingCaseRef.current || selectedCases.length < 2 || inputMode
+      || (options.timeAttack && timeAttackSessionStartRef.current != null)) return;
+    if (direction === -1) {
+      const previousCase = selectedCases.find(entry => entry.id === caseHistory.at(-1));
+      if (!previousCase) return;
+      setCaseHistory(history => history.slice(0, -1));
+      const queuedIndex = selectedQueueRef.current.findIndex(entry => entry.id === previousCase.id);
+      if (queuedIndex >= 0) selectedQueueRef.current.splice(queuedIndex, 1);
+      selectedQueueRef.current.unshift(previousCase);
+      selectQueueHead(previousCase);
+    } else if (options.timeAttack) {
+      // Before a timed run, rotate the complete set rather than skipping a leg.
+      const current = selectedQueueRef.current.shift();
+      if (current) selectedQueueRef.current.push(current);
+      selectQueueHead(selectedQueueRef.current[0] ?? null, true);
+    } else {
+      switchToNextAlgorithm(undefined, true);
+    }
+    const nextCase = selectedQueueRef.current[0];
+    if (!nextCase) return;
+    navigatingCaseRef.current = true;
+    timerStartRef.current = null;
+    isKeyboardTimerActiveRef.current = false;
+    setLastSolveText(null);
+    setLastSolveIsPb(false);
+    setLastSolveAlgName(null);
+    setTimerState('IDLE');
+    clearProgressState();
+    if (options.timeAttack) {
+      syncTimeAttackProgress(false, 1, selectedQueueRef.current.length);
+    }
+    try {
+      await trainCurrent(options.smartcubeConnected ? options.currentPattern : undefined, {
+        algorithm: nextCase.algorithm,
+        statsScopeId: getCaseStatsScopeId(nextCase),
+        trackRecognition: true,
+      });
+    } finally {
+      navigatingCaseRef.current = false;
+    }
   }
 
   function advanceTimeAttackQueue() {
@@ -1523,6 +1582,7 @@ export function useTrainingState(
     }
 
     const previousSelectedIds = previousSelectedIdsRef.current;
+    if (!selectedIdsUnchanged || timeAttackChanged) setCaseHistory([]);
     previousSelectedIdsRef.current = nextSelectedIds;
     previousTimeAttackRef.current = options.timeAttack;
     previousRandomOrderRef.current = options.randomOrder;
@@ -2078,6 +2138,7 @@ export function useTrainingState(
   }
 
   function resetDrill() {
+    setCaseHistory([]);
     trainingGenerationRef.current += 1;
     cancelCountdown();
     clearProgressState();
@@ -2111,6 +2172,7 @@ export function useTrainingState(
   const stableClearFailedCounts = useStableCallback(clearFailedCounts);
   const stableEnterInputMode = useStableCallback(enterInputMode);
   const stableTrainCurrent = useStableCallback(trainCurrent);
+  const stableNavigateCase = useStableCallback(navigateCase);
   const stableSetTimerState = useStableCallback(setTimerState);
   const stableActivateTimer = useStableCallback(activateTimer);
   const stableHandleSpaceKeyDown = useStableCallback(handleSpaceKeyDown);
@@ -2140,6 +2202,8 @@ export function useTrainingState(
     algInput,
     displayAlg,
     currentCase,
+    canGoToPreviousCase: caseHistory.length > 0,
+    navigateCase: stableNavigateCase,
     currentAlgName: options.timeAttack ? 'Time Attack' : currentCase?.name ?? '',
     selectedCases,
     stats,
@@ -2188,6 +2252,8 @@ export function useTrainingState(
     stableBeginRecovery,
     algInput,
     currentCase,
+    caseHistory,
+    stableNavigateCase,
     displayAlg,
     displayState.fixText,
     displayState.moves,

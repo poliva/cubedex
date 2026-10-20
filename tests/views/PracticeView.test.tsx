@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { Alg } from 'cubing/alg';
 import type { ComponentProps } from 'react';
 import { patternToFacelets, solvedPattern } from '../../src/lib/cube-utils';
-import { fixOrientation, patternToPlayerAlg } from '../../src/lib/scramble';
+import { alignForGuidance, fixOrientation, patternToPlayerAlg } from '../../src/lib/scramble';
 import { useScrambleState } from '../../src/hooks/useScrambleState';
 import { useTrainingState, type TrainingState } from '../../src/hooks/useTrainingState';
 import { PracticeView } from '../../src/views/PracticeView';
@@ -140,6 +140,8 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       algInput: '',
       displayAlg: "R U R'",
       currentCase: defaultPracticeCase,
+      canGoToPreviousCase: false,
+      navigateCase: vi.fn(async () => undefined),
       currentAlgName: 'Aa',
       selectedCases: [defaultPracticeCase],
       stats: {
@@ -287,6 +289,54 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 }
 
 describe('PracticeView', () => {
+  it.each([false, true])('navigates a multi-case selection without adding a control row (mobile %s)', async isMobile => {
+    const props = makeProps({ isMobile });
+    props.training.selectedCases = [props.training.currentCase, { ...props.training.currentCase, id: 'case-2' }];
+    const user = userEvent.setup();
+    const { rerender } = render(<PracticeView {...props} />);
+    const previous = screen.getByRole('button', { name: 'Previous case' });
+    const next = screen.getByRole('button', { name: 'Next case' });
+    expect(previous).toBeDisabled();
+    expect(next).toBeEnabled();
+    expect(screen.getByRole('group', { name: 'Case navigation' }).parentElement)
+      .toBe(screen.getByTestId('main-cube-area').parentElement?.parentElement);
+    await user.click(next);
+    expect(props.training.navigateCase).toHaveBeenCalledWith(1);
+    props.training = { ...props.training, canGoToPreviousCase: true };
+    rerender(<PracticeView {...props} />);
+    await user.click(previous);
+    expect(props.training.navigateCase).toHaveBeenCalledWith(-1);
+    next.focus();
+    await user.keyboard(' ');
+    expect(props.training.navigateCase).toHaveBeenLastCalledWith(1);
+  });
+
+  it('hides navigation for a single case and disables it during a timed run', () => {
+    const props = makeProps();
+    const { rerender } = render(<PracticeView {...props} />);
+    expect(screen.queryByRole('group', { name: 'Case navigation' })).toBeNull();
+    props.training = { ...props.training, canGoToPreviousCase: true, timeAttackActive: true,
+      selectedCases: [props.training.currentCase, { ...props.training.currentCase, id: 'case-2' }] };
+    rerender(<PracticeView {...props} />);
+    expect(screen.getByRole('button', { name: 'Next case' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Previous case' })).toBeDisabled();
+  });
+
+  it('can skip a case while its guided scramble is open', async () => {
+    const props = makeProps();
+    const solved = await solvedPattern(3);
+    props.smartcube.currentPattern = solved.applyMove('R');
+    props.smartcube.refreshPattern = vi.fn(async () => props.smartcube.currentPattern);
+    props.scramble = { ...props.scramble, scrambleMode: true, setupTarget: solved.applyMove('F'), targetAlgorithm: "F'" };
+    props.training.selectedCases = [props.training.currentCase, { ...props.training.currentCase, id: 'case-2' }];
+    render(<PracticeView {...props} />);
+    const next = await screen.findByRole('button', { name: 'Next case' });
+    expect(next.closest('.recovery-picture')).not.toBeNull();
+    await userEvent.click(next);
+    expect(props.scramble.clearScramble).toHaveBeenCalled();
+    expect(props.training.navigateCase).toHaveBeenCalledWith(1);
+  });
+
   it('applies responsive cube guardrails and shows idle practice chrome', () => {
     render(<PracticeView {...makeProps()} />);
 
@@ -720,14 +770,67 @@ it('keeps the actual 3×3 stickers after recovering an attempt that started with
   props.training.recoveredAt = 1;
   render(<PracticeView {...props} />);
   expect(JSON.parse(screen.getByTestId('main-cube-area').dataset.target!)).toEqual(physical.patternData);
+  expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stickering', 'PLL');
 });
 
-it('completes the expert 3×3 wand and returns to matching training stickers without extra clicks', async () => {
+it.each([
+  { gyro: true, supported: true },
+  { gyro: false, supported: true },
+  { gyro: true, supported: false },
+])('keeps OLL-4 wide turns in the gyro frame after wand setup (gyro $gyro, supported $supported)', async ({ gyro, supported }) => {
+  const { default: defaults } = await import('../../src/data/defaultAlgs.json');
+  const oll4 = defaults.OLL.flatMap(subset => subset.algorithms).find(card => card.name.startsWith('OLL-4 '))!;
+  const algorithm = new Alg(oll4.algorithm).expand().toString();
+  const moves = algorithm.split(/\s+/);
+  expect(moves[0]).toBe('f');
+  const solved = await solvedPattern(3);
+  const current = solved.applyAlg('F R U y');
+  const props = makeProps({ puzzle: '3x3x3', selectedStickering: 'OLL' });
+  props.options.expertScrambler = true;
+  props.options.gyroscope = gyro;
+  props.smartcube.gyroSupported = supported;
+  props.smartcube.currentPattern = current;
+  props.smartcube.refreshPattern = vi.fn(async () => props.smartcube.currentPattern);
+  let trainingState!: TrainingState;
+  function SetupPractice() {
+    const scramble = useScrambleState('3x3x3');
+    const training = useTrainingState([], 'OLL', {
+      puzzle: '3x3x3', selectionChangeMode: 'manual', countdownMode: false,
+      randomizeAUF: false, randomOrder: false, timeAttack: false, prioritizeSlowCases: false,
+      prioritizeFailedCases: false, smartReviewScheduling: false, smartcubeConnected: true,
+      currentPattern: props.smartcube.currentPattern,
+    });
+    trainingState = training;
+    return <PracticeView {...props} training={training} scramble={scramble} />;
+  }
+  const { rerender } = render(<SetupPractice />);
+  await act(async () => { await trainingState.trainCurrent(current, { algorithm }); });
+  await userEvent.click(screen.getByTitle('Scramble To...'));
+  const list = await screen.findByRole('list', { name: 'Setup algorithm' });
+  const setup = solved.applyAlg(screen.getByTestId('recovery-cube').dataset.setup!);
+  const start = setup.applyAlg(Array.from(list.children).map(item => item.textContent!).join(' '));
+  props.smartcube = { ...props.smartcube, currentPattern: start };
+  rerender(<SetupPractice />);
+  await waitFor(() => expect(screen.queryByRole('region', { name: '3×3 guided setup' })).toBeNull());
+  let physical = start;
+  for (const move of moves.slice(0, -1)) {
+    physical = physical.applyMove(move);
+    await act(async () => { trainingState.handleSmartcubeMove(fixOrientation(physical), move); });
+    // The logical algorithm frame still includes the rotation from wide turns.
+    expect(trainingState.caseCurrentPattern?.isIdentical(physical)).toBe(true);
+    const displayed = gyro && supported ? alignForGuidance(physical, start) : physical;
+    expect(JSON.parse(screen.getByTestId('main-cube-area').dataset.target!)).toEqual(displayed.patternData);
+    expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stickering', 'OLL');
+  }
+});
+
+it.each(['OLL', 'PLL', 'full'])('completes the expert 3×3 wand and restores %s training stickers without extra clicks', async stickering => {
   const solved = await solvedPattern(3);
   const algorithm = "R U R' U'";
   const target = solved.applyAlg(new Alg(algorithm).invert());
   const current = solved.applyAlg('F R U y');
-  const props = makeProps({ puzzle: '3x3x3' });
+  const props = makeProps({ puzzle: '3x3x3', selectedStickering: stickering });
+  props.options.fullStickering = stickering === 'full';
   props.options.expertScrambler = true;
   props.options.gyroscope = true;
   props.options.visualization = 'LL';
@@ -760,9 +863,10 @@ it('completes the expert 3×3 wand and returns to matching training stickers wit
   await waitFor(() => expect(screen.queryByRole('region', { name: '3×3 guided setup' })).toBeNull());
   expect(trainingState.casePicturePattern?.isIdentical(physical)).toBe(true);
   expect(JSON.parse(screen.getByTestId('main-cube-area').dataset.target!)).toEqual(physical.patternData);
-  expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stickering', 'full');
+  expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stickering', stickering);
   await act(async () => { trainingState.handleSmartcubeMove(physical.applyMove('R').applyAlg('z'), 'R'); });
   expect(JSON.parse(screen.getByTestId('main-cube-area').dataset.target!)).toEqual(physical.applyMove('R').patternData);
+  expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stickering', stickering);
 });
 
 

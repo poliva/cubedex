@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { KPattern } from 'cubing/kpuzzle';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
 import { useGuidanceOrientation } from '../hooks/useGuidanceOrientation';
@@ -18,7 +18,7 @@ type Recovery = {
 const initial: Recovery = { phase: 'loading', reference: null, steps: [], index: 0, notice: '' };
 const equivalent = (a: KPattern, b: KPattern) => fixOrientation(a).isIdentical(fixOrientation(b));
 
-export function CubeGuidancePanel({ smartcube, target, onRecovered, onCancel, mode = 'recovery', expertScrambler = false, onGripCheck }: {
+export function CubeGuidancePanel({ smartcube, target, onRecovered, onCancel, mode = 'recovery', expertScrambler = false, onGripCheck, pictureControls }: {
   smartcube: SmartcubeConnectionState;
   target: KPattern;
   onRecovered: (pattern: KPattern) => boolean;
@@ -26,6 +26,7 @@ export function CubeGuidancePanel({ smartcube, target, onRecovered, onCancel, mo
   mode?: 'recovery' | 'setup';
   expertScrambler?: boolean;
   onGripCheck?: (check: ((pattern: KPattern) => boolean) | null) => void;
+  pictureControls?: ReactNode;
 }) {
   const [state, setState] = useState<Recovery>(initial);
   const [expertOverride, setExpertOverride] = useState<boolean | null>(null);
@@ -214,6 +215,7 @@ export function CubeGuidancePanel({ smartcube, target, onRecovered, onCancel, mo
       <p className="guidance-progress" role="status">{sequence.filter(step => step.end <= state.index).length} of {sequence.length} moves complete</p>
     </>}
     {state.reference && state.phase !== 'error' ? <div className={`recovery-picture${rotateFirst ? ' recovery-picture--regrip' : ''}`} aria-label={guiding && !expert && !rotateFirst ? `Animated correction ${turn}` : 'Current scrambled cube, top front and right visible'}>
+      {pictureControls}
       <TwistyCube key={`${setup}:${state.index}:${guiding}:${replay}:${rotateFirst}`}
         puzzle={size === 2 ? '2x2x2' : '3x3x3'} setupAlg={setup} alg={expert || rotateFirst ? '' : turn} autoplay={guiding && !expert && !rotateFirst} tempoScale={0.65}
         visualization="3D" hintFacelets="none" controlPanel="none" experimentalStickering="full"
