@@ -16,6 +16,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     autoUpdateLearningState: false,
     expertScrambler: false,
     matchVirtualCubeOnRecovery: true,
+    allowAlternativeAlgorithms: false,
     visualization: 'PG3D',
     backview: 'none',
     hintFacelets: 'none',
@@ -33,6 +34,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     setAutoUpdateLearningState: vi.fn(),
     setExpertScrambler: vi.fn(),
     setMatchVirtualCubeOnRecovery: vi.fn(),
+    setAllowAlternativeAlgorithms: vi.fn(),
     setVisualization: vi.fn(),
     setBackview: vi.fn(),
     setHintFacelets: vi.fn(),
@@ -112,6 +114,15 @@ function createAlgorithmActions(overrides: Partial<AlgorithmImportExportState> =
 }
 
 describe('OptionsView', () => {
+  it('lets users enable alternative algorithms', async () => {
+    const options = createOptions();
+    render(<OptionsView visible infoVisible={false} setInfoVisible={vi.fn()}
+      options={options} smartcube={createSmartcube()} algorithmActions={createAlgorithmActions()} />);
+    expect(screen.getByLabelText('Allow Alternative Algorithms')).not.toBeChecked();
+    await userEvent.click(screen.getByLabelText('Allow Alternative Algorithms'));
+    expect(options.setAllowAlternativeAlgorithms).toHaveBeenCalledWith(true);
+  });
+
   it('shows the white-on-bottom dependency and forwards toggle changes', async () => {
     const user = userEvent.setup();
     const options = createOptions();

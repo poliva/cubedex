@@ -198,6 +198,7 @@ vi.mock('../src/hooks/useAppSettings', () => ({
     showAlgName: true,
     countdownMode: false,
     alwaysScrambleTo: alwaysScrambleRegressDyn.alwaysScrambleTo,
+    allowAlternativeAlgorithms: localStorage.getItem('allowAlternativeAlgorithms') === 'true',
     autoUpdateLearningState: false,
     visualization: 'PG3D',
     backview: 'none',
@@ -379,6 +380,13 @@ vi.mock('../src/views/HelpView', () => ({
 }));
 
 describe('App case-card stats refresh', () => {
+  it.each([true, false])('passes the alternative algorithm preference (%s) to training', enabled => {
+    localStorage.setItem('allowAlternativeAlgorithms', String(enabled));
+    render(<App />);
+    expect(mocks.useTrainingState).toHaveBeenLastCalledWith(expect.anything(), expect.anything(),
+      expect.objectContaining({ allowAlternativeAlgorithms: enabled }));
+  });
+
   it('refreshes per-card best and ao5 when a time-attack solve updates an individual case', () => {
     const { rerender } = render(<App />);
 

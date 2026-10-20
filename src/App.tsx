@@ -110,6 +110,7 @@ export function App() {
     smartReviewScheduling: practiceToggles.smartReviewScheduling,
     smartcubeConnected: smartcube.connected,
     alwaysScrambleTo: options.alwaysScrambleTo,
+    allowAlternativeAlgorithms: options.allowAlternativeAlgorithms,
     currentPattern: smartcube.currentPattern,
     statsRefreshToken,
     reviewRefreshToken,

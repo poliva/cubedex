@@ -3,6 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { useAppSettings } from '../../src/hooks/useAppSettings';
 
 describe('useAppSettings', () => {
+  it('disables alternative algorithms by default and remembers enabling them', () => {
+    const hook = renderHook(() => useAppSettings());
+    expect(hook.result.current.allowAlternativeAlgorithms).toBe(false);
+    act(() => hook.result.current.setAllowAlternativeAlgorithms(true));
+    expect(localStorage.getItem('allowAlternativeAlgorithms')).toBe('true');
+    hook.unmount();
+    const next = renderHook(() => useAppSettings());
+    expect(next.result.current.allowAlternativeAlgorithms).toBe(true);
+  });
+
   it('matches the virtual cube on recovery by default and remembers opting out', () => {
     const hook = renderHook(() => useAppSettings());
     expect(hook.result.current.matchVirtualCubeOnRecovery).toBe(true);

@@ -8,6 +8,7 @@ export interface AppSettingsState {
   alwaysScrambleTo: boolean;
   expertScrambler: boolean;
   matchVirtualCubeOnRecovery: boolean;
+  allowAlternativeAlgorithms: boolean;
   autoUpdateLearningState: boolean;
   visualization: string;
   backview: string;
@@ -25,6 +26,7 @@ export interface AppSettingsState {
   setAlwaysScrambleTo: (value: boolean) => void;
   setExpertScrambler: (value: boolean) => void;
   setMatchVirtualCubeOnRecovery: (value: boolean) => void;
+  setAllowAlternativeAlgorithms: (value: boolean) => void;
   setAutoUpdateLearningState: (value: boolean) => void;
   setVisualization: (value: string) => void;
   setBackview: (value: string) => void;
@@ -63,6 +65,7 @@ export function useAppSettings(): AppSettingsState {
   const [alwaysScrambleTo, setAlwaysScrambleToState] = useState(readOption('alwaysScrambleTo') === 'true');
   const [expertScrambler, setExpertScrambler] = useState(readOption('expertScrambler') === 'true');
   const [matchVirtualCubeOnRecovery, setMatchVirtualCubeOnRecovery] = useState(readOption('matchVirtualCubeOnRecovery') !== 'false');
+  const [allowAlternativeAlgorithms, setAllowAlternativeAlgorithms] = useState(readOption('allowAlternativeAlgorithms') === 'true');
   const [autoUpdateLearningState, setAutoUpdateLearningStateState] = useState(
     readOption('autoUpdateLearningState') !== 'false',
   );
@@ -107,6 +110,10 @@ export function useAppSettings(): AppSettingsState {
   useEffect(() => {
     writeOption('matchVirtualCubeOnRecovery', String(matchVirtualCubeOnRecovery));
   }, [matchVirtualCubeOnRecovery]);
+
+  useEffect(() => {
+    writeOption('allowAlternativeAlgorithms', String(allowAlternativeAlgorithms));
+  }, [allowAlternativeAlgorithms]);
 
   useEffect(() => {
     writeOption('autoUpdateLearningState', String(autoUpdateLearningState));
@@ -163,6 +170,7 @@ export function useAppSettings(): AppSettingsState {
     alwaysScrambleTo,
     expertScrambler,
     matchVirtualCubeOnRecovery,
+    allowAlternativeAlgorithms,
     autoUpdateLearningState,
     visualization,
     backview,
@@ -180,6 +188,7 @@ export function useAppSettings(): AppSettingsState {
     setAlwaysScrambleTo: setAlwaysScrambleToState,
     setExpertScrambler,
     setMatchVirtualCubeOnRecovery,
+    setAllowAlternativeAlgorithms,
     setAutoUpdateLearningState: setAutoUpdateLearningStateState,
     setVisualization: setVisualizationState,
     setBackview: setBackviewState,
@@ -195,6 +204,7 @@ export function useAppSettings(): AppSettingsState {
     alwaysScrambleTo,
     expertScrambler,
     matchVirtualCubeOnRecovery,
+    allowAlternativeAlgorithms,
     autoUpdateLearningState,
     backview,
     countdownMode,

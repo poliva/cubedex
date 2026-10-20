@@ -56,6 +56,7 @@ export const STORAGE_KEYS = {
   autoUpdateLearningState: 'autoUpdateLearningState',
   expertScrambler: 'expertScrambler',
   matchVirtualCubeOnRecovery: 'matchVirtualCubeOnRecovery',
+  allowAlternativeAlgorithms: 'allowAlternativeAlgorithms',
   showTimesInsteadOfGraph: 'showTimesInsteadOfGraph',
 } as const;
 

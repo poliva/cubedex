@@ -243,6 +243,12 @@ export const OptionsView = memo(function OptionsView({
             <Toggle ariaLabel="Match Virtual Cube on Recovery" checked={options.matchVirtualCubeOnRecovery} onChange={options.setMatchVirtualCubeOnRecovery} />
           </div>
           <div style={row()}>
+            <div style={lbl}>Allow Alternative Algorithms
+              <div style={{ fontSize: 12, color: 'var(--fg3)', marginTop: 4 }}>With a smartcube, solve the case using any algorithm. Different turns won’t trigger mistake or undo warnings.</div>
+            </div>
+            <Toggle ariaLabel="Allow Alternative Algorithms" checked={options.allowAlternativeAlgorithms} onChange={options.setAllowAlternativeAlgorithms} />
+          </div>
+          <div style={row()}>
             <span style={lbl}>Flashing Indicator</span>
             <Toggle ariaLabel="Flashing Indicator" checked={options.flashingIndicatorEnabled} onChange={(v) => options.setFlashingIndicatorEnabled(v)} />
           </div>

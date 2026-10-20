@@ -110,6 +110,7 @@ export interface TrainingPracticeOptions {
   smartReviewScheduling: boolean;
   smartcubeConnected: boolean;
   alwaysScrambleTo?: boolean;
+  allowAlternativeAlgorithms?: boolean;
   currentPattern?: KPattern | null;
   statsRefreshToken?: number;
   reviewRefreshToken?: number;
@@ -743,9 +744,25 @@ export function useTrainingState(
   }, [selectedCases]);
 
   const displayState = useMemo(
-    () => buildDisplayState(displayAlg, currentMoveIndex, badMoves, options.randomizeAUF, guidedRecovery && Boolean(recoveryTarget)),
-    [badMoves, currentMoveIndex, displayAlg, options.randomizeAUF, guidedRecovery, recoveryTarget],
+    () => buildDisplayState(displayAlg, currentMoveIndex, options.allowAlternativeAlgorithms ? [] : badMoves,
+      options.randomizeAUF, guidedRecovery && Boolean(recoveryTarget)),
+    [badMoves, currentMoveIndex, displayAlg, options.randomizeAUF, options.allowAlternativeAlgorithms, guidedRecovery, recoveryTarget],
   );
+
+  useEffect(() => {
+    if (!options.allowAlternativeAlgorithms) return;
+    // Switching modes releases undo recovery without restarting the attempt.
+    recoveryTargetRef.current = null;
+    recoveryStartPatternRef.current = null;
+    recoveredPatternRef.current = null;
+    recoveryGripCheckRef.current = null;
+    setRecoveryTarget(null);
+    setRecoveryMoveCount(0);
+    setGuidedRecovery(false);
+    setBadMoves([]);
+    setFixVisible(false);
+    setHelpTone('hidden');
+  }, [options.allowAlternativeAlgorithms]);
 
   const statsAlgId = originalAlgIdRef.current;
   const stats = useMemo(
@@ -2028,12 +2045,12 @@ export function useTrainingState(
       }
       return false;
     }
-    if (is2x2 && initialPatternRef.current && currentMoveIndex < 0
+    if (!options.allowAlternativeAlgorithms && is2x2 && initialPatternRef.current && currentMoveIndex < 0
       && patternAfterMove.isIdentical(fixOrientation(initialPatternRef.current))) {
       setCaseCurrentPattern(initialPatternRef.current);
       return false;
     }
-    if (patternStatesRef.current.length > 0 && currentMoveIndex === 0 && initialPatternRef.current
+    if (!options.allowAlternativeAlgorithms && patternStatesRef.current.length > 0 && currentMoveIndex === 0 && initialPatternRef.current
       && (is2x2 ? fixOrientation(initialPatternRef.current) : initialPatternRef.current).isIdentical(patternAfterMove)) {
       if (is2x2) {
         setCaseCurrentPattern(initialPatternRef.current);
@@ -2046,10 +2063,13 @@ export function useTrainingState(
     const nextExpectedIdx = currentMoveIndex + 1;
     let matchedIndex: number | null = null;
 
-    // Fast path: the user made the expected next move. Keep the direct
-    // `isIdentical` check first — it's the common case and cheaper than hashing
-    // when it hits.
-    if (
+    const finalIndex = patternStatesRef.current.length - 1;
+    if (options.allowAlternativeAlgorithms && patternAfterMove.isIdentical(patternStatesRef.current[finalIndex])) {
+      // Any route to the case endpoint counts, even if that pattern appeared
+      // earlier in the displayed algorithm and the hash index kept that visit.
+      matchedIndex = finalIndex;
+    } else if (
+      // The expected next move is the common path and avoids a hash lookup.
       nextExpectedIdx >= 0
       && nextExpectedIdx < patternStatesRef.current.length
       && patternAfterMove.isIdentical(patternStatesRef.current[nextExpectedIdx])
@@ -2099,6 +2119,12 @@ export function useTrainingState(
         }
         return true;
       }
+      return false;
+    }
+
+    if (options.allowAlternativeAlgorithms) {
+      // An unmatched intermediate state can belong to a valid alternative.
+      // Keep timing and wait for the case endpoint without starting undo help.
       return false;
     }
 
