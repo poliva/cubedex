@@ -140,6 +140,7 @@ export interface TrainingState {
   visualResetKey: number;
   caseStartPattern: KPattern | null;
   casePicturePattern: KPattern | null;
+  caseGripPattern: KPattern | null;
   caseCurrentPattern: KPattern | null;
   algInput: string;
   displayAlg: string;
@@ -612,6 +613,7 @@ export function useTrainingState(
   const [visualResetKey, setVisualResetKey] = useState(0);
   const [caseStartPattern, setCaseStartPattern] = useState<KPattern | null>(null);
   const [casePicturePattern, setCasePicturePattern] = useState<KPattern | null>(null);
+  const [caseGripPattern, setCaseGripPattern] = useState<KPattern | null>(null);
   const [caseCurrentPattern, setCaseCurrentPattern] = useState<KPattern | null>(null);
   const [algInput, setAlgInputState] = useState('');
   const [displayAlg, setDisplayAlg] = useState('');
@@ -644,6 +646,9 @@ export function useTrainingState(
       recoveryStartPatternRef.current = null;
     }
     resumeTimerAfterRecovery();
+    // The visual guide confirms this grip, which can differ from the start
+    // after a wide or slice turn. The resumed gyro anchors to this same grip.
+    if (recoveryGripCheckRef.current) setCaseGripPattern(target);
     recoveryTargetRef.current = null;
     recoveredPatternRef.current = target;
     setRecoveryTarget(null);
@@ -1381,6 +1386,7 @@ export function useTrainingState(
     clearRecoveryTiming();
     setCaseStartPattern(null);
     setCasePicturePattern(null);
+    setCaseGripPattern(null);
     setCaseCurrentPattern(null);
     recoveryTargetRef.current = null;
     recoveryStartPatternRef.current = null;
@@ -1628,6 +1634,7 @@ export function useTrainingState(
 
     clearProgressState();
     setCaseStartPattern(basePattern);
+    setCaseGripPattern(basePattern);
     setCaseCurrentPattern(basePattern);
     setCasePicturePattern(basePattern && options.smartcubeConnected
       ? preparedCasePicture(prepared.displayAlgorithm, basePattern,
@@ -2316,6 +2323,7 @@ export function useTrainingState(
     visualResetKey,
     caseStartPattern,
     casePicturePattern,
+    caseGripPattern,
     caseCurrentPattern,
     algInput,
     displayAlg,
@@ -2361,6 +2369,7 @@ export function useTrainingState(
   }), [
     caseStartPattern,
     casePicturePattern,
+    caseGripPattern,
     caseCurrentPattern,
     recoveryTarget,
     recoveryMoveCount,

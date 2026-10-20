@@ -237,7 +237,10 @@ export function TwistyCube({
               gripInverseRef.current = targetQuaternionRef.current.clone().normalize().invert();
               gripBasisVersionRef.current = liveQuaternion.basisVersion;
             }
-            targetQuaternionRef.current.premultiply(gripInverseRef.current).premultiply(HOME_ORIENTATION);
+            // Remove the confirmed pose on the right so motion stays in the
+            // pictured axes. Removing it on the left expresses motion in the
+            // device's rolled axes (after f', a physical x becomes y').
+            targetQuaternionRef.current.multiply(gripInverseRef.current).multiply(HOME_ORIENTATION);
           }
           puzzleObject.quaternion.slerp(targetQuaternionRef.current, 0.25);
         } else {

@@ -314,14 +314,14 @@ export const PracticeView = memo(function PracticeView({
       ? training.caseCurrentPattern : smartcube.currentPattern;
     if (puzzle === '3x3x3') {
       // Wide and slice turns rotate the algorithm's centers. The gyro already
-      // supplies that physical rotation, so render stickers in the starting
-      // center frame rather than applying the rotation a second time.
+      // supplies that physical rotation. After recovery it anchors to the
+      // newly confirmed grip, so use that grip's centers for the stickers too.
       return options.gyroscope && smartcube.gyroSupported
-        ? alignForGuidance(current, training.caseStartPattern) : current;
+        ? alignForGuidance(current, training.caseGripPattern ?? training.caseStartPattern) : current;
     }
     return projectTrainingPattern(training.displayAlg, training.caseStartPattern, current, training.casePicturePattern);
   }, [puzzle, smartcube.connected, smartcube.currentPattern, training.inputMode, scramble.scrambleMode,
-    training.displayAlg, training.caseStartPattern, training.casePicturePattern, training.caseCurrentPattern, training.recoveredAt,
+    training.displayAlg, training.caseStartPattern, training.casePicturePattern, training.caseGripPattern, training.caseCurrentPattern, training.recoveredAt,
     options.gyroscope, smartcube.gyroSupported]);
   const fixedTrainingGrip = Boolean(trainingPicture && ((training.casePicturePattern && training.caseCurrentPattern) || training.recoveredAt));
   // Compensate the device frame in the gyro, leaving sticker turns in the

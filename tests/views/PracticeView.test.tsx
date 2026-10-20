@@ -853,6 +853,78 @@ it.each([
   }
 });
 
+it.each([false, true].flatMap(prepared => [false, true].map(matchVirtualCube => ({ prepared, matchVirtualCube }))))
+  ('keeps the confirmed V perm grip after recovery past f\' (prepared $prepared, match virtual $matchVirtualCube)', async ({ prepared, matchVirtualCube }) => {
+    const { default: defaults } = await import('../../src/data/defaultAlgs.json');
+    const algorithm = defaults.PLL.flatMap(subset => subset.algorithms).find(card => card.name === 'V Perm')!.algorithm;
+    const moves = new Alg(algorithm).expand().toString().split(/\s+/);
+    const solved = await solvedPattern(3);
+    const start = prepared ? solved.applyAlg(new Alg(algorithm).invert()) : solved.applyAlg('D R B y');
+    let physical = start;
+    const props = makeProps({ puzzle: '3x3x3', selectedStickering: 'PLL' });
+    props.options.expertScrambler = true;
+    props.options.matchVirtualCubeOnRecovery = matchVirtualCube;
+    props.options.gyroscope = true;
+    props.smartcube.gyroSupported = true;
+    props.smartcube.currentPattern = fixOrientation(physical);
+    props.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone();
+    props.smartcube.refreshPattern = vi.fn(async () => props.smartcube.currentPattern);
+    let training!: TrainingState;
+    function VPermPractice() {
+      training = useTrainingState([], 'PLL', {
+        puzzle: '3x3x3', selectionChangeMode: 'manual', countdownMode: false,
+        randomizeAUF: false, randomOrder: false, timeAttack: false, prioritizeSlowCases: false,
+        prioritizeFailedCases: false, smartReviewScheduling: false, smartcubeConnected: true,
+      });
+      const scramble = useScrambleState('3x3x3');
+      return <PracticeView {...props} training={training} scramble={scramble} />;
+    }
+    const { rerender } = render(<VPermPractice />);
+    await act(async () => { await training.trainCurrent(start, { algorithm, preserveDisplayedAlgorithm: true }); });
+    let packet = 0;
+    async function report(move: string) {
+      const sensor = fixOrientation(physical);
+      props.smartcube = { ...props.smartcube, currentPattern: sensor,
+        lastProcessedMove: { key: `v-perm-${++packet}`, move } };
+      props.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone()
+        .multiply(guidanceFrameRotation(sensor, physical)!);
+      await act(async () => {
+        training.handleSmartcubeMove(sensor, move);
+        rerender(<VPermPractice />);
+      });
+    }
+    const shown = () => new KPattern(solved.kpuzzle,
+      JSON.parse(screen.getByTestId('main-cube-area').dataset.target!));
+    let confirmedGrip = start;
+    for (const [index, move] of moves.entries()) {
+      physical = physical.applyMove(move);
+      await report(move);
+      if (index === moves.indexOf("f'") || index === moves.indexOf('U2')) {
+        const anchor = physical;
+        physical = physical.applyMove('F');
+        await report('F');
+        await userEvent.click(await screen.findByRole('button', { name: 'Help me recover' }));
+        const sequence = await screen.findByRole('list', { name: 'Recovery algorithm' });
+        const reference = solved.applyAlg(screen.getByTestId('recovery-cube').dataset.setup!);
+        physical = reference.applyAlg(Array.from(sequence.children).map(item => item.textContent!).join(' '));
+        expect(physical.isIdentical(training.recoveryTarget!)).toBe(true);
+        if (prepared || !matchVirtualCube) expect(physical.isIdentical(anchor)).toBe(true);
+        await report('F');
+        await waitFor(() => expect(screen.queryByRole('region', { name: '3×3 visual recovery' })).toBeNull());
+        expect(training.fixText).toBe('');
+        confirmedGrip = physical;
+        // The gyro reanchors at the pictured grip when training remounts.
+        // Its stickers must retain those centers rather than adding a z turn.
+        expect(shown().isIdentical(confirmedGrip)).toBe(true);
+      } else if (training.casePicturePattern || training.recoveredAt) {
+        expect(shown().isIdentical(alignForGuidance(physical, confirmedGrip))).toBe(true);
+      }
+    }
+    expect(training.timerState).toBe('STOPPED');
+    await act(async () => { await training.trainCurrent(physical, { algorithm, preserveDisplayedAlgorithm: true }); });
+    expect(training.caseGripPattern?.isIdentical(physical)).toBe(true);
+  });
+
 it.each(['OLL', 'PLL', 'full'])('completes the expert 3×3 wand and restores %s training stickers without extra clicks', async stickering => {
   const solved = await solvedPattern(3);
   const algorithm = "R U R' U'";
