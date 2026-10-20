@@ -61,8 +61,8 @@ function MainCubeAreaComponent({
         controlPanel={controlPanel}
         experimentalStickering={experimentalStickering}
         setupAlg={fixedOrientation ? '' : setupAlg}
-        cameraLatitude={fixedOrientation ? 30 : 0}
-        cameraLongitude={fixedOrientation ? 30 : 0}
+        cameraLatitude={fixedOrientation && !gyroscopeEnabled ? 30 : 0}
+        cameraLongitude={fixedOrientation && !gyroscopeEnabled ? 30 : 0}
         dragInput={fixedOrientation ? 'none' : 'auto'}
         enableExternalOrientationLoop={!fixedOrientation || gyroscopeEnabled}
         backView={backView}

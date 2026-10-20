@@ -6,6 +6,7 @@ import { patternToGuidanceAlg } from '../lib/scramble';
 import { getTrainingVisualDelta } from '../lib/training-visual';
 import type { PuzzleId } from '../lib/puzzles';
 import type { SmartcubeQuaternion } from '../hooks/useSmartcubeConnection';
+import { HOME_ORIENTATION } from '../lib/cube-orientation';
 
 export interface TwistyCubeProps {
   puzzle?: PuzzleId;
@@ -114,6 +115,7 @@ export function TwistyCube({
   useEffect(() => {
     // Guidance establishes the pictured grip. Use it as gyro zero so enabling
     // motion does not restore the device's earlier, unrelated orientation.
+    // The renderer adds the same home tilt used by a fresh connection.
     const q = cubeQuaternionRef ? cubeQuaternionRef.current : cubeQuaternion;
     gripInverseRef.current = gyroscopeRelativeToGrip && gyroscopeEnabled && q
       ? new THREE.Quaternion(q.x, q.y, q.z, q.w).normalize().invert() : null;
@@ -220,11 +222,13 @@ export function TwistyCube({
               gripInverseRef.current = targetQuaternionRef.current.clone().normalize().invert();
               gripBasisVersionRef.current = liveQuaternion.basisVersion;
             }
-            targetQuaternionRef.current.premultiply(gripInverseRef.current);
+            targetQuaternionRef.current.premultiply(gripInverseRef.current).premultiply(HOME_ORIENTATION);
           }
           puzzleObject.quaternion.slerp(targetQuaternionRef.current, 0.25);
         } else {
-          puzzleObject.quaternion.slerp(gyroscopeRelativeToGrip ? targetQuaternionRef.current.identity() : DR_LOCK_ORIENTATION, 0.25);
+          puzzleObject.quaternion.slerp(gyroscopeRelativeToGrip
+            ? latestGyroscopeEnabledRef.current ? HOME_ORIENTATION : targetQuaternionRef.current.identity()
+            : DR_LOCK_ORIENTATION, 0.25);
         }
         vantageRef.current?.render?.();
       }

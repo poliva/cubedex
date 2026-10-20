@@ -12,6 +12,7 @@ import { useTrainingState } from '../../src/hooks/useTrainingState';
 import { useScrambleState } from '../../src/hooks/useScrambleState';
 import { getCaseCards } from '../../src/lib/case-cards';
 import { align2x2RecoveryPattern, fixOrientation, get2x2RecoveryMoves } from '../../src/lib/scramble';
+import { HOME_ORIENTATION } from '../../src/lib/cube-orientation';
 
 const drawing = vi.hoisted(() => ({
   solved: null as KPattern | null,
@@ -78,7 +79,7 @@ describe('TwistyCube training frame', () => {
     };
   }
 
-  it.each([2, 3] as const)('resumes %i× gyro motion from the confirmed grip without changing stickers or jumping', async size => {
+  it.each([2, 3] as const)('resumes %i× gyro motion from the confirmed grip at the connection viewing angle', async size => {
     const frames = orientationFrames();
     const solved = await solvedPattern(size);
     drawing.solved = solved;
@@ -93,26 +94,40 @@ describe('TwistyCube training frame', () => {
       setupAlg: 'z2', backView: 'none' as const, resetToken: 'after-guidance',
       orientationResetToken: 0, orientationResetAlg: null, gyroscopeEnabled: true, cubeQuaternionRef,
     };
-    const { rerender, unmount } = render(<StrictMode><MainCubeArea {...props} /></StrictMode>);
-    await frames.advance();
-    expect(drawing.object!.quaternion.angleTo(new THREE.Quaternion())).toBeLessThan(1e-6);
+    const { rerender, unmount } = render(<StrictMode><MainCubeArea {...props}
+      fixedOrientation={false} cubeQuaternionRef={{ current: HOME_ORIENTATION.clone() }} /></StrictMode>);
+    await frames.advance(48);
+    const connectedOrientation = drawing.object!.quaternion.clone();
+    expect(connectedOrientation.angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
+    rerender(<StrictMode><MainCubeArea {...props} /></StrictMode>);
+    await frames.advance(48);
+    expect(drawing.object!.quaternion.angleTo(connectedOrientation)).toBeLessThan(1e-6);
+    expect(drawing.player?.cameraLatitude).toBe(0);
+    expect(drawing.player?.cameraLongitude).toBe(0);
     expect(drawing.current!.isIdentical(physical)).toBe(true);
     // Gyro packets update a ref without triggering a React render.
     const rotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(-.23, .42, .14));
+    const displayedRotation = HOME_ORIENTATION.clone().multiply(rotation);
     cubeQuaternionRef.current = anchor.clone().multiply(rotation);
     await frames.advance(24);
-    expect(drawing.object!.quaternion.angleTo(rotation)).toBeLessThan(.001);
+    expect(drawing.object!.quaternion.angleTo(displayedRotation)).toBeLessThan(.001);
     const next = physical.applyMove('B');
     rerender(<StrictMode><MainCubeArea {...props} targetPattern={next} /></StrictMode>);
     await frames.advance();
     expect(drawing.current!.isIdentical(next)).toBe(true);
-    expect(drawing.object!.quaternion.angleTo(rotation)).toBeLessThan(.001);
+    expect(drawing.object!.quaternion.angleTo(displayedRotation)).toBeLessThan(.001);
     // Reset Gyro can deliver its new reference before the next render frame.
     // It must reanchor even without a React render or observing a null packet.
     cubeQuaternionRef.current = Object.assign(new THREE.Quaternion().setFromEuler(new THREE.Euler(-.6, .7, -.2)), { basisVersion: 1 });
     await frames.advance(24);
-    expect(drawing.object!.quaternion.angleTo(new THREE.Quaternion())).toBeLessThan(.001);
+    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION)).toBeLessThan(.001);
     expect(drawing.current!.isIdentical(next)).toBe(true);
+    cubeQuaternionRef.current = null;
+    await frames.advance(24);
+    expect(drawing.object!.quaternion.angleTo(connectedOrientation)).toBeLessThan(.001);
+    cubeQuaternionRef.current = Object.assign(HOME_ORIENTATION.clone(), { basisVersion: 2 });
+    await frames.advance(24);
+    expect(drawing.object!.quaternion.angleTo(connectedOrientation)).toBeLessThan(.001);
     unmount();
     expect(frames.pending.size).toBe(0);
   });
@@ -132,21 +147,22 @@ describe('TwistyCube training frame', () => {
     const { rerender } = render(<MainCubeArea {...props} />);
     expect(frames.pending.size).toBe(0);
     rerender(<MainCubeArea {...props} gyroscopeEnabled />);
-    await frames.advance();
+    await frames.advance(48);
+    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
     const anchor = new THREE.Quaternion().setFromEuler(new THREE.Euler(.2, -.7, .1));
     cubeQuaternionRef.current = anchor.clone();
-    await frames.advance();
-    expect(drawing.object!.quaternion.angleTo(new THREE.Quaternion())).toBeLessThan(1e-6);
+    await frames.advance(48);
+    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
     const rotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), .8);
     cubeQuaternionRef.current = anchor.clone().multiply(rotation);
     await frames.advance(24);
-    expect(drawing.object!.quaternion.angleTo(rotation)).toBeLessThan(.001);
+    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION.clone().multiply(rotation))).toBeLessThan(.001);
     rerender(<MainCubeArea {...props} />);
     expect(frames.pending.size).toBe(0);
     expect(drawing.object!.quaternion.angleTo(new THREE.Quaternion())).toBeLessThan(1e-6);
     rerender(<MainCubeArea {...props} gyroscopeEnabled />);
-    await frames.advance();
-    expect(drawing.object!.quaternion.angleTo(new THREE.Quaternion())).toBeLessThan(1e-6);
+    await frames.advance(48);
+    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
     expect(drawing.current!.isIdentical(physical)).toBe(true);
   });
 
@@ -241,7 +257,7 @@ describe('TwistyCube training frame', () => {
     expect(patternToFacelets(drawing.current!)).toBe(patternToFacelets(physical));
   });
 
-  it.each([false, true])('keeps the confirmed setup stickers and viewing angle when training resumes (gyro %s)', async gyroscopeEnabled => {
+  it.each([false, true])('keeps the confirmed setup stickers with the training camera (gyro %s)', async gyroscopeEnabled => {
     const solved = await solvedPattern(2);
     drawing.solved = solved;
     drawing.moves = [];
@@ -258,8 +274,8 @@ describe('TwistyCube training frame', () => {
     const { rerender } = render(<StrictMode><MainCubeArea {...props} /></StrictMode>);
     expect(drawing.current?.isIdentical(physical)).toBe(true);
     expect(drawing.setupAlg).toBe('');
-    expect(drawing.player?.cameraLatitude).toBe(30);
-    expect(drawing.player?.cameraLongitude).toBe(30);
+    expect(drawing.player?.cameraLatitude).toBe(gyroscopeEnabled ? 0 : 30);
+    expect(drawing.player?.cameraLongitude).toBe(gyroscopeEnabled ? 0 : 30);
     expect(drawing.player?.experimentalDragInput).toBe('none');
     expect(drawing.moves).toEqual([]);
     const next = physical.applyMove('B');
