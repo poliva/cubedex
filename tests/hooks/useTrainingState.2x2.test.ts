@@ -6,7 +6,7 @@ import { selectedCases } from './useTrainingStateTestUtils';
 import { getAttemptHistory } from '../../src/lib/storage';
 import { solvedPattern } from '../../src/lib/cube-utils';
 import { align2x2RecoveryPattern, fixOrientation, get2x2RecoveryMoves } from '../../src/lib/scramble';
-import { project2x2TrainingPattern } from '../../src/lib/training-visual';
+import { projectTrainingPattern } from '../../src/lib/training-visual';
 
 // Exercise real corner patterns through training, without the pattern mocks used
 // by the queue/timer tests.
@@ -251,7 +251,7 @@ describe('2×2 PBL orientation between cases', () => {
             ['', 'y', 'y2', "y'"].map(y => `${x} ${y}`.trim()));
           const rotation = rotations.find(r => currentPhysical.applyAlg(r).isIdentical(snapshot));
           expect(rotation).toBeDefined();
-          const picture = project2x2TrainingPattern(card.algorithm, physicalStart, snapshot);
+          const picture = projectTrainingPattern(card.algorithm, physicalStart, snapshot);
           expect(picture.isIdentical(selectedCase.applyAlg(progress).applyAlg(rotation!))).toBe(true);
         };
         assertPicture(pattern, reportedPattern, '');

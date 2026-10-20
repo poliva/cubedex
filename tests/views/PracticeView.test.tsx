@@ -66,6 +66,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       countdownMode: false,
       alwaysScrambleTo: false,
       autoUpdateLearningState: false,
+      expertScrambler: false,
       visualization: 'PG3D',
       backview: 'none',
       hintFacelets: 'none',
@@ -80,6 +81,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       setCountdownMode: vi.fn(),
       setAlwaysScrambleTo: vi.fn(),
       setAutoUpdateLearningState: vi.fn(),
+      setExpertScrambler: vi.fn(),
       setVisualization: vi.fn(),
       setBackview: vi.fn(),
       setHintFacelets: vi.fn(),
@@ -173,6 +175,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       handleSpaceKeyDown: vi.fn(),
       handleSpaceKeyUp: vi.fn(),
       handleSmartcubeMove: vi.fn(() => false),
+      beginRecovery: vi.fn(),
       stopAndRecordSolve: vi.fn(),
       abortRunningAttempt: vi.fn(),
       resetDrill: vi.fn(),
@@ -462,7 +465,7 @@ describe('PracticeView', () => {
     expect(body.textContent?.indexOf('U')).toBeLessThan(body.textContent?.indexOf('WHITE') ?? -1);
   });
 
-  it('shows fix moves above orientation when mistake help merges fix into the status bar', () => {
+  it('offers the shared visual recovery flow for 3×3 mistakes', async () => {
     const base = makeProps();
     const props = makeProps({
       training: {
@@ -475,8 +478,9 @@ describe('PracticeView', () => {
 
     render(<PracticeView {...props} />);
 
-    const body = screen.getByTestId('practice-status-bar-body');
-    expect(body.textContent?.indexOf("U R' D'")).toBeLessThan(body.textContent?.indexOf('WHITE') ?? -1);
+    expect(screen.getByRole('button', { name: 'Help me recover' })).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'Help me recover' }));
+    expect(props.training.beginRecovery).toHaveBeenCalledOnce();
   });
 
   it('clears scramble mode on Train when alwaysScrambleTo is disabled', async () => {
@@ -705,6 +709,62 @@ describe('PracticeView', () => {
   });
 });
 
+it('keeps the actual 3×3 stickers after recovering an attempt that started without wand setup', async () => {
+  const solved = await solvedPattern(3);
+  const physical = solved.applyAlg('D R U y');
+  const props = makeProps({ puzzle: '3x3x3' });
+  props.smartcube.currentPattern = physical.applyAlg('x');
+  props.training.caseStartPattern = solved.applyAlg('D R y');
+  props.training.caseCurrentPattern = physical;
+  props.training.casePicturePattern = null;
+  props.training.recoveredAt = 1;
+  render(<PracticeView {...props} />);
+  expect(JSON.parse(screen.getByTestId('main-cube-area').dataset.target!)).toEqual(physical.patternData);
+});
+
+it('completes the expert 3×3 wand and returns to matching training stickers without extra clicks', async () => {
+  const solved = await solvedPattern(3);
+  const algorithm = "R U R' U'";
+  const target = solved.applyAlg(new Alg(algorithm).invert());
+  const current = solved.applyAlg('F R U y');
+  const props = makeProps({ puzzle: '3x3x3' });
+  props.options.expertScrambler = true;
+  props.options.gyroscope = true;
+  props.options.visualization = 'LL';
+  props.smartcube.currentPattern = current;
+  props.smartcube.refreshPattern = vi.fn(async () => props.smartcube.currentPattern);
+  let trainingState!: TrainingState;
+  function SetupPractice() {
+    const scramble = useScrambleState('3x3x3');
+    const training = useTrainingState([], 'Custom', {
+      puzzle: '3x3x3', selectionChangeMode: 'manual', countdownMode: false,
+      randomizeAUF: false, randomOrder: false, timeAttack: false, prioritizeSlowCases: false,
+      prioritizeFailedCases: false, smartReviewScheduling: false, smartcubeConnected: true,
+      currentPattern: props.smartcube.currentPattern,
+    });
+    trainingState = training;
+    return <PracticeView {...props} training={training} scramble={scramble} />;
+  }
+  const { rerender } = render(<SetupPractice />);
+  await act(async () => { await trainingState.trainCurrent(current, { algorithm }); });
+  await userEvent.click(screen.getByTitle('Scramble To...'));
+  const list = await screen.findByRole('list', { name: 'Setup algorithm' });
+  expect(screen.getByRole('region', { name: '3×3 guided setup' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'My cube matches' })).toBeNull();
+  const shownStart = solved.applyAlg(screen.getByTestId('recovery-cube').dataset.setup!);
+  const sequence = Array.from(list.children).map(item => item.textContent!).join(' ');
+  const physical = shownStart.applyAlg(sequence);
+  expect(physical.isIdentical(target)).toBe(true);
+  props.smartcube = { ...props.smartcube, currentPattern: physical.applyAlg('x y') };
+  rerender(<SetupPractice />);
+  await waitFor(() => expect(screen.queryByRole('region', { name: '3×3 guided setup' })).toBeNull());
+  expect(trainingState.casePicturePattern?.isIdentical(physical)).toBe(true);
+  expect(JSON.parse(screen.getByTestId('main-cube-area').dataset.target!)).toEqual(physical.patternData);
+  expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stickering', 'full');
+  await act(async () => { trainingState.handleSmartcubeMove(physical.applyMove('R').applyAlg('z'), 'R'); });
+  expect(JSON.parse(screen.getByTestId('main-cube-area').dataset.target!)).toEqual(physical.applyMove('R').patternData);
+});
+
 
 describe('puzzle-specific mistake guidance', () => {
   it.each([false, true])('offers immediate 2×2 undo and visual help (mobile %s)', async isMobile => {
@@ -719,7 +779,7 @@ describe('puzzle-specific mistake guidance', () => {
     expect(screen.queryByText(/WHITE on top/)).toBeNull();
   });
 
-  it('explains multiple errors and retains 3×3 orientation guidance', async () => {
+  it('explains multiple errors consistently for both cube sizes', async () => {
     const props = makeProps();
     props.puzzle = '2x2x2';
     props.training.recoveryTarget = await solvedPattern(2);
@@ -727,9 +787,11 @@ describe('puzzle-specific mistake guidance', () => {
     const { rerender } = render(<PracticeView {...props} />);
     expect(screen.getByText(/Undo your recent turns/)).toBeVisible();
     props.puzzle = '3x3x3';
+    props.training.recoveryTarget = await solvedPattern(3);
     props.training.helpTone = 'red';
     rerender(<PracticeView {...props} training={{ ...props.training }} />);
-    expect(screen.getByText(/WHITE on top and GREEN on front/)).toBeVisible();
+    expect(screen.getByText(/Undo your recent turns/)).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Help me recover' })).toBeVisible();
   });
 });
 

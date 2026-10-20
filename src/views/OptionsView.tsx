@@ -179,6 +179,12 @@ export const OptionsView = memo(function OptionsView({
             <Toggle ariaLabel="Auto-update learning state" checked={options.autoUpdateLearningState} onChange={(v) => options.setAutoUpdateLearningState(v)} />
           </div>
           <div style={row()}>
+            <div style={lbl}>Expert Scrambler
+              <div style={{ fontSize: 12, color: 'var(--fg3)', marginTop: 4 }}>Full setup and recovery sequences with automatic progress. Start turning after matching the pictured grip.</div>
+            </div>
+            <Toggle ariaLabel="Expert Scrambler" checked={options.expertScrambler} onChange={options.setExpertScrambler} />
+          </div>
+          <div style={row()}>
             <span style={lbl}>Flashing Indicator</span>
             <Toggle ariaLabel="Flashing Indicator" checked={options.flashingIndicatorEnabled} onChange={(v) => options.setFlashingIndicatorEnabled(v)} />
           </div>

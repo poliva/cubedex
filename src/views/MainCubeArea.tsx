@@ -10,6 +10,7 @@ interface MainCubeAreaProps {
   puzzle?: PuzzleId;
   alg: string;
   targetPattern?: KPattern | null;
+  /** Preserve the confirmed grip; gyro motion is measured relative to it. */
   fixedOrientation?: boolean;
   sizePx: number;
   visualization: string;
@@ -63,14 +64,15 @@ function MainCubeAreaComponent({
         cameraLatitude={fixedOrientation ? 30 : 0}
         cameraLongitude={fixedOrientation ? 30 : 0}
         dragInput={fixedOrientation ? 'none' : 'auto'}
-        enableExternalOrientationLoop={!fixedOrientation}
+        enableExternalOrientationLoop={!fixedOrientation || gyroscopeEnabled}
         backView={backView}
         resetToken={resetToken}
         orientationResetToken={orientationResetToken}
         orientationResetAlg={orientationResetAlg}
         appendMoveKey={appendMoveKey}
         appendMove={appendMove}
-        gyroscopeEnabled={!fixedOrientation && gyroscopeEnabled}
+        gyroscopeEnabled={gyroscopeEnabled}
+        gyroscopeRelativeToGrip={fixedOrientation}
         cubeQuaternionRef={cubeQuaternionRef}
         className="twisty-cube-host"
       />

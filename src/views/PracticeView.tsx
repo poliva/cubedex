@@ -9,8 +9,8 @@ import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExpo
 import { averageOfFiveTimeNumber, historyTimeString } from '../lib/case-cards';
 import { getBestTime } from '../lib/storage';
 import { fixOrientation, patternToPlayerAlg } from '../lib/scramble';
-import { project2x2TrainingPattern } from '../lib/training-visual';
-import { Recovery2x2Panel } from '../components/Recovery2x2Panel';
+import { projectTrainingPattern } from '../lib/training-visual';
+import { CubeGuidancePanel } from '../components/CubeGuidancePanel';
 import { MainCubeArea } from './MainCubeArea';
 import { MoveListPanel } from './MoveListPanel';
 import { StatsPanel } from './StatsPanel';
@@ -176,7 +176,8 @@ export const PracticeView = memo(function PracticeView({
 
   const [guidedRecovery, setGuidedRecovery] = useState(false);
   const [showBackOnTrack, setShowBackOnTrack] = useState(false);
-  const undo2x2 = puzzle === '2x2x2' && Boolean(training.recoveryTarget);
+  const undoRecovery = PUZZLES[puzzle].smartcube && Boolean(training.recoveryTarget);
+  const canGuide3x3 = puzzle === '3x3x3' && smartcube.connected && training.fixVisible && Boolean(training.fixText);
   useEffect(() => {
     setShowBackOnTrack(Boolean(training.recoveredAt));
     if (!training.recoveredAt) return;
@@ -185,9 +186,12 @@ export const PracticeView = memo(function PracticeView({
   }, [training.recoveredAt]);
   useEffect(() => {
     setGuidedRecovery(false);
-  }, [puzzle, visible, showAlgEditor, training.visualResetKey, training.currentCase?.id, training.inputMode, smartcube.connected, training.recoveryTarget]);
-  const showingGuidedRecovery = guidedRecovery && undo2x2 && smartcube.connected && !showAlgEditor && visible;
-  const showingGuidedSetup = puzzle === '2x2x2' && Boolean(scramble.setupTarget)
+  }, [puzzle, visible, showAlgEditor, training.visualResetKey, training.currentCase?.id, training.inputMode, smartcube.connected]);
+  useEffect(() => {
+    if (!training.recoveryTarget) setGuidedRecovery(false);
+  }, [training.recoveryTarget]);
+  const showingGuidedRecovery = guidedRecovery && undoRecovery && smartcube.connected && !showAlgEditor && visible;
+  const showingGuidedSetup = PUZZLES[puzzle].smartcube && Boolean(scramble.setupTarget)
     && scramble.scrambleMode && smartcube.connected && !showAlgEditor && visible;
   const finishedSetup = useRef<typeof scramble.setupTarget>(null);
   const orientationReminder = puzzle === '2x2x2'
@@ -241,24 +245,27 @@ export const PracticeView = memo(function PracticeView({
 
   const showPracticeTimerCard = training.selectedCases.length > 0;
 
-  const showStatus = !showingGuidedRecovery && !showingGuidedSetup && (undo2x2 || showBackOnTrack || Boolean(smartcube.stateSyncError) || scramble.helpTone === 'green' || training.helpTone === 'red' || scramble.scrambleMode);
+  const showStatus = !showingGuidedRecovery && !showingGuidedSetup && (undoRecovery || canGuide3x3 || showBackOnTrack || Boolean(smartcube.stateSyncError) || scramble.helpTone === 'green' || training.helpTone === 'red' || scramble.scrambleMode);
   const statusColor =
-    undo2x2 || smartcube.stateSyncError || training.helpTone === 'red' ? 'var(--danger)' :
+    undoRecovery || canGuide3x3 || smartcube.stateSyncError || training.helpTone === 'red' ? 'var(--danger)' :
     scramble.helpTone === 'green' ? 'var(--ok)' :
     scramble.scrambleMode ? 'var(--ok)' : undefined;
 
-  const isDangerStatus = undo2x2 || training.helpTone === 'red';
+  const isDangerStatus = undoRecovery || canGuide3x3 || training.helpTone === 'red';
   const isScrambleGrowHint = scramble.scrambleMode && scramble.helpTone === 'green';
   const useWarningStatusIcon = isDangerStatus || isScrambleGrowHint;
   const mergeFixIntoStatusBar = isDangerStatus && training.fixVisible && Boolean(training.fixText);
 
   let statusBody: ReactNode;
-  if (undo2x2) {
+  if (undoRecovery || canGuide3x3) {
     statusBody = <>
-      <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{training.recoveryMoveCount > 1
+      <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{training.recoveryMoveCount > 1 || (canGuide3x3 && training.fixText.trim().split(/\s+/).length > 1)
         ? 'Undo your recent turns to get back on track, or use visual recovery.'
         : 'Turned the wrong way? Undo your last turn.'}</span>
-      <button type="button" className="recovery-button" onClick={() => setGuidedRecovery(true)}>Help me recover</button>
+      <button type="button" className="recovery-button" onClick={() => {
+        if (!training.recoveryTarget) training.beginRecovery();
+        setGuidedRecovery(true);
+      }}>Help me recover</button>
     </>;
   } else if (smartcube.stateSyncError) {
     statusBody = <><span>{smartcube.stateSyncError}</span><button type="button" className="recovery-button" onClick={() => { void smartcube.refreshPattern().catch(() => {}); }}>Retry reading cube</button></>;
@@ -296,19 +303,22 @@ export const PracticeView = memo(function PracticeView({
   }
 
   const trainingPicture = useMemo(() => {
-    if (puzzle !== '2x2x2' || !smartcube.connected || training.inputMode || scramble.scrambleMode
+    if (!PUZZLES[puzzle].smartcube || !smartcube.connected || training.inputMode || scramble.scrambleMode
       || !training.displayAlg || !training.caseStartPattern || !smartcube.currentPattern) return null;
-    const current = training.casePicturePattern && training.caseCurrentPattern
+    if (puzzle === '3x3x3' && !training.casePicturePattern && !training.recoveredAt) return null;
+    const current = (training.casePicturePattern || training.recoveredAt) && training.caseCurrentPattern
       ? training.caseCurrentPattern : smartcube.currentPattern;
-    return project2x2TrainingPattern(training.displayAlg, training.caseStartPattern, current, training.casePicturePattern);
+    if (puzzle === '3x3x3') return current;
+    return projectTrainingPattern(training.displayAlg, training.caseStartPattern, current, training.casePicturePattern);
   }, [puzzle, smartcube.connected, smartcube.currentPattern, training.inputMode, scramble.scrambleMode,
-    training.displayAlg, training.caseStartPattern, training.casePicturePattern, training.caseCurrentPattern]);
-  const fixedTrainingGrip = puzzle === '2x2x2' && Boolean(trainingPicture && training.casePicturePattern && training.caseCurrentPattern);
+    training.displayAlg, training.caseStartPattern, training.casePicturePattern, training.caseCurrentPattern, training.recoveredAt]);
+  const fixedTrainingGrip = Boolean(trainingPicture && ((training.casePicturePattern && training.caseCurrentPattern) || training.recoveredAt));
 
   const cubeNode = showingGuidedSetup ? (
-    <Recovery2x2Panel
+    <CubeGuidancePanel
       key={`${smartcube.disconnectToken}:${training.visualResetKey}:${scramble.targetAlgorithm}`}
       mode="setup"
+      expertScrambler={options.expertScrambler}
       smartcube={smartcube}
       target={scramble.setupTarget!}
       onRecovered={pattern => {
@@ -335,10 +345,11 @@ export const PracticeView = memo(function PracticeView({
       }}
     />
   ) : showingGuidedRecovery ? (
-    <Recovery2x2Panel
+    <CubeGuidancePanel
       key={`${training.visualResetKey}:${training.currentCase?.id ?? ''}`}
       smartcube={smartcube}
       target={training.recoveryTarget!}
+      expertScrambler={options.expertScrambler}
       onRecovered={training.checkRecovery}
       onCancel={() => setGuidedRecovery(false)}
     />
@@ -362,10 +373,10 @@ export const PracticeView = memo(function PracticeView({
           targetPattern={trainingPicture}
           fixedOrientation={fixedTrainingGrip}
           sizePx={options.cubeSizePx}
-          visualization={!PUZZLES[puzzle].lastLayerPreview && options.visualization.includes('LL') ? '3D' : options.visualization}
-          hintFacelets={options.hintFacelets}
+          visualization={fixedTrainingGrip || (!PUZZLES[puzzle].lastLayerPreview && options.visualization.includes('LL')) ? '3D' : options.visualization}
+          hintFacelets={fixedTrainingGrip ? 'none' : options.hintFacelets}
           controlPanel={options.controlPanel}
-          experimentalStickering={puzzle !== '3x3x3' ? 'full' : selectedStickering}
+          experimentalStickering={fixedTrainingGrip || puzzle !== '3x3x3' ? 'full' : selectedStickering}
           setupAlg={PUZZLES[puzzle].cube && options.whiteOnBottom ? 'z2' : ''}
           backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
           resetToken={`${smartcube.connected}:${training.visualResetKey}`}
@@ -531,7 +542,7 @@ export const PracticeView = memo(function PracticeView({
             training.currentCase,
             PUZZLES[puzzle].smartcube ? smartcube.currentPattern : null,
             !alreadyPreparedAlg && PUZZLES[puzzle].randomAUF && practiceToggles.randomizeAUF,
-            puzzle === '2x2x2' ? trainingPicture : null,
+            trainingPicture,
           ).then((started) => {
             if (!started) return;
             setAcknowledgedDisconnectToken(smartcube.disconnectToken);

@@ -54,6 +54,7 @@ export const STORAGE_KEYS = {
   theme: 'theme',
   smartcubeDeviceSelection: 'smartcubeDeviceSelection',
   autoUpdateLearningState: 'autoUpdateLearningState',
+  expertScrambler: 'expertScrambler',
   showTimesInsteadOfGraph: 'showTimesInsteadOfGraph',
 } as const;
 

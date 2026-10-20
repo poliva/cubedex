@@ -1,15 +1,14 @@
 import { Alg } from 'cubing/alg';
 import type { KPattern } from 'cubing/kpuzzle';
-import { patternCubeSize } from './cube-utils';
 import { fixOrientation } from './scramble';
 
 /** Keep case colors while expressing its progress in the device's exact frame. */
-export function project2x2TrainingPattern(
+export function projectTrainingPattern(
   algorithm: string, caseStart: KPattern, sensor: KPattern, casePicture?: KPattern | null,
 ): KPattern {
   const startTransformation = caseStart.experimentalToTransformation();
   const sensorTransformation = sensor.experimentalToTransformation();
-  if (!startTransformation || !sensorTransformation) throw new Error('Invalid 2×2 training pattern');
+  if (!startTransformation || !sensorTransformation) throw new Error('Invalid training pattern');
   const relative = startTransformation.invert().applyTransformation(sensorTransformation);
   const selectedCase = casePicture ?? caseStart.kpuzzle.defaultPattern().applyAlg(new Alg(algorithm).invert());
   // This replaces the physical starting stickers with the selected case's
@@ -19,8 +18,8 @@ export function project2x2TrainingPattern(
 }
 
 /** A setup is ready only when the displayed turns solve it without a regrip. */
-export function prepared2x2CasePicture(algorithm: string, start: KPattern, prepared: boolean): KPattern | null {
-  if (!prepared || patternCubeSize(start) !== 2) return null;
+export function preparedCasePicture(algorithm: string, start: KPattern, prepared: boolean): KPattern | null {
+  if (!prepared) return null;
   const solved = start.kpuzzle.defaultPattern();
   return fixOrientation(start.applyAlg(algorithm)).isIdentical(solved) ? start : null;
 }
@@ -30,7 +29,7 @@ const rotations = ['', 'x', 'x2', "x'", 'z', "z'"].flatMap(x =>
 const turns = ['U', 'R', 'F', 'D', 'L', 'B'].flatMap(face => ['', "'", '2'].map(suffix => face + suffix));
 
 /** Animate a turn and any frame change; a multi-turn batch can be set directly. */
-export function get2x2VisualDelta(before: KPattern, after: KPattern): string | null {
+export function getTrainingVisualDelta(before: KPattern, after: KPattern): string | null {
   if (before.isIdentical(after)) return '';
   // Prefer a single layer turn over an opposite layer plus a cube rotation.
   for (const turn of turns) {

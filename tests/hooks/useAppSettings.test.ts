@@ -3,6 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { useAppSettings } from '../../src/hooks/useAppSettings';
 
 describe('useAppSettings', () => {
+  it('keeps guided setup as the default and remembers expert scrambler across sessions', () => {
+    const hook = renderHook(() => useAppSettings());
+    expect(hook.result.current.expertScrambler).toBe(false);
+    act(() => hook.result.current.setExpertScrambler(true));
+    expect(localStorage.getItem('expertScrambler')).toBe('true');
+    hook.unmount();
+    const next = renderHook(() => useAppSettings());
+    expect(next.result.current.expertScrambler).toBe(true);
+  });
+
   it('detects the initial theme from stored options and persists dark mode changes', async () => {
     localStorage.setItem('theme', 'dark');
 

@@ -449,7 +449,7 @@ export function App() {
       training.currentCase,
       smartcube.currentPattern,
       practiceToggles.randomizeAUF,
-      puzzle === '2x2x2' ? training.casePicturePattern : null,
+      training.casePicturePattern,
     ).then((started) => {
       if (!started) return;
       setAcknowledgedDisconnectToken(smartcube.disconnectToken);
@@ -484,7 +484,7 @@ export function App() {
     if (lastProcessedAnyMoveKeyRef.current === moveKey) return;
     lastProcessedAnyMoveKeyRef.current = moveKey;
 
-    // The guided 2×2 panel owns setup progress and confirms the pictured grip
+    // The guided panel owns setup progress and confirms the pictured grip
     // before training starts. Do not also consume its turns as input or solves.
     if (scramble.scrambleMode && scramble.setupTarget) return;
 

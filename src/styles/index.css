@@ -2630,3 +2630,8 @@ html.dark .footer {
 .recovery-button--primary { background: var(--accent); color: #fff; }
 .recovery-button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .recovery-button:disabled { opacity: .55; cursor: wait; }
+.guidance-sequence { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 14px 0 6px; padding: 0; font: 600 22px/1.6 var(--mono); }
+.guidance-sequence li { padding: 1px 7px; border-radius: 6px; }
+.guidance-sequence__done { color: var(--fg3); opacity: .55; }
+.guidance-sequence__current { background: var(--accent-tint); color: var(--accent); outline: 2px solid var(--accent); }
+.guidance-progress { font-size: 13px; color: var(--fg3); margin: 6px 0; }

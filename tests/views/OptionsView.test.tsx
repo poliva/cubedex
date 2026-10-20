@@ -13,6 +13,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     countdownMode: false,
     alwaysScrambleTo: false,
     autoUpdateLearningState: false,
+    expertScrambler: false,
     visualization: 'PG3D',
     backview: 'none',
     hintFacelets: 'none',
@@ -28,6 +29,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     setCountdownMode: vi.fn(),
     setAlwaysScrambleTo: vi.fn(),
     setAutoUpdateLearningState: vi.fn(),
+    setExpertScrambler: vi.fn(),
     setVisualization: vi.fn(),
     setBackview: vi.fn(),
     setHintFacelets: vi.fn(),
@@ -261,6 +263,15 @@ describe('OptionsView', () => {
 
     await user.click(screen.getByLabelText('Countdown Mode'));
     expect(options.setCountdownMode).toHaveBeenCalledWith(true);
+  });
+
+  it('forwards expert scrambler toggle changes', async () => {
+    const user = userEvent.setup();
+    const options = createOptions();
+    render(<OptionsView visible infoVisible={false} setInfoVisible={vi.fn()}
+      options={options} smartcube={createSmartcube()} algorithmActions={createAlgorithmActions()} />);
+    await user.click(screen.getByLabelText('Expert Scrambler'));
+    expect(options.setExpertScrambler).toHaveBeenCalledWith(true);
   });
 
   it('forwards auto learning state toggle changes', async () => {

@@ -7,7 +7,7 @@ import { getCaseCards } from '../../src/lib/case-cards';
 import { patternToFacelets, solvedPattern } from '../../src/lib/cube-utils';
 import { getAttemptHistory } from '../../src/lib/storage';
 import { align2x2RecoveryPattern, fixOrientation } from '../../src/lib/scramble';
-import { project2x2TrainingPattern } from '../../src/lib/training-visual';
+import { projectTrainingPattern } from '../../src/lib/training-visual';
 
 const options = {
   puzzle: '2x2x2' as const, selectionChangeMode: 'manual' as const, countdownMode: false,
@@ -91,7 +91,7 @@ describe('2×2 physical setup and execution', () => {
           algorithm, preserveDisplayedAlgorithm: true, statsScopeId: `physical-setup-${algorithm}`,
         });
       });
-      const picture = () => project2x2TrainingPattern(result.current.training.displayAlg,
+      const picture = () => projectTrainingPattern(result.current.training.displayAlg,
         result.current.training.caseStartPattern!, sensor, result.current.training.casePicturePattern);
       expect(patternToFacelets(picture())).toBe(patternToFacelets(sensor));
       expect(result.current.training.displayAlg).toBe(algorithm);
@@ -128,7 +128,7 @@ describe('2×2 physical setup and execution', () => {
     const resetKey = result.current.visualResetKey;
     expect(result.current.casePicturePattern).toBeNull();
     rerender({ enabled: true });
-    const picture = project2x2TrainingPattern(result.current.displayAlg,
+    const picture = projectTrainingPattern(result.current.displayAlg,
       result.current.caseStartPattern!, sensor, result.current.casePicturePattern);
     expect(picture.isIdentical(sensor)).toBe(true);
     expect(result.current.displayAlg).toBe(algorithm);
@@ -222,7 +222,7 @@ describe('2×2 physical setup and execution', () => {
         for (let i = 0; i < moves.length; i++) {
           const move = moves[i];
           sensor = sensor.applyMove(move);
-          const picture = project2x2TrainingPattern(card.algorithm,
+          const picture = projectTrainingPattern(card.algorithm,
             result.current.training.caseStartPattern!, sensor, result.current.training.casePicturePattern);
           expect(picture.isIdentical(sensor)).toBe(true);
           let completed = false;

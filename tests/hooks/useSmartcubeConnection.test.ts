@@ -47,6 +47,21 @@ beforeEach(() => {
   }));
 });
 
+it('marks a fresh gyro reference after Reset Gyro so guided grips can recalibrate', async () => {
+  const { result } = renderHook(() => useSmartcubeConnection(false));
+  await act(async () => { await result.current.connectOrDisconnect(); });
+  const quaternion = { x: .2, y: .3, z: -.1, w: .9 };
+  act(() => events.next({ type: 'GYRO', quaternion, timestamp: ++timestamp }));
+  const before = result.current.cubeQuaternionRef.current!;
+  expect(before).not.toBeNull();
+  act(() => result.current.resetGyro());
+  expect(result.current.cubeQuaternionRef.current).toBeNull();
+  act(() => events.next({ type: 'GYRO', quaternion, timestamp: ++timestamp }));
+  const after = result.current.cubeQuaternionRef.current!;
+  expect(after.basisVersion).toBeGreaterThan(before.basisVersion!);
+  expect([after.x, after.y, after.z, after.w]).toEqual([before.x, before.y, before.z, before.w]);
+});
+
 describe('smartcube battery refresh', () => {
   beforeEach(() => {
     vi.useFakeTimers();

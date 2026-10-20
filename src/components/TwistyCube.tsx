@@ -2,8 +2,8 @@ import { useEffect, useRef, type MutableRefObject } from 'react';
 import * as THREE from 'three';
 import { TwistyPlayer } from 'cubing/twisty';
 import type { KPattern } from 'cubing/kpuzzle';
-import { patternToPlayerAlg } from '../lib/scramble';
-import { get2x2VisualDelta } from '../lib/training-visual';
+import { patternToGuidanceAlg } from '../lib/scramble';
+import { getTrainingVisualDelta } from '../lib/training-visual';
 import type { PuzzleId } from '../lib/puzzles';
 import type { SmartcubeQuaternion } from '../hooks/useSmartcubeConnection';
 
@@ -31,6 +31,7 @@ export interface TwistyCubeProps {
   appendMoveKey?: string;
   appendMove?: string;
   gyroscopeEnabled?: boolean;
+  gyroscopeRelativeToGrip?: boolean;
   cubeQuaternion?: SmartcubeQuaternion | null;
   cubeQuaternionRef?: MutableRefObject<SmartcubeQuaternion | null>;
   enableExternalOrientationLoop?: boolean;
@@ -82,6 +83,7 @@ export function TwistyCube({
   appendMoveKey,
   appendMove,
   gyroscopeEnabled = false,
+  gyroscopeRelativeToGrip = false,
   cubeQuaternion = null,
   cubeQuaternionRef,
   enableExternalOrientationLoop = true,
@@ -96,20 +98,27 @@ export function TwistyCube({
   const animationFrameRef = useRef<number | null>(null);
   const puzzleObjectRef = useRef<THREE.Object3D | null>(null);
   const vantageRef = useRef<{ render?: () => void } | null>(null);
-  const latestQuaternionRef = useRef<THREE.Quaternion | null>(null);
+  const latestQuaternionRef = useRef<SmartcubeQuaternion | null>(null);
   const latestGyroscopeEnabledRef = useRef(false);
   const forceRefreshRef = useRef(false);
-  const latestEnableLoopRef = useRef(true);
+  const gripInverseRef = useRef<THREE.Quaternion | null>(null);
+  const gripBasisVersionRef = useRef<number | undefined>(undefined);
   const targetQuaternionRef = useRef(new THREE.Quaternion());
 
   useEffect(() => {
     latestGyroscopeEnabledRef.current = gyroscopeEnabled;
-    latestEnableLoopRef.current = enableExternalOrientationLoop;
     const q = cubeQuaternionRef?.current ?? cubeQuaternion;
-    latestQuaternionRef.current = q
-      ? new THREE.Quaternion(q.x, q.y, q.z, q.w)
-      : null;
+    latestQuaternionRef.current = q;
   }, [cubeQuaternion, cubeQuaternionRef, enableExternalOrientationLoop, gyroscopeEnabled]);
+
+  useEffect(() => {
+    // Guidance establishes the pictured grip. Use it as gyro zero so enabling
+    // motion does not restore the device's earlier, unrelated orientation.
+    const q = cubeQuaternionRef ? cubeQuaternionRef.current : cubeQuaternion;
+    gripInverseRef.current = gyroscopeRelativeToGrip && gyroscopeEnabled && q
+      ? new THREE.Quaternion(q.x, q.y, q.z, q.w).normalize().invert() : null;
+    gripBasisVersionRef.current = q?.basisVersion;
+  }, [gyroscopeRelativeToGrip, gyroscopeEnabled, orientationResetToken]);
 
   useEffect(() => {
     forceRefreshRef.current = true;
@@ -165,22 +174,33 @@ export function TwistyCube({
       });
     }
 
+    return () => {
+      // React owns the subtree; manually removing the player can race unmount.
+      player.pause();
+      playerRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!enableExternalOrientationLoop) {
+      if (gyroscopeRelativeToGrip) {
+        puzzleObjectRef.current?.quaternion.identity();
+        vantageRef.current?.render?.();
+      }
+      return;
+    }
+    let active = true;
     async function animateOrientation() {
       const activePlayer = playerRef.current;
-      if (!activePlayer) {
-        return;
-      }
-
-      if (!latestEnableLoopRef.current) {
-        animationFrameRef.current = null;
-        return;
-      }
+      if (!active || !activePlayer) return;
 
       if (!puzzleObjectRef.current || !vantageRef.current || forceRefreshRef.current) {
         try {
           const vantageList = await activePlayer.experimentalCurrentVantages();
+          const puzzleObject = await activePlayer.experimentalCurrentThreeJSPuzzleObject();
+          if (!active || playerRef.current !== activePlayer) return;
           vantageRef.current = [...vantageList][0] ?? null;
-          puzzleObjectRef.current = await activePlayer.experimentalCurrentThreeJSPuzzleObject();
+          puzzleObjectRef.current = puzzleObject;
           forceRefreshRef.current = false;
         } catch {
           puzzleObjectRef.current = null;
@@ -188,14 +208,23 @@ export function TwistyCube({
         }
       }
 
+      if (!active) return;
+
       const puzzleObject = puzzleObjectRef.current;
       if (puzzleObject) {
-        const liveQuaternion = cubeQuaternionRef?.current ?? null;
+        const liveQuaternion = cubeQuaternionRef ? cubeQuaternionRef.current : latestQuaternionRef.current;
         if (latestGyroscopeEnabledRef.current && liveQuaternion) {
           targetQuaternionRef.current.set(liveQuaternion.x, liveQuaternion.y, liveQuaternion.z, liveQuaternion.w);
+          if (gyroscopeRelativeToGrip) {
+            if (!gripInverseRef.current || gripBasisVersionRef.current !== liveQuaternion.basisVersion) {
+              gripInverseRef.current = targetQuaternionRef.current.clone().normalize().invert();
+              gripBasisVersionRef.current = liveQuaternion.basisVersion;
+            }
+            targetQuaternionRef.current.premultiply(gripInverseRef.current);
+          }
           puzzleObject.quaternion.slerp(targetQuaternionRef.current, 0.25);
         } else {
-          puzzleObject.quaternion.slerp(DR_LOCK_ORIENTATION, 0.25);
+          puzzleObject.quaternion.slerp(gyroscopeRelativeToGrip ? targetQuaternionRef.current.identity() : DR_LOCK_ORIENTATION, 0.25);
         }
         vantageRef.current?.render?.();
       }
@@ -203,23 +232,16 @@ export function TwistyCube({
       animationFrameRef.current = window.requestAnimationFrame(animateOrientation);
     }
 
-    if (enableExternalOrientationLoop) {
-      animationFrameRef.current = window.requestAnimationFrame(animateOrientation);
-    }
+    animationFrameRef.current = window.requestAnimationFrame(animateOrientation);
 
     return () => {
+      active = false;
       if (animationFrameRef.current !== null) {
         window.cancelAnimationFrame(animationFrameRef.current);
         animationFrameRef.current = null;
       }
-      puzzleObjectRef.current = null;
-      vantageRef.current = null;
-      // Important: do NOT manually detach `player` from the DOM here.
-      // React will remove the subtree during unmount; manual removal can race and trigger NotFoundError.
-      player.pause();
-      playerRef.current = null;
     };
-  }, []);
+  }, [enableExternalOrientationLoop, gyroscopeRelativeToGrip, cubeQuaternionRef]);
 
   useEffect(() => {
     const player = playerRef.current;
@@ -353,14 +375,14 @@ export function TwistyCube({
     const previous = targetPatternRef.current;
     const seed = targetSeedRef.current;
     const delta = previous && seed?.alg === alg && seed.resetToken === resetToken
-      ? get2x2VisualDelta(previous, targetPattern) : null;
+      ? getTrainingVisualDelta(previous, targetPattern) : null;
     targetPatternRef.current = targetPattern;
     targetSeedRef.current = { alg, resetToken };
     if (delta === null) {
       // Case changes and batched turns replace the picture exactly. Never
       // animate a stale raw axis sequence over a different reference frame.
       player.pause();
-      player.alg = patternToPlayerAlg(targetPattern);
+      player.alg = patternToGuidanceAlg(targetPattern);
     } else {
       for (const move of delta.split(/\s+/).filter(Boolean)) {
         player.experimentalAddMove(move, { cancel: false });

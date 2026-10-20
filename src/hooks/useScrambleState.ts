@@ -5,7 +5,7 @@ import type { KPattern } from 'cubing/kpuzzle';
 import { cube3x3x3 } from 'cubing/puzzles';
 import type { CaseCardData } from '../lib/case-cards';
 import { solvedPattern } from '../lib/cube-utils';
-import { align2x2RecoveryPattern, fixOrientation, get2x2RecoveryMoves, getScrambleToSolution } from '../lib/scramble';
+import { alignForGuidance, fixOrientation, getGuidanceMoves, getScrambleToSolution } from '../lib/scramble';
 import { prepareTrainingAlgorithm } from '../lib/auf';
 import { countMovesETM } from '../lib/charts';
 import { expandNotation } from '../lib/storage';
@@ -115,16 +115,16 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
 
       let physicalTarget: KPattern | null = null;
       let scramble: string;
-      if (puzzle === '2x2x2' && currentPattern) {
-        const solved = await solvedPattern(2);
+      if (PUZZLES[puzzle].smartcube && currentPattern) {
+        const solved = await solvedPattern(puzzle === '2x2x2' ? 2 : 3);
         const originalAlg = new Alg(expandNotation(algorithm, puzzle));
         const previewEnd = casePreview?.applyAlg(originalAlg);
         // Retain the preview's colors in the algorithm's grip. A progressed
         // preview is not a setup; use the initial case for that algorithm.
         const colorFrame = previewEnd && fixOrientation(previewEnd).isIdentical(solved) ? previewEnd : solved;
         physicalTarget = colorFrame.applyAlg(new Alg(expandNotation(aufModifiedAlgorithm, puzzle)).invert());
-        const reference = align2x2RecoveryPattern(currentPattern, physicalTarget);
-        scramble = (await get2x2RecoveryMoves(reference, physicalTarget)).join(' ');
+        const reference = alignForGuidance(currentPattern, physicalTarget);
+        scramble = (await getGuidanceMoves(reference, physicalTarget)).join(' ');
       } else {
         // Puzzles without live state tracking use a setup from solved.
         scramble = PUZZLES[puzzle].smartcube
@@ -137,7 +137,7 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
       }
 
       if (generation !== generationRef.current) return false;
-      // Connected 2×2 setups establish a visible grip even if no layer turns
+      // Connected cube setups establish a visible grip even if no layer turns
       // are needed. The same exact target is kept through rotated snapshots.
       if (scramble.length > 0 || physicalTarget) {
         setScrambleMode(true);
@@ -166,8 +166,8 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
 
     const generation = generationRef.current;
     if (setupTarget) {
-      const picture = align2x2RecoveryPattern(currentPattern, setupTarget);
-      const remaining = await get2x2RecoveryMoves(picture, setupTarget);
+      const picture = alignForGuidance(currentPattern, setupTarget);
+      const remaining = await getGuidanceMoves(picture, setupTarget);
       if (generation !== generationRef.current) return false;
       const nextScramble = remaining.join(' ');
       const completed = remaining.length === 0;

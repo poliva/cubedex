@@ -79,6 +79,8 @@ export interface SmartcubeQuaternion {
   y: number;
   z: number;
   w: number;
+  /** Changes when Reset Gyro establishes a new sensor reference. */
+  basisVersion?: number;
 }
 
 interface SmartcubeProcessedMove {
@@ -211,6 +213,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   const gyroscopeEnabledRef = useRef(gyroscopeEnabled);
   const recentMovesRef = useRef<SmartCubeMoveEvent[]>([]);
   const gyroBasisRef = useRef<THREE.Quaternion | null>(null);
+  const gyroBasisVersionRef = useRef(0);
   const previousFaceletsRef = useRef<string>('');
   const isBuggedRef = useRef(false);
 
@@ -323,6 +326,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
 
   const resetGyro = useCallback(() => {
     gyroBasisRef.current = null;
+    cubeQuaternionRef.current = null;
   }, []);
 
   const resetOrientation = useCallback(() => {
@@ -493,6 +497,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
 
       if (!gyroBasisRef.current) {
         gyroBasisRef.current = rawQuaternion.clone().conjugate();
+        gyroBasisVersionRef.current += 1;
       }
 
       const displayQuaternion = rawQuaternion.clone().premultiply(gyroBasisRef.current).premultiply(HOME_ORIENTATION);
@@ -501,6 +506,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
         y: displayQuaternion.y,
         z: displayQuaternion.z,
         w: displayQuaternion.w,
+        basisVersion: gyroBasisVersionRef.current,
       };
 
       // Store in ref so consumers (e.g. cube renderer) can read without rerendering App.

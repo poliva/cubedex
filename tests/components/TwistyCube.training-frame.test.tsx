@@ -1,10 +1,11 @@
 import { act, render, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { StrictMode } from 'react';
+import * as THREE from 'three';
 import { Alg } from 'cubing/alg';
 import type { KPattern } from 'cubing/kpuzzle';
 import { patternToFacelets, solvedPattern } from '../../src/lib/cube-utils';
-import { project2x2TrainingPattern } from '../../src/lib/training-visual';
+import { projectTrainingPattern } from '../../src/lib/training-visual';
 import { TwistyCube } from '../../src/components/TwistyCube';
 import { MainCubeArea } from '../../src/views/MainCubeArea';
 import { useTrainingState } from '../../src/hooks/useTrainingState';
@@ -20,6 +21,8 @@ const drawing = vi.hoisted(() => ({
   alg: '',
   setupAlg: '',
   player: null as Record<string, unknown> | null,
+  object: null as THREE.Object3D | null,
+  renders: 0,
 }));
 
 vi.mock('cubing/twisty', () => ({
@@ -29,6 +32,8 @@ vi.mock('cubing/twisty', () => ({
       drawing.alg = '';
       drawing.setupAlg = '';
       drawing.player = player as unknown as Record<string, unknown>;
+      const object = new THREE.Object3D();
+      drawing.object = object;
       Object.defineProperty(player, 'alg', { set(value: string) {
         drawing.alg = value;
         drawing.current = drawing.solved!.applyAlg(drawing.setupAlg).applyAlg(value);
@@ -40,6 +45,8 @@ vi.mock('cubing/twisty', () => ({
       } });
       Object.assign(player, {
         pause: () => {},
+        experimentalCurrentVantages: async () => [{ render: () => { drawing.renders++; } }],
+        experimentalCurrentThreeJSPuzzleObject: async () => object,
         experimentalAddMove: (move: string) => {
           drawing.moves.push(move);
           drawing.current = drawing.current!.applyMove(move);
@@ -51,6 +58,111 @@ vi.mock('cubing/twisty', () => ({
 }));
 
 describe('TwistyCube training frame', () => {
+  function orientationFrames() {
+    const pending = new Map<number, FrameRequestCallback>();
+    let id = 0;
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => {
+      pending.set(++id, callback);
+      return id;
+    });
+    vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(frame => { pending.delete(frame); });
+    return {
+      pending,
+      async advance(count = 1) {
+        for (let i = 0; i < count; i++) {
+          const callbacks = [...pending.values()];
+          pending.clear();
+          await act(async () => { for (const callback of callbacks) callback(i * 16); });
+        }
+      },
+    };
+  }
+
+  it.each([2, 3] as const)('resumes %i× gyro motion from the confirmed grip without changing stickers or jumping', async size => {
+    const frames = orientationFrames();
+    const solved = await solvedPattern(size);
+    drawing.solved = solved;
+    drawing.moves = [];
+    const physical = solved.applyAlg('x y R F2 U');
+    const anchor = new THREE.Quaternion().setFromEuler(new THREE.Euler(.8, -.4, .2));
+    const cubeQuaternionRef = { current: anchor.clone() as THREE.Quaternion | null };
+    const props = {
+      puzzle: size === 2 ? '2x2x2' as const : '3x3x3' as const, alg: "R U' R'",
+      targetPattern: physical, fixedOrientation: true, sizePx: 420, visualization: '3D',
+      hintFacelets: 'none', controlPanel: 'none', experimentalStickering: 'full',
+      setupAlg: 'z2', backView: 'none' as const, resetToken: 'after-guidance',
+      orientationResetToken: 0, orientationResetAlg: null, gyroscopeEnabled: true, cubeQuaternionRef,
+    };
+    const { rerender, unmount } = render(<StrictMode><MainCubeArea {...props} /></StrictMode>);
+    await frames.advance();
+    expect(drawing.object!.quaternion.angleTo(new THREE.Quaternion())).toBeLessThan(1e-6);
+    expect(drawing.current!.isIdentical(physical)).toBe(true);
+    // Gyro packets update a ref without triggering a React render.
+    const rotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(-.23, .42, .14));
+    cubeQuaternionRef.current = anchor.clone().multiply(rotation);
+    await frames.advance(24);
+    expect(drawing.object!.quaternion.angleTo(rotation)).toBeLessThan(.001);
+    const next = physical.applyMove('B');
+    rerender(<StrictMode><MainCubeArea {...props} targetPattern={next} /></StrictMode>);
+    await frames.advance();
+    expect(drawing.current!.isIdentical(next)).toBe(true);
+    expect(drawing.object!.quaternion.angleTo(rotation)).toBeLessThan(.001);
+    // Reset Gyro can deliver its new reference before the next render frame.
+    // It must reanchor even without a React render or observing a null packet.
+    cubeQuaternionRef.current = Object.assign(new THREE.Quaternion().setFromEuler(new THREE.Euler(-.6, .7, -.2)), { basisVersion: 1 });
+    await frames.advance(24);
+    expect(drawing.object!.quaternion.angleTo(new THREE.Quaternion())).toBeLessThan(.001);
+    expect(drawing.current!.isIdentical(next)).toBe(true);
+    unmount();
+    expect(frames.pending.size).toBe(0);
+  });
+
+  it('starts and stops gyro tracking when toggled after guidance, including a late first sensor packet', async () => {
+    const frames = orientationFrames();
+    const solved = await solvedPattern(2);
+    drawing.solved = solved;
+    const physical = solved.applyAlg('R U F');
+    const cubeQuaternionRef = { current: null as THREE.Quaternion | null };
+    const props = {
+      puzzle: '2x2x2' as const, alg: '', targetPattern: physical, fixedOrientation: true,
+      sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      experimentalStickering: 'full', setupAlg: '', backView: 'none' as const, resetToken: 'recovery',
+      orientationResetToken: 0, orientationResetAlg: null, gyroscopeEnabled: false, cubeQuaternionRef,
+    };
+    const { rerender } = render(<MainCubeArea {...props} />);
+    expect(frames.pending.size).toBe(0);
+    rerender(<MainCubeArea {...props} gyroscopeEnabled />);
+    await frames.advance();
+    const anchor = new THREE.Quaternion().setFromEuler(new THREE.Euler(.2, -.7, .1));
+    cubeQuaternionRef.current = anchor.clone();
+    await frames.advance();
+    expect(drawing.object!.quaternion.angleTo(new THREE.Quaternion())).toBeLessThan(1e-6);
+    const rotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), .8);
+    cubeQuaternionRef.current = anchor.clone().multiply(rotation);
+    await frames.advance(24);
+    expect(drawing.object!.quaternion.angleTo(rotation)).toBeLessThan(.001);
+    rerender(<MainCubeArea {...props} />);
+    expect(frames.pending.size).toBe(0);
+    expect(drawing.object!.quaternion.angleTo(new THREE.Quaternion())).toBeLessThan(1e-6);
+    rerender(<MainCubeArea {...props} gyroscopeEnabled />);
+    await frames.advance();
+    expect(drawing.object!.quaternion.angleTo(new THREE.Quaternion())).toBeLessThan(1e-6);
+    expect(drawing.current!.isIdentical(physical)).toBe(true);
+  });
+
+  it('retains absolute gyro tracking outside the guidance grip', async () => {
+    const frames = orientationFrames();
+    drawing.solved = await solvedPattern(3);
+    const rotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(.3, -.8, .1));
+    const cubeQuaternionRef = { current: rotation.clone() };
+    render(<MainCubeArea puzzle="3x3x3" alg="R U" sizePx={420} visualization="3D"
+      hintFacelets="none" controlPanel="none" experimentalStickering="full" setupAlg=""
+      backView="none" resetToken="ordinary-training" orientationResetToken={0}
+      orientationResetAlg={null} gyroscopeEnabled cubeQuaternionRef={cubeQuaternionRef} />);
+    await frames.advance(24);
+    expect(drawing.object!.quaternion.angleTo(rotation)).toBeLessThan(.001);
+  });
+
   it('preserves the wand setup when returning to training after the first three Ortega PBL cases', async () => {
     const { default: defaults } = await import('../../src/data/defaultAlgs.json');
     const cards = getCaseCards(defaults, '2x2x2:PBL', ['Ortega PBL']);
@@ -94,7 +206,7 @@ describe('TwistyCube training frame', () => {
       await result.current.training.trainCurrent(target, { algorithm: card.algorithm, preserveDisplayedAlgorithm: true });
     });
     const training = result.current.training;
-    const picture = project2x2TrainingPattern(card.algorithm, training.caseStartPattern!,
+    const picture = projectTrainingPattern(card.algorithm, training.caseStartPattern!,
       training.caseCurrentPattern!, training.casePicturePattern);
     render(<StrictMode><MainCubeArea
       puzzle="2x2x2" alg={new Alg(card.algorithm).invert().toString()}
@@ -163,7 +275,7 @@ describe('TwistyCube training frame', () => {
     drawing.resets = 0;
     const algorithm = "R U R'";
     const start = solved.applyAlg('R F2 U');
-    const initial = project2x2TrainingPattern(algorithm, start, start.applyAlg("y'"));
+    const initial = projectTrainingPattern(algorithm, start, start.applyAlg("y'"));
     const props = {
       puzzle: '2x2x2' as const, alg: "R U' R'", resetToken: 'case-1',
       targetPattern: initial, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
@@ -175,7 +287,7 @@ describe('TwistyCube training frame', () => {
     expect(drawing.moves).toEqual([]);
     const resetsBefore = drawing.resets;
 
-    const after = project2x2TrainingPattern(algorithm, start, start.applyAlg("R y'"));
+    const after = projectTrainingPattern(algorithm, start, start.applyAlg("R y'"));
     rerender(<TwistyCube {...props} targetPattern={after} appendMoveKey="new" appendMove="F" />);
     expect(drawing.current?.isIdentical(after)).toBe(true);
     expect(drawing.moves).toHaveLength(1);
@@ -189,7 +301,7 @@ describe('TwistyCube training frame', () => {
     // Case transitions replace the base picture and skip the previous raw event.
     const nextAlgorithm = "F U F'";
     const nextStart = start.applyMove('R');
-    const next = project2x2TrainingPattern(nextAlgorithm, nextStart, nextStart.applyAlg('y2'));
+    const next = projectTrainingPattern(nextAlgorithm, nextStart, nextStart.applyAlg('y2'));
     const movesBefore = drawing.moves.length;
     rerender(<TwistyCube {...props} alg="F U' F'" resetToken="case-2"
       targetPattern={next} appendMoveKey="same-state" />);

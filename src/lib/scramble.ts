@@ -179,6 +179,47 @@ export function align2x2RecoveryPattern(current: KPattern, target: KPattern): KP
   throw new Error('Could not find a 2×2 recovery orientation');
 }
 
+/** Match the target grip using a corner on 2×2 and the centers on 3×3. */
+export function alignForGuidance(current: KPattern, target: KPattern): KPattern {
+  if (patternCubeSize(current) === 2) return align2x2RecoveryPattern(current, target);
+  for (const x of ['', 'x', 'x2', "x'", 'z', "z'"]) {
+    for (const y of ['', 'y', 'y2', "y'"]) {
+      const candidate = current.applyAlg(`${x} ${y}`);
+      if (candidate.patternData.CENTERS.pieces.every((piece, i) => piece === target.patternData.CENTERS.pieces[i])) return candidate;
+    }
+  }
+  throw new Error('Could not match the cube orientation');
+}
+
+/** Render every sticker in the confirmed grip, including rotated 3×3 centers. */
+export function patternToGuidanceAlg(pattern: KPattern): string {
+  if (patternCubeSize(pattern) === 2) return patternToPlayerAlg(pattern);
+  const oriented = fixOrientation(pattern);
+  const setup = patternToPlayerAlg(oriented);
+  for (const x of ['', 'x', 'x2', "x'", 'z', "z'"]) {
+    for (const y of ['', 'y', 'y2', "y'"]) {
+      if (oriented.applyAlg(`${x} ${y}`).isIdentical(pattern)) return `${setup} ${x} ${y}`.trim();
+    }
+  }
+  throw new Error('Could not render the cube in the confirmed grip');
+}
+
+/** Direct corrections to a target, with no intermediate solved-cube step. */
+export async function getGuidanceMoves(current: KPattern, target: KPattern): Promise<string[]> {
+  if (patternCubeSize(current) === 2) return get2x2RecoveryMoves(current, target);
+  const alignedTarget = alignForGuidance(target, current);
+  if (current.isIdentical(alignedTarget)) return [];
+  const from = current.experimentalToTransformation();
+  const to = alignedTarget.experimentalToTransformation();
+  if (!from || !to) throw new Error('Invalid recovery state');
+  const relative = current.kpuzzle.defaultPattern().applyTransformation(to.invert().applyTransformation(from));
+  const solution = min2phase.solve(solverFacelets(relative)).trim();
+  if (solution.startsWith('Error')) throw new Error('Could not calculate correction turns. Refresh the picture and retry.');
+  const moves = solution.split(/\s+/).filter(Boolean);
+  if (!current.applyAlg(solution).isIdentical(alignedTarget)) throw new Error('Could not calculate corrections in this grip');
+  return moves;
+}
+
 /** U/R/F corrections applied directly to the exact state used by the picture. */
 export async function get2x2RecoveryMoves(current: KPattern, target: KPattern): Promise<string[]> {
   if (fixOrientation(current).isIdentical(fixOrientation(target))) return [];

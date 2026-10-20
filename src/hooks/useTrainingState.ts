@@ -16,8 +16,8 @@ import {
 import { countMovesETM } from '../lib/charts';
 import { prepareTrainingAlgorithm } from '../lib/auf';
 import { patternCubeSize, solvedPattern } from '../lib/cube-utils';
-import { align2x2RecoveryPattern, fixOrientation } from '../lib/scramble';
-import { prepared2x2CasePicture } from '../lib/training-visual';
+import { alignForGuidance, fixOrientation } from '../lib/scramble';
+import { preparedCasePicture } from '../lib/training-visual';
 import { getInverseMove, getOppositeMove, sanitizeMove, trailingWholeCubeRotationMoveCount } from '../lib/move-helpers';
 import {
   TIME_ATTACK_SCOPE_PREFIX,
@@ -152,6 +152,7 @@ export interface TrainingState {
   recoveryMoveCount: number;
   recoveredAt: number;
   checkRecovery: (pattern: KPattern) => boolean;
+  beginRecovery: () => void;
   fixVisible: boolean;
   helpTone: 'hidden' | 'red';
   failedCounts: Record<string, number>;
@@ -612,6 +613,7 @@ export function useTrainingState(
   const [badMoves, setBadMoves] = useState<string[]>([]);
   const [recoveryTarget, setRecoveryTarget] = useState<KPattern | null>(null);
   const recoveryTargetRef = useRef<KPattern | null>(null);
+  const recoveredPatternRef = useRef<KPattern | null>(null);
   const [recoveryMoveCount, setRecoveryMoveCount] = useState(0);
   const [recoveredAt, setRecoveredAt] = useState(0);
 
@@ -619,12 +621,24 @@ export function useTrainingState(
     const target = recoveryTargetRef.current;
     if (!target || !fixOrientation(pattern).isIdentical(fixOrientation(target))) return false;
     recoveryTargetRef.current = null;
+    recoveredPatternRef.current = target;
     setRecoveryTarget(null);
     setRecoveryMoveCount(0);
     setBadMoves([]);
     setCaseCurrentPattern(target);
     setRecoveredAt(performance.now());
     return true;
+  }
+
+  function beginRecovery() {
+    if (inputMode || scrambleMode || recoveryTargetRef.current) return;
+    const target = currentMoveIndex < 0 ? initialPatternRef.current : patternStatesInTrainingFrameRef.current[currentMoveIndex];
+    if (!target) return;
+    recoveryTargetRef.current = target;
+    recoveredPatternRef.current = null;
+    setRecoveryTarget(target);
+    setRecoveryMoveCount(badMoves.length);
+    setRecoveredAt(0);
   }
   const [fixVisible, setFixVisible] = useState(false);
   const [helpTone, setHelpTone] = useState<'hidden' | 'red'>('hidden');
@@ -712,7 +726,7 @@ export function useTrainingState(
 
   useEffect(() => {
     if (!options.alwaysScrambleTo || !options.smartcubeConnected || !caseStartPattern || !displayAlg) return;
-    setCasePicturePattern(prepared2x2CasePicture(displayAlg, caseStartPattern, true));
+    setCasePicturePattern(preparedCasePicture(displayAlg, caseStartPattern, true));
   }, [options.alwaysScrambleTo, options.smartcubeConnected, caseStartPattern, displayAlg]);
 
   function getTimeAttackStatsScopeId() {
@@ -1254,6 +1268,7 @@ export function useTrainingState(
     setCasePicturePattern(null);
     setCaseCurrentPattern(null);
     recoveryTargetRef.current = null;
+    recoveredPatternRef.current = null;
     setRecoveryTarget(null);
     setRecoveryMoveCount(0);
     setRecoveredAt(0);
@@ -1433,7 +1448,7 @@ export function useTrainingState(
     setCaseStartPattern(basePattern);
     setCaseCurrentPattern(basePattern);
     setCasePicturePattern(basePattern && options.smartcubeConnected
-      ? prepared2x2CasePicture(prepared.displayAlgorithm, basePattern,
+      ? preparedCasePicture(prepared.displayAlgorithm, basePattern,
         Boolean(options.alwaysScrambleTo || trainOptions?.preserveDisplayedAlgorithm))
       : null);
     clearRecognitionTracking();
@@ -1870,6 +1885,13 @@ export function useTrainingState(
       return false;
     }
 
+    // The visual panel can confirm recovery before the same device packet
+    // reaches training. Consume that correction once, without changing progress.
+    if (recoveredPatternRef.current) {
+      if (fixOrientation(currentPattern).isIdentical(fixOrientation(recoveredPatternRef.current))) return false;
+      recoveredPatternRef.current = null;
+    }
+
     const capturedMoves = rawMoves && rawMoves.length > 0
       ? rawMoves
       : [{ face: -1, direction: 0, move, localTimestamp: null, cubeTimestamp: null }];
@@ -1894,13 +1916,13 @@ export function useTrainingState(
 
     const patternAfterMove = fixOrientation(currentPattern);
     const is2x2 = patternCubeSize(currentPattern) === 2;
-    if (is2x2) {
+    if (is2x2 || casePicturePattern || recoveredAt || recoveryTargetRef.current) {
       // Keep the last confirmed physical grip when a device report chooses
       // another orientation. Expected turns below provide the exact frame,
       // including D/L/B turns that move the corner used for normalization.
-      setCaseCurrentPattern(previous => align2x2RecoveryPattern(currentPattern, previous ?? currentPattern));
+      setCaseCurrentPattern(previous => alignForGuidance(currentPattern, previous ?? currentPattern));
     }
-    if (is2x2 && recoveryTargetRef.current) {
+    if (recoveryTargetRef.current) {
       // Only the last correct position ends recovery. Visiting a later training
       // state while correcting must never finish or restart the attempt.
       if (!checkRecovery(currentPattern)) {
@@ -1946,7 +1968,7 @@ export function useTrainingState(
     }
 
     if (matchedIndex !== null) {
-      if (is2x2) setCaseCurrentPattern(patternStatesInTrainingFrameRef.current[matchedIndex]);
+      setCaseCurrentPattern(patternStatesInTrainingFrameRef.current[matchedIndex]);
       setCurrentMoveIndex(matchedIndex);
       setBadMoves([]);
       const tailRotations = trailingWholeCubeRotationMoveCount(expectedMovesRef.current);
@@ -2077,6 +2099,7 @@ export function useTrainingState(
   }
 
   const stableCheckRecovery = useStableCallback(checkRecovery);
+  const stableBeginRecovery = useStableCallback(beginRecovery);
   const stableSetAlgInput = useStableCallback(setAlgInput);
   const stableClearFailedCounts = useStableCallback(clearFailedCounts);
   const stableEnterInputMode = useStableCallback(enterInputMode);
@@ -2120,6 +2143,7 @@ export function useTrainingState(
     recoveryMoveCount,
     recoveredAt,
     checkRecovery: stableCheckRecovery,
+    beginRecovery: stableBeginRecovery,
     fixVisible,
     helpTone,
     failedCounts,
@@ -2152,6 +2176,7 @@ export function useTrainingState(
     recoveryMoveCount,
     recoveredAt,
     stableCheckRecovery,
+    stableBeginRecovery,
     algInput,
     currentCase,
     displayAlg,

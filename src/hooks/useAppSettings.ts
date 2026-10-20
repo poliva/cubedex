@@ -6,6 +6,7 @@ export interface AppSettingsState {
   showAlgName: boolean;
   countdownMode: boolean;
   alwaysScrambleTo: boolean;
+  expertScrambler: boolean;
   autoUpdateLearningState: boolean;
   visualization: string;
   backview: string;
@@ -21,6 +22,7 @@ export interface AppSettingsState {
   setShowAlgName: (value: boolean) => void;
   setCountdownMode: (value: boolean) => void;
   setAlwaysScrambleTo: (value: boolean) => void;
+  setExpertScrambler: (value: boolean) => void;
   setAutoUpdateLearningState: (value: boolean) => void;
   setVisualization: (value: string) => void;
   setBackview: (value: string) => void;
@@ -57,6 +59,7 @@ export function useAppSettings(): AppSettingsState {
   const [showAlgName, setShowAlgNameState] = useState(readOption('showAlgName') !== 'false');
   const [countdownMode, setCountdownModeState] = useState(readOption('countdownMode') === 'true');
   const [alwaysScrambleTo, setAlwaysScrambleToState] = useState(readOption('alwaysScrambleTo') === 'true');
+  const [expertScrambler, setExpertScrambler] = useState(readOption('expertScrambler') === 'true');
   const [autoUpdateLearningState, setAutoUpdateLearningStateState] = useState(
     readOption('autoUpdateLearningState') !== 'false',
   );
@@ -93,6 +96,10 @@ export function useAppSettings(): AppSettingsState {
   useEffect(() => {
     writeOption('alwaysScrambleTo', String(alwaysScrambleTo));
   }, [alwaysScrambleTo]);
+
+  useEffect(() => {
+    writeOption('expertScrambler', String(expertScrambler));
+  }, [expertScrambler]);
 
   useEffect(() => {
     writeOption('autoUpdateLearningState', String(autoUpdateLearningState));
@@ -147,6 +154,7 @@ export function useAppSettings(): AppSettingsState {
     showAlgName,
     countdownMode,
     alwaysScrambleTo,
+    expertScrambler,
     autoUpdateLearningState,
     visualization,
     backview,
@@ -162,6 +170,7 @@ export function useAppSettings(): AppSettingsState {
     setShowAlgName: setShowAlgNameState,
     setCountdownMode: setCountdownModeState,
     setAlwaysScrambleTo: setAlwaysScrambleToState,
+    setExpertScrambler,
     setAutoUpdateLearningState: setAutoUpdateLearningStateState,
     setVisualization: setVisualizationState,
     setBackview: setBackviewState,
@@ -175,6 +184,7 @@ export function useAppSettings(): AppSettingsState {
     setShowTimesInsteadOfGraph,
   }), [
     alwaysScrambleTo,
+    expertScrambler,
     autoUpdateLearningState,
     backview,
     countdownMode,
