@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { KPattern } from 'cubing/kpuzzle';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
-import { fixOrientation, get2x2RecoveryMoves, patternToPlayerAlg } from '../lib/scramble';
+import { align2x2RecoveryPattern, fixOrientation, get2x2RecoveryMoves, patternToPlayerAlg } from '../lib/scramble';
 import { TwistyCube } from './TwistyCube';
 
 type Recovery = {
@@ -36,7 +36,7 @@ export function Recovery2x2Panel({ smartcube, target, onRecovered, onCancel }: {
       const reference = await smartcube.refreshPattern(abort.signal);
       if (generation.current !== version) return;
       if (onRecovered(reference)) return;
-      setState({ ...initial, phase: 'align', reference, notice: '' });
+      setState({ ...initial, phase: 'align', reference: align2x2RecoveryPattern(reference, target), notice: '' });
     } catch (error) {
       if (generation.current !== version) return;
       setState({ ...initial, phase: 'error', notice: error instanceof Error ? error.message : 'Could not read the cube. Please retry.' });
@@ -69,9 +69,9 @@ export function Recovery2x2Panel({ smartcube, target, onRecovered, onCancel }: {
       if (!moved && equivalent(current, state.steps[state.index].before)) return;
     } else if (!moved && equivalent(current, state.reference)) return;
     generation.current += 1;
-    setState({ ...initial, phase: 'align', reference: current,
+    setState({ ...initial, phase: 'align', reference: align2x2RecoveryPattern(current, target),
       notice: 'The cube changed. Match the updated picture before continuing.' });
-  }, [smartcube.currentPattern, smartcube.lastProcessedMove?.key, state, onRecovered]);
+  }, [smartcube.currentPattern, smartcube.lastProcessedMove?.key, state, onRecovered, target]);
 
   useEffect(() => {
     if (!smartcube.stateSyncError || state.phase === 'loading' || state.phase === 'error') return;
@@ -111,8 +111,8 @@ export function Recovery2x2Panel({ smartcube, target, onRecovered, onCancel }: {
     <div aria-live="polite" className="recovery-instructions">
       <strong>{guiding ? `Follow this turn: ${turn}` : 'Match your cube'}</strong>
       <p>{guiding
-        ? 'Keep this grip. Copy the moving layer, then wait for the next turn.'
-        : 'Rotate the whole cube to match this picture. Don’t turn any layers.'}</p>
+        ? 'Keep this grip. Copy the moving layer, then wait for the next turn. When recovered, continue the algorithm without rotating the cube.'
+        : 'Rotate the whole cube to match this picture. Don’t turn any layers. This grip will let you continue the algorithm after recovery.'}</p>
       {state.notice && <p role={state.phase === 'error' ? 'alert' : 'status'}>{state.notice}</p>}
     </div>
     {state.reference && state.phase !== 'error' ? <div className="recovery-picture" aria-label={guiding ? `Animated correction ${turn}` : 'Current scrambled cube, top front and right visible'}>

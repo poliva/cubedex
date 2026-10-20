@@ -5,7 +5,7 @@ import { useTrainingState } from '../../src/hooks/useTrainingState';
 import { selectedCases } from './useTrainingStateTestUtils';
 import { getAttemptHistory } from '../../src/lib/storage';
 import { solvedPattern } from '../../src/lib/cube-utils';
-import { fixOrientation } from '../../src/lib/scramble';
+import { align2x2RecoveryPattern, fixOrientation, get2x2RecoveryMoves } from '../../src/lib/scramble';
 import { project2x2TrainingPattern } from '../../src/lib/training-visual';
 
 // Exercise real corner patterns through training, without the pattern mocks used
@@ -74,6 +74,43 @@ describe('keyboard puzzle training', () => {
 });
 
 describe('2×2 state-based undo recovery', () => {
+  it.each(['', 'D', 'L B', 'x U'])('resumes the remaining algorithm in the same grip after progress "%s"', async progress => {
+    const solved = await solvedPattern(2);
+    const remaining = ['R', 'U', 'F'];
+    const algorithm = `${progress} ${remaining.join(' ')}`.trim();
+    const finish = solved.applyAlg('x y');
+    const start = finish.applyAlg(new Alg(algorithm).invert());
+    const { result } = renderHook(() => useTrainingState([], 'Custom', {
+      puzzle: '2x2x2', selectionChangeMode: 'manual', countdownMode: false, randomizeAUF: false,
+      randomOrder: false, timeAttack: false, prioritizeSlowCases: false,
+      prioritizeFailedCases: false, smartReviewScheduling: false,
+      smartcubeConnected: true, currentPattern: start,
+    }));
+    await act(async () => { await result.current.trainCurrent(start, { algorithm }); });
+    expect(result.current.inputMode).toBe(false);
+    expect(result.current.displayAlg).toBe(algorithm);
+    const anchor = start.applyAlg(progress);
+    if (progress) await act(async () => { result.current.handleSmartcubeMove(anchor.applyAlg('y'), 'U'); });
+    const current = anchor.applyAlg('F x y');
+    await act(async () => { result.current.handleSmartcubeMove(current, 'F'); });
+    const target = result.current.recoveryTarget!;
+    expect(target).not.toBeNull();
+    expect(target.isIdentical(anchor)).toBe(true);
+    const picture = align2x2RecoveryPattern(current, target);
+    const moves = await get2x2RecoveryMoves(picture, target);
+    let physical = picture.applyAlg(moves.join(' '));
+    await act(async () => { result.current.handleSmartcubeMove(physical.applyAlg('z'), moves.at(-1)!); });
+    expect(result.current.recoveryTarget).toBeNull();
+    for (let i = 0; i < remaining.length; i++) {
+      physical = physical.applyMove(remaining[i]);
+      let completed = false;
+      await act(async () => { completed = result.current.handleSmartcubeMove(physical.applyAlg('y'), remaining[i]); });
+      expect(result.current.recoveryTarget).toBeNull();
+      expect(completed).toBe(i === remaining.length - 1);
+    }
+    expect(physical.isIdentical(finish)).toBe(true);
+  });
+
   let attemptId = 0;
   async function start() {
     let pattern = (await solvedPattern(2)).applyAlg('F U R');

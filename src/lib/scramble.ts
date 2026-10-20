@@ -164,26 +164,36 @@ export async function getScrambleToSolution(alg: string, state: KPattern) {
     .trim();
 }
 
+/** Orient the picture so U/R/F corrections finish in the target's exact grip. */
+export function align2x2RecoveryPattern(current: KPattern, target: KPattern): KPattern {
+  const anchor = target.patternData.CORNERS;
+  // U/R/F leave DBL untouched. Match that corner before the user grips the
+  // pictured cube, so the correction never needs a final whole-cube rotation.
+  for (const x of ['', 'x', 'x2', "x'", 'z', "z'"]) {
+    for (const y of ['', 'y', 'y2', "y'"]) {
+      const candidate = current.applyAlg(`${x} ${y}`);
+      const corners = candidate.patternData.CORNERS;
+      if (corners.pieces[6] === anchor.pieces[6] && corners.orientation[6] === anchor.orientation[6]) return candidate;
+    }
+  }
+  throw new Error('Could not find a 2×2 recovery orientation');
+}
+
 /** U/R/F corrections applied directly to the exact state used by the picture. */
 export async function get2x2RecoveryMoves(current: KPattern, target: KPattern): Promise<string[]> {
   if (fixOrientation(current).isIdentical(fixOrientation(target))) return [];
-  const { rotations } = await (sensorFramePromise ??= build2x2SensorFrame());
-  const anchor = current.patternData.CORNERS;
-  // Choose the equivalent target in the picture's frame. U/R/F cannot change
-  // DBL, so this orientation is the only reachable one without a regrip.
-  const alignedTarget = rotations.map(rotation => target.applyTransformation(rotation)).find(candidate => {
-    const corners = candidate.patternData.CORNERS;
-    return corners.pieces[6] === anchor.pieces[6] && corners.orientation[6] === anchor.orientation[6];
-  });
+  // Callers can first align the picture to target for an exact finish. Keep
+  // accepting other frames for state-based recovery and shortest-path queries.
+  const alignedTarget = align2x2RecoveryPattern(target, current);
   const from = current.experimentalToTransformation();
-  const to = alignedTarget?.experimentalToTransformation();
+  const to = alignedTarget.experimentalToTransformation();
   if (!from || !to) throw new Error('Invalid 2×2 recovery pattern');
   // Solving target^-1 * current produces current^-1 * target directly, without
   // taking the physical cube through solved or remapping a 3×3 solution.
   const relative = current.kpuzzle.defaultPattern().applyTransformation(to.invert().applyTransformation(from));
   const moves = await shortest2x2Solution(relative);
   const correction = moves.join(' ');
-  if (!fixOrientation(current.applyAlg(correction)).isIdentical(fixOrientation(target))) {
+  if (!current.applyAlg(correction).isIdentical(alignedTarget)) {
     throw new Error('Could not calculate recovery. Refresh the picture and retry.');
   }
   return moves;

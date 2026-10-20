@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { patternToFacelets, solvedPattern } from '../../src/lib/cube-utils';
-import { fixOrientation, get2x2RecoveryMoves, getScrambleToSolution, patternToPlayerAlg } from '../../src/lib/scramble';
+import { align2x2RecoveryPattern, fixOrientation, get2x2RecoveryMoves, getScrambleToSolution, patternToPlayerAlg } from '../../src/lib/scramble';
 
 const SOLVED_FACELETS = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB';
 
@@ -97,6 +97,21 @@ describe('2×2 sensor setup notation', () => {
 });
 
 describe('2×2 physical recovery frame', () => {
+  const rotations = ['', 'x', 'x2', "x'", 'z', "z'"].flatMap(x =>
+    ['', 'y', 'y2', "y'"].map(y => `${x} ${y}`.trim()));
+
+  it.each(rotations)('finishes in the exact training grip for sensor rotation "%s" and errors on every face', async rotation => {
+    const target = (await solvedPattern(2)).applyAlg("L D B R U x y");
+    for (const error of ['U', "R'", 'F2', 'D', "L'", 'B2']) {
+      const sensor = target.applyAlg(`${error} ${rotation}`);
+      const picture = align2x2RecoveryPattern(sensor, target);
+      expect(fixOrientation(picture).isIdentical(fixOrientation(sensor))).toBe(true);
+      const moves = await get2x2RecoveryMoves(picture, target);
+      expect(moves.every(move => /^[URF]'?$/.test(move))).toBe(true);
+      expect(picture.applyAlg(moves.join(' ')).isIdentical(target), error).toBe(true);
+    }
+  });
+
   it.each(['U', "U'", 'U2', 'R', "R'", 'R2', 'F', "F'", 'F2',
     'D', "D'", 'D2', 'L', "L'", 'L2', 'B', "B'", 'B2'])
     ('recovers a single %s error directly, even with a rotated target', async error => {

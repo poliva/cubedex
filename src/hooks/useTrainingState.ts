@@ -1972,7 +1972,9 @@ export function useTrainingState(
         setBadMoves(capturedMoves.map(entry => entry.move));
         return false;
       }
-      const anchor = currentMoveIndex < 0 ? initialPatternRef.current : patternStatesRef.current[currentMoveIndex];
+      // Recovery must finish in the algorithm's grip, including after D/L/B
+      // turns or authored rotations. Normalized states lose that orientation.
+      const anchor = currentMoveIndex < 0 ? initialPatternRef.current : patternStatesInTrainingFrameRef.current[currentMoveIndex];
       if (anchor) {
         recoveryTargetRef.current = anchor;
         setRecoveryTarget(anchor);

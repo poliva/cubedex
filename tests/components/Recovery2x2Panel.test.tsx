@@ -29,6 +29,38 @@ async function fixture() {
 }
 
 describe('guided visual recovery', () => {
+  it.each([
+    { targetAlg: 'F U R', error: 'D', sensorRotation: 'x y' },
+    { targetAlg: 'L U B R', error: 'F R', sensorRotation: 'y' },
+    { targetAlg: 'R F2 x y', error: 'L B', sensorRotation: 'z x' },
+  ])('keeps the continuation grip after recovering $error with sensor rotation $sensorRotation', async ({ targetAlg, error, sensorRotation }) => {
+    const f = await fixture();
+    f.target = f.solved.applyAlg(targetAlg);
+    f.current = f.target.applyAlg(`${error} ${sensorRotation}`);
+    f.smartcube = { ...f.smartcube, currentPattern: f.current, refreshPattern: vi.fn(async () => f.current) };
+    f.onRecovered = vi.fn((pattern: KPattern) => equivalent(pattern, f.target));
+    const user = userEvent.setup();
+    const { rerender } = render(<Recovery2x2Panel {...f} />);
+    await user.click(await screen.findByRole('button', { name: 'My cube matches' }));
+    await screen.findByRole('button', { name: 'Show turn again' });
+    expect(screen.getByText(/continue the algorithm without rotating the cube/)).toBeVisible();
+    let physical = f.solved.applyAlg(screen.getByTestId('reference').dataset.setup!);
+    expect(equivalent(physical, f.current)).toBe(true);
+    for (let i = 0; i < 40; i++) {
+      const ref = screen.getByTestId('reference');
+      expect(f.solved.applyAlg(ref.dataset.setup!).isIdentical(physical)).toBe(true);
+      physical = physical.applyMove(ref.dataset.turn!);
+      f.smartcube = { ...f.smartcube, currentPattern: physical.applyAlg(sensorRotation), lastProcessedMove: { key: `${i}` } as never };
+      rerender(<Recovery2x2Panel {...f} />);
+      if (equivalent(physical, f.target)) break;
+      expect(screen.queryByRole('button', { name: 'My cube matches' })).toBeNull();
+    }
+    // Exact equality matters: an equivalent rotated cube changes the next
+    // algorithm turn's physical face even though recovery would accept it.
+    expect(physical.isIdentical(f.target)).toBe(true);
+    expect(f.onRecovered).toHaveLastReturnedWith(true);
+  });
+
   it('shows exact current stickers in a stationary, fully colored frame before confirmation', async () => {
     const f = await fixture();
     const { rerender } = render(<Recovery2x2Panel {...f} />);
@@ -79,11 +111,13 @@ describe('guided visual recovery', () => {
     const user = userEvent.setup();
     const { rerender } = render(<Recovery2x2Panel {...f} />);
     await screen.findByRole('button', { name: 'My cube matches' });
-    const actual = f.current.applyMove('U');
+    const actual = f.current.applyAlg('D x y');
     f.smartcube = { ...f.smartcube, currentPattern: actual, lastProcessedMove: { key: 'new' } as never };
     rerender(<Recovery2x2Panel {...f} />);
     expect(screen.getByText(/The cube changed/)).toBeVisible();
-    expect(f.solved.applyAlg(screen.getByTestId('reference').dataset.setup!).isIdentical(actual)).toBe(true);
+    const picture = f.solved.applyAlg(screen.getByTestId('reference').dataset.setup!);
+    expect(equivalent(picture, actual)).toBe(true);
+    expect(picture.applyAlg((await get2x2RecoveryMoves(picture, f.target)).join(' ')).isIdentical(f.target)).toBe(true);
     await user.click(screen.getByRole('button', { name: 'My cube matches' }));
     await screen.findByRole('button', { name: 'Show turn again' });
     const wrong = actual.applyAlg('U F');
@@ -91,6 +125,9 @@ describe('guided visual recovery', () => {
     rerender(<Recovery2x2Panel {...f} />);
     expect(screen.getByRole('button', { name: 'My cube matches' })).toBeVisible();
     expect(screen.getByTestId('reference')).toHaveAttribute('data-turn', '');
+    const updatedPicture = f.solved.applyAlg(screen.getByTestId('reference').dataset.setup!);
+    expect(equivalent(updatedPicture, wrong)).toBe(true);
+    expect(updatedPicture.applyAlg((await get2x2RecoveryMoves(updatedPicture, f.target)).join(' ')).isIdentical(f.target)).toBe(true);
     await user.click(screen.getByRole('button', { name: 'Back to undo help' }));
     expect(f.onCancel).toHaveBeenCalledOnce();
   });
