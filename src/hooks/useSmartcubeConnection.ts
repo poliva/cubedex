@@ -175,6 +175,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
   const [cubeSize, setCubeSize] = useState<CubeSize>(3);
   const connRef = useRef<SmartCubeConnection | null>(null);
   const pending2x2MovesRef = useRef<Array<SmartCubeMoveEvent & { timestamp: number }>>([]);
+  const pending2x2SnapshotRef = useRef<{ pattern: KPattern; event: SmartCubeEvent & { type: 'FACELETS' } } | null>(null);
   const snapshotVersionRef = useRef(0);
   const refreshRef = useRef<{ promise: Promise<KPattern>; resolve: (pattern: KPattern) => void; reject: (error: Error) => void; timer: number } | null>(null);
   const [stateSyncing, setStateSyncing] = useState(false);
@@ -215,6 +216,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
     snapshotVersionRef.current += 1;
     subscriptionRef.current?.unsubscribe();
     pending2x2MovesRef.current = [];
+    pending2x2SnapshotRef.current = null;
     if (sliceBufferRef.current) window.clearTimeout(sliceBufferRef.current.timer);
     if (refreshRef.current) {
       window.clearTimeout(refreshRef.current.timer);
@@ -432,6 +434,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
     gyroTrainingPatternRef.current = null;
     snapshotVersionRef.current += 1;
     pending2x2MovesRef.current = [];
+    pending2x2SnapshotRef.current = null;
     if (refreshRef.current) {
       window.clearTimeout(refreshRef.current.timer);
       refreshRef.current.reject(new Error('Cube disconnected.'));
@@ -541,6 +544,23 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
     await processResolvedMove(bufferedEvent, [bufferedEvent]);
   }, [clearSliceBuffer, processResolvedMove]);
 
+  const publish2x2Snapshot = useCallback(() => {
+    const snapshot = pending2x2SnapshotRef.current;
+    if (!snapshot) return false;
+    const { pattern, event } = snapshot;
+    const queue = pending2x2MovesRef.current;
+    const end = event.serial == null ? queue.length - 1 : queue.findIndex(move => move.serial != null && (move.serial & 0xff) === (event.serial! & 0xff));
+    const moves = end < 0 ? [] : queue.splice(0, end + 1);
+    const last = moves.at(-1);
+    if (!last) return false;
+    pending2x2SnapshotRef.current = null;
+    flushSync(() => setLastProcessedMove({
+      key: `${event.timestamp}:${snapshotVersionRef.current}`, move: last.move, rawMoves: moves,
+      visualMove: moves.map(move => move.move).join(' '), currentPattern: pattern, isBugged: false,
+    }));
+    return true;
+  }, []);
+
   const handleCubeEvent = useCallback((event: SmartCubeEvent) => {
     if (event.type === 'HARDWARE') {
       diagnosticsRef.current?.updateDevice({ hardwareName: event.hardwareName, hardwareVersion: event.hardwareVersion,
@@ -646,6 +666,8 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
         clearSliceBuffer();
         sliceOrientationRef.current = { ...IDENTITY };
         currentPatternRef.current = null;
+        pending2x2MovesRef.current = [];
+        pending2x2SnapshotRef.current = null;
         previousFaceletsRef.current = '';
         isBuggedRef.current = false;
         cubeSizeRef.current = size;
@@ -690,18 +712,18 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
             pending.resolve(pattern);
           }
           if (size === 2) {
+            pending2x2SnapshotRef.current = { pattern, event };
+            publish2x2Snapshot();
+            // Without a counter a snapshot can only confirm turns that had
+            // arrived before it; it cannot be paired with future telemetry.
+            if (event.serial == null) pending2x2SnapshotRef.current = null;
             const queue = pending2x2MovesRef.current;
-            const end = event.serial == null ? queue.length - 1 : queue.findIndex(move => move.serial != null && (move.serial & 0xff) === (event.serial! & 0xff));
-            const moves = end < 0 ? [] : queue.splice(0, end + 1);
-            const last = moves.at(-1);
-            if (last) {
-              // Each batch represents the actual snapshot, including recovered history.
-              flushSync(() => setLastProcessedMove({
-                key: `${event.timestamp}:${version}`, move: last.move, rawMoves: moves,
-                visualMove: moves.map(move => move.move).join(' '), currentPattern: pattern, isBugged: false,
-              }));
-            }
-            if (queue.length) void refreshPattern().catch(() => {});
+            const lastSerial = queue.at(-1)?.serial;
+            const ahead = event.serial != null && lastSerial != null
+              && ((event.serial - lastSerial) & 0xff) > 0 && ((event.serial - lastSerial) & 0xff) < 128;
+            // Wait for telemetry already represented by this snapshot. Reading
+            // it repeatedly cannot recover its move names or hardware timing.
+            if (queue.length && !ahead) void refreshPattern().catch(() => {});
           }
         }).catch((error) => console.error('Invalid smartcube facelets', error));
       }
@@ -725,6 +747,9 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
 
     if (cubeSizeRef.current === 2) {
       pending2x2MovesRef.current.push(event);
+      // Requested sticker reports can arrive before the corresponding turn
+      // notification. Pair late telemetry with that report without another read.
+      if (publish2x2Snapshot() && !pending2x2MovesRef.current.length) return;
       // Do not infer a physical state from ambiguous U/R/F axis telemetry.
       void refreshPattern().catch(() => {});
       return;
@@ -779,7 +804,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
       return;
     }
     void processResolvedMove(event, [event]);
-  }, [clearSliceBuffer, disconnect, flushBufferedMove, processResolvedMove, refreshPattern]);
+  }, [clearSliceBuffer, disconnect, flushBufferedMove, processResolvedMove, publish2x2Snapshot, refreshPattern]);
 
   const connectOrDisconnect = useCallback(async () => {
     if (connRef.current) {

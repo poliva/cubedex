@@ -358,6 +358,36 @@ describe('smartcube puzzle size', () => {
 });
 
 describe('authoritative 2×2 state refresh', () => {
+  it.each([40, 254])('finishes the PBL final R2 when its snapshot overtakes the last notification (counter %i)', async serial => {
+    const { result } = renderHook(() => useSmartcubeConnection(false));
+    await act(async () => result.current.connectOrDisconnect());
+    sendCommand.mockImplementation(async () => {});
+    // The first quarter of the last R2 triggers a read. The cube completes
+    // the second quarter before answering. Its MOVE notification arrives later.
+    const start = (await solvedPattern(2)).applyMove('R2');
+    await act(async () => {
+      events.next({ type: 'FACELETS', source: 'device', serial,
+        facelets: patternToFacelets(start), timestamp: ++timestamp });
+    });
+    sendCommand.mockClear();
+    await act(async () => {
+      events.next({ type: 'MOVE', serial: (serial + 1) & 0xff, move: 'R', face: 1, direction: 0,
+        timestamp: ++timestamp, localTimestamp: timestamp, cubeTimestamp: timestamp });
+      events.next({ type: 'FACELETS', source: 'device', serial: (serial + 2) & 0xff,
+        facelets: patternToFacelets(start.applyMove('R2')), timestamp: ++timestamp });
+    });
+    expect(result.current.lastProcessedMove).toBeNull();
+    expect(sendCommand).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      events.next({ type: 'MOVE', serial: (serial + 2) & 0xff, move: 'R', face: 1, direction: 0,
+        timestamp: ++timestamp, localTimestamp: timestamp, cubeTimestamp: timestamp });
+    });
+    expect(result.current.lastProcessedMove?.currentPattern?.isIdentical(start.applyMove('R2'))).toBe(true);
+    expect(result.current.lastProcessedMove?.rawMoves).toHaveLength(2);
+    expect(result.current.stateSyncing).toBe(false);
+    expect(sendCommand).toHaveBeenCalledTimes(1);
+  });
+
   it('uses device stickers for aliased opposite turns, rejecting synthetic facelets', async () => {
     const { result } = renderHook(() => useSmartcubeConnection(true));
     await act(async () => { await result.current.connectOrDisconnect(); });
