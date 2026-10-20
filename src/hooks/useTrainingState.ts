@@ -152,6 +152,7 @@ export interface TrainingState {
   recoveryMoveCount: number;
   recoveredAt: number;
   checkRecovery: (pattern: KPattern) => boolean;
+  setRecoveryGripCheck: (check: ((pattern: KPattern) => boolean) | null) => void;
   beginRecovery: () => void;
   fixVisible: boolean;
   helpTone: 'hidden' | 'red';
@@ -613,6 +614,7 @@ export function useTrainingState(
   const [badMoves, setBadMoves] = useState<string[]>([]);
   const [recoveryTarget, setRecoveryTarget] = useState<KPattern | null>(null);
   const recoveryTargetRef = useRef<KPattern | null>(null);
+  const recoveryGripCheckRef = useRef<((pattern: KPattern) => boolean) | null>(null);
   const recoveredPatternRef = useRef<KPattern | null>(null);
   const [recoveryMoveCount, setRecoveryMoveCount] = useState(0);
   const [recoveredAt, setRecoveredAt] = useState(0);
@@ -620,6 +622,7 @@ export function useTrainingState(
   function checkRecovery(pattern: KPattern) {
     const target = recoveryTargetRef.current;
     if (!target || !fixOrientation(pattern).isIdentical(fixOrientation(target))) return false;
+    if (recoveryGripCheckRef.current?.(pattern) === false) return false;
     recoveryTargetRef.current = null;
     recoveredPatternRef.current = target;
     setRecoveryTarget(null);
@@ -1269,6 +1272,7 @@ export function useTrainingState(
     setCaseCurrentPattern(null);
     recoveryTargetRef.current = null;
     recoveredPatternRef.current = null;
+    recoveryGripCheckRef.current = null;
     setRecoveryTarget(null);
     setRecoveryMoveCount(0);
     setRecoveredAt(0);
@@ -2099,6 +2103,9 @@ export function useTrainingState(
   }
 
   const stableCheckRecovery = useStableCallback(checkRecovery);
+  const stableSetRecoveryGripCheck = useStableCallback((check: ((pattern: KPattern) => boolean) | null) => {
+    recoveryGripCheckRef.current = check;
+  });
   const stableBeginRecovery = useStableCallback(beginRecovery);
   const stableSetAlgInput = useStableCallback(setAlgInput);
   const stableClearFailedCounts = useStableCallback(clearFailedCounts);
@@ -2143,6 +2150,7 @@ export function useTrainingState(
     recoveryMoveCount,
     recoveredAt,
     checkRecovery: stableCheckRecovery,
+    setRecoveryGripCheck: stableSetRecoveryGripCheck,
     beginRecovery: stableBeginRecovery,
     fixVisible,
     helpTone,
@@ -2176,6 +2184,7 @@ export function useTrainingState(
     recoveryMoveCount,
     recoveredAt,
     stableCheckRecovery,
+    stableSetRecoveryGripCheck,
     stableBeginRecovery,
     algInput,
     currentCase,

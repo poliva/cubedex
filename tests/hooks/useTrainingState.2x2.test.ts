@@ -144,6 +144,18 @@ describe('2×2 state-based undo recovery', () => {
     expect(h.result.current.displayMoves[0].color).toBe('next');
   });
 
+  it('waits for the guided grip check after undo and releases it when the guide closes', async () => {
+    const h = await start();
+    await h.turn('F');
+    act(() => h.result.current.setRecoveryGripCheck(() => false));
+    await h.turn("F'");
+    expect(h.result.current.recoveryTarget).not.toBeNull();
+    expect(h.result.current.checkRecovery(h.getPattern())).toBe(false);
+    act(() => h.result.current.setRecoveryGripCheck(null));
+    act(() => { expect(h.result.current.checkRecovery(h.getPattern())).toBe(true); });
+    expect(h.result.current.recoveryTarget).toBeNull();
+  });
+
   it('preserves the correct index across multiple errors, partial undo, and a misleading inverse token', async () => {
     const h = await start();
     await h.turn('R');

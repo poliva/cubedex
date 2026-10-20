@@ -68,6 +68,12 @@ describe('3×3 setup and recovery', () => {
     let physical = alignForGuidance(finish, anchor);
     const corrections = await getGuidanceMoves(physical, anchor);
     physical = physical.applyAlg(corrections.join(' '));
+    // A mounted visual guide can hold completion until the physical grip fits.
+    act(() => result.current.setRecoveryGripCheck(() => false));
+    await act(async () => { result.current.handleSmartcubeMove(physical, corrections.at(-1)!); });
+    expect(result.current.recoveryTarget?.isIdentical(anchor)).toBe(true);
+    expect(result.current.checkRecovery(physical)).toBe(false);
+    act(() => result.current.setRecoveryGripCheck(() => true));
     // Child effects in the panel run before the app consumes this same packet.
     act(() => { expect(result.current.checkRecovery(physical)).toBe(true); });
     await act(async () => { result.current.handleSmartcubeMove(physical.applyAlg('y'), corrections.at(-1)!); });

@@ -14,6 +14,7 @@ import {
 } from 'smartcube-web-bluetooth';
 import { faceletsToPattern, patternToFacelets, solvedPattern, solvedFacelets, type CubeSize } from '../lib/cube-utils';
 import { readOption, writeOption } from '../lib/storage';
+import { HOME_ORIENTATION } from '../lib/cube-orientation';
 import {
   getSliceForPair,
   IDENTITY,
@@ -139,8 +140,6 @@ const EMPTY_INFO: SmartcubeDeviceInfo = {
   quaternion: '- n/a -',
   velocity: '- n/a -',
 };
-
-const HOME_ORIENTATION = new THREE.Quaternion().setFromEuler(new THREE.Euler(15 * Math.PI / 180, -5 * Math.PI / 180, 0));
 
 function storedSmartCubeDeviceSelection(): 'filtered' | 'any' {
   return readOption('smartcubeDeviceSelection') === 'any' ? 'any' : 'filtered';

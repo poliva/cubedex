@@ -1,10 +1,12 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Quaternion, Vector3 } from 'three';
 import type { KPattern } from 'cubing/kpuzzle';
 import { CubeGuidancePanel } from '../../src/components/CubeGuidancePanel';
 import { solvedPattern } from '../../src/lib/cube-utils';
 import { fixOrientation, get2x2RecoveryMoves } from '../../src/lib/scramble';
+import { HOME_ORIENTATION } from '../../src/lib/cube-orientation';
 import type { SmartcubeConnectionState } from '../../src/hooks/useSmartcubeConnection';
 import type { TwistyCubeProps } from '../../src/components/TwistyCube';
 
@@ -313,4 +315,114 @@ describe.each([2, 3] as const)('%i× cube shared guidance', size => {
     await userEvent.click(screen.getByRole('button', { name: 'Start algorithm' }));
     await waitFor(() => expect(f.onRecovered).toHaveBeenCalledOnce());
   });
+});
+
+describe('gyro grip warnings', () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => { cleanup(); vi.useRealTimers(); });
+
+  it.each(([2, 3] as const).flatMap(size => [false, true].flatMap(expert =>
+    (['setup', 'recovery'] as const).map(mode => ({ size, expert, mode })))))
+    ('warns and resumes automatically for $size× $mode (expert $expert)', async ({ size, expert, mode }) => {
+      const f = await fixture(size);
+      f.smartcube.gyroSupported = true;
+      f.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone();
+      const { container, unmount } = render(<CubeGuidancePanel {...f} mode={mode} expertScrambler={expert} />);
+      await act(async () => {});
+      if (!expert) await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'My cube matches' })); });
+      const main = () => container.querySelector('.recovery-picture [data-testid="reference"]')!;
+      expect(main()).toHaveAttribute('data-autoplay', String(!expert));
+      const setup = main().getAttribute('data-setup');
+      f.onRecovered.mockClear();
+      f.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone()
+        .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / 2));
+      act(() => vi.advanceTimersByTime(300));
+      const warning = screen.getByRole('alert', { name: 'Cube orientation warning' });
+      expect(warning).toHaveTextContent('Turn the front of the cube to your left.');
+      expect(warning).toHaveTextContent('Keep the layers still.');
+      expect(warning.querySelector('svg')).toHaveAttribute('data-axis', 'y');
+      expect(warning.querySelector('svg')).toHaveAttribute('data-direction', '-1');
+      expect(main()).toHaveAttribute('data-autoplay', 'false');
+      expect(main()).toHaveAttribute('data-turn', '');
+      expect(main().getAttribute('data-setup')).toBe(setup);
+      expect(within(warning).getByTestId('reference')).toHaveAttribute('data-gyro', 'true');
+      expect(f.onRecovered).not.toHaveBeenCalled();
+      if (expert) expect(screen.getByRole('list')).toHaveClass('guidance-sequence--paused');
+      f.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone();
+      act(() => vi.advanceTimersByTime(100));
+      expect(screen.queryByRole('alert')).toBeNull();
+      expect(screen.getByText('✓ Grip aligned')).toBeVisible();
+      expect(main()).toHaveAttribute('data-autoplay', String(!expert));
+      expect(main().getAttribute('data-setup')).toBe(setup);
+      if (!expert) expect(main()).toHaveAttribute('data-turn', "F'");
+      expect(f.onRecovered).not.toHaveBeenCalled();
+      unmount();
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+  it('shows the rotation before confirmation and offers Reset Gyro in the warning', async () => {
+    const f = await fixture();
+    f.smartcube.gyroSupported = true;
+    f.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone()
+      .multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), Math.PI / 2));
+    f.smartcube.resetGyro = vi.fn(() => { f.smartcube.cubeQuaternionRef.current = null; });
+    render(<CubeGuidancePanel {...f} mode="setup" />);
+    await act(async () => {});
+    act(() => vi.advanceTimersByTime(200));
+    expect(screen.getByRole('alert')).toHaveTextContent('Tilt the top of the cube away from you.');
+    expect(screen.getByRole('button', { name: 'My cube matches' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Gyro' }));
+    expect(f.smartcube.resetGyro).toHaveBeenCalledOnce();
+    act(() => vi.advanceTimersByTime(100));
+    expect(screen.queryByRole('alert')).toBeNull();
+    f.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone();
+    act(() => vi.advanceTimersByTime(100));
+    expect(screen.getByRole('button', { name: 'My cube matches' })).toBeEnabled();
+  });
+
+  it('compares against a rotated case picture rather than always demanding the connection grip', async () => {
+    const f = await fixture(3);
+    f.target = f.target.applyAlg('y');
+    f.smartcube.gyroSupported = true;
+    f.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone();
+    render(<CubeGuidancePanel {...f} mode="setup" />);
+    await act(async () => {});
+    act(() => vi.advanceTimersByTime(200));
+    expect(screen.getByRole('alert')).toHaveTextContent('Turn the front of the cube to your left.');
+    f.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone()
+      .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2));
+    act(() => vi.advanceTimersByTime(100));
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(screen.getByRole('button', { name: 'My cube matches' })).toBeEnabled();
+  });
+
+  it.each([{ size: 2 as const, mode: 'setup' as const }, { size: 3 as const, mode: 'recovery' as const }])
+    ('waits at the end of $size× $mode for a gyro-only grip correction', async ({ size, mode }) => {
+      const f = await fixture(size);
+      f.smartcube.gyroSupported = true;
+      f.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone();
+      const registered = { current: null as ((pattern: KPattern) => boolean) | null };
+      const register = vi.fn((check: ((pattern: KPattern) => boolean) | null) => { registered.current = check; });
+      const { rerender, container, unmount } = render(<CubeGuidancePanel {...f} mode={mode} expertScrambler onGripCheck={register} />);
+      await act(async () => {});
+      f.onRecovered.mockClear();
+      f.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone()
+        .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / 2));
+      // The last turn arrives before the warning debounce has elapsed.
+      f.smartcube = { ...f.smartcube, currentPattern: f.target };
+      rerender(<CubeGuidancePanel {...f} mode={mode} expertScrambler onGripCheck={register} />);
+      expect(screen.getByText('Stickers ready — match the pictured grip')).toBeVisible();
+      expect(f.onRecovered).not.toHaveBeenCalled();
+      expect(registered.current?.(f.target)).toBe(false);
+      const picture = container.querySelector('.recovery-picture [data-testid="reference"]') as HTMLElement;
+      expect(f.solved.applyAlg(picture.dataset.setup!).isIdentical(f.target)).toBe(true);
+      act(() => vi.advanceTimersByTime(300));
+      expect(screen.getByRole('alert')).toBeVisible();
+      f.smartcube.cubeQuaternionRef.current = HOME_ORIENTATION.clone();
+      act(() => vi.advanceTimersByTime(100));
+      expect(f.onRecovered).toHaveBeenCalledOnce();
+      expect(f.onRecovered).toHaveLastReturnedWith(true);
+      unmount();
+      expect(registered.current).toBeNull();
+    });
 });

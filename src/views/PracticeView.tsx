@@ -351,6 +351,7 @@ export const PracticeView = memo(function PracticeView({
       target={training.recoveryTarget!}
       expertScrambler={options.expertScrambler}
       onRecovered={training.checkRecovery}
+      onGripCheck={training.setRecoveryGripCheck}
       onCancel={() => setGuidedRecovery(false)}
     />
   ) : (
