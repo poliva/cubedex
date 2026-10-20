@@ -3,7 +3,7 @@ import type { KPattern } from 'cubing/kpuzzle';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
 import { useGuidanceOrientation } from '../hooks/useGuidanceOrientation';
 import { patternCubeSize } from '../lib/cube-utils';
-import { guidanceFrameRotation, guidanceGripRotation } from '../lib/cube-orientation';
+import { guidanceFrameRotation, guidanceGripRotation, WRONG_GRIP_ANGLE } from '../lib/cube-orientation';
 import { alignForGuidance, fixOrientation, getGuidanceMoves, patternToGuidanceAlg } from '../lib/scramble';
 import { TwistyCube } from './TwistyCube';
 import { GripRotationWarning } from './GripRotationWarning';
@@ -48,7 +48,7 @@ export function CubeGuidancePanel({ smartcube, target, onRecovered, onCancel, mo
     if (!smartcube.gyroSupported || !gyro) return true;
     const frame = guidanceFrameRotation(pattern, alignForGuidance(pattern, target));
     const rotation = frame && guidanceGripRotation(gyro, frame);
-    return !rotation || rotation.angle < 30;
+    return !rotation || rotation.angle < WRONG_GRIP_ANGLE;
   }
 
   useEffect(() => {

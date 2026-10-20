@@ -8,7 +8,8 @@ import { solvedPattern } from '../../src/lib/cube-utils';
 
 beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
-const pose = (angle: number) => HOME_ORIENTATION.clone().multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), angle * Math.PI / 180));
+const pose = (angle: number, axis: 'x' | 'y' | 'z' = 'y') => HOME_ORIENTATION.clone().multiply(
+  new Quaternion().setFromAxisAngle(new Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, axis === 'z' ? 1 : 0), angle * Math.PI / 180));
 
 async function fixture() {
   const pattern = (await solvedPattern(2)).applyAlg('R U F');
@@ -21,7 +22,7 @@ it('detects gyro-only changes and clears the warning without any layer turn or R
   const { result, unmount } = renderHook(() => useGuidanceOrientation(smartcube, pattern, pattern));
   expect(result.current?.misaligned).toBe(false);
   smartcube.cubeQuaternionRef.current = pose(90);
-  act(() => vi.advanceTimersByTime(299));
+  act(() => vi.advanceTimersByTime(699));
   expect(result.current?.misaligned).toBe(false);
   act(() => vi.advanceTimersByTime(1));
   expect(result.current?.misaligned).toBe(true);
@@ -33,24 +34,34 @@ it('detects gyro-only changes and clears the warning without any layer turn or R
   expect(vi.getTimerCount()).toBe(0);
 });
 
-it('ignores brief hand movement and uses separate warning and aligned thresholds', async () => {
+it.each(['x', 'y', 'z'] as const)('allows sustained ordinary tilts around %s', async axis => {
   const { pattern, smartcube } = await fixture();
   const { result } = renderHook(() => useGuidanceOrientation(smartcube, pattern, pattern));
-  smartcube.cubeQuaternionRef.current = pose(50);
-  act(() => vi.advanceTimersByTime(100));
-  smartcube.cubeQuaternionRef.current = pose(10);
+  for (const angle of [30, -40, 50, -59]) {
+    smartcube.cubeQuaternionRef.current = pose(angle, axis);
+    act(() => vi.advanceTimersByTime(2000));
+    expect(result.current?.misaligned).toBe(false);
+  }
+});
+
+it('ignores brief regrips, restarts the delay after a tilt, and clears without exact alignment', async () => {
+  const { pattern, smartcube } = await fixture();
+  const { result } = renderHook(() => useGuidanceOrientation(smartcube, pattern, pattern));
+  smartcube.cubeQuaternionRef.current = pose(90);
   act(() => vi.advanceTimersByTime(400));
   expect(result.current?.misaligned).toBe(false);
-  smartcube.cubeQuaternionRef.current = pose(28);
+  smartcube.cubeQuaternionRef.current = pose(50);
   act(() => vi.advanceTimersByTime(500));
   expect(result.current?.misaligned).toBe(false);
   smartcube.cubeQuaternionRef.current = pose(90);
-  act(() => vi.advanceTimersByTime(300));
-  expect(result.current?.misaligned).toBe(true);
-  smartcube.cubeQuaternionRef.current = pose(25);
+  act(() => vi.advanceTimersByTime(600));
+  expect(result.current?.misaligned).toBe(false);
   act(() => vi.advanceTimersByTime(100));
   expect(result.current?.misaligned).toBe(true);
-  smartcube.cubeQuaternionRef.current = pose(17);
+  smartcube.cubeQuaternionRef.current = pose(50);
+  act(() => vi.advanceTimersByTime(100));
+  expect(result.current?.misaligned).toBe(true);
+  smartcube.cubeQuaternionRef.current = pose(39);
   act(() => vi.advanceTimersByTime(100));
   expect(result.current?.misaligned).toBe(false);
 });
@@ -59,7 +70,7 @@ it('uses the white-up/green-front reference immediately and follows Reset Gyro',
   const { pattern, smartcube } = await fixture();
   smartcube.cubeQuaternionRef.current = pose(90);
   const { result } = renderHook(() => useGuidanceOrientation(smartcube, pattern, pattern));
-  act(() => vi.advanceTimersByTime(200));
+  act(() => vi.advanceTimersByTime(600));
   expect(result.current?.misaligned).toBe(true);
   smartcube.cubeQuaternionRef.current = null;
   act(() => vi.advanceTimersByTime(100));
@@ -78,6 +89,9 @@ it('keeps detecting a wrong grip while rapid layer turns replace the sticker sna
   act(() => vi.advanceTimersByTime(100));
   rerender({ current: pattern.applyMove('R') });
   act(() => vi.advanceTimersByTime(100));
+  expect(result.current?.misaligned).toBe(false);
+  rerender({ current: pattern.applyAlg('R U') });
+  act(() => vi.advanceTimersByTime(400));
   expect(result.current?.misaligned).toBe(true);
   rerender({ current: pattern.applyAlg('R U') });
   expect(result.current?.misaligned).toBe(true);

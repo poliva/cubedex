@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { KPattern } from 'cubing/kpuzzle';
 import type { SmartcubeConnectionState } from './useSmartcubeConnection';
-import { guidanceFrameRotation, guidanceGripRotation, type GripRotation } from '../lib/cube-orientation';
+import { guidanceFrameRotation, guidanceGripRotation, WRONG_GRIP_ANGLE, type GripRotation } from '../lib/cube-orientation';
 
 export type GuidanceOrientation = { misaligned: boolean; rotation: GripRotation } | null;
 
@@ -25,14 +25,15 @@ export function useGuidanceOrientation(smartcube: SmartcubeConnectionState, sens
         setOrientation(null);
         return;
       }
-      // Allow ordinary hand movement during a turn. Separate enter/exit
-      // thresholds and a short delay prevent flickering near the boundary.
-      if (rotation.angle <= 18) {
+      // A wrong quarter-turn grip should be clear before interrupting guidance.
+      // Allow normal tilts and brief regrips, with a wider release threshold
+      // so correcting the grip does not require matching the picture exactly.
+      if (rotation.angle <= 40) {
         warning = false;
         wrongSince = null;
-      } else if (rotation.angle >= 30) {
+      } else if (rotation.angle >= WRONG_GRIP_ANGLE) {
         wrongSince ??= performance.now();
-        if (performance.now() - wrongSince >= 200) warning = true;
+        if (performance.now() - wrongSince >= 600) warning = true;
       } else if (!warning) wrongSince = null;
       setOrientation({ misaligned: warning, rotation });
     };

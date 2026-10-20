@@ -7,6 +7,8 @@ import type { SmartcubeQuaternion } from '../hooks/useSmartcubeConnection';
 export const HOME_ORIENTATION = new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), 15 * Math.PI / 180)
   .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -5 * Math.PI / 180));
 
+export const WRONG_GRIP_ANGLE = 60;
+
 const rotations = ['', 'x', 'x2', "x'", 'z', "z'"].flatMap(x =>
   ['', 'y', 'y2', "y'"].map(y => `${x} ${y}`.trim()));
 const axes = { x: new Vector3(1, 0, 0), y: new Vector3(0, 1, 0), z: new Vector3(0, 0, 1) };
