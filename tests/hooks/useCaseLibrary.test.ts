@@ -185,6 +185,48 @@ describe('useCaseLibrary', () => {
     });
   });
 
+  it.each(['all', 'learning', 'learned'] as const)(
+    'preserves manual selections across review refreshes after selecting %s cases',
+    async (filter) => {
+      const { result, rerender } = renderHook(
+        ({ reviewRefreshToken }) => useCaseLibrary({ autoUpdateLearningState: true, reviewRefreshToken }),
+        { initialProps: { reviewRefreshToken: 0 } },
+      );
+      await waitFor(() => expect(result.current.isReady).toBe(true));
+      act(() => {
+        result.current.toggleAllSubsets(true);
+        if (filter === 'learning') result.current.setSelectLearningCases(true);
+        if (filter === 'learned') result.current.setSelectLearnedCases(true);
+      });
+
+      const retainedId = filter === 'learned' ? 'case-3' : 'case-2';
+      act(() => {
+        for (const id of result.current.selectedCaseIds) {
+          if (id !== retainedId) result.current.toggleCaseSelection(id, false);
+        }
+        // Include a case outside the learning/learned preset, too.
+        result.current.toggleCaseSelection('case-1', true);
+      });
+      const manualSelection = [...result.current.selectedCaseIds];
+      expect(manualSelection).toContain(retainedId);
+      expect(manualSelection).toContain('case-1');
+
+      for (let token = 1; token <= 3; token++) {
+        mockCards[1].learned = 2;
+        rerender({ reviewRefreshToken: token });
+        expect(result.current.selectedCaseIds).toEqual(manualSelection);
+        expect(result.current.selectionChangeMode).toBe('manual');
+      }
+
+      // Explicit subset changes should still apply the bulk selection preset.
+      act(() => result.current.toggleSubset('B', false));
+      expect(result.current.selectionChangeMode).toBe('bulk');
+      expect(result.current.selectedCaseIds).toEqual(
+        filter === 'all' ? ['case-1', 'case-2'] : filter === 'learning' ? [] : ['case-2'],
+      );
+    },
+  );
+
   it('does not deselect cases when clicking the already selected category', async () => {
     const { result } = renderHook(() => useCaseLibrary());
 

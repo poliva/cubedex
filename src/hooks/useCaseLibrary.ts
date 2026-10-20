@@ -164,6 +164,13 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
       ))
       : caseCards;
 
+    // Review/stat refreshes update cards without overriding manual choices.
+    // Explicit category, subset, and preset changes restore bulk selection.
+    if (selectionChangeMode === 'manual') {
+      setSelectedCaseIds((current) => current.filter((algId) => caseCards.some((card) => card.id === algId)));
+      return;
+    }
+
     if (selectAllCases) {
       setSelectedCaseIds(
         caseCards.map((card) => card.id),
@@ -179,6 +186,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     setSelectedCaseIds((current) => current.filter((algId) => caseCards.some((card) => card.id === algId)));
   }, [
     caseCards,
+    selectionChangeMode,
     selectAllCases,
     selectLearnedCases,
     selectLearningCases,
