@@ -643,6 +643,7 @@ export function useTrainingState(
       setCasePicturePattern(recoveredStart);
       recoveryStartPatternRef.current = null;
     }
+    resumeTimerAfterRecovery();
     recoveryTargetRef.current = null;
     recoveredPatternRef.current = target;
     setRecoveryTarget(null);
@@ -655,10 +656,11 @@ export function useTrainingState(
 
   function beginRecovery(matchVirtualCube = true) {
     if (inputMode || scrambleMode) return;
-    if (matchVirtualCube && recoveryStartPatternRef.current) return;
-    if (!matchVirtualCube && recoveryTargetRef.current && !recoveryStartPatternRef.current) return;
     const start = initialPatternRef.current;
     if (!start) return;
+    pauseTimerForRecovery();
+    if (matchVirtualCube && recoveryStartPatternRef.current) return;
+    if (!matchVirtualCube && recoveryTargetRef.current && !recoveryStartPatternRef.current) return;
     // Ordinary practice projects the selected case onto the physical turns.
     // Explicit recovery can make those virtual stickers physical too, including
     // when 2×2 undo recovery was already started by a wrong turn.
@@ -691,6 +693,8 @@ export function useTrainingState(
   });
 
   const timerStartRef = useRef<number | null>(null);
+  const recoveryPausedAtRef = useRef<number | null>(null);
+  const recoveryPausedMsRef = useRef(0);
   const frameRef = useRef<number | null>(null);
   const countdownTimeoutRef = useRef<number | null>(null);
   const countdownGenerationRef = useRef(0);
@@ -754,6 +758,7 @@ export function useTrainingState(
   useEffect(() => {
     if (!options.allowAlternativeAlgorithms) return;
     // Switching modes releases undo recovery without restarting the attempt.
+    resumeTimerAfterRecovery();
     recoveryTargetRef.current = null;
     recoveryStartPatternRef.current = null;
     recoveredPatternRef.current = null;
@@ -996,7 +1001,7 @@ export function useTrainingState(
       if (activeStart == null) {
         return;
       }
-      const elapsed = performance.now() - activeStart;
+      const elapsed = (recoveryPausedAtRef.current ?? performance.now()) - activeStart;
       setTimerText(formatTimerTimestamp(elapsed));
       frameRef.current = window.requestAnimationFrame(tick);
     }
@@ -1373,6 +1378,7 @@ export function useTrainingState(
   }
 
   function clearProgressState() {
+    clearRecoveryTiming();
     setCaseStartPattern(null);
     setCasePicturePattern(null);
     setCaseCurrentPattern(null);
@@ -1428,6 +1434,7 @@ export function useTrainingState(
     setTimerStateInternal(state);
 
     if (state === 'IDLE') {
+      clearRecoveryTiming();
       timerStartRef.current = null;
       clearRecognitionTracking();
       setTimerText('');
@@ -1435,12 +1442,14 @@ export function useTrainingState(
     }
 
     if (state === 'READY') {
+      clearRecoveryTiming();
       timerStartRef.current = null;
       setTimerText('0:00.000');
       return;
     }
 
     if (state === 'RUNNING') {
+      clearRecoveryTiming();
       solutionMovesRef.current = [];
       const now = performance.now();
       timerStartRef.current = now;
@@ -1461,8 +1470,8 @@ export function useTrainingState(
 
     if (state === 'STOPPED' && timerStartRef.current != null) {
       const elapsed = options.timeAttack && timeAttackSessionStartRef.current != null
-        ? performance.now() - timeAttackSessionStartRef.current
-        : performance.now() - timerStartRef.current;
+        ? (recoveryPausedAtRef.current ?? performance.now()) - timeAttackSessionStartRef.current
+        : (recoveryPausedAtRef.current ?? performance.now()) - timerStartRef.current;
       setTimerText(formatTimerTimestamp(elapsed));
     }
   }
@@ -1471,7 +1480,31 @@ export function useTrainingState(
     if (timerStartRef.current == null) {
       return 0;
     }
-    return Math.round(performance.now() - timerStartRef.current);
+    return Math.round((recoveryPausedAtRef.current ?? performance.now()) - timerStartRef.current);
+  }
+
+  function pauseTimerForRecovery() {
+    if (timerStartRef.current == null || recoveryPausedAtRef.current != null) return;
+    const now = performance.now();
+    recoveryPausedAtRef.current = now;
+    const start = options.timeAttack && timeAttackSessionStartRef.current != null
+      ? timeAttackSessionStartRef.current : timerStartRef.current;
+    setTimerText(formatTimerTimestamp(now - start));
+  }
+
+  function resumeTimerAfterRecovery() {
+    const pausedAt = recoveryPausedAtRef.current;
+    if (pausedAt == null) return;
+    const pausedMs = Math.max(0, performance.now() - pausedAt);
+    recoveryPausedMsRef.current += pausedMs;
+    if (timerStartRef.current != null) timerStartRef.current += pausedMs;
+    if (timeAttackSessionStartRef.current != null) timeAttackSessionStartRef.current += pausedMs;
+    recoveryPausedAtRef.current = null;
+  }
+
+  function clearRecoveryTiming() {
+    resumeTimerAfterRecovery();
+    recoveryPausedMsRef.current = 0;
   }
 
   function enterInputMode(algorithm = algInput || displayAlg) {
@@ -1839,7 +1872,9 @@ export function useTrainingState(
       const fittedMoves = cubeTimestampLinearFit(solutionMovesRef.current);
       const lastMove = fittedMoves.at(-1);
       if (lastMove?.cubeTimestamp != null && Number.isFinite(lastMove.cubeTimestamp) && lastMove.cubeTimestamp > 0) {
-        finalTime = lastMove.cubeTimestamp;
+        // Device timestamps span the recovery too, even while the displayed
+        // clock is frozen. Remove that same interval from the recorded solve.
+        finalTime = Math.max(0, Math.round(lastMove.cubeTimestamp - recoveryPausedMsRef.current));
       }
     }
 
@@ -1867,7 +1902,7 @@ export function useTrainingState(
 
       const totalWallTime = timeAttackSessionStartRef.current == null
         ? finalTime
-        : Math.round(performance.now() - timeAttackSessionStartRef.current);
+        : Math.round((recoveryPausedAtRef.current ?? performance.now()) - timeAttackSessionStartRef.current);
       const previousTimeAttackBest = getBestTime(algId);
       persistExecutionOnlyResult(algId, totalWallTime);
       setTimeAttackLastRuns(algId, appendLimitedTime(
@@ -1924,6 +1959,7 @@ export function useTrainingState(
     }
     recordCaseFailureIfNotYetCounted();
     const elapsedMs = Math.round(getElapsedMs());
+    clearRecoveryTiming();
     if (options.timeAttack) {
       if (currentCaseRef.current?.id) {
         persistAbortedAttempt(currentCaseRef.current.id, elapsedMs);
@@ -2246,6 +2282,8 @@ export function useTrainingState(
   const stableSetRecoveryGripCheck = useStableCallback((check: ((pattern: KPattern) => boolean) | null) => {
     recoveryGripCheckRef.current = check;
     setGuidedRecovery(Boolean(check));
+    if (check && recoveryTargetRef.current) pauseTimerForRecovery();
+    else if (!check) resumeTimerAfterRecovery();
   });
   const stableBeginRecovery = useStableCallback(beginRecovery);
   const stableSetAlgInput = useStableCallback(setAlgInput);
