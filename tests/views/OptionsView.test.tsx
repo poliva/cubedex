@@ -1,10 +1,11 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { OptionsView } from '../../src/views/OptionsView';
 import type { AlgorithmImportExportState } from '../../src/hooks/useAlgorithmImportExport';
 import type { AppSettingsState } from '../../src/hooks/useAppSettings';
 import type { SmartcubeConnectionState } from '../../src/hooks/useSmartcubeConnection';
+import { solvedPattern } from '../../src/lib/cube-utils';
 
 function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsState {
   return {
@@ -176,9 +177,52 @@ describe('OptionsView', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: 'Reset State' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Read cube again' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Mark cube as solved' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Reset Gyro' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Device Info' })).toBeDisabled();
+  });
+
+  it('explains reading versus marking solved and reports progress and success', async () => {
+    const pattern = await solvedPattern(3);
+    let finishRead!: (value: typeof pattern) => void;
+    const read = new Promise<typeof pattern>(resolve => { finishRead = resolve; });
+    const smartcube = createSmartcube({ connected: true, refreshPattern: vi.fn(() => read) });
+    const user = userEvent.setup();
+    render(<OptionsView visible infoVisible={false} setInfoVisible={vi.fn()}
+      options={createOptions()} smartcube={smartcube} algorithmActions={createAlgorithmActions()} isMobile />);
+    const readButton = screen.getByRole('button', { name: 'Read cube again' });
+    const markButton = screen.getByRole('button', { name: 'Mark cube as solved' });
+    expect(readButton).toHaveAccessibleDescription(/Works while scrambled/);
+    expect(markButton).toHaveAccessibleDescription(/Physically solve the cube first/);
+    await user.click(readButton);
+    expect(smartcube.refreshPattern).toHaveBeenCalledOnce();
+    expect(smartcube.resetState).not.toHaveBeenCalled();
+    expect(readButton).toBeDisabled();
+    expect(readButton).toHaveAttribute('aria-busy', 'true');
+    expect(readButton).toHaveTextContent('Reading cube…');
+    expect(markButton).toBeDisabled();
+    await act(async () => { finishRead(pattern); });
+    expect(await screen.findByRole('status')).toHaveTextContent('Cube state updated.');
+    expect(readButton).toBeEnabled();
+    await user.click(markButton);
+    expect(smartcube.resetState).toHaveBeenCalledOnce();
+    expect(smartcube.refreshPattern).toHaveBeenCalledOnce();
+    expect(await screen.findByRole('status')).toHaveTextContent('Cube marked as solved.');
+  });
+
+  it('shows a failed cube read and lets the user retry from Options', async () => {
+    const pattern = await solvedPattern(3);
+    const smartcube = createSmartcube({ connected: true,
+      refreshPattern: vi.fn().mockRejectedValueOnce(new Error('Could not read the cube. Keep it still and retry.')).mockResolvedValue(pattern) });
+    const user = userEvent.setup();
+    render(<OptionsView visible infoVisible={false} setInfoVisible={vi.fn()}
+      options={createOptions()} smartcube={smartcube} algorithmActions={createAlgorithmActions()} />);
+    await user.click(screen.getByRole('button', { name: 'Read cube again' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Keep it still and retry.');
+    await user.click(screen.getByRole('button', { name: 'Read cube again' }));
+    expect(await screen.findByRole('status')).toHaveTextContent('Cube state updated.');
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 
   it('opens device info with setInfoVisible(true) and hides other option sections when info is shown', async () => {

@@ -31,7 +31,7 @@ async function fixture(size: 2 | 3 = 2) {
 }
 
 describe('guided visual recovery', () => {
-  it('requires grip confirmation for an already prepared setup, including refreshes', async () => {
+  it('requires grip confirmation for an already prepared setup without extra device tools', async () => {
     const f = await fixture();
     f.smartcube = { ...f.smartcube, currentPattern: f.target.applyAlg('x y'),
       refreshPattern: vi.fn(async () => f.target.applyAlg('x y')) };
@@ -39,9 +39,7 @@ describe('guided visual recovery', () => {
     render(<CubeGuidancePanel {...f} mode="setup" />);
     await screen.findByRole('button', { name: 'My cube matches' });
     expect(f.onRecovered).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Picture doesn’t match? Refresh' }));
-    await screen.findByRole('button', { name: 'My cube matches' });
-    expect(f.onRecovered).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: /Refresh|Read cube again|Mark cube as solved/ })).toBeNull();
     const picture = f.solved.applyAlg(screen.getByTestId('reference').dataset.setup!);
     expect(picture.isIdentical(f.target)).toBe(true);
     await user.click(screen.getByRole('button', { name: 'My cube matches' }));

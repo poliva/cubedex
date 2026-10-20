@@ -226,7 +226,7 @@ export function CubeGuidancePanel({ smartcube, target, onRecovered, onCancel, mo
       {state.phase === 'align' && <button className="recovery-button recovery-button--primary" type="button" disabled={smartcube.stateSyncing || rotateFirst || Boolean(sensor && !gripMatches(sensor))} onClick={() => state.reference && void plan(state.reference)}>{expert ? 'Start algorithm' : 'My cube matches'}</button>}
       {guiding && !expert && <button className="recovery-button recovery-button--primary" type="button" disabled={rotateFirst} onClick={() => setReplay(value => value + 1)}>Show turn again</button>}
       {state.reference && state.phase !== 'loading' && state.phase !== 'error' && <button className="recovery-button" type="button" onClick={switchGuidance}>{expert ? 'Guide one turn at a time' : 'Show full sequence'}</button>}
-      {state.phase !== 'loading' && <button className="recovery-button" type="button" onClick={() => void refresh()}>{state.phase === 'error' ? 'Retry reading cube' : 'Picture doesn’t match? Refresh'}</button>}
+      {state.phase === 'error' && <button className="recovery-button" type="button" onClick={() => void refresh()}>Retry reading cube</button>}
       <button className="recovery-button" type="button" onClick={onCancel}>{mode === 'setup' ? 'Cancel setup' : 'Back to undo help'}</button>
     </div>
   </section>;

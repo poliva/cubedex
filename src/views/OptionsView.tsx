@@ -1,8 +1,9 @@
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
 import type { AppSettingsState } from '../hooks/useAppSettings';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
 import { Toggle } from '../components/ui/Toggle';
+import { Icon } from '../components/ui/Icon';
 
 export const OptionsView = memo(function OptionsView({
   visible,
@@ -21,6 +22,24 @@ export const OptionsView = memo(function OptionsView({
   algorithmActions: AlgorithmImportExportState;
   isMobile?: boolean;
 }) {
+  const [pendingAction, setPendingAction] = useState<'read' | 'mark' | null>(null);
+  const [actionFeedback, setActionFeedback] = useState<{ message: string; error: boolean } | null>(null);
+  useEffect(() => { setActionFeedback(null); }, [smartcube.connected]);
+
+  async function runCubeAction(kind: 'read' | 'mark', action: () => Promise<unknown>, message: string) {
+    if (!smartcube.connected || pendingAction || smartcube.stateSyncing) return;
+    setPendingAction(kind);
+    setActionFeedback(null);
+    try {
+      await action();
+      setActionFeedback({ message, error: false });
+    } catch (error) {
+      setActionFeedback({ message: error instanceof Error ? error.message : 'Could not update the cube. Please try again.', error: true });
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
   const pad = isMobile ? 12 : 20;
   const pb = isMobile ? 'calc(var(--tab-h) + 12px)' : 16;
 
@@ -59,9 +78,6 @@ export const OptionsView = memo(function OptionsView({
       ? { border: '1px solid var(--border)', background: 'var(--raised)', color: 'var(--fg2)' }
       : { border: 'none', background: 'var(--accent)', color: '#fff' }),
   });
-
-  const deviceActionBtnStyle = (active: boolean): React.CSSProperties =>
-    active ? btnStyle() : { ...btnStyle(true), opacity: 0.5, cursor: 'not-allowed' };
 
   const sel: React.CSSProperties = {
     background: 'var(--raised)',
@@ -118,8 +134,44 @@ export const OptionsView = memo(function OptionsView({
     </div>
   );
 
-  const deviceActionsEnabled = smartcube.connected;
+  const deviceActionsEnabled = smartcube.connected && !pendingAction && !smartcube.stateSyncing;
   const showGyroReset = options.gyroscope && smartcube.gyroSupported;
+  const deviceTools = [
+    {
+      id: 'read-cube', name: 'Read cube again',
+      description: 'Update the virtual cube from your smartcube. Works while scrambled.',
+      icon: 'M20 7v5h-5M4 17v-5h5M6.1 7a7 7 0 0 1 11.6-2L20 8M4 16l2.3 3a7 7 0 0 0 11.6-2',
+      busy: pendingAction === 'read', busyLabel: 'Reading cube…', disabled: !deviceActionsEnabled,
+      onClick: () => void runCubeAction('read', () => smartcube.refreshPattern(), 'Cube state updated.'),
+    },
+    {
+      id: 'mark-solved', name: 'Mark cube as solved',
+      description: 'Physically solve the cube first. This sets its recorded state to solved.',
+      icon: 'M9 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4M9 11l4 4L21 5',
+      busy: pendingAction === 'mark', busyLabel: 'Marking as solved…', disabled: !deviceActionsEnabled,
+      onClick: () => void runCubeAction('mark', smartcube.resetState, 'Cube marked as solved.'),
+    },
+    {
+      id: 'reset-cube-orientation', name: showGyroReset ? 'Reset Gyro' : 'Reset Orientation',
+      description: showGyroReset
+        ? 'Hold white on top and green in front, then reset the motion reference.'
+        : 'Restore the reference used to display cube turns.',
+      icon: 'M12 3v18M3 12h18M17 7l4 5-4 5M7 3l5 4 5-4',
+      busy: false, busyLabel: '', disabled: !deviceActionsEnabled,
+      onClick: () => {
+        if (showGyroReset) smartcube.resetGyro();
+        else smartcube.resetOrientation();
+        setActionFeedback(null);
+      },
+    },
+    {
+      id: 'device-info', name: 'Device Info',
+      description: 'View connection, battery, and device details.',
+      icon: 'M12 8h.01M12 12v5M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',
+      busy: false, busyLabel: '', disabled: !smartcube.connected,
+      onClick: () => setInfoVisible(true),
+    },
+  ];
 
   return (
     <div
@@ -288,42 +340,22 @@ export const OptionsView = memo(function OptionsView({
               onChange={(v) => smartcube.setShowAllBluetoothDevices(v)}
             />
           </div>
-          <div
-            style={{
-              ...row(true),
-              flexWrap: 'wrap',
-              gap: 8,
-              padding: '8px 14px 8px 14px',
-              minHeight: 'unset',
-            }}
-          >
-            <span style={lbl}>Device Actions</span>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <button
-                style={deviceActionBtnStyle(deviceActionsEnabled)}
-                type="button"
-                disabled={!deviceActionsEnabled}
-                onClick={() => void smartcube.resetState()}
-              >
-                Reset State
-              </button>
-              <button
-                style={deviceActionBtnStyle(deviceActionsEnabled)}
-                type="button"
-                disabled={!deviceActionsEnabled}
-                onClick={() => (showGyroReset ? smartcube.resetGyro() : smartcube.resetOrientation())}
-              >
-                {showGyroReset ? 'Reset Gyro' : 'Reset Orientation'}
-              </button>
-              <button
-                style={deviceActionBtnStyle(deviceActionsEnabled)}
-                type="button"
-                disabled={!deviceActionsEnabled}
-                onClick={() => setInfoVisible(true)}
-              >
-                Device Info
-              </button>
+          <div className="cube-tools" role="group" aria-label="Cube tools">
+            <div className="cube-tools__heading">
+              <span>Cube tools</span>
+              {!smartcube.connected && <span>Connect a cube to use these tools.</span>}
             </div>
+            {deviceTools.map(tool => <button key={tool.id} className="cube-tool" type="button"
+              aria-label={tool.name} aria-describedby={`${tool.id}-description`} aria-busy={tool.busy}
+              disabled={tool.disabled} onClick={tool.onClick}>
+              <span className="cube-tool__icon" aria-hidden="true"><Icon d={tool.icon} size={20} /></span>
+              <span className="cube-tool__copy">
+                <strong>{tool.busy ? tool.busyLabel : tool.name}</strong>
+                <span id={`${tool.id}-description`}>{tool.description}</span>
+              </span>
+            </button>)}
+            {actionFeedback && <p className={`cube-tools__feedback${actionFeedback.error ? ' cube-tools__feedback--error' : ''}`}
+              role={actionFeedback.error ? 'alert' : 'status'}>{actionFeedback.message}</p>}
           </div>
         </div>
 
