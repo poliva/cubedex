@@ -73,6 +73,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       alwaysScrambleTo: false,
       autoUpdateLearningState: false,
       expertScrambler: false,
+      matchVirtualCubeOnRecovery: true,
       visualization: 'PG3D',
       backview: 'none',
       hintFacelets: 'none',
@@ -88,6 +89,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       setAlwaysScrambleTo: vi.fn(),
       setAutoUpdateLearningState: vi.fn(),
       setExpertScrambler: vi.fn(),
+      setMatchVirtualCubeOnRecovery: vi.fn(),
       setVisualization: vi.fn(),
       setBackview: vi.fn(),
       setHintFacelets: vi.fn(),
@@ -521,9 +523,10 @@ describe('PracticeView', () => {
     expect(body.textContent?.indexOf('U')).toBeLessThan(body.textContent?.indexOf('WHITE') ?? -1);
   });
 
-  it('offers the shared visual recovery flow for 3×3 mistakes', async () => {
+  it.each([true, false])('uses the virtual cube recovery preference (%s) for 3×3 mistakes', async matchVirtualCubeOnRecovery => {
     const base = makeProps();
     const props = makeProps({
+      options: { ...base.options, matchVirtualCubeOnRecovery },
       training: {
         ...base.training,
         helpTone: 'red',
@@ -536,7 +539,7 @@ describe('PracticeView', () => {
 
     expect(screen.getByRole('button', { name: 'Help me recover' })).toBeVisible();
     await userEvent.click(screen.getByRole('button', { name: 'Help me recover' }));
-    expect(props.training.beginRecovery).toHaveBeenCalledOnce();
+    expect(props.training.beginRecovery).toHaveBeenCalledWith(matchVirtualCubeOnRecovery);
   });
 
   it('clears scramble mode on Train when alwaysScrambleTo is disabled', async () => {

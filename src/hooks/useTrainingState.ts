@@ -155,7 +155,7 @@ export interface TrainingState {
   recoveredAt: number;
   checkRecovery: (pattern: KPattern) => boolean;
   setRecoveryGripCheck: (check: ((pattern: KPattern) => boolean) | null) => void;
-  beginRecovery: () => void;
+  beginRecovery: (matchVirtualCube?: boolean) => void;
   fixVisible: boolean;
   helpTone: 'hidden' | 'red';
   failedCounts: Record<string, number>;
@@ -618,6 +618,7 @@ export function useTrainingState(
   const [badMoves, setBadMoves] = useState<string[]>([]);
   const [recoveryTarget, setRecoveryTarget] = useState<KPattern | null>(null);
   const recoveryTargetRef = useRef<KPattern | null>(null);
+  const recoveryStartPatternRef = useRef<KPattern | null>(null);
   const recoveryGripCheckRef = useRef<((pattern: KPattern) => boolean) | null>(null);
   const recoveredPatternRef = useRef<KPattern | null>(null);
   const [recoveryMoveCount, setRecoveryMoveCount] = useState(0);
@@ -627,6 +628,16 @@ export function useTrainingState(
     const target = recoveryTargetRef.current;
     if (!target || !fixOrientation(pattern).isIdentical(fixOrientation(target))) return false;
     if (recoveryGripCheckRef.current?.(pattern) === false) return false;
+    const recoveredStart = recoveryStartPatternRef.current;
+    if (recoveredStart) {
+      // The correction changed the starting stickers, while algorithm progress
+      // and the running attempt stay intact. Match future turns in this state.
+      initialPatternRef.current = recoveredStart;
+      rebuildPatternStates(recoveredStart);
+      setCaseStartPattern(recoveredStart);
+      setCasePicturePattern(recoveredStart);
+      recoveryStartPatternRef.current = null;
+    }
     recoveryTargetRef.current = null;
     recoveredPatternRef.current = target;
     setRecoveryTarget(null);
@@ -637,10 +648,23 @@ export function useTrainingState(
     return true;
   }
 
-  function beginRecovery() {
-    if (inputMode || scrambleMode || recoveryTargetRef.current) return;
-    const target = currentMoveIndex < 0 ? initialPatternRef.current : patternStatesInTrainingFrameRef.current[currentMoveIndex];
+  function beginRecovery(matchVirtualCube = true) {
+    if (inputMode || scrambleMode) return;
+    if (matchVirtualCube && recoveryStartPatternRef.current) return;
+    if (!matchVirtualCube && recoveryTargetRef.current && !recoveryStartPatternRef.current) return;
+    const start = initialPatternRef.current;
+    if (!start) return;
+    // Ordinary practice projects the selected case onto the physical turns.
+    // Explicit recovery can make those virtual stickers physical too, including
+    // when 2×2 undo recovery was already started by a wrong turn.
+    const virtualStart = matchVirtualCube
+      ? casePicturePattern ?? (recoveredAt ? start : start.kpuzzle.defaultPattern().applyAlg(new Alg(displayAlg).invert()))
+      : null;
+    const target = virtualStart
+      ? virtualStart.applyAlg(expectedMovesRef.current.slice(0, currentMoveIndex + 1).join(' '))
+      : currentMoveIndex < 0 ? start : patternStatesInTrainingFrameRef.current[currentMoveIndex];
     if (!target) return;
+    recoveryStartPatternRef.current = virtualStart;
     recoveryTargetRef.current = target;
     recoveredPatternRef.current = null;
     setRecoveryTarget(target);
@@ -1330,6 +1354,7 @@ export function useTrainingState(
     setCasePicturePattern(null);
     setCaseCurrentPattern(null);
     recoveryTargetRef.current = null;
+    recoveryStartPatternRef.current = null;
     recoveredPatternRef.current = null;
     recoveryGripCheckRef.current = null;
     setRecoveryTarget(null);
@@ -1459,6 +1484,36 @@ export function useTrainingState(
     setVisualResetKey((v) => v + 1);
   }
 
+  function rebuildPatternStates(basePattern: KPattern | null) {
+    // Keyboard-only puzzles do not need the cube-specific Bluetooth state matcher.
+    patternStatesRef.current = [];
+    patternStatesInTrainingFrameRef.current = [];
+    halfTurnStatesRef.current = [];
+    if (basePattern) {
+      let previousPattern = basePattern;
+      patternStatesRef.current = expectedMovesRef.current.map((move) => {
+        const face = patternCubeSize(basePattern) === 2 && /^[URFDLB]2'?$/i.test(move) ? move[0] : null;
+        halfTurnStatesRef.current.push(face
+          ? [fixOrientation(previousPattern.applyMove(face)), fixOrientation(previousPattern.applyMove(`${face}'`))]
+          : []);
+        previousPattern = previousPattern.applyMove(move);
+        patternStatesInTrainingFrameRef.current.push(previousPattern);
+        return fixOrientation(previousPattern);
+      });
+    }
+    // Rebuild the hash index in lockstep so `handleSmartcubeMove` can do O(1) lookups
+    // instead of an O(n) `isIdentical` scan across pattern states.
+    patternHashMapRef.current.clear();
+    for (let i = 0; i < patternStatesRef.current.length; i += 1) {
+      const hash = hashKPattern(patternStatesRef.current[i]);
+      // First occurrence wins so the earliest matching index is returned when a
+      // repeated pattern appears (rare but possible, e.g. A2 following A).
+      if (!patternHashMapRef.current.has(hash)) {
+        patternHashMapRef.current.set(hash, i);
+      }
+    }
+  }
+
   async function trainCurrent(initialPattern?: KPattern | null, trainOptions?: TrainCurrentOptions) {
     const generation = ++trainingGenerationRef.current;
     const rawAlgorithm = trainOptions?.algorithm ?? algInput;
@@ -1519,33 +1574,7 @@ export function useTrainingState(
     setScrambleMode(false);
 
     expectedMovesRef.current = prepared.moves.map(sanitizeMove);
-    // Keyboard-only puzzles do not need the cube-specific Bluetooth state matcher.
-    patternStatesRef.current = [];
-    patternStatesInTrainingFrameRef.current = [];
-    halfTurnStatesRef.current = [];
-    if (basePattern) {
-      let previousPattern = basePattern;
-      patternStatesRef.current = expectedMovesRef.current.map((move) => {
-        const face = patternCubeSize(basePattern) === 2 && /^[URFDLB]2'?$/i.test(move) ? move[0] : null;
-        halfTurnStatesRef.current.push(face
-          ? [fixOrientation(previousPattern.applyMove(face)), fixOrientation(previousPattern.applyMove(`${face}'`))]
-          : []);
-        previousPattern = previousPattern.applyMove(move);
-        patternStatesInTrainingFrameRef.current.push(previousPattern);
-        return fixOrientation(previousPattern);
-      });
-    }
-    // Rebuild the hash index in lockstep so `handleSmartcubeMove` can do O(1) lookups
-    // instead of an O(n) `isIdentical` scan across pattern states.
-    patternHashMapRef.current.clear();
-    for (let i = 0; i < patternStatesRef.current.length; i += 1) {
-      const hash = hashKPattern(patternStatesRef.current[i]);
-      // First occurrence wins so the earliest matching index is returned when a
-      // repeated pattern appears (rare but possible, e.g. A2 following A).
-      if (!patternHashMapRef.current.has(hash)) {
-        patternHashMapRef.current.set(hash, i);
-      }
-    }
+    rebuildPatternStates(basePattern);
 
     if (countdownEnabled) {
       setDisplayAlg('');
@@ -2072,12 +2101,15 @@ export function useTrainingState(
     if (is2x2) {
       if (halfTurnStatesRef.current[nextExpectedIdx]?.some(pattern => pattern.isIdentical(patternAfterMove))) {
         const halfIndex = halfTurnStatesRef.current[nextExpectedIdx].findIndex(pattern => pattern.isIdentical(patternAfterMove));
+        const face = expectedMovesRef.current[nextExpectedIdx][0];
+        const halfMove = halfIndex === 0 ? face : `${face}'`;
         const before = currentMoveIndex < 0 ? initialPatternRef.current : patternStatesInTrainingFrameRef.current[currentMoveIndex];
         if (before) {
-          const face = expectedMovesRef.current[nextExpectedIdx][0];
-          setCaseCurrentPattern(before.applyMove(halfIndex === 0 ? face : `${face}'`));
+          setCaseCurrentPattern(before.applyMove(halfMove));
         }
-        setBadMoves(capturedMoves.map(entry => entry.move));
+        // Color the recognized quarter turn in the algorithm's grip. A 2×2
+        // device can name this same layer using another face in its own frame.
+        setBadMoves([halfMove]);
         return false;
       }
       // Recovery must finish in the algorithm's grip, including after D/L/B

@@ -265,7 +265,7 @@ export const PracticeView = memo(function PracticeView({
         ? 'Undo your recent turns to get back on track, or use visual recovery.'
         : 'Turned the wrong way? Undo your last turn.'}</span>
       <button type="button" className="recovery-button" onClick={() => {
-        if (!training.recoveryTarget) training.beginRecovery();
+        training.beginRecovery(options.matchVirtualCubeOnRecovery);
         setGuidedRecovery(true);
       }}>Help me recover</button>
     </>;
@@ -402,7 +402,10 @@ export const PracticeView = memo(function PracticeView({
       expertScrambler={options.expertScrambler}
       onRecovered={training.checkRecovery}
       onGripCheck={training.setRecoveryGripCheck}
-      onCancel={() => setGuidedRecovery(false)}
+      onCancel={() => {
+        training.beginRecovery(false);
+        setGuidedRecovery(false);
+      }}
     />
   ) : (
     <div

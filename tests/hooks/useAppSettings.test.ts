@@ -3,6 +3,16 @@ import { describe, expect, it } from 'vitest';
 import { useAppSettings } from '../../src/hooks/useAppSettings';
 
 describe('useAppSettings', () => {
+  it('matches the virtual cube on recovery by default and remembers opting out', () => {
+    const hook = renderHook(() => useAppSettings());
+    expect(hook.result.current.matchVirtualCubeOnRecovery).toBe(true);
+    act(() => hook.result.current.setMatchVirtualCubeOnRecovery(false));
+    expect(localStorage.getItem('matchVirtualCubeOnRecovery')).toBe('false');
+    hook.unmount();
+    const next = renderHook(() => useAppSettings());
+    expect(next.result.current.matchVirtualCubeOnRecovery).toBe(false);
+  });
+
   it('keeps guided setup as the default and remembers expert scrambler across sessions', () => {
     const hook = renderHook(() => useAppSettings());
     expect(hook.result.current.expertScrambler).toBe(false);

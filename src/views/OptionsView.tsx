@@ -237,6 +237,12 @@ export const OptionsView = memo(function OptionsView({
             <Toggle ariaLabel="Expert Scrambler" checked={options.expertScrambler} onChange={options.setExpertScrambler} />
           </div>
           <div style={row()}>
+            <div style={lbl}>Match Virtual Cube on Recovery
+              <div style={{ fontSize: 12, color: 'var(--fg3)', marginTop: 4 }}>“Help me recover” also guides your physical cube to match the virtual cube’s stickers before you continue.</div>
+            </div>
+            <Toggle ariaLabel="Match Virtual Cube on Recovery" checked={options.matchVirtualCubeOnRecovery} onChange={options.setMatchVirtualCubeOnRecovery} />
+          </div>
+          <div style={row()}>
             <span style={lbl}>Flashing Indicator</span>
             <Toggle ariaLabel="Flashing Indicator" checked={options.flashingIndicatorEnabled} onChange={(v) => options.setFlashingIndicatorEnabled(v)} />
           </div>

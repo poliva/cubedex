@@ -15,6 +15,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     alwaysScrambleTo: false,
     autoUpdateLearningState: false,
     expertScrambler: false,
+    matchVirtualCubeOnRecovery: true,
     visualization: 'PG3D',
     backview: 'none',
     hintFacelets: 'none',
@@ -31,6 +32,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     setAlwaysScrambleTo: vi.fn(),
     setAutoUpdateLearningState: vi.fn(),
     setExpertScrambler: vi.fn(),
+    setMatchVirtualCubeOnRecovery: vi.fn(),
     setVisualization: vi.fn(),
     setBackview: vi.fn(),
     setHintFacelets: vi.fn(),
@@ -316,6 +318,15 @@ describe('OptionsView', () => {
       options={options} smartcube={createSmartcube()} algorithmActions={createAlgorithmActions()} />);
     await user.click(screen.getByLabelText('Expert Scrambler'));
     expect(options.setExpertScrambler).toHaveBeenCalledWith(true);
+  });
+
+  it('lets users disable matching the virtual cube on recovery', async () => {
+    const options = createOptions();
+    render(<OptionsView visible infoVisible={false} setInfoVisible={vi.fn()}
+      options={options} smartcube={createSmartcube()} algorithmActions={createAlgorithmActions()} />);
+    expect(screen.getByLabelText('Match Virtual Cube on Recovery')).toBeChecked();
+    await userEvent.click(screen.getByLabelText('Match Virtual Cube on Recovery'));
+    expect(options.setMatchVirtualCubeOnRecovery).toHaveBeenCalledWith(false);
   });
 
   it('forwards auto learning state toggle changes', async () => {

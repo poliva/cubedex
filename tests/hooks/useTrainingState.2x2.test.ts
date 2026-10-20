@@ -12,6 +12,47 @@ import { projectTrainingPattern } from '../../src/lib/training-visual';
 // by the queue/timer tests.
 describe('2×2 smartcube training', () => {
   it.each([
+    { direction: '' as const, rotatedReports: false },
+    { direction: "'" as const, rotatedReports: false },
+    { direction: '' as const, rotatedReports: true },
+    { direction: "'" as const, rotatedReports: true },
+  ])('shows every PBL half turn blue halfway through (direction "$direction", rotated reports $rotatedReports)', async ({ direction, rotatedReports }) => {
+    const { default: defaults } = await import('../../src/data/defaultAlgs.json');
+    const card = defaults['2x2x2:PBL'][0].algorithms.find(card => card.name === 'Adj Adj - 2 bars')!;
+    const tokens = card.algorithm.split(/\s+/);
+    let physical = (await solvedPattern(2)).applyAlg(new Alg(card.algorithm).invert());
+    const { result } = renderHook(() => useTrainingState([], '2x2x2:PBL', {
+      puzzle: '2x2x2', selectionChangeMode: 'manual', countdownMode: false, randomizeAUF: false,
+      randomOrder: false, timeAttack: false, prioritizeSlowCases: false,
+      prioritizeFailedCases: false, smartReviewScheduling: false,
+      smartcubeConnected: true, currentPattern: physical,
+    }));
+    await act(async () => { await result.current.trainCurrent(physical, { algorithm: card.algorithm, preserveDisplayedAlgorithm: true }); });
+    for (const [index, token] of tokens.entries()) {
+      const halfTurn = /2'?$/.test(token);
+      const quarter = halfTurn ? token[0] + direction : token;
+      for (let part = 0; part < (halfTurn ? 2 : 1); part++) {
+        physical = physical.applyMove(quarter);
+        const snapshot = rotatedReports ? fixOrientation(physical) : physical;
+        // A device can report the layer using a different axis from the
+        // algorithm's grip, including F for B2' or the final R2.
+        const reported = rotatedReports && (token[0] === 'B' || index === tokens.length - 1)
+          ? 'F' + direction : quarter;
+        let completed = false;
+        act(() => { completed = result.current.handleSmartcubeMove(snapshot, reported); });
+        if (halfTurn && part === 0) {
+          expect(result.current.displayMoves[index].color, `halfway through ${token} at ${index}`).toBe('blue');
+          expect(result.current.recoveryTarget).toBeNull();
+          expect(result.current.helpTone).toBe('hidden');
+        } else {
+          expect(completed).toBe(index === tokens.length - 1);
+          if (!completed) expect(result.current.displayMoves[index].color).toBe('green');
+        }
+      }
+    }
+  });
+
+  it.each([
     { algorithm: "R U R' U'", physicalMoves: ['R', 'U', "R'", "U'"] },
     { algorithm: "x U R U' R' x'", physicalMoves: ['F', 'R', "F'", "R'"] },
   ])('completes $algorithm from native 2×2 face turns', async ({ algorithm, physicalMoves }) => {

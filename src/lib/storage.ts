@@ -55,6 +55,7 @@ export const STORAGE_KEYS = {
   smartcubeDeviceSelection: 'smartcubeDeviceSelection',
   autoUpdateLearningState: 'autoUpdateLearningState',
   expertScrambler: 'expertScrambler',
+  matchVirtualCubeOnRecovery: 'matchVirtualCubeOnRecovery',
   showTimesInsteadOfGraph: 'showTimesInsteadOfGraph',
 } as const;
 

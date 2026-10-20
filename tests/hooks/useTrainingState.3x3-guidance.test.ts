@@ -15,6 +15,84 @@ const options = {
 };
 
 describe('3×3 setup and recovery', () => {
+  it.each([
+    { size: 2 as const, progress: '' },
+    { size: 2 as const, progress: 'R' },
+    { size: 2 as const, progress: 'x R' },
+    { size: 3 as const, progress: '' },
+    { size: 3 as const, progress: 'R' },
+    { size: 3 as const, progress: 'M' },
+    { size: 3 as const, progress: 'f' },
+  ].flatMap(test => [true, false].map(matchVirtualCube => ({ ...test, matchVirtualCube }))))
+    ('recovers unprepared $size×$size stickers after "$progress" (match virtual $matchVirtualCube)', async ({ size, progress, matchVirtualCube }) => {
+      const solved = await solvedPattern(size);
+      const remaining = ['U', 'F2', 'L'];
+      const algorithm = `${progress} ${remaining.join(' ')}`.trim();
+      const start = solved.applyAlg('D R B y');
+      const scope = `match-virtual-${size}-${progress}-${matchVirtualCube}`;
+      const card = { ...selectedCases[0], id: scope, algorithm };
+      const { result } = renderHook(() => useTrainingState([card], 'Custom', {
+        ...options, puzzle: size === 2 ? '2x2x2' : '3x3x3',
+      }));
+      await act(async () => { await result.current.trainCurrent(start, { algorithm, statsScopeId: scope, preserveDisplayedAlgorithm: true }); });
+      expect(result.current.casePicturePattern).toBeNull();
+      const anchor = start.applyAlg(progress);
+      if (progress) act(() => { result.current.handleSmartcubeMove(anchor, 'R'); });
+      act(() => { result.current.handleSmartcubeMove(anchor.applyAlg('B'), 'B'); });
+      await waitFor(() => expect(result.current.failedCounts[scope]).toBe(1));
+      const resetKey = result.current.visualResetKey;
+      const highlights = result.current.displayMoves.filter(move => move.color === 'green');
+      act(() => result.current.beginRecovery(matchVirtualCube));
+      const expectedStart = matchVirtualCube ? solved.applyAlg(new Alg(algorithm).invert()) : start;
+      const target = expectedStart.applyAlg(progress);
+      expect(result.current.recoveryTarget?.isIdentical(target)).toBe(true);
+      if (matchVirtualCube) expect(result.current.checkRecovery(anchor)).toBe(false);
+      // Neither passing the endpoint nor reading the final correction twice
+      // should record a solve or move algorithm progress.
+      act(() => { result.current.handleSmartcubeMove(expectedStart.applyAlg(algorithm), 'L'); });
+      expect(getAttemptHistory(scope)).toHaveLength(0);
+      const reference = alignForGuidance(expectedStart.applyAlg(algorithm), target);
+      const corrections = await getGuidanceMoves(reference, target);
+      const corrected = reference.applyAlg(corrections.join(' '));
+      expect(corrected.isIdentical(target)).toBe(true);
+      act(() => { expect(result.current.checkRecovery(corrected)).toBe(true); });
+      act(() => { result.current.handleSmartcubeMove(target.applyAlg('x'), 'D'); });
+      expect(result.current.visualResetKey).toBe(resetKey);
+      expect(result.current.timerState).toBe('RUNNING');
+      expect(result.current.displayMoves.filter(move => move.color === 'green')).toEqual(highlights);
+      expect(result.current.caseStartPattern?.isIdentical(expectedStart)).toBe(true);
+      expect(result.current.caseCurrentPattern?.isIdentical(target)).toBe(true);
+      let physical = target;
+      // Split the half turn to verify the rebuilt 2×2 half-turn states as well.
+      for (const [i, move] of ['U', 'F', 'F', 'L'].entries()) {
+        physical = physical.applyMove(move);
+        await act(async () => {
+          expect(result.current.handleSmartcubeMove(physical.applyAlg('x y'), move)).toBe(i === 3);
+        });
+      }
+      expect(getAttemptHistory(scope)).toHaveLength(1);
+      expect(getAttemptHistory(scope)[0].hadMistake).toBe(true);
+      if (matchVirtualCube) expect(fixOrientation(physical).isIdentical(solved)).toBe(true);
+    });
+
+  it.each([2, 3] as const)('returns to the physical undo target when canceling matching on a cube of size %s', async size => {
+    const solved = await solvedPattern(size);
+    const start = solved.applyAlg('D R B y');
+    const { result } = renderHook(() => useTrainingState([], 'Custom', {
+      ...options, puzzle: size === 2 ? '2x2x2' : '3x3x3',
+    }));
+    await act(async () => { await result.current.trainCurrent(start, { algorithm: 'R U F2 L', preserveDisplayedAlgorithm: true }); });
+    act(() => { result.current.handleSmartcubeMove(start.applyAlg('R'), 'R'); });
+    act(() => { result.current.handleSmartcubeMove(start.applyAlg('R B'), 'B'); });
+    act(() => result.current.beginRecovery());
+    expect(result.current.recoveryTarget?.isIdentical(start.applyAlg('R'))).toBe(false);
+    act(() => result.current.beginRecovery(false));
+    expect(result.current.recoveryTarget?.isIdentical(start.applyAlg('R'))).toBe(true);
+    act(() => { expect(result.current.checkRecovery(start.applyAlg('R'))).toBe(true); });
+    expect(result.current.caseStartPattern?.isIdentical(start)).toBe(true);
+    expect(result.current.timerState).toBe('RUNNING');
+  });
+
   it.each(["R U R' U'", "x R U2 R' x'", "M2 U M2 U2 M2 U M2"])
     ('prepares %s and continues in the pictured grip', async algorithm => {
       const solved = await solvedPattern(3);

@@ -7,6 +7,7 @@ export interface AppSettingsState {
   countdownMode: boolean;
   alwaysScrambleTo: boolean;
   expertScrambler: boolean;
+  matchVirtualCubeOnRecovery: boolean;
   autoUpdateLearningState: boolean;
   visualization: string;
   backview: string;
@@ -23,6 +24,7 @@ export interface AppSettingsState {
   setCountdownMode: (value: boolean) => void;
   setAlwaysScrambleTo: (value: boolean) => void;
   setExpertScrambler: (value: boolean) => void;
+  setMatchVirtualCubeOnRecovery: (value: boolean) => void;
   setAutoUpdateLearningState: (value: boolean) => void;
   setVisualization: (value: string) => void;
   setBackview: (value: string) => void;
@@ -60,6 +62,7 @@ export function useAppSettings(): AppSettingsState {
   const [countdownMode, setCountdownModeState] = useState(readOption('countdownMode') === 'true');
   const [alwaysScrambleTo, setAlwaysScrambleToState] = useState(readOption('alwaysScrambleTo') === 'true');
   const [expertScrambler, setExpertScrambler] = useState(readOption('expertScrambler') === 'true');
+  const [matchVirtualCubeOnRecovery, setMatchVirtualCubeOnRecovery] = useState(readOption('matchVirtualCubeOnRecovery') !== 'false');
   const [autoUpdateLearningState, setAutoUpdateLearningStateState] = useState(
     readOption('autoUpdateLearningState') !== 'false',
   );
@@ -100,6 +103,10 @@ export function useAppSettings(): AppSettingsState {
   useEffect(() => {
     writeOption('expertScrambler', String(expertScrambler));
   }, [expertScrambler]);
+
+  useEffect(() => {
+    writeOption('matchVirtualCubeOnRecovery', String(matchVirtualCubeOnRecovery));
+  }, [matchVirtualCubeOnRecovery]);
 
   useEffect(() => {
     writeOption('autoUpdateLearningState', String(autoUpdateLearningState));
@@ -155,6 +162,7 @@ export function useAppSettings(): AppSettingsState {
     countdownMode,
     alwaysScrambleTo,
     expertScrambler,
+    matchVirtualCubeOnRecovery,
     autoUpdateLearningState,
     visualization,
     backview,
@@ -171,6 +179,7 @@ export function useAppSettings(): AppSettingsState {
     setCountdownMode: setCountdownModeState,
     setAlwaysScrambleTo: setAlwaysScrambleToState,
     setExpertScrambler,
+    setMatchVirtualCubeOnRecovery,
     setAutoUpdateLearningState: setAutoUpdateLearningStateState,
     setVisualization: setVisualizationState,
     setBackview: setBackviewState,
@@ -185,6 +194,7 @@ export function useAppSettings(): AppSettingsState {
   }), [
     alwaysScrambleTo,
     expertScrambler,
+    matchVirtualCubeOnRecovery,
     autoUpdateLearningState,
     backview,
     countdownMode,
