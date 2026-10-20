@@ -18,6 +18,7 @@ import { prepareTrainingAlgorithm } from '../lib/auf';
 import { patternCubeSize, solvedPattern } from '../lib/cube-utils';
 import { alignForGuidance, fixOrientation } from '../lib/scramble';
 import { preparedCasePicture } from '../lib/training-visual';
+import { createCaseGoalMatcher } from '../lib/training-goal';
 import { getInverseMove, getOppositeMove, sanitizeMove, trailingWholeCubeRotationMoveCount } from '../lib/move-helpers';
 import {
   TIME_ATTACK_SCOPE_PREFIX,
@@ -701,6 +702,7 @@ export function useTrainingState(
   // Comparison states discard whole-cube rotation; these retain the frame in
   // which the displayed algorithm was executed, across automatic case changes.
   const patternStatesInTrainingFrameRef = useRef<KPattern[]>([]);
+  const caseGoalMatcherRef = useRef<((pattern: KPattern) => boolean) | null>(null);
   const halfTurnStatesRef = useRef<KPattern[][]>([]);
   // Hash of each pattern in `patternStatesRef` → index in that array.
   // Used to replace an O(n) `isIdentical` scan per smartcube move with an O(1) lookup.
@@ -1237,6 +1239,7 @@ export function useTrainingState(
     if (rememberCurrent && previousCase && nextCase && previousCase.id !== nextCase.id) {
       setCaseHistory(history => [...history, previousCase.id]);
     }
+    currentCaseRef.current = nextCase;
     setCurrentCase(nextCase);
     if (nextCase) {
       setAlgInputState(nextCase.algorithm);
@@ -1384,6 +1387,7 @@ export function useTrainingState(
     expectedMovesRef.current = [];
     patternStatesRef.current = [];
     patternStatesInTrainingFrameRef.current = [];
+    caseGoalMatcherRef.current = null;
     halfTurnStatesRef.current = [];
     patternHashMapRef.current.clear();
     lastMovesRef.current = [];
@@ -1510,6 +1514,7 @@ export function useTrainingState(
     patternStatesRef.current = [];
     patternStatesInTrainingFrameRef.current = [];
     halfTurnStatesRef.current = [];
+    caseGoalMatcherRef.current = null;
     if (basePattern) {
       let previousPattern = basePattern;
       patternStatesRef.current = expectedMovesRef.current.map((move) => {
@@ -1521,6 +1526,11 @@ export function useTrainingState(
         patternStatesInTrainingFrameRef.current.push(previousPattern);
         return fixOrientation(previousPattern);
       });
+      const endpoint = patternStatesInTrainingFrameRef.current.at(-1);
+      if (endpoint) {
+        caseGoalMatcherRef.current = createCaseGoalMatcher(endpoint,
+          currentCaseRef.current?.category ?? category, currentCaseRef.current?.subset);
+      }
     }
     // Rebuild the hash index in lockstep so `handleSmartcubeMove` can do O(1) lookups
     // instead of an O(n) `isIdentical` scan across pattern states.
@@ -2064,9 +2074,13 @@ export function useTrainingState(
     let matchedIndex: number | null = null;
 
     const finalIndex = patternStatesRef.current.length - 1;
-    if (options.allowAlternativeAlgorithms && patternAfterMove.isIdentical(patternStatesRef.current[finalIndex])) {
-      // Any route to the case endpoint counts, even if that pattern appeared
-      // earlier in the displayed algorithm and the hash index kept that visit.
+    const alternativeGoalReached = options.allowAlternativeAlgorithms && (
+      patternAfterMove.isIdentical(patternStatesRef.current[finalIndex])
+      || caseGoalMatcherRef.current?.(currentPattern) === true
+    );
+    if (alternativeGoalReached) {
+      // Any route to the case goal counts, including endpoints with a
+      // different last layer when this stage does not constrain it.
       matchedIndex = finalIndex;
     } else if (
       // The expected next move is the common path and avoids a hash lookup.
@@ -2085,7 +2099,10 @@ export function useTrainingState(
     }
 
     if (matchedIndex !== null) {
-      setCaseCurrentPattern(patternStatesInTrainingFrameRef.current[matchedIndex]);
+      const matchedPattern = alternativeGoalReached
+        ? alignForGuidance(currentPattern, patternStatesInTrainingFrameRef.current[matchedIndex])
+        : patternStatesInTrainingFrameRef.current[matchedIndex];
+      setCaseCurrentPattern(matchedPattern);
       setCurrentMoveIndex(matchedIndex);
       setBadMoves([]);
       const tailRotations = trailingWholeCubeRotationMoveCount(expectedMovesRef.current);
@@ -2100,7 +2117,7 @@ export function useTrainingState(
         // the matched state in the algorithm's original frame so the next
         // case keeps the same physical turn axes, including on queue wrap.
         const completedPattern = is2x2
-          ? patternStatesInTrainingFrameRef.current[matchedIndex]
+          ? matchedPattern
           : patternAfterMove;
         initialPatternRef.current = completedPattern;
         setCurrentMoveIndex(0);
