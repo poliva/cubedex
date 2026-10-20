@@ -14,7 +14,10 @@ import {
 } from 'smartcube-web-bluetooth';
 import { faceletsToPattern, patternToFacelets, solvedPattern, solvedFacelets, type CubeSize } from '../lib/cube-utils';
 import { readOption, writeOption } from '../lib/storage';
-import { HOME_ORIENTATION } from '../lib/cube-orientation';
+import { HOME_ORIENTATION, guidanceFrameRotation } from '../lib/cube-orientation';
+import { GyroDriftCorrector, gyroPoseMetrics, gyroQuaternion, quaternionData } from '../lib/gyro-drift';
+import { GyroDiagnostics } from '../lib/gyro-diagnostics';
+import { GYRO_TESTING_ENABLED } from '../lib/build-flags';
 import {
   getSliceForPair,
   IDENTITY,
@@ -99,6 +102,18 @@ interface SmartcubeProcessedMove {
   isBugged: boolean;
 }
 
+export type GyroTrainingEvent =
+  | { phase: 'ready'; algorithm: string; pattern: KPattern | null; reason?: string }
+  | { phase: 'complete'; pattern: KPattern }
+  | { phase: 'guided-recovery-start' }
+  | { phase: 'guided-recovery-cancel' }
+  | { phase: 'guided-recovery-complete'; pattern: KPattern }
+  | { phase: 'guided-setup-start' }
+  | { phase: 'guided-setup-cancel' }
+  | { phase: 'guided-setup-complete'; pattern: KPattern }
+  | { phase: 'context'; alwaysScrambleTo: boolean }
+  | { phase: 'cancel'; reason: string };
+
 export interface SmartcubeConnectionState {
   cubeSize: CubeSize;
   connected: boolean;
@@ -118,6 +133,9 @@ export interface SmartcubeConnectionState {
   stateSyncError: string | null;
   stateSyncing: boolean;
   resetGyro: () => void;
+  handleGyroTrainingEvent: (event: GyroTrainingEvent) => void;
+  exportGyroDiagnostics: () => void;
+  clearGyroDiagnostics: () => void;
   resetOrientation: () => void;
   gyroSupported: boolean;
   gyroSupportResolved: boolean;
@@ -152,7 +170,7 @@ function batteryColor(level: number): SmartcubeBatteryState['color'] {
   return 'red';
 }
 
-export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConnectionState {
+export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyroDrift = true): SmartcubeConnectionState {
   const cubeSizeRef = useRef<CubeSize>(3);
   const [cubeSize, setCubeSize] = useState<CubeSize>(3);
   const connRef = useRef<SmartCubeConnection | null>(null);
@@ -213,6 +231,18 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   const recentMovesRef = useRef<SmartCubeMoveEvent[]>([]);
   const gyroBasisRef = useRef<THREE.Quaternion | null>(null);
   const gyroBasisVersionRef = useRef(0);
+  const diagnosticsRef = useRef<GyroDiagnostics | null>(null);
+  if (GYRO_TESTING_ENABLED && !diagnosticsRef.current) {
+    let storage: Storage | null = null;
+    try { storage = window.localStorage; } catch { /* Recording still works in memory. */ }
+    diagnosticsRef.current = new GyroDiagnostics(storage);
+  }
+  const driftRef = useRef<GyroDriftCorrector | null>(null);
+  if (!driftRef.current) driftRef.current = new GyroDriftCorrector(diagnosticsRef.current?.record);
+  const gyroTrainingPatternRef = useRef<KPattern | null>(null);
+  const pendingGyroResetRef = useRef<{
+    basis: THREE.Quaternion; correction: THREE.Quaternion; clickedAt: number; before: Record<string, unknown>;
+  } | null>(null);
   const previousFaceletsRef = useRef<string>('');
   const isBuggedRef = useRef(false);
 
@@ -275,6 +305,22 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   }, [gyroscopeEnabled]);
 
   useEffect(() => {
+    driftRef.current!.setEnabled(gyroscopeEnabled && autoCorrectGyroDrift, performance.now());
+  }, [gyroscopeEnabled, autoCorrectGyroDrift]);
+
+  useEffect(() => {
+    if (!GYRO_TESTING_ENABLED) return;
+    const flush = () => diagnosticsRef.current?.flush();
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', flush);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', flush);
+      flush();
+    };
+  }, []);
+
+  useEffect(() => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -324,9 +370,55 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   }, []);
 
   const resetGyro = useCallback(() => {
+    const now = performance.now();
+    if (GYRO_TESTING_ENABLED && gyroBasisRef.current) {
+      pendingGyroResetRef.current = { basis: gyroBasisRef.current.clone(), correction: driftRef.current!.correction.clone(),
+        clickedAt: now, before: driftRef.current!.snapshot(now) };
+      diagnosticsRef.current?.record('manual-reset-request', { at: now, ...pendingGyroResetRef.current.before });
+    } else {
+      diagnosticsRef.current?.record('manual-reset-request', { at: now, reason: 'no-reference-yet' });
+    }
+    driftRef.current!.reset('manual-reset', now);
+    gyroTrainingPatternRef.current = null;
     gyroBasisRef.current = null;
     cubeQuaternionRef.current = null;
+    setCubeQuaternion(null);
+    diagnosticsRef.current?.flush();
   }, []);
+
+  const handleGyroTrainingEvent = useCallback((event: GyroTrainingEvent) => {
+    const now = performance.now();
+    if (event.phase === 'ready') {
+      gyroTrainingPatternRef.current = event.pattern;
+      driftRef.current!.armAlgorithm(event.algorithm, event.reason ?? null, now);
+    } else if (event.phase === 'complete') {
+      const device = currentPatternRef.current;
+      driftRef.current!.completeAlgorithm(device ? guidanceFrameRotation(event.pattern, device) : null, now);
+      gyroTrainingPatternRef.current = null;
+    } else if (event.phase === 'context') {
+      diagnosticsRef.current?.record('training-context', { at: now, alwaysScrambleTo: event.alwaysScrambleTo });
+    } else if (event.phase === 'guided-recovery-start' || event.phase === 'guided-setup-start') {
+      driftRef.current!.guidanceStarted(now, event.phase === 'guided-setup-start' ? 'setup' : 'recovery');
+      gyroTrainingPatternRef.current = null;
+    } else if (event.phase === 'guided-recovery-cancel' || event.phase === 'guided-setup-cancel') {
+      driftRef.current!.guidanceCancelled(now, event.phase === 'guided-setup-cancel' ? 'setup' : 'recovery');
+    } else if (event.phase === 'guided-recovery-complete' || event.phase === 'guided-setup-complete') {
+      const device = currentPatternRef.current;
+      // Guidance's frame maps device stickers to the pictured target. This is
+      // the inverse of the frame used to render algorithm progress on a 2×2.
+      driftRef.current!.observeGuidedGrip(device ? guidanceFrameRotation(device, event.pattern) : null, now,
+        event.phase === 'guided-setup-complete' ? 'setup' : 'recovery');
+      gyroTrainingPatternRef.current = null;
+    } else {
+      driftRef.current!.cancelAttempt(event.reason, now);
+      gyroTrainingPatternRef.current = null;
+    }
+  }, []);
+  const exportGyroDiagnostics = useCallback(() => {
+    diagnosticsRef.current?.record('estimator-snapshot', driftRef.current!.snapshot(performance.now()));
+    diagnosticsRef.current?.download();
+  }, []);
+  const clearGyroDiagnostics = useCallback(() => diagnosticsRef.current?.clear(), []);
 
   const resetOrientation = useCallback(() => {
     clearSliceBuffer();
@@ -334,6 +426,10 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   }, [clearSliceBuffer]);
 
   const disconnect = useCallback(() => {
+    driftRef.current!.reset('disconnect', performance.now());
+    diagnosticsRef.current?.flush();
+    pendingGyroResetRef.current = null;
+    gyroTrainingPatternRef.current = null;
     snapshotVersionRef.current += 1;
     pending2x2MovesRef.current = [];
     if (refreshRef.current) {
@@ -447,6 +543,8 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
 
   const handleCubeEvent = useCallback((event: SmartCubeEvent) => {
     if (event.type === 'HARDWARE') {
+      diagnosticsRef.current?.updateDevice({ hardwareName: event.hardwareName, hardwareVersion: event.hardwareVersion,
+        softwareVersion: event.softwareVersion, productDate: event.productDate });
       setInfo((current) => ({
         ...current,
         deviceProtocol: connRef.current?.protocol.name || '- n/a -',
@@ -469,6 +567,12 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     }
 
     if (event.type === 'GYRO') {
+      const rawQuaternion = gyroQuaternion({ x: event.quaternion.x, y: event.quaternion.z,
+        z: -event.quaternion.y, w: event.quaternion.w });
+      if (!rawQuaternion) {
+        diagnosticsRef.current?.record('invalid-sample', { quaternion: event.quaternion });
+        return;
+      }
       // This data is primarily for display/debug panels; updating it at gyro-rate
       // causes large React rerender storms. Keep a ref updated always, and
       // throttle state updates.
@@ -487,19 +591,32 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
         }));
       }
 
-      const rawQuaternion = new THREE.Quaternion(
-        event.quaternion.x,
-        event.quaternion.z,
-        -event.quaternion.y,
-        event.quaternion.w,
-      ).normalize();
-
+      const gyroNow = performance.now();
+      const reset = pendingGyroResetRef.current;
+      if (reset) {
+        const oldPose = rawQuaternion.clone().premultiply(reset.basis);
+        const oldCorrectedPose = oldPose.clone().premultiply(reset.correction);
+        diagnosticsRef.current?.record('manual-reset-comparison', {
+          at: gyroNow, delayAfterClickMs: gyroNow - reset.clickedAt, beforeClick: reset.before,
+          rawAfterClick: quaternionData(rawQuaternion), oldReferencePose: quaternionData(oldPose),
+          oldCorrectedPose: quaternionData(oldCorrectedPose),
+          residualWithoutAutoCorrection: gyroPoseMetrics(oldPose), residualAfterAutoCorrection: gyroPoseMetrics(oldCorrectedPose),
+          requiredCorrection: quaternionData(oldCorrectedPose.clone().invert()),
+          newReferencePose: quaternionData(new THREE.Quaternion()),
+          assumption: 'white-up-green-front-at-reset',
+        });
+        pendingGyroResetRef.current = null;
+        diagnosticsRef.current?.flush();
+      }
       if (!gyroBasisRef.current) {
         gyroBasisRef.current = rawQuaternion.clone().conjugate();
         gyroBasisVersionRef.current += 1;
+        diagnosticsRef.current?.record('reference-established', { at: gyroNow, raw: quaternionData(rawQuaternion),
+          basisVersion: gyroBasisVersionRef.current });
       }
 
-      const displayQuaternion = rawQuaternion.clone().premultiply(gyroBasisRef.current).premultiply(HOME_ORIENTATION);
+      const physicalQuaternion = rawQuaternion.clone().premultiply(gyroBasisRef.current);
+      const displayQuaternion = driftRef.current!.update(physicalQuaternion, gyroNow).premultiply(HOME_ORIENTATION);
       const next = {
         x: displayQuaternion.x,
         y: displayQuaternion.y,
@@ -524,6 +641,8 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       if (event.facelets.length !== 24 && event.facelets.length !== 54) return;
       const size = event.facelets.length === 24 ? 2 : 3;
       if (size !== cubeSizeRef.current) {
+        driftRef.current!.cancelAttempt('puzzle-size-changed', performance.now());
+        diagnosticsRef.current?.updateDevice({ cubeSize: size });
         clearSliceBuffer();
         sliceOrientationRef.current = { ...IDENTITY };
         currentPatternRef.current = null;
@@ -597,6 +716,12 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     if (event.type !== 'MOVE') {
       return;
     }
+
+    const startPattern = gyroTrainingPatternRef.current;
+    const devicePattern = currentPatternRef.current;
+    driftRef.current!.noteMove(performance.now(), startPattern && devicePattern
+      ? guidanceFrameRotation(startPattern, devicePattern) : null);
+    gyroTrainingPatternRef.current = null;
 
     if (cubeSizeRef.current === 2) {
       pending2x2MovesRef.current.push(event);
@@ -710,6 +835,8 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
       cubeSizeRef.current = 2;
       setCubeSize(2);
     }
+    diagnosticsRef.current?.startSession({ deviceName: newConn.deviceName, protocol: newConn.protocol.name,
+      protocolId: newConn.protocol.id, cubeSize: cubeSizeRef.current });
     subscriptionRef.current = connRef.current.events$.subscribe(handleCubeEvent);
 
     if (connRef.current.capabilities.hardware) {
@@ -744,6 +871,8 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
   }, [connecting, customMacAddressProvider, disconnect, handleCubeEvent, showAllBluetoothDevices]);
 
   const resetState = useCallback(async () => {
+    driftRef.current!.cancelAttempt('cube-state-reset', performance.now());
+    gyroTrainingPatternRef.current = null;
     await connRef.current?.sendCommand({ type: 'REQUEST_RESET' });
     if (connRef.current?.capabilities.facelets) {
       await connRef.current.sendCommand({ type: 'REQUEST_FACELETS' });
@@ -787,6 +916,9 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     stateSyncError,
     stateSyncing,
     resetGyro,
+    handleGyroTrainingEvent,
+    exportGyroDiagnostics,
+    clearGyroDiagnostics,
     resetOrientation,
     gyroSupported,
     gyroSupportResolved,
@@ -810,6 +942,9 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean): SmartcubeConn
     info,
     lastProcessedMove,
     resetGyro,
+    handleGyroTrainingEvent,
+    exportGyroDiagnostics,
+    clearGyroDiagnostics,
     resetOrientation,
     resetState,
     refreshPattern,

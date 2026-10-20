@@ -3,6 +3,15 @@ import { describe, expect, it } from 'vitest';
 import { useAppSettings } from '../../src/hooks/useAppSettings';
 
 describe('useAppSettings', () => {
+  it('enables gyro drift correction by default and remembers opting out', () => {
+    const hook = renderHook(() => useAppSettings());
+    expect(hook.result.current.autoCorrectGyroDrift).toBe(true);
+    act(() => hook.result.current.setAutoCorrectGyroDrift(false));
+    expect(localStorage.getItem('autoCorrectGyroDrift')).toBe('false');
+    hook.unmount();
+    expect(renderHook(() => useAppSettings()).result.current.autoCorrectGyroDrift).toBe(false);
+  });
+
   it('disables alternative algorithms by default and remembers enabling them', () => {
     const hook = renderHook(() => useAppSettings());
     expect(hook.result.current.allowAlternativeAlgorithms).toBe(false);

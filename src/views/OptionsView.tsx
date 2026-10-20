@@ -4,6 +4,7 @@ import type { AppSettingsState } from '../hooks/useAppSettings';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
 import { Toggle } from '../components/ui/Toggle';
 import { Icon } from '../components/ui/Icon';
+import { GYRO_TESTING_ENABLED } from '../lib/build-flags';
 
 export const OptionsView = memo(function OptionsView({
   visible,
@@ -344,6 +345,40 @@ export const OptionsView = memo(function OptionsView({
               onChange={(v) => options.setGyroscope(v)}
             />
           </div>
+          <div style={row()}>
+            <span style={lbl}>Auto-correct Gyro Drift</span>
+            <Toggle
+              ariaLabel="Auto-correct Gyro Drift"
+              checked={options.autoCorrectGyroDrift}
+              disabled={!options.gyroscope || smartcube.gyroscopeToggleDisabled}
+              onChange={options.setAutoCorrectGyroDrift}
+            />
+          </div>
+          <div style={{ padding: '9px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border)', fontSize: 12, color: 'var(--fg3)' }}>
+            Corrects small tilts while resting flat and heading drift after rotation-free algorithms.
+            Connect or reset with white on top and green in front.
+          </div>
+          {GYRO_TESTING_ENABLED && (
+            <>
+              <div style={row()}>
+                <span style={lbl}>Gyro testing log</span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button style={btnStyle()} type="button" onClick={() => {
+                    smartcube.exportGyroDiagnostics();
+                    setActionFeedback({ message: 'Gyro testing log exported.', error: false });
+                  }}>Export gyro log</button>
+                  <button style={btnStyle(true)} type="button" onClick={() => {
+                    smartcube.clearGyroDiagnostics();
+                    setActionFeedback({ message: 'Gyro testing log cleared.', error: false });
+                  }}>Clear gyro log</button>
+                </div>
+              </div>
+              <div style={{ padding: '9px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border)', fontSize: 12, color: 'var(--fg3)' }}>
+                Recent corrections, skipped corrections, and Reset Gyro comparisons are saved locally.
+                To measure remaining drift, hold white up and green forward before resetting. Export after testing each cube.
+              </div>
+            </>
+          )}
           <div style={row()}>
             <span style={lbl}>Show All Bluetooth Devices</span>
             <Toggle

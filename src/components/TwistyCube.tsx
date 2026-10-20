@@ -32,7 +32,7 @@ export interface TwistyCubeProps {
   appendMoveKey?: string;
   appendMove?: string;
   gyroscopeEnabled?: boolean;
-  gyroscopeRelativeToGrip?: boolean;
+  fixedOrientation?: boolean;
   /** Rendered sticker frame into the device frame; null waits for reconciliation. */
   gyroFrameQuaternion?: SmartcubeQuaternion | null;
   cubeQuaternion?: SmartcubeQuaternion | null;
@@ -86,7 +86,7 @@ export function TwistyCube({
   appendMoveKey,
   appendMove,
   gyroscopeEnabled = false,
-  gyroscopeRelativeToGrip = false,
+  fixedOrientation = false,
   gyroFrameQuaternion,
   cubeQuaternion = null,
   cubeQuaternionRef,
@@ -105,8 +105,6 @@ export function TwistyCube({
   const latestQuaternionRef = useRef<SmartcubeQuaternion | null>(null);
   const latestGyroscopeEnabledRef = useRef(false);
   const forceRefreshRef = useRef(false);
-  const gripInverseRef = useRef<THREE.Quaternion | null>(null);
-  const gripBasisVersionRef = useRef<number | undefined>(undefined);
   const targetQuaternionRef = useRef(new THREE.Quaternion());
   const gyroFrameRef = useRef(new THREE.Quaternion());
 
@@ -125,16 +123,6 @@ export function TwistyCube({
     const q = cubeQuaternionRef?.current ?? cubeQuaternion;
     latestQuaternionRef.current = q;
   }, [cubeQuaternion, cubeQuaternionRef, enableExternalOrientationLoop, gyroscopeEnabled]);
-
-  useEffect(() => {
-    // Guidance establishes the pictured grip. Use it as gyro zero so enabling
-    // motion does not restore the device's earlier, unrelated orientation.
-    // The renderer adds the same home tilt used by a fresh connection.
-    const q = cubeQuaternionRef ? cubeQuaternionRef.current : cubeQuaternion;
-    gripInverseRef.current = gyroscopeRelativeToGrip && gyroscopeEnabled && q
-      ? new THREE.Quaternion(q.x, q.y, q.z, q.w).normalize().multiply(gyroFrameRef.current).invert() : null;
-    gripBasisVersionRef.current = q?.basisVersion;
-  }, [gyroscopeRelativeToGrip, gyroscopeEnabled, orientationResetToken]);
 
   useEffect(() => {
     forceRefreshRef.current = true;
@@ -199,7 +187,7 @@ export function TwistyCube({
 
   useEffect(() => {
     if (!enableExternalOrientationLoop) {
-      if (gyroscopeRelativeToGrip) {
+      if (fixedOrientation) {
         puzzleObjectRef.current?.quaternion.identity();
         vantageRef.current?.render?.();
       }
@@ -232,19 +220,12 @@ export function TwistyCube({
         if (latestGyroscopeEnabledRef.current && liveQuaternion) {
           targetQuaternionRef.current.set(liveQuaternion.x, liveQuaternion.y, liveQuaternion.z, liveQuaternion.w)
             .multiply(gyroFrameRef.current);
-          if (gyroscopeRelativeToGrip) {
-            if (!gripInverseRef.current || gripBasisVersionRef.current !== liveQuaternion.basisVersion) {
-              gripInverseRef.current = targetQuaternionRef.current.clone().normalize().invert();
-              gripBasisVersionRef.current = liveQuaternion.basisVersion;
-            }
-            // Remove the confirmed pose on the right so motion stays in the
-            // pictured axes. Removing it on the left expresses motion in the
-            // device's rolled axes (after f', a physical x becomes y').
-            targetQuaternionRef.current.multiply(gripInverseRef.current).multiply(HOME_ORIENTATION);
-          }
+          // The frame comes from stickers. Capturing a live pose here would
+          // turn every setup remount, gyro toggle, and Reset Gyro into a new
+          // zero at whatever angle the user happened to be holding the cube.
           puzzleObject.quaternion.slerp(targetQuaternionRef.current, 0.25);
         } else {
-          puzzleObject.quaternion.slerp(gyroscopeRelativeToGrip
+          puzzleObject.quaternion.slerp(fixedOrientation
             ? latestGyroscopeEnabledRef.current ? HOME_ORIENTATION : targetQuaternionRef.current.identity()
             : DR_LOCK_ORIENTATION, 0.25);
         }
@@ -263,7 +244,7 @@ export function TwistyCube({
         animationFrameRef.current = null;
       }
     };
-  }, [enableExternalOrientationLoop, gyroscopeRelativeToGrip, cubeQuaternionRef]);
+  }, [enableExternalOrientationLoop, fixedOrientation, cubeQuaternionRef]);
 
   useEffect(() => {
     const player = playerRef.current;

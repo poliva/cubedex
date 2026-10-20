@@ -69,7 +69,7 @@ export function App() {
   const isMobile = useIsMobile();
   const options = useAppSettings();
   const practiceToggles = usePracticeToggles();
-  const smartcube = useSmartcubeConnection(options.gyroscope);
+  const smartcube = useSmartcubeConnection(options.gyroscope, options.autoCorrectGyroDrift);
   const [manualPuzzle, setManualPuzzle] = useState<PuzzleId>(() => {
     const saved = window.localStorage.getItem('practicePuzzle') ?? '';
     return isPuzzleId(saved) ? saved : '3x3x3';
@@ -116,6 +116,7 @@ export function App() {
     reviewRefreshToken,
     onReviewRecorded: () => setReviewRefreshToken((value) => value + 1),
     onAttemptStart: smartcube.resetOrientation,
+    onGyroTrainingEvent: smartcube.handleGyroTrainingEvent,
   });
   const scramble = useScrambleState(puzzle);
   const prevSmartcubeConnectedRef = useRef(smartcube.connected);

@@ -242,6 +242,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       connectOrDisconnect: vi.fn(async () => undefined),
       resetState: vi.fn(async () => undefined),
       resetGyro: vi.fn(),
+      handleGyroTrainingEvent: vi.fn(),
       resetOrientation: vi.fn(),
       gyroSupported: false,
       gyroSupportResolved: true,
@@ -913,9 +914,12 @@ it.each([false, true].flatMap(prepared => [false, true].map(matchVirtualCube => 
         await waitFor(() => expect(screen.queryByRole('region', { name: '3×3 visual recovery' })).toBeNull());
         expect(training.fixText).toBe('');
         confirmedGrip = physical;
-        // The gyro reanchors at the pictured grip when training remounts.
-        // Its stickers must retain those centers rather than adding a z turn.
+        // Use only the pictured centers as a frame. The hand pose must not
+        // become a new gyro zero when recovery closes.
         expect(shown().isIdentical(confirmedGrip)).toBe(true);
+        const frame = JSON.parse(screen.getByTestId('main-cube-area').dataset.gyroFrame!);
+        expect(new Quaternion(frame.x, frame.y, frame.z, frame.w)
+          .angleTo(guidanceFrameRotation(confirmedGrip, fixOrientation(confirmedGrip))!)).toBeLessThan(1e-6);
       } else if (training.casePicturePattern || training.recoveredAt) {
         expect(shown().isIdentical(alignForGuidance(physical, confirmedGrip))).toBe(true);
       }
@@ -1211,6 +1215,7 @@ it.each([false, true])('guides the 2×2 wand into the algorithm grip with rotate
   const previewBeforeSetup = JSON.parse(screen.getByTestId('main-cube-area').dataset.target!);
   await user.click(screen.getByTitle('Scramble To...'));
   await screen.findByRole('region', { name: '2×2 guided setup' });
+  expect(props.smartcube.handleGyroTrainingEvent).toHaveBeenCalledWith({ phase: 'guided-setup-start' });
   await screen.findByRole('button', { name: 'My cube matches' });
   expect(screen.getByText(/Keep this grip through the setup and into the algorithm/)).toBeVisible();
   let physical = solved.applyAlg(screen.getByTestId('recovery-cube').dataset.setup!);
@@ -1226,6 +1231,8 @@ it.each([false, true])('guides the 2×2 wand into the algorithm grip with rotate
     rerender(<SetupPractice />);
   }
   await waitFor(() => expect(screen.queryByRole('region', { name: '2×2 guided setup' })).toBeNull());
+  expect(props.smartcube.handleGyroTrainingEvent).toHaveBeenCalledWith({ phase: 'guided-setup-complete', pattern: physical });
+  expect(props.smartcube.handleGyroTrainingEvent).not.toHaveBeenCalledWith({ phase: 'guided-setup-cancel' });
   expect(fixOrientation(physical.applyAlg(algorithm)).isIdentical(solved)).toBe(true);
   expect(physical.patternData).toEqual(previewBeforeSetup);
   expect(patternToFacelets(physical).slice(8, 12)).toBe('FFFF');

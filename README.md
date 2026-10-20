@@ -40,3 +40,13 @@ snapshot metadata. Build that package before installing/building Cubedex:
 $ npm install
 $ npm run build && npm run preview
 ```
+
+Gyro diagnostic recording and the testing log export/clear controls are enabled
+by `npm run dev`. To include them in a testing release build, run:
+
+```sh
+VITE_GYRO_TESTING=true npm run build
+```
+
+Normal release builds omit these tools and do not record gyro diagnostics.
+Automatic gyro drift correction is available in every build.

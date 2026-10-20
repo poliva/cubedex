@@ -52,6 +52,7 @@ import {
 } from '../lib/training-debug';
 import { FACES, IDENTITY, SLICE_ROTATION, composePerm, invertPerm, type Face, type FacePerm } from '../lib/smartcube-parity';
 import { useStableCallback } from './useStableCallback';
+import type { GyroTrainingEvent } from './useSmartcubeConnection';
 
 export type TimerState = 'IDLE' | 'READY' | 'RUNNING' | 'STOPPED';
 
@@ -117,6 +118,7 @@ export interface TrainingPracticeOptions {
   reviewRefreshToken?: number;
   onReviewRecorded?: () => void;
   onAttemptStart?: () => void;
+  onGyroTrainingEvent?: (event: GyroTrainingEvent) => void;
 }
 
 interface TrainCurrentOptions {
@@ -630,6 +632,17 @@ export function useTrainingState(
   const recoveredPatternRef = useRef<KPattern | null>(null);
   const [recoveryMoveCount, setRecoveryMoveCount] = useState(0);
   const [recoveredAt, setRecoveredAt] = useState(0);
+  const gyroTrainingArmedRef = useRef(false);
+
+  useEffect(() => {
+    if (options.smartcubeConnected) options.onGyroTrainingEvent?.({ phase: 'context', alwaysScrambleTo: Boolean(options.alwaysScrambleTo) });
+  }, [options.smartcubeConnected, options.alwaysScrambleTo, options.onGyroTrainingEvent]);
+
+  function cancelGyroTraining(reason: string) {
+    if (!gyroTrainingArmedRef.current) return;
+    gyroTrainingArmedRef.current = false;
+    options.onGyroTrainingEvent?.({ phase: 'cancel', reason });
+  }
 
   function checkRecovery(pattern: KPattern) {
     const target = recoveryTargetRef.current;
@@ -646,9 +659,12 @@ export function useTrainingState(
       recoveryStartPatternRef.current = null;
     }
     resumeTimerAfterRecovery();
-    // The visual guide confirms this grip, which can differ from the start
-    // after a wide or slice turn. The resumed gyro anchors to this same grip.
-    if (recoveryGripCheckRef.current) setCaseGripPattern(target);
+    // The visual guide confirms the sticker frame, which can differ from the
+    // start after a wide or slice turn. Keep the physical gyro reference.
+    if (recoveryGripCheckRef.current) {
+      setCaseGripPattern(target);
+      options.onGyroTrainingEvent?.({ phase: 'guided-recovery-complete', pattern: target });
+    }
     recoveryTargetRef.current = null;
     recoveredPatternRef.current = target;
     setRecoveryTarget(null);
@@ -663,6 +679,7 @@ export function useTrainingState(
     if (inputMode || scrambleMode) return;
     const start = initialPatternRef.current;
     if (!start) return;
+    cancelGyroTraining('recovery');
     pauseTimerForRecovery();
     if (matchVirtualCube && recoveryStartPatternRef.current) return;
     if (!matchVirtualCube && recoveryTargetRef.current && !recoveryStartPatternRef.current) return;
@@ -676,6 +693,7 @@ export function useTrainingState(
       ? virtualStart.applyAlg(expectedMovesRef.current.slice(0, currentMoveIndex + 1).join(' '))
       : currentMoveIndex < 0 ? start : patternStatesInTrainingFrameRef.current[currentMoveIndex];
     if (!target) return;
+    options.onGyroTrainingEvent?.({ phase: 'guided-recovery-start' });
     recoveryStartPatternRef.current = virtualStart;
     recoveryTargetRef.current = target;
     recoveredPatternRef.current = null;
@@ -1383,6 +1401,10 @@ export function useTrainingState(
   }
 
   function clearProgressState() {
+    if (recoveryTargetRef.current && recoveryGripCheckRef.current) {
+      options.onGyroTrainingEvent?.({ phase: 'guided-recovery-cancel' });
+    }
+    cancelGyroTraining('training-cleared');
     clearRecoveryTiming();
     setCaseStartPattern(null);
     setCasePicturePattern(null);
@@ -1420,6 +1442,7 @@ export function useTrainingState(
   }
 
   function resetAttemptStateKeepAlgorithm() {
+    cancelGyroTraining('attempt-restarted');
     lastMovesRef.current = [];
     solutionMovesRef.current = [];
     setCurrentMoveIndex(-1);
@@ -1534,6 +1557,10 @@ export function useTrainingState(
   function revealTrainingCase(displayAlgorithm: string, normalizedAlgorithm: string, trainOptions?: TrainCurrentOptions) {
     if (options.smartcubeConnected) {
       options.onAttemptStart?.();
+      gyroTrainingArmedRef.current = true;
+      options.onGyroTrainingEvent?.({ phase: 'ready', algorithm: normalizedAlgorithm,
+        pattern: initialPatternRef.current,
+        reason: options.allowAlternativeAlgorithms ? 'alternative-algorithms-enabled' : undefined });
     }
     setAlgInputState(normalizedAlgorithm);
     setDisplayAlg(displayAlgorithm);
@@ -1557,7 +1584,10 @@ export function useTrainingState(
     if (basePattern) {
       let previousPattern = basePattern;
       patternStatesRef.current = expectedMovesRef.current.map((move) => {
-        const face = patternCubeSize(basePattern) === 2 && /^[URFDLB]2'?$/i.test(move) ? move[0] : null;
+        // Quarter-turn packets inside a half turn are clean calibration data,
+        // including on 3×3 where the visual tracker uses ordinary undo hints.
+        const face = (patternCubeSize(basePattern) === 2 || Boolean(options.onGyroTrainingEvent))
+          && /^[URFDLB]2'?$/i.test(move) ? move[0] : null;
         halfTurnStatesRef.current.push(face
           ? [fixOrientation(previousPattern.applyMove(face)), fixOrientation(previousPattern.applyMove(`${face}'`))]
           : []);
@@ -1964,6 +1994,7 @@ export function useTrainingState(
     if (timerState !== 'RUNNING') {
       return;
     }
+    cancelGyroTraining('attempt-aborted');
     recordCaseFailureIfNotYetCounted();
     const elapsedMs = Math.round(getElapsedMs());
     clearRecoveryTiming();
@@ -2049,6 +2080,7 @@ export function useTrainingState(
     }
 
     if (isBugged) {
+      cancelGyroTraining('unreliable-move');
       return false;
     }
 
@@ -2142,6 +2174,7 @@ export function useTrainingState(
     }
 
     if (matchedIndex !== null) {
+      if (matchedIndex !== nextExpectedIdx) cancelGyroTraining('nonsequential-progress');
       const matchedPattern = alternativeGoalReached
         ? alignForGuidance(currentPattern, patternStatesInTrainingFrameRef.current[matchedIndex])
         : patternStatesInTrainingFrameRef.current[matchedIndex];
@@ -2155,6 +2188,10 @@ export function useTrainingState(
         && matchedIndex === lastLayerMoveIndex;
 
       if (matchedIndex === expectedMovesRef.current.length - 1 || finishedIncludingIgnoredRotations) {
+        if (gyroTrainingArmedRef.current) {
+          gyroTrainingArmedRef.current = false;
+          options.onGyroTrainingEvent?.({ phase: 'complete', pattern: matchedPattern });
+        }
         // Both a normalized comparison and the device's equivalent snapshot
         // may be rotated relative to the grip used for this algorithm. Carry
         // the matched state in the algorithm's original frame so the next
@@ -2206,6 +2243,7 @@ export function useTrainingState(
       // turns or authored rotations. Normalized states lose that orientation.
       const anchor = currentMoveIndex < 0 ? initialPatternRef.current : patternStatesInTrainingFrameRef.current[currentMoveIndex];
       if (anchor) {
+        cancelGyroTraining('wrong-move');
         recoveryTargetRef.current = anchor;
         setRecoveryTarget(anchor);
         setRecoveryMoveCount(capturedMoves.length);
@@ -2216,6 +2254,9 @@ export function useTrainingState(
     }
 
     const wrongMoves = capturedMoves.map((entry) => entry.move);
+    if (!halfTurnStatesRef.current[nextExpectedIdx]?.some(pattern => pattern.isIdentical(patternAfterMove))) {
+      cancelGyroTraining('wrong-move');
+    }
     const nextBadMoves = [...badMoves, ...wrongMoves];
     const lastWrongMove = wrongMoves.at(-1) ?? move;
 

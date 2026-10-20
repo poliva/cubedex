@@ -16,6 +16,7 @@ export interface AppSettingsState {
   fullStickering: boolean;
   whiteOnBottom: boolean;
   gyroscope: boolean;
+  autoCorrectGyroDrift: boolean;
   controlPanel: string;
   flashingIndicatorEnabled: boolean;
   cubeSizePx: number;
@@ -34,6 +35,7 @@ export interface AppSettingsState {
   setFullStickering: (value: boolean) => void;
   setWhiteOnBottom: (value: boolean) => void;
   setGyroscope: (value: boolean) => void;
+  setAutoCorrectGyroDrift: (value: boolean) => void;
   setControlPanel: (value: string) => void;
   setFlashingIndicatorEnabled: (value: boolean) => void;
   setCubeSizePx: (value: number) => void;
@@ -75,6 +77,7 @@ export function useAppSettings(): AppSettingsState {
   const [fullStickering, setFullStickeringState] = useState(readOption('fullStickering') === 'true');
   const [whiteOnBottom, setWhiteOnBottomState] = useState(readOption('whiteOnBottom') === 'true');
   const [gyroscope, setGyroscopeState] = useState(readOption('gyroscope') !== 'disabled');
+  const [autoCorrectGyroDrift, setAutoCorrectGyroDrift] = useState(readOption('autoCorrectGyroDrift') !== 'false');
   const [controlPanel, setControlPanelState] = useState(readOption('controlPanel') || 'none');
   const [flashingIndicatorEnabled, setFlashingIndicatorEnabledState] = useState(
     readOption('flashingIndicatorEnabled') !== 'false',
@@ -144,6 +147,10 @@ export function useAppSettings(): AppSettingsState {
   }, [gyroscope]);
 
   useEffect(() => {
+    writeOption('autoCorrectGyroDrift', String(autoCorrectGyroDrift));
+  }, [autoCorrectGyroDrift]);
+
+  useEffect(() => {
     writeOption('controlPanel', controlPanel);
   }, [controlPanel]);
 
@@ -178,6 +185,7 @@ export function useAppSettings(): AppSettingsState {
     fullStickering,
     whiteOnBottom,
     gyroscope,
+    autoCorrectGyroDrift,
     controlPanel,
     flashingIndicatorEnabled,
     cubeSizePx,
@@ -196,6 +204,7 @@ export function useAppSettings(): AppSettingsState {
     setFullStickering: setFullStickeringState,
     setWhiteOnBottom: setWhiteOnBottomState,
     setGyroscope: setGyroscopeState,
+    setAutoCorrectGyroDrift,
     setControlPanel: setControlPanelState,
     setFlashingIndicatorEnabled: setFlashingIndicatorEnabledState,
     setCubeSizePx,
@@ -214,6 +223,7 @@ export function useAppSettings(): AppSettingsState {
     flashingIndicatorEnabled,
     fullStickering,
     gyroscope,
+    autoCorrectGyroDrift,
     hintFacelets,
     setCubeSizePx,
     showAlgName,

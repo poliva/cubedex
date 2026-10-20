@@ -196,6 +196,14 @@ export const PracticeView = memo(function PracticeView({
   const showingGuidedSetup = PUZZLES[puzzle].smartcube && Boolean(scramble.setupTarget)
     && scramble.scrambleMode && smartcube.connected && !showAlgEditor && visible;
   const finishedSetup = useRef<typeof scramble.setupTarget>(null);
+  useEffect(() => {
+    const target = scramble.setupTarget;
+    if (!showingGuidedSetup || !target) return;
+    smartcube.handleGyroTrainingEvent?.({ phase: 'guided-setup-start' });
+    return () => {
+      if (finishedSetup.current !== target) smartcube.handleGyroTrainingEvent?.({ phase: 'guided-setup-cancel' });
+    };
+  }, [showingGuidedSetup, scramble.setupTarget, smartcube.handleGyroTrainingEvent]);
   const orientationReminder = puzzle === '2x2x2'
     ? 'Use U/R/F turns in the cube’s reference frame. If the setup does not match, reconnect and retry.'
     : ORIENTATION_REMINDER;
@@ -314,8 +322,8 @@ export const PracticeView = memo(function PracticeView({
       ? training.caseCurrentPattern : smartcube.currentPattern;
     if (puzzle === '3x3x3') {
       // Wide and slice turns rotate the algorithm's centers. The gyro already
-      // supplies that physical rotation. After recovery it anchors to the
-      // newly confirmed grip, so use that grip's centers for the stickers too.
+      // supplies that physical rotation. Render in the grip's fixed sticker
+      // frame and compensate those centers below, without sampling the hand.
       return options.gyroscope && smartcube.gyroSupported
         ? alignForGuidance(current, training.caseGripPattern ?? training.caseStartPattern) : current;
     }
@@ -326,10 +334,16 @@ export const PracticeView = memo(function PracticeView({
   const fixedTrainingGrip = Boolean(trainingPicture && ((training.casePicturePattern && training.caseCurrentPattern) || training.recoveredAt));
   // Compensate the device frame in the gyro, leaving sticker turns in the
   // tracked grip. Otherwise a frame change is visible as a second rotation.
-  const gyroFrameQuaternion = useMemo(() => puzzle === '2x2x2' && options.gyroscope && smartcube.gyroSupported
-    && trainingPicture && training.caseCurrentPattern && smartcube.currentPattern
-    ? guidanceFrameRotation(training.caseCurrentPattern, smartcube.currentPattern) : undefined,
-  [puzzle, options.gyroscope, smartcube.gyroSupported, trainingPicture, training.caseCurrentPattern, smartcube.currentPattern]);
+  const gyroFrameQuaternion = useMemo(() => {
+    if (!options.gyroscope || !smartcube.gyroSupported || !trainingPicture) return undefined;
+    if (puzzle === '2x2x2') return training.caseCurrentPattern && smartcube.currentPattern
+      ? guidanceFrameRotation(training.caseCurrentPattern, smartcube.currentPattern) : undefined;
+    // A 3×3 picture can retain centers rotated by wide/slice turns. Remove
+    // that discrete sticker rotation, not the user's live physical pose.
+    const grip = training.caseGripPattern ?? training.caseStartPattern;
+    return fixedTrainingGrip && grip ? guidanceFrameRotation(grip, fixOrientation(grip)) : undefined;
+  }, [puzzle, options.gyroscope, smartcube.gyroSupported, trainingPicture, training.caseCurrentPattern,
+    smartcube.currentPattern, fixedTrainingGrip, training.caseGripPattern, training.caseStartPattern]);
   const caseNavigationDisabled = caseNavigationBusy || training.countdownActive || training.timeAttackActive || scramble.isComputing;
 
   async function changeCase(direction: -1 | 1) {
@@ -375,6 +389,7 @@ export const PracticeView = memo(function PracticeView({
         if (!fixOrientation(pattern).isIdentical(fixOrientation(target))) return false;
         if (finishedSetup.current === target) return true;
         finishedSetup.current = target;
+        smartcube.handleGyroTrainingEvent?.({ phase: 'guided-setup-complete', pattern: target });
         const algorithm = scramble.targetAlgorithm;
         // The confirmed picture defines the physical grip. A device snapshot
         // may describe those same stickers in a different whole-cube frame.
@@ -404,6 +419,7 @@ export const PracticeView = memo(function PracticeView({
       onGripCheck={training.setRecoveryGripCheck}
       onCancel={() => {
         training.beginRecovery(false);
+        smartcube.handleGyroTrainingEvent?.({ phase: 'guided-recovery-cancel' });
         setGuidedRecovery(false);
       }}
     />

@@ -79,37 +79,38 @@ describe('TwistyCube training frame', () => {
     };
   }
 
-  it.each([2, 3] as const)('resumes %i× gyro motion from the confirmed grip at the connection viewing angle', async size => {
+  it.each([2, 3] as const)('preserves the calibrated %i× hand pose through prepared training and gyro resets', async size => {
     const frames = orientationFrames();
     const solved = await solvedPattern(size);
     drawing.solved = solved;
     drawing.moves = [];
     const physical = solved.applyAlg('x y R F2 U');
-    const anchor = new THREE.Quaternion().setFromEuler(new THREE.Euler(.8, -.4, .2));
+    const frame = guidanceFrameRotation(physical, fixOrientation(physical))!;
+    const tilt = new THREE.Quaternion().setFromEuler(new THREE.Euler(.3, -.2, .1));
+    const anchor = HOME_ORIENTATION.clone().multiply(tilt).multiply(frame.clone().invert());
     const cubeQuaternionRef = { current: anchor.clone() as THREE.Quaternion | null };
     const props = {
       puzzle: size === 2 ? '2x2x2' as const : '3x3x3' as const, alg: "R U' R'",
       targetPattern: physical, fixedOrientation: true, sizePx: 420, visualization: '3D',
       hintFacelets: 'none', controlPanel: 'none', experimentalStickering: 'full',
-      setupAlg: 'z2', backView: 'none' as const, resetToken: 'after-guidance',
+      setupAlg: 'z2', backView: 'none' as const, resetToken: 'after-guidance', gyroFrameQuaternion: frame,
       orientationResetToken: 0, orientationResetAlg: null, gyroscopeEnabled: true, cubeQuaternionRef,
     };
     const { rerender, unmount } = render(<StrictMode><MainCubeArea {...props}
-      fixedOrientation={false} cubeQuaternionRef={{ current: HOME_ORIENTATION.clone() }} /></StrictMode>);
+      fixedOrientation={false} gyroFrameQuaternion={undefined} cubeQuaternionRef={{ current: HOME_ORIENTATION.clone() }} /></StrictMode>);
     await frames.advance(48);
     const connectedOrientation = drawing.object!.quaternion.clone();
     expect(connectedOrientation.angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
     rerender(<StrictMode><MainCubeArea {...props} /></StrictMode>);
     await frames.advance(48);
-    expect(drawing.object!.quaternion.angleTo(connectedOrientation)).toBeLessThan(1e-6);
+    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION.clone().multiply(tilt))).toBeLessThan(1e-6);
     expect(drawing.player?.cameraLatitude).toBe(0);
     expect(drawing.player?.cameraLongitude).toBe(0);
     expect(drawing.current!.isIdentical(physical)).toBe(true);
     // Gyro packets update a ref without triggering a React render.
     const rotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(-.23, .42, .14));
-    const displayedRotation = HOME_ORIENTATION.clone().multiply(rotation);
-    const grip = HOME_ORIENTATION.clone().invert().multiply(anchor);
-    cubeQuaternionRef.current = HOME_ORIENTATION.clone().multiply(rotation).multiply(grip);
+    const displayedRotation = HOME_ORIENTATION.clone().multiply(rotation).multiply(tilt);
+    cubeQuaternionRef.current = displayedRotation.clone().multiply(frame.clone().invert());
     await frames.advance(24);
     expect(drawing.object!.quaternion.angleTo(displayedRotation)).toBeLessThan(.001);
     const next = physical.applyMove('B');
@@ -118,17 +119,18 @@ describe('TwistyCube training frame', () => {
     expect(drawing.current!.isIdentical(next)).toBe(true);
     expect(drawing.object!.quaternion.angleTo(displayedRotation)).toBeLessThan(.001);
     // Reset Gyro can deliver its new reference before the next render frame.
-    // It must reanchor even without a React render or observing a null packet.
-    cubeQuaternionRef.current = Object.assign(new THREE.Quaternion().setFromEuler(new THREE.Euler(-.6, .7, -.2)), { basisVersion: 1 });
+    // A basis change must not erase a pose already measured in the new basis.
+    const afterReset = HOME_ORIENTATION.clone().multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(-.6, .7, -.2)));
+    cubeQuaternionRef.current = Object.assign(afterReset.clone().multiply(frame.clone().invert()), { basisVersion: 1 });
     await frames.advance(24);
-    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION)).toBeLessThan(.001);
+    expect(drawing.object!.quaternion.angleTo(afterReset)).toBeLessThan(.001);
     expect(drawing.current!.isIdentical(next)).toBe(true);
     cubeQuaternionRef.current = null;
     await frames.advance(24);
     expect(drawing.object!.quaternion.angleTo(connectedOrientation)).toBeLessThan(.001);
     cubeQuaternionRef.current = Object.assign(HOME_ORIENTATION.clone(), { basisVersion: 2 });
-    await frames.advance(24);
-    expect(drawing.object!.quaternion.angleTo(connectedOrientation)).toBeLessThan(.001);
+    await frames.advance(48);
+    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION.clone().multiply(frame))).toBeLessThan(.001);
     unmount();
     expect(frames.pending.size).toBe(0);
   });
@@ -153,18 +155,18 @@ describe('TwistyCube training frame', () => {
     const anchor = new THREE.Quaternion().setFromEuler(new THREE.Euler(.2, -.7, .1));
     cubeQuaternionRef.current = anchor.clone();
     await frames.advance(48);
-    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
+    expect(drawing.object!.quaternion.angleTo(anchor)).toBeLessThan(1e-6);
     const rotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), .8);
     const grip = HOME_ORIENTATION.clone().invert().multiply(anchor);
     cubeQuaternionRef.current = HOME_ORIENTATION.clone().multiply(rotation).multiply(grip);
     await frames.advance(24);
-    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION.clone().multiply(rotation))).toBeLessThan(.001);
+    expect(drawing.object!.quaternion.angleTo(cubeQuaternionRef.current)).toBeLessThan(.001);
     rerender(<MainCubeArea {...props} />);
     expect(frames.pending.size).toBe(0);
     expect(drawing.object!.quaternion.angleTo(new THREE.Quaternion())).toBeLessThan(1e-6);
     rerender(<MainCubeArea {...props} gyroscopeEnabled />);
     await frames.advance(48);
-    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
+    expect(drawing.object!.quaternion.angleTo(cubeQuaternionRef.current)).toBeLessThan(1e-6);
     expect(drawing.current!.isIdentical(physical)).toBe(true);
   });
 
@@ -185,6 +187,7 @@ describe('TwistyCube training frame', () => {
       sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
       experimentalStickering: 'PLL', setupAlg: '', backView: 'none' as const,
       resetToken: 'v-perm-recovered', orientationResetToken: 0, orientationResetAlg: null,
+      gyroFrameQuaternion: grip.clone().invert(),
       gyroscopeEnabled: true, cubeQuaternionRef,
     };
     const { rerender } = render(<MainCubeArea {...props} />);
@@ -212,15 +215,14 @@ describe('TwistyCube training frame', () => {
     expect(drawing.object!.quaternion.angleTo(pose)).toBeLessThan(1e-6);
     expect(drawing.current!.isIdentical(next)).toBe(true);
     // A new gyro basis can arrive without a render or an intervening null.
-    const resetGrip = new THREE.Quaternion().setFromEuler(new THREE.Euler(.4, -.7, .2));
-    cubeQuaternionRef.current = Object.assign(HOME_ORIENTATION.clone().multiply(resetGrip), { basisVersion: 1 });
+    cubeQuaternionRef.current = Object.assign(HOME_ORIENTATION.clone(), { basisVersion: 1 });
     await frames.advance(64);
-    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
+    expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION.clone().multiply(grip.clone().invert()))).toBeLessThan(1e-6);
     const turn = new THREE.Quaternion().setFromAxisAngle(
       new THREE.Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, axis === 'z' ? 1 : 0), Math.PI / 3,
     );
-    const expected = HOME_ORIENTATION.clone().multiply(turn);
-    cubeQuaternionRef.current = Object.assign(expected.clone().multiply(resetGrip), { basisVersion: 1 });
+    const expected = HOME_ORIENTATION.clone().multiply(turn).multiply(grip.clone().invert());
+    cubeQuaternionRef.current = Object.assign(HOME_ORIENTATION.clone().multiply(turn), { basisVersion: 1 });
     await frames.advance(64);
     expect(drawing.object!.quaternion.angleTo(expected)).toBeLessThan(1e-6);
     expect(drawing.current!.isIdentical(next)).toBe(true);
@@ -237,6 +239,34 @@ describe('TwistyCube training frame', () => {
       orientationResetAlg={null} gyroscopeEnabled cubeQuaternionRef={cubeQuaternionRef} />);
     await frames.advance(24);
     expect(drawing.object!.quaternion.angleTo(rotation)).toBeLessThan(.001);
+  });
+
+  it('does not adopt the current hand angle as zero on repeated Always Scramble To remounts', async () => {
+    const frames = orientationFrames();
+    const solved = await solvedPattern(2);
+    drawing.solved = solved;
+    const physical = solved.applyAlg('R U F D L B');
+    const frame = guidanceFrameRotation(physical, fixOrientation(physical))!;
+    for (const [i, degrees] of [20, -15, 8, -25].entries()) {
+      const hand = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), degrees * Math.PI / 180);
+      const shown = HOME_ORIENTATION.clone().multiply(hand);
+      const cubeQuaternionRef = { current: shown.clone().multiply(frame.clone().invert()) };
+      const props = {
+        puzzle: '2x2x2' as const, alg: '', targetPattern: physical, fixedOrientation: true,
+        sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+        experimentalStickering: 'full', setupAlg: '', backView: 'none' as const,
+        resetToken: `auto-setup-${i}`, orientationResetToken: 0, orientationResetAlg: null,
+        gyroscopeEnabled: true, cubeQuaternionRef, gyroFrameQuaternion: frame,
+      };
+      const { unmount } = render(<MainCubeArea {...props} />);
+      await frames.advance(64);
+      expect(drawing.object!.quaternion.angleTo(shown)).toBeLessThan(1e-6);
+      // Return to the calibrated grip without a remount or React render.
+      cubeQuaternionRef.current = HOME_ORIENTATION.clone().multiply(frame.clone().invert());
+      await frames.advance(64);
+      expect(drawing.object!.quaternion.angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
+      unmount();
+    }
   });
 
   it.each([false, true])('keeps the next PBL view and R turn steady while preserving hand tilts (guided %s)', async fixedOrientation => {

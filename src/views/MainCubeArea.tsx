@@ -10,7 +10,7 @@ interface MainCubeAreaProps {
   puzzle?: PuzzleId;
   alg: string;
   targetPattern?: KPattern | null;
-  /** Preserve the confirmed grip; gyro motion is measured relative to it. */
+  /** Keep the pictured stickers fixed; gyro poses retain the connection reference. */
   fixedOrientation?: boolean;
   sizePx: number;
   visualization: string;
@@ -74,7 +74,7 @@ function MainCubeAreaComponent({
         appendMoveKey={appendMoveKey}
         appendMove={appendMove}
         gyroscopeEnabled={gyroscopeEnabled}
-        gyroscopeRelativeToGrip={fixedOrientation}
+        fixedOrientation={fixedOrientation}
         gyroFrameQuaternion={gyroFrameQuaternion}
         cubeQuaternionRef={cubeQuaternionRef}
         className="twisty-cube-host"

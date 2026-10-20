@@ -1,11 +1,15 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { OptionsView } from '../../src/views/OptionsView';
 import type { AlgorithmImportExportState } from '../../src/hooks/useAlgorithmImportExport';
 import type { AppSettingsState } from '../../src/hooks/useAppSettings';
 import type { SmartcubeConnectionState } from '../../src/hooks/useSmartcubeConnection';
 import { solvedPattern } from '../../src/lib/cube-utils';
+
+const buildFlags = vi.hoisted(() => ({ gyroTesting: true }));
+vi.mock('../../src/lib/build-flags', () => ({ get GYRO_TESTING_ENABLED() { return buildFlags.gyroTesting; } }));
+beforeEach(() => { buildFlags.gyroTesting = true; });
 
 function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsState {
   return {
@@ -23,6 +27,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     fullStickering: false,
     whiteOnBottom: false,
     gyroscope: true,
+    autoCorrectGyroDrift: true,
     controlPanel: 'none',
     flashingIndicatorEnabled: true,
     cubeSizePx: 400,
@@ -41,6 +46,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     setFullStickering: vi.fn(),
     setWhiteOnBottom: vi.fn(),
     setGyroscope: vi.fn(),
+    setAutoCorrectGyroDrift: vi.fn(),
     setControlPanel: vi.fn(),
     setFlashingIndicatorEnabled: vi.fn(),
     setCubeSizePx: vi.fn(),
@@ -82,6 +88,9 @@ function createSmartcube(overrides: Partial<SmartcubeConnectionState> = {}): Sma
     stateSyncing: false,
     resetState: vi.fn(async () => undefined),
     resetGyro: vi.fn(),
+    handleGyroTrainingEvent: vi.fn(),
+    exportGyroDiagnostics: vi.fn(),
+    clearGyroDiagnostics: vi.fn(),
     resetOrientation: vi.fn(),
     gyroSupported: true,
     gyroSupportResolved: true,
@@ -194,6 +203,35 @@ describe('OptionsView', () => {
     expect(screen.getByRole('button', { name: 'Mark cube as solved' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Reset Gyro' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Device Info' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Export gyro log' })).toBeEnabled();
+  });
+
+  it('allows opting out of correction and exporting or clearing recordings after disconnect', async () => {
+    const options = createOptions();
+    const smartcube = createSmartcube();
+    const user = userEvent.setup();
+    render(<OptionsView visible infoVisible={false} setInfoVisible={vi.fn()}
+      options={options} smartcube={smartcube} algorithmActions={createAlgorithmActions()} />);
+    expect(screen.getByLabelText('Auto-correct Gyro Drift')).toBeChecked();
+    await user.click(screen.getByLabelText('Auto-correct Gyro Drift'));
+    expect(options.setAutoCorrectGyroDrift).toHaveBeenCalledWith(false);
+    await user.click(screen.getByRole('button', { name: 'Export gyro log' }));
+    expect(smartcube.exportGyroDiagnostics).toHaveBeenCalledOnce();
+    expect(screen.getByRole('status')).toHaveTextContent('Gyro testing log exported.');
+    await user.click(screen.getByRole('button', { name: 'Clear gyro log' }));
+    expect(smartcube.clearGyroDiagnostics).toHaveBeenCalledOnce();
+  });
+
+  it('hides testing controls and instructions in normal builds while keeping gyro correction available', () => {
+    buildFlags.gyroTesting = false;
+    render(<OptionsView visible infoVisible={false} setInfoVisible={vi.fn()}
+      options={createOptions()} smartcube={createSmartcube({ connected: true })} algorithmActions={createAlgorithmActions()} />);
+    expect(screen.queryByText('Gyro testing log')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Export gyro log' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Clear gyro log' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Recent corrections, skipped corrections/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Auto-correct Gyro Drift')).toBeChecked();
+    expect(screen.getByRole('button', { name: 'Reset Gyro' })).toBeEnabled();
   });
 
   it('explains reading versus marking solved and reports progress and success', async () => {
