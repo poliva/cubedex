@@ -42,7 +42,13 @@ describe('3×3 setup and recovery', () => {
       await waitFor(() => expect(result.current.failedCounts[scope]).toBe(1));
       const resetKey = result.current.visualResetKey;
       const highlights = result.current.displayMoves.filter(move => move.color === 'green');
+      expect(result.current.displayMoves.some(move => move.color === 'red')).toBe(true);
       act(() => result.current.beginRecovery(matchVirtualCube));
+      // The visual guide registers its grip check while mounted.
+      act(() => result.current.setRecoveryGripCheck(() => true));
+      const guidedMoves = result.current.displayMoves;
+      expect(guidedMoves.some(move => move.color === 'red')).toBe(false);
+      expect(guidedMoves.filter(move => move.color === 'green')).toEqual(highlights);
       const expectedStart = matchVirtualCube ? solved.applyAlg(new Alg(algorithm).invert()) : start;
       const target = expectedStart.applyAlg(progress);
       expect(result.current.recoveryTarget?.isIdentical(target)).toBe(true);
@@ -51,8 +57,15 @@ describe('3×3 setup and recovery', () => {
       // should record a solve or move algorithm progress.
       act(() => { result.current.handleSmartcubeMove(expectedStart.applyAlg(algorithm), 'L'); });
       expect(getAttemptHistory(scope)).toHaveLength(0);
+      expect(result.current.displayMoves).toEqual(guidedMoves);
       const reference = alignForGuidance(expectedStart.applyAlg(algorithm), target);
       const corrections = await getGuidanceMoves(reference, target);
+      let correcting = reference;
+      for (const move of corrections.slice(0, -1)) {
+        correcting = correcting.applyMove(move);
+        act(() => { result.current.handleSmartcubeMove(correcting, move); });
+        expect(result.current.displayMoves).toEqual(guidedMoves);
+      }
       const corrected = reference.applyAlg(corrections.join(' '));
       expect(corrected.isIdentical(target)).toBe(true);
       act(() => { expect(result.current.checkRecovery(corrected)).toBe(true); });
@@ -85,8 +98,12 @@ describe('3×3 setup and recovery', () => {
     act(() => { result.current.handleSmartcubeMove(start.applyAlg('R'), 'R'); });
     act(() => { result.current.handleSmartcubeMove(start.applyAlg('R B'), 'B'); });
     act(() => result.current.beginRecovery());
+    act(() => result.current.setRecoveryGripCheck(() => true));
+    expect(result.current.displayMoves.some(move => move.color === 'red')).toBe(false);
     expect(result.current.recoveryTarget?.isIdentical(start.applyAlg('R'))).toBe(false);
     act(() => result.current.beginRecovery(false));
+    act(() => result.current.setRecoveryGripCheck(null));
+    expect(result.current.displayMoves.some(move => move.color === 'red')).toBe(true);
     expect(result.current.recoveryTarget?.isIdentical(start.applyAlg('R'))).toBe(true);
     act(() => { expect(result.current.checkRecovery(start.applyAlg('R'))).toBe(true); });
     expect(result.current.caseStartPattern?.isIdentical(start)).toBe(true);

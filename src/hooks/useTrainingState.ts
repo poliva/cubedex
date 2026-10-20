@@ -473,7 +473,7 @@ function simplifyFixAlg(badMoves: string[]): string {
   return simplified;
 }
 
-function buildDisplayState(displayAlg: string, currentMoveIndex: number, badMoves: string[], randomizeAUF: boolean): {
+function buildDisplayState(displayAlg: string, currentMoveIndex: number, badMoves: string[], randomizeAUF: boolean, guidedRecovery: boolean): {
   moves: TrainingDisplayMove[];
   fixText: string;
   suppressedFix: boolean;
@@ -485,7 +485,9 @@ function buildDisplayState(displayAlg: string, currentMoveIndex: number, badMove
   if (badMoves.length > 0) {
     const simplified = simplifyFixAlg(badMoves);
     fixText = simplified;
-    simplifiedBadAlg = simplified ? simplified.split(/\s+/) : [];
+    // Keep undo help available when the guide closes, while the main algorithm
+    // shows only saved progress during recovery rather than correction errors.
+    simplifiedBadAlg = simplified && !guidedRecovery ? simplified.split(/\s+/) : [];
   }
 
   let previousColor: DisplayColor = 'default';
@@ -620,6 +622,7 @@ export function useTrainingState(
   const recoveryTargetRef = useRef<KPattern | null>(null);
   const recoveryStartPatternRef = useRef<KPattern | null>(null);
   const recoveryGripCheckRef = useRef<((pattern: KPattern) => boolean) | null>(null);
+  const [guidedRecovery, setGuidedRecovery] = useState(false);
   const recoveredPatternRef = useRef<KPattern | null>(null);
   const [recoveryMoveCount, setRecoveryMoveCount] = useState(0);
   const [recoveredAt, setRecoveredAt] = useState(0);
@@ -740,8 +743,8 @@ export function useTrainingState(
   }, [selectedCases]);
 
   const displayState = useMemo(
-    () => buildDisplayState(displayAlg, currentMoveIndex, badMoves, options.randomizeAUF),
-    [badMoves, currentMoveIndex, displayAlg, options.randomizeAUF],
+    () => buildDisplayState(displayAlg, currentMoveIndex, badMoves, options.randomizeAUF, guidedRecovery && Boolean(recoveryTarget)),
+    [badMoves, currentMoveIndex, displayAlg, options.randomizeAUF, guidedRecovery, recoveryTarget],
   );
 
   const statsAlgId = originalAlgIdRef.current;
@@ -1357,6 +1360,7 @@ export function useTrainingState(
     recoveryStartPatternRef.current = null;
     recoveredPatternRef.current = null;
     recoveryGripCheckRef.current = null;
+    setGuidedRecovery(false);
     setRecoveryTarget(null);
     setRecoveryMoveCount(0);
     setRecoveredAt(0);
@@ -2198,6 +2202,7 @@ export function useTrainingState(
   const stableCheckRecovery = useStableCallback(checkRecovery);
   const stableSetRecoveryGripCheck = useStableCallback((check: ((pattern: KPattern) => boolean) | null) => {
     recoveryGripCheckRef.current = check;
+    setGuidedRecovery(Boolean(check));
   });
   const stableBeginRecovery = useStableCallback(beginRecovery);
   const stableSetAlgInput = useStableCallback(setAlgInput);
