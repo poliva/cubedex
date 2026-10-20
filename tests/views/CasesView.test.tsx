@@ -118,4 +118,26 @@ describe('CasesView', () => {
 
     expect(props.caseLibrary.setSelectLearningCases).toHaveBeenCalledWith(true);
   });
+
+  it('activates category stickers when practicing an existing selection', async () => {
+    const user = userEvent.setup();
+    const props = makeProps();
+    render(<CasesView {...props} />);
+
+    await user.click(screen.getByRole('button', { name: 'Practice Selected' }));
+
+    expect(props.setMainCubeStickeringDeferred).toHaveBeenCalledWith(false);
+    expect(props.setAcknowledgedDisconnectToken).toHaveBeenCalledWith(4);
+    expect(props.onPracticeSelected).toHaveBeenCalledOnce();
+  });
+
+  it.each(['All', 'B'])('activates category stickers when selecting subset %s', async subset => {
+    const user = userEvent.setup();
+    const props = makeProps();
+    render(<CasesView {...props} />);
+
+    await user.click(screen.getAllByRole('button', { name: subset })[0]);
+
+    expect(props.setMainCubeStickeringDeferred).toHaveBeenCalledWith(false);
+  });
 });

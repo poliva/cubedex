@@ -431,7 +431,7 @@ export const PracticeView = memo(function PracticeView({
           visualization={fixedTrainingGrip || (!PUZZLES[puzzle].lastLayerPreview && options.visualization.includes('LL')) ? '3D' : options.visualization}
           hintFacelets={fixedTrainingGrip ? 'none' : options.hintFacelets}
           controlPanel={options.controlPanel}
-          experimentalStickering={puzzle !== '3x3x3' ? 'full' : selectedStickering}
+          experimentalStickering={selectedStickering}
           setupAlg={PUZZLES[puzzle].cube && options.whiteOnBottom ? 'z2' : ''}
           backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
           resetToken={`${smartcube.connected}:${training.visualResetKey}`}

@@ -175,7 +175,11 @@ export const CasesView = memo(function CasesView({
           return (
             <button
               type="button"
-              onClick={onPracticeSelected}
+              onClick={() => {
+                setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+                setMainCubeStickeringDeferred(false);
+                onPracticeSelected();
+              }}
               disabled={!hasSelection}
               aria-disabled={!hasSelection}
               title={hasSelection ? undefined : 'Select at least one case to practice'}
@@ -367,6 +371,7 @@ export const CasesView = memo(function CasesView({
                 type="button"
                 onClick={() => {
                   setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+                  setMainCubeStickeringDeferred(false);
                   toggleAllSubsets(selectedSubsets.length < subsets.length);
                   training.clearFailedCounts();
                   training.resetDrill();
@@ -395,6 +400,7 @@ export const CasesView = memo(function CasesView({
                   type="button"
                   onClick={() => {
                     setAcknowledgedDisconnectToken(smartcube.disconnectToken);
+                    setMainCubeStickeringDeferred(false);
                     toggleSubset(subset, !selectedSubsets.includes(subset));
                     training.clearFailedCounts();
                     training.resetDrill();

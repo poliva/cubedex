@@ -136,7 +136,7 @@ describe('CaseCard', () => {
   it('keeps category stickering for previews even when full-stickering is enabled elsewhere', () => {
     render(<CaseCard card={card} index={0} />);
 
-    expect(stickeringSpy).toHaveBeenCalledWith('PLL', false);
+    expect(stickeringSpy).toHaveBeenCalledWith('PLL', false, '3x3x3');
     expect(mockState.previewProps).toMatchObject({
       alg: "R U R'",
       visualization: 'experimental-2D-LL',

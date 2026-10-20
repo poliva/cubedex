@@ -12,6 +12,7 @@ import { useTrainingState, type TrainingState } from '../../src/hooks/useTrainin
 import { PracticeView } from '../../src/views/PracticeView';
 import { getTrainingVisualDelta } from '../../src/lib/training-visual';
 import { guidanceFrameRotation, HOME_ORIENTATION } from '../../src/lib/cube-orientation';
+import { getStickeringForCategory } from '../../src/lib/stickering';
 
 vi.mock('../../src/components/TwistyCube', () => ({
   TwistyCube: (props: ComponentProps<typeof import('../../src/components/TwistyCube').TwistyCube>) =>
@@ -365,8 +366,25 @@ describe('PracticeView', () => {
     const props = makeProps();
     const { rerender } = render(<PracticeView {...props} />);
     expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-puzzle', '3x3x3');
-    rerender(<PracticeView {...makeProps({ puzzle: '2x2x2' })} />);
+    rerender(<PracticeView {...makeProps({ puzzle: '2x2x2', selectedStickering: 'full' })} />);
     expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-puzzle', '2x2x2');
+    expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stickering', 'full');
+  });
+
+  it.each([false, true])('applies 2×2 Ortega OLL masking and full-sticker changes (connected %s)', connected => {
+    const props = makeProps({
+      puzzle: '2x2x2',
+      selectedStickering: getStickeringForCategory('2x2x2:OLL', false, '2x2x2'),
+    });
+    props.smartcube = { ...props.smartcube, connected, cubeSize: 2, currentPattern: null };
+    const { rerender } = render(<PracticeView {...props} />);
+
+    expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stickering', 'OLL');
+
+    props.options = { ...props.options, fullStickering: true };
+    props.selectedStickering = getStickeringForCategory('2x2x2:OLL', true, '2x2x2');
+    rerender(<PracticeView {...props} />);
+
     expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stickering', 'full');
   });
 

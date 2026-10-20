@@ -171,9 +171,9 @@ export function App() {
     lastProcessedAnyMoveKeyRef.current = '';
   }, [puzzle, training.resetDrill, training.clearFailedCounts, scramble.clearScramble,
     algorithmActions.clearForm, algorithmActions.clearMessages, activeView, smartcube.disconnectToken]);
-  const selectedStickering = puzzle !== '3x3x3' ? 'full' : mainCubeStickeringDeferred && !options.fullStickering
+  const selectedStickering = mainCubeStickeringDeferred && !options.fullStickering
     ? 'full'
-    : getStickeringForCategory(selectedCategory || 'PLL', options.fullStickering);
+    : getStickeringForCategory(selectedCategory || 'PLL', options.fullStickering, puzzle);
   const optionsVisible = activeView === 'options';
   const optionsDeviceInfoOpen = activeView === 'options' && infoVisible;
 

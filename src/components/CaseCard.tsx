@@ -21,7 +21,7 @@ function CaseCardComponent({ card, index, style }: CaseCardProps) {
   const puzzle = categoryPuzzle(card.category);
   const isLL = PUZZLES[puzzle].lastLayerPreview && categoryName(card.category).toLowerCase().includes('ll');
   const visualization = isLL ? 'experimental-2D-LL' : '3D';
-  const stickering = getStickeringForCategory(categoryName(card.category), puzzle !== '3x3x3');
+  const stickering = getStickeringForCategory(categoryName(card.category), false, puzzle);
 
   const background = failedCount
     ? 'rgba(239,68,68,0.12)'
