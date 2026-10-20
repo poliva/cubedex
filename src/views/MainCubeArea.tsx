@@ -10,6 +10,7 @@ interface MainCubeAreaProps {
   puzzle?: PuzzleId;
   alg: string;
   targetPattern?: KPattern | null;
+  fixedOrientation?: boolean;
   sizePx: number;
   visualization: string;
   hintFacelets: string;
@@ -30,6 +31,7 @@ function MainCubeAreaComponent({
   puzzle,
   alg,
   targetPattern,
+  fixedOrientation = false,
   sizePx,
   visualization,
   hintFacelets,
@@ -48,7 +50,7 @@ function MainCubeAreaComponent({
   return (
     <ErrorBoundary resetKey={`${puzzle}:${resetToken}:${orientationResetToken}:${alg}`}>
       <TwistyCube
-        key={puzzle}
+        key={`${puzzle}:${fixedOrientation}`}
         puzzle={puzzle}
         alg={alg}
         targetPattern={targetPattern}
@@ -57,16 +59,18 @@ function MainCubeAreaComponent({
         hintFacelets={hintFacelets}
         controlPanel={controlPanel}
         experimentalStickering={experimentalStickering}
-        setupAlg={setupAlg}
-        cameraLatitude={0}
-        cameraLongitude={0}
+        setupAlg={fixedOrientation ? '' : setupAlg}
+        cameraLatitude={fixedOrientation ? 30 : 0}
+        cameraLongitude={fixedOrientation ? 30 : 0}
+        dragInput={fixedOrientation ? 'none' : 'auto'}
+        enableExternalOrientationLoop={!fixedOrientation}
         backView={backView}
         resetToken={resetToken}
         orientationResetToken={orientationResetToken}
         orientationResetAlg={orientationResetAlg}
         appendMoveKey={appendMoveKey}
         appendMove={appendMove}
-        gyroscopeEnabled={gyroscopeEnabled}
+        gyroscopeEnabled={!fixedOrientation && gyroscopeEnabled}
         cubeQuaternionRef={cubeQuaternionRef}
         className="twisty-cube-host"
       />

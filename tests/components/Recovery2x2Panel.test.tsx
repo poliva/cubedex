@@ -29,6 +29,24 @@ async function fixture() {
 }
 
 describe('guided visual recovery', () => {
+  it('requires grip confirmation for an already prepared setup, including refreshes', async () => {
+    const f = await fixture();
+    f.smartcube = { ...f.smartcube, currentPattern: f.target.applyAlg('x y'),
+      refreshPattern: vi.fn(async () => f.target.applyAlg('x y')) };
+    const user = userEvent.setup();
+    render(<Recovery2x2Panel {...f} mode="setup" />);
+    await screen.findByRole('button', { name: 'My cube matches' });
+    expect(f.onRecovered).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Picture doesn’t match? Refresh' }));
+    await screen.findByRole('button', { name: 'My cube matches' });
+    expect(f.onRecovered).not.toHaveBeenCalled();
+    const picture = f.solved.applyAlg(screen.getByTestId('reference').dataset.setup!);
+    expect(picture.isIdentical(f.target)).toBe(true);
+    await user.click(screen.getByRole('button', { name: 'My cube matches' }));
+    await waitFor(() => expect(f.onRecovered).toHaveBeenCalledOnce());
+    expect(f.onRecovered.mock.calls[0][0].isIdentical(f.target)).toBe(true);
+  });
+
   it.each([
     { targetAlg: 'F U R', error: 'D', sensorRotation: 'x y' },
     { targetAlg: 'L U B R', error: 'F R', sensorRotation: 'y' },

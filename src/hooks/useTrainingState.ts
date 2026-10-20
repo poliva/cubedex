@@ -16,7 +16,7 @@ import {
 import { countMovesETM } from '../lib/charts';
 import { prepareTrainingAlgorithm } from '../lib/auf';
 import { patternCubeSize, solvedPattern } from '../lib/cube-utils';
-import { fixOrientation } from '../lib/scramble';
+import { align2x2RecoveryPattern, fixOrientation } from '../lib/scramble';
 import { prepared2x2CasePicture } from '../lib/training-visual';
 import { getInverseMove, getOppositeMove, sanitizeMove, trailingWholeCubeRotationMoveCount } from '../lib/move-helpers';
 import {
@@ -138,6 +138,7 @@ export interface TrainingState {
   visualResetKey: number;
   caseStartPattern: KPattern | null;
   casePicturePattern: KPattern | null;
+  caseCurrentPattern: KPattern | null;
   algInput: string;
   displayAlg: string;
   currentCase: CaseCardData | null;
@@ -603,6 +604,7 @@ export function useTrainingState(
   const [visualResetKey, setVisualResetKey] = useState(0);
   const [caseStartPattern, setCaseStartPattern] = useState<KPattern | null>(null);
   const [casePicturePattern, setCasePicturePattern] = useState<KPattern | null>(null);
+  const [caseCurrentPattern, setCaseCurrentPattern] = useState<KPattern | null>(null);
   const [algInput, setAlgInputState] = useState('');
   const [displayAlg, setDisplayAlg] = useState('');
   const [currentCase, setCurrentCase] = useState<CaseCardData | null>(null);
@@ -620,6 +622,7 @@ export function useTrainingState(
     setRecoveryTarget(null);
     setRecoveryMoveCount(0);
     setBadMoves([]);
+    setCaseCurrentPattern(target);
     setRecoveredAt(performance.now());
     return true;
   }
@@ -1249,6 +1252,7 @@ export function useTrainingState(
   function clearProgressState() {
     setCaseStartPattern(null);
     setCasePicturePattern(null);
+    setCaseCurrentPattern(null);
     recoveryTargetRef.current = null;
     setRecoveryTarget(null);
     setRecoveryMoveCount(0);
@@ -1427,6 +1431,7 @@ export function useTrainingState(
 
     clearProgressState();
     setCaseStartPattern(basePattern);
+    setCaseCurrentPattern(basePattern);
     setCasePicturePattern(basePattern && options.smartcubeConnected
       ? prepared2x2CasePicture(prepared.displayAlgorithm, basePattern,
         Boolean(options.alwaysScrambleTo || trainOptions?.preserveDisplayedAlgorithm))
@@ -1889,6 +1894,12 @@ export function useTrainingState(
 
     const patternAfterMove = fixOrientation(currentPattern);
     const is2x2 = patternCubeSize(currentPattern) === 2;
+    if (is2x2) {
+      // Keep the last confirmed physical grip when a device report chooses
+      // another orientation. Expected turns below provide the exact frame,
+      // including D/L/B turns that move the corner used for normalization.
+      setCaseCurrentPattern(previous => align2x2RecoveryPattern(currentPattern, previous ?? currentPattern));
+    }
     if (is2x2 && recoveryTargetRef.current) {
       // Only the last correct position ends recovery. Visiting a later training
       // state while correcting must never finish or restart the attempt.
@@ -1899,10 +1910,14 @@ export function useTrainingState(
       return false;
     }
     if (is2x2 && initialPatternRef.current && currentMoveIndex < 0
-      && patternAfterMove.isIdentical(fixOrientation(initialPatternRef.current))) return false;
+      && patternAfterMove.isIdentical(fixOrientation(initialPatternRef.current))) {
+      setCaseCurrentPattern(initialPatternRef.current);
+      return false;
+    }
     if (patternStatesRef.current.length > 0 && currentMoveIndex === 0 && initialPatternRef.current
       && (is2x2 ? fixOrientation(initialPatternRef.current) : initialPatternRef.current).isIdentical(patternAfterMove)) {
       if (is2x2) {
+        setCaseCurrentPattern(initialPatternRef.current);
         setCurrentMoveIndex(-1);
         setBadMoves([]);
       } else resetAttemptStateKeepAlgorithm();
@@ -1931,6 +1946,7 @@ export function useTrainingState(
     }
 
     if (matchedIndex !== null) {
+      if (is2x2) setCaseCurrentPattern(patternStatesInTrainingFrameRef.current[matchedIndex]);
       setCurrentMoveIndex(matchedIndex);
       setBadMoves([]);
       const tailRotations = trailingWholeCubeRotationMoveCount(expectedMovesRef.current);
@@ -1969,6 +1985,12 @@ export function useTrainingState(
 
     if (is2x2) {
       if (halfTurnStatesRef.current[nextExpectedIdx]?.some(pattern => pattern.isIdentical(patternAfterMove))) {
+        const halfIndex = halfTurnStatesRef.current[nextExpectedIdx].findIndex(pattern => pattern.isIdentical(patternAfterMove));
+        const before = currentMoveIndex < 0 ? initialPatternRef.current : patternStatesInTrainingFrameRef.current[currentMoveIndex];
+        if (before) {
+          const face = expectedMovesRef.current[nextExpectedIdx][0];
+          setCaseCurrentPattern(before.applyMove(halfIndex === 0 ? face : `${face}'`));
+        }
         setBadMoves(capturedMoves.map(entry => entry.move));
         return false;
       }
@@ -2084,6 +2106,7 @@ export function useTrainingState(
     visualResetKey,
     caseStartPattern,
     casePicturePattern,
+    caseCurrentPattern,
     algInput,
     displayAlg,
     currentCase,
@@ -2124,6 +2147,7 @@ export function useTrainingState(
   }), [
     caseStartPattern,
     casePicturePattern,
+    caseCurrentPattern,
     recoveryTarget,
     recoveryMoveCount,
     recoveredAt,

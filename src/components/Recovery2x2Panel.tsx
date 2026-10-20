@@ -14,11 +14,12 @@ type Recovery = {
 const initial: Recovery = { phase: 'loading', reference: null, steps: [], index: 0, notice: '' };
 const equivalent = (a: KPattern, b: KPattern) => fixOrientation(a).isIdentical(fixOrientation(b));
 
-export function Recovery2x2Panel({ smartcube, target, onRecovered, onCancel }: {
+export function Recovery2x2Panel({ smartcube, target, onRecovered, onCancel, mode = 'recovery' }: {
   smartcube: SmartcubeConnectionState;
   target: KPattern;
   onRecovered: (pattern: KPattern) => boolean;
   onCancel: () => void;
+  mode?: 'recovery' | 'setup';
 }) {
   const [state, setState] = useState<Recovery>(initial);
   const [replay, setReplay] = useState(0);
@@ -35,7 +36,7 @@ export function Recovery2x2Panel({ smartcube, target, onRecovered, onCancel }: {
     try {
       const reference = await smartcube.refreshPattern(abort.signal);
       if (generation.current !== version) return;
-      if (onRecovered(reference)) return;
+      if (mode === 'recovery' && onRecovered(reference)) return;
       setState({ ...initial, phase: 'align', reference: align2x2RecoveryPattern(reference, target), notice: '' });
     } catch (error) {
       if (generation.current !== version) return;
@@ -55,7 +56,9 @@ export function Recovery2x2Panel({ smartcube, target, onRecovered, onCancel }: {
     const moved = moveKey.current !== smartcube.lastProcessedMove?.key;
     moveKey.current = smartcube.lastProcessedMove?.key;
     if (!current || !state.reference || state.phase === 'loading' || state.phase === 'error') return;
-    if (onRecovered(current)) return;
+    // Setup always requires confirming the pictured grip, including a case
+    // that already has the right stickers when it is read from the device.
+    if ((mode === 'recovery' || state.phase === 'guiding') && onRecovered(current)) return;
     if (!moved && current.isIdentical(state.reference)) return;
     if (state.phase === 'guiding') {
       const next = state.steps.findIndex((step, i) => i >= state.index && equivalent(current, step.after));
@@ -71,7 +74,7 @@ export function Recovery2x2Panel({ smartcube, target, onRecovered, onCancel }: {
     generation.current += 1;
     setState({ ...initial, phase: 'align', reference: align2x2RecoveryPattern(current, target),
       notice: 'The cube changed. Match the updated picture before continuing.' });
-  }, [smartcube.currentPattern, smartcube.lastProcessedMove?.key, state, onRecovered, target]);
+  }, [smartcube.currentPattern, smartcube.lastProcessedMove?.key, state, onRecovered, target, mode]);
 
   useEffect(() => {
     if (!smartcube.stateSyncError || state.phase === 'loading' || state.phase === 'error') return;
@@ -107,12 +110,16 @@ export function Recovery2x2Panel({ smartcube, target, onRecovered, onCancel }: {
   const guiding = state.phase === 'guiding';
   const turn = guiding ? state.steps[state.index].move : '';
   const setup = state.reference ? patternToPlayerAlg(state.reference) : '';
-  return <section className="recovery-panel" aria-label="2×2 visual recovery">
+  return <section className="recovery-panel" aria-label={mode === 'setup' ? '2×2 guided setup' : '2×2 visual recovery'}>
     <div aria-live="polite" className="recovery-instructions">
       <strong>{guiding ? `Follow this turn: ${turn}` : 'Match your cube'}</strong>
       <p>{guiding
-        ? 'Keep this grip. Copy the moving layer, then wait for the next turn. When recovered, continue the algorithm without rotating the cube.'
-        : 'Rotate the whole cube to match this picture. Don’t turn any layers. This grip will let you continue the algorithm after recovery.'}</p>
+        ? mode === 'setup'
+          ? 'Keep this grip. Copy the moving layer, then wait for the next turn. When the setup is ready, start the algorithm without rotating the cube.'
+          : 'Keep this grip. Copy the moving layer, then wait for the next turn. When recovered, continue the algorithm without rotating the cube.'
+        : mode === 'setup'
+          ? 'Rotate the whole cube to match this picture. Don’t turn any layers. Keep this grip through the setup and into the algorithm.'
+          : 'Rotate the whole cube to match this picture. Don’t turn any layers. This grip will let you continue the algorithm after recovery.'}</p>
       {state.notice && <p role={state.phase === 'error' ? 'alert' : 'status'}>{state.notice}</p>}
     </div>
     {state.reference && state.phase !== 'error' ? <div className="recovery-picture" aria-label={guiding ? `Animated correction ${turn}` : 'Current scrambled cube, top front and right visible'}>
@@ -127,7 +134,7 @@ export function Recovery2x2Panel({ smartcube, target, onRecovered, onCancel }: {
       {state.phase === 'align' && <button className="recovery-button recovery-button--primary" type="button" disabled={smartcube.stateSyncing} onClick={() => void confirm()}>My cube matches</button>}
       {guiding && <button className="recovery-button recovery-button--primary" type="button" onClick={() => setReplay(value => value + 1)}>Show turn again</button>}
       {state.phase !== 'loading' && <button className="recovery-button" type="button" onClick={() => void refresh()}>{state.phase === 'error' ? 'Retry reading cube' : 'Picture doesn’t match? Refresh'}</button>}
-      <button className="recovery-button" type="button" onClick={onCancel}>Back to undo help</button>
+      <button className="recovery-button" type="button" onClick={onCancel}>{mode === 'setup' ? 'Cancel setup' : 'Back to undo help'}</button>
     </div>
   </section>;
 }

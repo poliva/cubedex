@@ -2,19 +2,24 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../src/App';
+import type { SmartcubeConnectionState } from '../src/hooks/useSmartcubeConnection';
 
 /** Mutable wiring for `alwaysScrambleTo` + scramble-mode regression (see App.tsx lastAutoScrambleKeyRef). */
 const alwaysScrambleRegressDyn = vi.hoisted(() => ({
   alwaysScrambleTo: false,
   practiceTimeAttack: true,
   scrambleMode: false,
+  setupTarget: null as object | null,
+  advanceScramble: vi.fn(async () => false),
   /** Mimics real `useScrambleState` returning a new `startScrambleTo` when scramble state updates. */
   startScrambleToSpyPick: 0 as 0 | 1,
   startScrambleToSpyA: vi.fn(async () => true),
   startScrambleToSpyB: vi.fn(async () => true),
 }));
 
-const connectionDyn = vi.hoisted(() => ({ connected: false, cubeSize: 3 }));
+const connectionDyn = vi.hoisted(() => ({ connected: false, cubeSize: 3,
+  lastProcessedMove: null as SmartcubeConnectionState['lastProcessedMove'],
+}));
 
 const trainingRegressDyn = vi.hoisted(() => ({
   timerState: 'IDLE' as string,
@@ -242,11 +247,12 @@ vi.mock('../src/hooks/useScrambleState', () => ({
     scrambleText: '',
     isComputing: false,
     targetAlgorithm: '',
+    setupTarget: alwaysScrambleRegressDyn.setupTarget,
     helpTone: 'hidden',
     startScrambleTo: alwaysScrambleRegressDyn.startScrambleToSpyPick === 0
       ? alwaysScrambleRegressDyn.startScrambleToSpyA
       : alwaysScrambleRegressDyn.startScrambleToSpyB,
-    advanceScramble: vi.fn(async () => false),
+    advanceScramble: alwaysScrambleRegressDyn.advanceScramble,
     clearScramble: vi.fn(),
   })),
 }));
@@ -275,7 +281,7 @@ vi.mock('../src/hooks/useSmartcubeConnection', () => ({
     },
     currentFacelets: null,
     currentPattern: null,
-    lastProcessedMove: null,
+    lastProcessedMove: connectionDyn.lastProcessedMove,
     showAllBluetoothDevices: false,
     setShowAllBluetoothDevices: vi.fn(),
     connectOrDisconnect: vi.fn(async () => undefined),
@@ -551,4 +557,30 @@ describe('App manual setup follows displayed cases', () => {
       trainingRegressDyn.displayAlg, mockState.caseCards[0], null, false,
     );
   });
+});
+
+it.each([false, true])('lets guided 2×2 setup consume turns without replaying them as input or training (input mode %s)', inputMode => {
+  const previousInputMode = trainingRegressDyn.inputMode;
+  trainingRegressDyn.inputMode = inputMode;
+  connectionDyn.lastProcessedMove = { key: 'setup-final-turn', move: 'U', rawMoves: [], visualMove: 'U', currentPattern: null, isBugged: false };
+  alwaysScrambleRegressDyn.scrambleMode = true;
+  alwaysScrambleRegressDyn.setupTarget = {};
+  alwaysScrambleRegressDyn.advanceScramble.mockClear();
+  const initialCalls = mocks.useTrainingState.mock.results.length;
+  try {
+    const { rerender } = render(<App />);
+    alwaysScrambleRegressDyn.scrambleMode = false;
+    alwaysScrambleRegressDyn.setupTarget = null;
+    rerender(<App />);
+    expect(alwaysScrambleRegressDyn.advanceScramble).not.toHaveBeenCalled();
+    for (const result of mocks.useTrainingState.mock.results.slice(initialCalls)) {
+      expect(result.value.setAlgInput).not.toHaveBeenCalled();
+      expect(result.value.handleSmartcubeMove).not.toHaveBeenCalled();
+    }
+  } finally {
+    connectionDyn.lastProcessedMove = null;
+    alwaysScrambleRegressDyn.scrambleMode = false;
+    alwaysScrambleRegressDyn.setupTarget = null;
+    trainingRegressDyn.inputMode = previousInputMode;
+  }
 });

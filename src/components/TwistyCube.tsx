@@ -233,6 +233,11 @@ export function TwistyCube({
     // Important: do NOT include appendMoveKey in this effect's deps, otherwise every physical move
     // would reset player.alg and the cube would appear to "not follow" the smartcube.
     appendedMoveKeyRef.current = appendMoveKey ?? '';
+    // Replacing the algorithm invalidates the picture we last rendered. In
+    // Strict Mode the mount effects run again with their refs preserved; the
+    // target effect must restore the physical stickers after this assignment.
+    targetPatternRef.current = null;
+    targetSeedRef.current = null;
     player.alg = alg;
   }, [alg, resetToken]);
 

@@ -8,7 +8,7 @@ import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
 import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
 import { averageOfFiveTimeNumber, historyTimeString } from '../lib/case-cards';
 import { getBestTime } from '../lib/storage';
-import { patternToPlayerAlg } from '../lib/scramble';
+import { fixOrientation, patternToPlayerAlg } from '../lib/scramble';
 import { project2x2TrainingPattern } from '../lib/training-visual';
 import { Recovery2x2Panel } from '../components/Recovery2x2Panel';
 import { MainCubeArea } from './MainCubeArea';
@@ -187,6 +187,9 @@ export const PracticeView = memo(function PracticeView({
     setGuidedRecovery(false);
   }, [puzzle, visible, showAlgEditor, training.visualResetKey, training.currentCase?.id, training.inputMode, smartcube.connected, training.recoveryTarget]);
   const showingGuidedRecovery = guidedRecovery && undo2x2 && smartcube.connected && !showAlgEditor && visible;
+  const showingGuidedSetup = puzzle === '2x2x2' && Boolean(scramble.setupTarget)
+    && scramble.scrambleMode && smartcube.connected && !showAlgEditor && visible;
+  const finishedSetup = useRef<typeof scramble.setupTarget>(null);
   const orientationReminder = puzzle === '2x2x2'
     ? 'Use U/R/F turns in the cube’s reference frame. If the setup does not match, reconnect and retry.'
     : ORIENTATION_REMINDER;
@@ -238,7 +241,7 @@ export const PracticeView = memo(function PracticeView({
 
   const showPracticeTimerCard = training.selectedCases.length > 0;
 
-  const showStatus = !showingGuidedRecovery && (undo2x2 || showBackOnTrack || Boolean(smartcube.stateSyncError) || scramble.helpTone === 'green' || training.helpTone === 'red' || scramble.scrambleMode);
+  const showStatus = !showingGuidedRecovery && !showingGuidedSetup && (undo2x2 || showBackOnTrack || Boolean(smartcube.stateSyncError) || scramble.helpTone === 'green' || training.helpTone === 'red' || scramble.scrambleMode);
   const statusColor =
     undo2x2 || smartcube.stateSyncError || training.helpTone === 'red' ? 'var(--danger)' :
     scramble.helpTone === 'green' ? 'var(--ok)' :
@@ -295,11 +298,43 @@ export const PracticeView = memo(function PracticeView({
   const trainingPicture = useMemo(() => {
     if (puzzle !== '2x2x2' || !smartcube.connected || training.inputMode || scramble.scrambleMode
       || !training.displayAlg || !training.caseStartPattern || !smartcube.currentPattern) return null;
-    return project2x2TrainingPattern(training.displayAlg, training.caseStartPattern, smartcube.currentPattern, training.casePicturePattern);
+    const current = training.casePicturePattern && training.caseCurrentPattern
+      ? training.caseCurrentPattern : smartcube.currentPattern;
+    return project2x2TrainingPattern(training.displayAlg, training.caseStartPattern, current, training.casePicturePattern);
   }, [puzzle, smartcube.connected, smartcube.currentPattern, training.inputMode, scramble.scrambleMode,
-    training.displayAlg, training.caseStartPattern, training.casePicturePattern]);
+    training.displayAlg, training.caseStartPattern, training.casePicturePattern, training.caseCurrentPattern]);
+  const fixedTrainingGrip = puzzle === '2x2x2' && Boolean(trainingPicture && training.casePicturePattern && training.caseCurrentPattern);
 
-  const cubeNode = showingGuidedRecovery ? (
+  const cubeNode = showingGuidedSetup ? (
+    <Recovery2x2Panel
+      key={`${smartcube.disconnectToken}:${training.visualResetKey}:${scramble.targetAlgorithm}`}
+      mode="setup"
+      smartcube={smartcube}
+      target={scramble.setupTarget!}
+      onRecovered={pattern => {
+        const target = scramble.setupTarget!;
+        if (!fixOrientation(pattern).isIdentical(fixOrientation(target))) return false;
+        if (finishedSetup.current === target) return true;
+        finishedSetup.current = target;
+        const algorithm = scramble.targetAlgorithm;
+        // The confirmed picture defines the physical grip. A device snapshot
+        // may describe those same stickers in a different whole-cube frame.
+        lastProcessedScrambleMoveRef.current = smartcube.lastProcessedMove?.key ?? '';
+        scramble.clearScramble();
+        training.setKeepInitialState(true);
+        void training.trainCurrent(target, {
+          algorithm, preserveDisplayedAlgorithm: true,
+          statsScopeId: training.timeAttackMode ? training.statsAlgId : training.currentCase?.id,
+          trackRecognition: true,
+        });
+        return true;
+      }}
+      onCancel={() => {
+        scramble.clearScramble();
+        void training.trainCurrent(smartcube.currentPattern, { algorithm: scramble.targetAlgorithm });
+      }}
+    />
+  ) : showingGuidedRecovery ? (
     <Recovery2x2Panel
       key={`${training.visualResetKey}:${training.currentCase?.id ?? ''}`}
       smartcube={smartcube}
@@ -325,6 +360,7 @@ export const PracticeView = memo(function PracticeView({
           puzzle={puzzle}
           alg={mainCubeAlg}
           targetPattern={trainingPicture}
+          fixedOrientation={fixedTrainingGrip}
           sizePx={options.cubeSizePx}
           visualization={!PUZZLES[puzzle].lastLayerPreview && options.visualization.includes('LL') ? '3D' : options.visualization}
           hintFacelets={options.hintFacelets}
@@ -388,7 +424,7 @@ export const PracticeView = memo(function PracticeView({
         title="Train"
         onClick={() => {
           setAcknowledgedDisconnectToken(smartcube.disconnectToken);
-          if (scramble.scrambleMode && (!options.alwaysScrambleTo || !PUZZLES[puzzle].smartcube)) {
+          if (scramble.scrambleMode && (scramble.setupTarget || !options.alwaysScrambleTo || !PUZZLES[puzzle].smartcube)) {
             scramble.clearScramble();
             lastProcessedScrambleMoveRef.current = '';
           }
@@ -495,6 +531,7 @@ export const PracticeView = memo(function PracticeView({
             training.currentCase,
             PUZZLES[puzzle].smartcube ? smartcube.currentPattern : null,
             !alreadyPreparedAlg && PUZZLES[puzzle].randomAUF && practiceToggles.randomizeAUF,
+            puzzle === '2x2x2' ? trainingPicture : null,
           ).then((started) => {
             if (!started) return;
             setAcknowledgedDisconnectToken(smartcube.disconnectToken);

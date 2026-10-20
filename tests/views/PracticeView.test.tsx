@@ -1,12 +1,18 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { Alg } from 'cubing/alg';
 import type { ComponentProps } from 'react';
-import { solvedPattern } from '../../src/lib/cube-utils';
+import { patternToFacelets, solvedPattern } from '../../src/lib/cube-utils';
+import { fixOrientation, patternToPlayerAlg } from '../../src/lib/scramble';
+import { useScrambleState } from '../../src/hooks/useScrambleState';
+import { useTrainingState, type TrainingState } from '../../src/hooks/useTrainingState';
 import { PracticeView } from '../../src/views/PracticeView';
 
-vi.mock('../../src/components/TwistyCube', () => ({ TwistyCube: () => <div data-testid="recovery-cube" /> }));
+vi.mock('../../src/components/TwistyCube', () => ({
+  TwistyCube: (props: ComponentProps<typeof import('../../src/components/TwistyCube').TwistyCube>) =>
+    <div data-testid="recovery-cube" data-setup={props.setupAlg} data-turn={props.alg} />,
+}));
 vi.mock('../../src/views/CaseGrid', () => ({ CaseGrid: () => <div data-testid="case-grid" /> }));
 vi.mock('../../src/views/MainCubeArea', () => ({
   MainCubeArea: ({ puzzle, experimentalStickering, alg, appendMoveKey, appendMove, targetPattern, gyroscopeEnabled }: ComponentProps<typeof import('../../src/views/MainCubeArea').MainCubeArea>) => (
@@ -171,6 +177,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       abortRunningAttempt: vi.fn(),
       resetDrill: vi.fn(),
       prepareForScramble: vi.fn(),
+      setKeepInitialState: vi.fn(),
       clearFix: vi.fn(),
       clearDisplayMoves: vi.fn(),
       setDisplayAlg: vi.fn(),
@@ -184,6 +191,7 @@ function makeProps(overrides: Record<string, unknown> = {}) {
       scrambleText: '',
       isComputing: false,
       targetAlgorithm: '',
+      setupTarget: null,
       helpTone: 'hidden',
       startScrambleTo: vi.fn(async () => true),
       advanceScramble: vi.fn(async () => false),
@@ -537,6 +545,7 @@ describe('PracticeView', () => {
         props.training.currentCase,
         props.smartcube.currentPattern,
         false,
+        null,
       );
     });
     await waitFor(() => {
@@ -565,6 +574,7 @@ describe('PracticeView', () => {
         props.training.currentCase,
         null,
         false,
+        null,
       );
       expect(props.setScrambleStartAlg).toHaveBeenCalledWith('');
 
@@ -837,4 +847,71 @@ it('shows the verified physical setup frame after Always Scramble To, then resto
   rerender(<PracticeView {...props} />);
   expect(shownData()).toEqual(target.patternData);
   expect(shownData()).not.toEqual(other.patternData);
+});
+
+it.each([false, true])('guides the 2×2 wand into the algorithm grip with rotated device reports (already prepared %s)', async prepared => {
+  const actualScramble = await vi.importActual<typeof import('../../src/lib/scramble')>('../../src/lib/scramble');
+  vi.mocked(patternToPlayerAlg).mockImplementation(actualScramble.patternToPlayerAlg);
+  const solved = await solvedPattern(2);
+  const algorithm = "R2 U' B2 U2 R2 U' R2";
+  const current = prepared
+    ? solved.applyAlg('x y').applyAlg(new Alg(algorithm).invert())
+    : solved.applyAlg('x y R U');
+  const props = makeProps({ puzzle: '2x2x2' });
+  props.training.displayAlg = algorithm;
+  props.smartcube.currentPattern = current;
+  props.smartcube.refreshPattern = vi.fn(async () => props.smartcube.currentPattern);
+  const cards = [{ ...props.training.currentCase, id: `wand-handoff-${prepared}`, algorithm }];
+  let trainingState!: TrainingState;
+  function SetupPractice() {
+    const scramble = useScrambleState('2x2x2');
+    const training = useTrainingState(cards, '2x2x2:PBL', {
+      puzzle: '2x2x2', selectionChangeMode: 'manual', countdownMode: false,
+      randomizeAUF: false, randomOrder: false, timeAttack: false, prioritizeSlowCases: false,
+      prioritizeFailedCases: false, smartReviewScheduling: false, smartcubeConnected: true,
+      currentPattern: props.smartcube.currentPattern,
+    });
+    trainingState = training;
+    return <PracticeView {...props} training={training} scramble={scramble} />;
+  }
+  const user = userEvent.setup();
+  const { rerender } = render(<SetupPractice />);
+  await act(async () => { await trainingState.trainCurrent(current, { algorithm }); });
+  const previewBeforeSetup = JSON.parse(screen.getByTestId('main-cube-area').dataset.target!);
+  await user.click(screen.getByTitle('Scramble To...'));
+  await screen.findByRole('region', { name: '2×2 guided setup' });
+  await screen.findByRole('button', { name: 'My cube matches' });
+  expect(screen.getByText(/Keep this grip through the setup and into the algorithm/)).toBeVisible();
+  let physical = solved.applyAlg(screen.getByTestId('recovery-cube').dataset.setup!);
+  expect(fixOrientation(physical).isIdentical(fixOrientation(current))).toBe(true);
+  await user.click(screen.getByRole('button', { name: 'My cube matches' }));
+  for (let i = 0; i < 40 && screen.queryByRole('region', { name: '2×2 guided setup' }); i++) {
+    await screen.findByRole('button', { name: 'Show turn again' });
+    const picture = screen.getByTestId('recovery-cube');
+    expect(solved.applyAlg(picture.dataset.setup!).isIdentical(physical)).toBe(true);
+    physical = physical.applyMove(picture.dataset.turn!);
+    // The firmware's frame and move code do not define the user's grip.
+    props.smartcube = { ...props.smartcube, currentPattern: physical.applyAlg("z y'"), lastProcessedMove: { key: `${i}`, move: 'U' } };
+    rerender(<SetupPractice />);
+  }
+  await waitFor(() => expect(screen.queryByRole('region', { name: '2×2 guided setup' })).toBeNull());
+  expect(fixOrientation(physical.applyAlg(algorithm)).isIdentical(solved)).toBe(true);
+  expect(physical.patternData).toEqual(previewBeforeSetup);
+  expect(patternToFacelets(physical).slice(8, 12)).toBe('FFFF');
+  expect(trainingState.caseStartPattern?.isIdentical(physical)).toBe(true);
+  expect(trainingState.casePicturePattern?.isIdentical(physical)).toBe(true);
+  const shown = () => JSON.parse(screen.getByTestId('main-cube-area').dataset.target!);
+  expect(shown()).toEqual(physical.patternData);
+  const turns = new Alg(algorithm).expand().toString().split(/\s+/)
+    .flatMap(move => /2'?$/.test(move) ? [move[0], move[0]] : [move]);
+  for (let i = 0; i < turns.length - 1; i++) {
+    physical = physical.applyMove(turns[i]);
+    props.smartcube = { ...props.smartcube, currentPattern: fixOrientation(physical), lastProcessedMove: { key: `algorithm-${i}`, move: 'F' } };
+    await act(async () => {
+      trainingState.handleSmartcubeMove(props.smartcube.currentPattern, 'F');
+      rerender(<SetupPractice />);
+    });
+    expect(trainingState.recoveryTarget).toBeNull();
+    expect(shown()).toEqual(physical.patternData);
+  }
 });

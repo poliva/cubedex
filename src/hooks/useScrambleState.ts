@@ -5,7 +5,7 @@ import type { KPattern } from 'cubing/kpuzzle';
 import { cube3x3x3 } from 'cubing/puzzles';
 import type { CaseCardData } from '../lib/case-cards';
 import { solvedPattern } from '../lib/cube-utils';
-import { getScrambleToSolution } from '../lib/scramble';
+import { align2x2RecoveryPattern, fixOrientation, get2x2RecoveryMoves, getScrambleToSolution } from '../lib/scramble';
 import { prepareTrainingAlgorithm } from '../lib/auf';
 import { countMovesETM } from '../lib/charts';
 import { expandNotation } from '../lib/storage';
@@ -59,12 +59,14 @@ export interface ScrambleState {
   scrambleText: string;
   isComputing: boolean;
   targetAlgorithm: string;
+  setupTarget: KPattern | null;
   helpTone: 'hidden' | 'green';
   startScrambleTo: (
     algorithm: string,
     currentCase: CaseCardData | null,
     currentPattern?: KPattern | null,
     randomizeAUF?: boolean,
+    casePreview?: KPattern | null,
   ) => Promise<boolean>;
   advanceScramble: (move: string, currentPattern: KPattern | null) => Promise<boolean>;
   clearScramble: () => void;
@@ -76,6 +78,7 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
   const [scrambleText, setScrambleText] = useState('');
   const [isComputing, setIsComputing] = useState(false);
   const [targetAlgorithm, setTargetAlgorithm] = useState('');
+  const [setupTarget, setSetupTarget] = useState<KPattern | null>(null);
   const [helpTone, setHelpTone] = useState<'hidden' | 'green'>('hidden');
 
   const startScrambleTo = useCallback(async (
@@ -83,6 +86,7 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
     currentCase: CaseCardData | null,
     currentPattern?: KPattern | null,
     randomizeAUF = false,
+    casePreview?: KPattern | null,
   ) => {
     const generation = ++generationRef.current;
     if (!PUZZLES[puzzle].available || !algorithm.trim()) {
@@ -90,6 +94,7 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
       setScrambleMode(false);
       setScrambleText('');
       setTargetAlgorithm('');
+      setSetupTarget(null);
       setHelpTone('hidden');
       return false;
     }
@@ -108,26 +113,44 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
         aufModifiedAlgorithm = prepared.displayAlgorithm;
       }
 
-      // Puzzles without live state tracking use a setup from solved.
-      const scramble = PUZZLES[puzzle].smartcube
-        ? await getScrambleToSolution(
-          aufModifiedAlgorithm,
-          currentPattern ?? await solvedPattern(puzzle === '2x2x2' ? 2 : 3),
-        )
-        // Show individual setup moves, including inverses of groups and repetitions.
-        : Alg.fromString(expandNotation(aufModifiedAlgorithm, puzzle)).invert().expand().toString().trim();
+      let physicalTarget: KPattern | null = null;
+      let scramble: string;
+      if (puzzle === '2x2x2' && currentPattern) {
+        const solved = await solvedPattern(2);
+        const originalAlg = new Alg(expandNotation(algorithm, puzzle));
+        const previewEnd = casePreview?.applyAlg(originalAlg);
+        // Retain the preview's colors in the algorithm's grip. A progressed
+        // preview is not a setup; use the initial case for that algorithm.
+        const colorFrame = previewEnd && fixOrientation(previewEnd).isIdentical(solved) ? previewEnd : solved;
+        physicalTarget = colorFrame.applyAlg(new Alg(expandNotation(aufModifiedAlgorithm, puzzle)).invert());
+        const reference = align2x2RecoveryPattern(currentPattern, physicalTarget);
+        scramble = (await get2x2RecoveryMoves(reference, physicalTarget)).join(' ');
+      } else {
+        // Puzzles without live state tracking use a setup from solved.
+        scramble = PUZZLES[puzzle].smartcube
+          ? await getScrambleToSolution(
+            aufModifiedAlgorithm,
+            currentPattern ?? await solvedPattern(puzzle === '2x2x2' ? 2 : 3),
+          )
+          // Show individual setup moves, including inverses of groups and repetitions.
+          : Alg.fromString(expandNotation(aufModifiedAlgorithm, puzzle)).invert().expand().toString().trim();
+      }
 
       if (generation !== generationRef.current) return false;
-      if (scramble.length > 0) {
+      // Connected 2×2 setups establish a visible grip even if no layer turns
+      // are needed. The same exact target is kept through rotated snapshots.
+      if (scramble.length > 0 || physicalTarget) {
         setScrambleMode(true);
         setScrambleText(scramble);
         setTargetAlgorithm(aufModifiedAlgorithm);
+        setSetupTarget(physicalTarget);
         setHelpTone('hidden');
         return true;
       } else {
         setScrambleMode(false);
         setScrambleText('');
         setTargetAlgorithm('');
+        setSetupTarget(null);
         setHelpTone('hidden');
         return false;
       }
@@ -137,11 +160,27 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
   }, [puzzle]);
 
   const advanceScramble = useCallback(async (move: string, currentPattern: KPattern | null) => {
-    if (!PUZZLES[puzzle].smartcube || !scrambleMode || !scrambleText.trim() || !currentPattern || !targetAlgorithm.trim()) {
+    if (!PUZZLES[puzzle].smartcube || !scrambleMode || (!scrambleText.trim() && !setupTarget) || !currentPattern || !targetAlgorithm.trim()) {
       return false;
     }
 
     const generation = generationRef.current;
+    if (setupTarget) {
+      const picture = align2x2RecoveryPattern(currentPattern, setupTarget);
+      const remaining = await get2x2RecoveryMoves(picture, setupTarget);
+      if (generation !== generationRef.current) return false;
+      const nextScramble = remaining.join(' ');
+      const completed = remaining.length === 0;
+      setScrambleText(nextScramble);
+      setHelpTone(countMovesETM(nextScramble) > countMovesETM(scrambleText) ? 'green' : 'hidden');
+      if (completed) {
+        setScrambleMode(false);
+        setTargetAlgorithm('');
+        setSetupTarget(null);
+        setHelpTone('hidden');
+      }
+      return completed;
+    }
     const rawNextScramble = await getScrambleToSolution(targetAlgorithm, currentPattern);
     if (generation !== generationRef.current) return false;
     let nextScramble = rawNextScramble;
@@ -196,7 +235,7 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
       setHelpTone('hidden');
     }
     return completed;
-  }, [puzzle, scrambleMode, scrambleText, targetAlgorithm]);
+  }, [puzzle, scrambleMode, scrambleText, targetAlgorithm, setupTarget]);
 
   const clearScramble = useCallback(() => {
     generationRef.current += 1;
@@ -204,6 +243,7 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
     setScrambleMode(false);
     setScrambleText('');
     setTargetAlgorithm('');
+    setSetupTarget(null);
     setHelpTone('hidden');
   }, []);
 
@@ -212,6 +252,7 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
     scrambleText,
     isComputing,
     targetAlgorithm,
+    setupTarget,
     helpTone,
     startScrambleTo,
     advanceScramble,
@@ -225,5 +266,6 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
     scrambleText,
     startScrambleTo,
     targetAlgorithm,
+    setupTarget,
   ]);
 }

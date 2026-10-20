@@ -6,7 +6,7 @@ import { useTrainingState } from '../../src/hooks/useTrainingState';
 import { getCaseCards } from '../../src/lib/case-cards';
 import { patternToFacelets, solvedPattern } from '../../src/lib/cube-utils';
 import { getAttemptHistory } from '../../src/lib/storage';
-import { fixOrientation } from '../../src/lib/scramble';
+import { align2x2RecoveryPattern, fixOrientation } from '../../src/lib/scramble';
 import { project2x2TrainingPattern } from '../../src/lib/training-visual';
 
 const options = {
@@ -16,8 +16,51 @@ const options = {
 };
 
 describe('2×2 physical setup and execution', () => {
+  it.each(['', 'y', "x y'"])("keeps the requested case preview's exact colors and orientation (%s)", async frame => {
+    const solved = await solvedPattern(2);
+    const algorithm = "R2 U' B2' U2' R2' U' R2";
+    const preview = solved.applyAlg(frame).applyAlg(new Alg(algorithm).invert());
+    const sensor = solved.applyAlg("y R F U");
+    const { result } = renderHook(() => useScrambleState('2x2x2'));
+    await act(async () => { await result.current.startScrambleTo(algorithm, null, sensor, false, preview); });
+    expect(result.current.setupTarget?.isIdentical(preview)).toBe(true);
+    const reference = align2x2RecoveryPattern(sensor, preview);
+    const physical = reference.applyAlg(result.current.scrambleText);
+    expect(patternToFacelets(physical)).toBe(patternToFacelets(preview));
+    expect(physical.applyAlg(algorithm).isIdentical(solved.applyAlg(frame))).toBe(true);
+  });
+
+  it('keeps the setup target and turn frame through rotated snapshots and misleading move codes', async () => {
+    const solved = await solvedPattern(2);
+    const algorithm = "R2 U' B2 U2 R2 U' R2";
+    const sensor = solved.applyAlg('R F U');
+    const { result } = renderHook(() => useScrambleState('2x2x2'));
+    await act(async () => { await result.current.startScrambleTo(algorithm, null, sensor); });
+    const target = result.current.setupTarget!;
+    expect(target).not.toBeNull();
+    let physical = sensor;
+    const first = result.current.scrambleText.split(/\s+/)[0];
+    // The reported token claims the planned turn, but stickers are unchanged.
+    await act(async () => { expect(await result.current.advanceScramble(first, sensor.applyAlg('x y'))).toBe(false); });
+    expect(result.current.setupTarget).toBe(target);
+    expect(align2x2RecoveryPattern(sensor, target).applyAlg(result.current.scrambleText).isIdentical(target)).toBe(true);
+    // Correct displayed turns with arbitrary tokens and changing report frames.
+    let complete = false;
+    for (let i = 0; i < 40 && !complete; i++) {
+      physical = align2x2RecoveryPattern(physical, target);
+      const turn = result.current.scrambleText.split(/\s+/)[0];
+      physical = physical.applyMove(turn);
+      await act(async () => { complete = await result.current.advanceScramble('F', physical.applyAlg(i % 2 ? 'z' : 'x y')); });
+      if (!complete) expect(result.current.setupTarget).toBe(target);
+    }
+    expect(complete).toBe(true);
+    expect(physical.isIdentical(target)).toBe(true);
+    expect(fixOrientation(physical.applyAlg(algorithm)).isIdentical(solved)).toBe(true);
+    expect(result.current.setupTarget).toBeNull();
+  });
+
   it.each(["R U R' U'", "R2 U' B2' U2' R2' U' R2", "R' D R' F2 R D' R"])
-    ('sets up and solves %s without rotating, with matching stickers and highlights', async algorithm => {
+    ('sets up and solves %s in the confirmed grip, with matching stickers and highlights', async algorithm => {
       const solved = await solvedPattern(2);
       const target = solved.applyAlg(new Alg(algorithm).invert());
       let sensor = solved.applyAlg('x y R U');
@@ -31,6 +74,7 @@ describe('2×2 physical setup and execution', () => {
         expect(await result.current.scramble.startScrambleTo(algorithm, null, sensor, false)).toBe(true);
         result.current.training.prepareForScramble();
       });
+      sensor = align2x2RecoveryPattern(sensor, result.current.scramble.setupTarget!);
       let complete = false;
       for (let i = 0; i < 100 && !complete; i++) {
         const first = result.current.scramble.scrambleText.split(/\s+/)[0];
@@ -41,7 +85,7 @@ describe('2×2 physical setup and execution', () => {
       }
       expect(complete).toBe(true);
       expect(fixOrientation(sensor.applyAlg(algorithm)).isIdentical(solved)).toBe(true);
-      expect(sensor.isIdentical(target)).toBe(false);
+      expect(sensor.isIdentical(target)).toBe(true);
       await act(async () => {
         await result.current.training.trainCurrent(sensor, {
           algorithm, preserveDisplayedAlgorithm: true, statsScopeId: `physical-setup-${algorithm}`,
@@ -110,7 +154,7 @@ describe('2×2 physical setup and execution', () => {
     expect(result.current.casePicturePattern).toBeNull();
   });
 
-  it('corrects a visually equivalent case that would require a regrip before accepting setup', async () => {
+  it('confirms an equivalent case in the pictured algorithm grip without unnecessary layer turns', async () => {
     const algorithm = "R2 U' B2' U2' R2' U' R2";
     const solved = await solvedPattern(2);
     const canonical = solved.applyAlg(new Alg(algorithm).invert());
@@ -126,14 +170,10 @@ describe('2×2 physical setup and execution', () => {
     await act(async () => {
       expect(await result.current.scramble.startScrambleTo(algorithm, null, sensor)).toBe(true);
     });
-    let complete = false;
-    for (let i = 0; i < 100 && !complete; i++) {
-      const move = result.current.scramble.scrambleText.split(/\s+/)[0];
-      expect(move).toMatch(/^[URF](2|')?$/);
-      sensor = sensor.applyMove(move);
-      await act(async () => { complete = await result.current.scramble.advanceScramble(move, sensor); });
-    }
-    expect(complete).toBe(true);
+    sensor = align2x2RecoveryPattern(sensor, result.current.scramble.setupTarget!);
+    expect(sensor.isIdentical(canonical)).toBe(true);
+    expect(result.current.scramble.scrambleText).toBe('');
+    await act(async () => { expect(await result.current.scramble.advanceScramble('', sensor)).toBe(true); });
     expect(fixOrientation(sensor.applyAlg(algorithm)).isIdentical(solved)).toBe(true);
   });
 
@@ -160,6 +200,7 @@ describe('2×2 physical setup and execution', () => {
           if (started) result.current.training.prepareForScramble();
         });
         if (started) {
+          sensor = align2x2RecoveryPattern(sensor, result.current.scramble.setupTarget!);
           let complete = false;
           for (let i = 0; i < 100 && !complete; i++) {
             const first = result.current.scramble.scrambleText.split(/\s+/)[0];
