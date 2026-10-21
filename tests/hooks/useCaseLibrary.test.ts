@@ -113,11 +113,7 @@ describe('useCaseLibrary', () => {
       expect(result.current.isReady).toBe(true);
     });
 
-    // Subsets start empty by default now; select both A and B first
-    act(() => {
-      result.current.toggleSubset('A', true);
-      result.current.toggleSubset('B', true);
-    });
+    expect(result.current.selectedSubsets).toEqual(['A', 'B']);
 
     await waitFor(() => {
       expect(result.current.selectedCaseIds).toEqual(['case-1', 'case-2', 'case-3']);
@@ -234,14 +230,11 @@ describe('useCaseLibrary', () => {
       expect(result.current.isReady).toBe(true);
     });
 
-    // Select PLL and a subset to have some selected cases
-    act(() => {
-      result.current.toggleSubset('A', true);
-      result.current.toggleSubset('B', true);
-    });
+    // Narrow the default selection before clicking the active category.
+    act(() => result.current.toggleSubset('B', false));
 
     await waitFor(() => {
-      expect(result.current.selectedCaseIds).toEqual(['case-1', 'case-2', 'case-3']);
+      expect(result.current.selectedCaseIds).toEqual(['case-1', 'case-2']);
     });
 
     // Click the already selected category
@@ -251,29 +244,21 @@ describe('useCaseLibrary', () => {
 
     await waitFor(() => {
       // Selection should remain unchanged
-      expect(result.current.selectedCaseIds).toEqual(['case-1', 'case-2', 'case-3']);
+      expect(result.current.selectedCaseIds).toEqual(['case-1', 'case-2']);
     });
   });
 
-  it('clears cases when switching to a different category', async () => {
+  it('lets users deselect all subsets and keeps that choice on reload', async () => {
     const { result } = renderHook(() => useCaseLibrary());
 
     await waitFor(() => {
       expect(result.current.isReady).toBe(true);
     });
 
-    // Select PLL and a subset to have some selected cases
-    act(() => {
-      result.current.toggleSubset('A', true);
-    });
-
-    await waitFor(() => {
-      expect(result.current.selectedCaseIds).toEqual(['case-1', 'case-2']);
-    });
-
-    // Switch to a different category (simulate OLL if it existed in mock)
-    // Since our mock only has PLL, we can still verify the clearing logic
-    // by checking that switching would clear - but this test case already covers
-    // the "no-op" behavior above. This test documents expected clearing behavior.
+    expect(result.current.selectedSubsets).toEqual(['A', 'B']);
+    act(() => result.current.toggleAllSubsets(false));
+    expect(result.current.selectedSubsets).toEqual([]);
+    act(() => result.current.reloadSavedAlgorithms());
+    expect(result.current.selectedSubsets).toEqual([]);
   });
 });

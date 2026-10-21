@@ -22,7 +22,7 @@ export function PuzzleSelector({ puzzle, connected, onChange }: {
       <p id="puzzle-mode-hint">
         {connected
           ? `Showing ${PUZZLES[puzzle].name} alg sets for your connected cube. Disconnect to choose another puzzle.`
-          : 'Choose your puzzle, then pick cases to practice. Use Space or tap the timer to time your solves.'}
+          : 'Choose your puzzle, then pick cases to practice. Use Space or tap the timer to time your algs.'}
       </p>
     </div>
   );

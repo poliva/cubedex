@@ -367,9 +367,10 @@ vi.mock('../src/views/OptionsView', () => ({
 }));
 
 vi.mock('../src/views/CasesView', () => ({
-  CasesView: ({ handleDeleteTimes }: { handleDeleteTimes: () => void }) => (
+  CasesView: ({ handleDeleteTimes, onPracticeSelected }: { handleDeleteTimes: () => void; onPracticeSelected: () => void }) => (
     <div>
       <button type="button" onClick={handleDeleteTimes}>Delete Times</button>
+      <button type="button" onClick={onPracticeSelected}>Practice Selected</button>
       <div data-testid="cases-view" />
     </div>
   ),
@@ -416,6 +417,8 @@ describe('App case-card stats refresh', () => {
     mocks.useCaseLibrary.mockClear();
     mocks.useTrainingState.mockClear();
 
+    await user.click(screen.getByRole('button', { name: 'Cases' }));
+    await user.click(screen.getByRole('button', { name: 'Practice Selected' }));
     await user.click(screen.getByRole('button', { name: 'Cases' }));
     await user.click(screen.getByRole('button', { name: 'Delete Times' }));
 
@@ -591,4 +594,54 @@ it.each([false, true])('lets guided 2×2 setup consume turns without replaying t
     alwaysScrambleRegressDyn.setupTarget = null;
     trainingRegressDyn.inputMode = previousInputMode;
   }
+});
+
+
+describe('App practice selection confirmation', () => {
+  beforeEach(() => {
+    connectionDyn.connected = false;
+    connectionDyn.cubeSize = 3;
+    alwaysScrambleRegressDyn.alwaysScrambleTo = false;
+  });
+
+  async function confirmSelection(action: 'Practice' | 'Practice Selected') {
+    expect(mocks.useTrainingState).toHaveBeenLastCalledWith([], expect.anything(), expect.anything());
+    if (action === 'Practice Selected' && !screen.queryByTestId('cases-view')) {
+      await userEvent.click(screen.getByRole('button', { name: 'Cases' }));
+    }
+    await userEvent.click(screen.getByRole('button', { name: action }));
+    expect(screen.queryByTestId('cases-view')).not.toBeInTheDocument();
+    expect(mocks.useTrainingState).toHaveBeenLastCalledWith(mockState.caseCards, expect.anything(), expect.anything());
+  }
+
+  it.each([
+    [2, 'Practice'], [3, 'Practice'],
+    [2, 'Practice Selected'], [3, 'Practice Selected'],
+  ] as const)('starts selected cases after connecting a size %s cube and reconnecting via %s', async (cubeSize, action) => {
+    const { rerender } = render(<App />);
+    await confirmSelection(action);
+    connectionDyn.connected = true;
+    connectionDyn.cubeSize = cubeSize;
+    rerender(<App />);
+    expect(screen.getByTestId('cases-view')).toBeInTheDocument();
+    await confirmSelection(action);
+    connectionDyn.connected = false;
+    rerender(<App />);
+    expect(screen.getByTestId('cases-view')).toBeInTheDocument();
+    expect(mocks.useTrainingState).toHaveBeenLastCalledWith([], expect.anything(), expect.anything());
+    connectionDyn.connected = true;
+    rerender(<App />);
+    await confirmSelection(action);
+  });
+
+  it.each(['Practice', 'Practice Selected'] as const)('starts selected cases via %s after manual puzzle changes, including switching back', async action => {
+    render(<App />);
+    await confirmSelection(action);
+    for (const puzzle of ['2x2x2', '3x3x3']) {
+      await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Puzzle' }), puzzle);
+      expect(screen.queryByTestId('cases-view')).not.toBeInTheDocument();
+      expect(mocks.useTrainingState).toHaveBeenLastCalledWith([], expect.anything(), expect.objectContaining({ puzzle }));
+      await confirmSelection(action);
+    }
+  });
 });

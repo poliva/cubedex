@@ -75,6 +75,10 @@ export function App() {
     return isPuzzleId(saved) ? saved : '3x3x3';
   });
   const puzzle: PuzzleId = smartcube.connected ? (smartcube.cubeSize === 2 ? '2x2x2' : '3x3x3') : manualPuzzle;
+  const cubeConnectionKey = `${smartcube.connected}:${smartcube.disconnectToken}:${smartcube.connected ? smartcube.info.deviceMAC : ''}`;
+  const practiceSessionKey = `${puzzle}:${cubeConnectionKey}`;
+  const [confirmedPracticeSession, setConfirmedPracticeSession] = useState<string | null>(null);
+  const practiceSelectionConfirmed = confirmedPracticeSession === practiceSessionKey;
   const caseLibrary = useCaseLibrary({
     puzzle,
     autoUpdateLearningState: options.autoUpdateLearningState,
@@ -98,7 +102,12 @@ export function App() {
       .filter((card): card is (typeof caseCards)[number] => card !== null),
     [caseCards, selectedCaseIds],
   );
-  const training = useTrainingState(selectedCases, selectedCategory, {
+  // Library defaults can select cases without starting a practice session.
+  const practiceCases = useMemo(
+    () => practiceSelectionConfirmed ? selectedCases : [],
+    [practiceSelectionConfirmed, selectedCases],
+  );
+  const training = useTrainingState(practiceCases, selectedCategory, {
     puzzle,
     selectionChangeMode,
     countdownMode: options.countdownMode,
@@ -121,6 +130,19 @@ export function App() {
   const scramble = useScrambleState(puzzle);
   const prevSmartcubeConnectedRef = useRef(smartcube.connected);
   const pendingPhysicalTrainingRetrainRef = useRef(false);
+  const previousPracticeSessionRef = useRef({ key: practiceSessionKey, cubeConnectionKey });
+
+  useEffect(() => {
+    if (previousPracticeSessionRef.current.key === practiceSessionKey) return;
+    const onlyPuzzleChanged = previousPracticeSessionRef.current.cubeConnectionKey === cubeConnectionKey;
+    previousPracticeSessionRef.current = { key: practiceSessionKey, cubeConnectionKey };
+    setConfirmedPracticeSession(null);
+    setActiveView((view) => onlyPuzzleChanged && view === 'practice' ? 'practice' : 'cases');
+    setInfoVisible(false);
+    setAlgEditorVisible(false);
+    training.resetDrill();
+    scramble.clearScramble();
+  }, [practiceSessionKey, cubeConnectionKey, training.resetDrill, scramble.clearScramble]);
 
   useEffect(() => {
     const wasConnected = prevSmartcubeConnectedRef.current;
@@ -134,7 +156,7 @@ export function App() {
   }, [smartcube.connected]);
 
   useEffect(() => {
-    if (!pendingPhysicalTrainingRetrainRef.current || !smartcube.connected || !smartcube.currentPattern) {
+    if (!practiceSelectionConfirmed || !pendingPhysicalTrainingRetrainRef.current || !smartcube.connected || !smartcube.currentPattern) {
       return;
     }
     if (training.inputMode || training.countdownActive || scramble.scrambleMode) {
@@ -143,6 +165,7 @@ export function App() {
     pendingPhysicalTrainingRetrainRef.current = false;
     void training.trainCurrent(smartcube.currentPattern);
   }, [
+    practiceSelectionConfirmed,
     scramble.scrambleMode,
     smartcube.connected,
     smartcube.currentPattern,
@@ -345,12 +368,12 @@ export function App() {
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.code !== 'Space' || smartcube.connected || training.inputMode) return;
+      if (activeView !== 'practice' || event.code !== 'Space' || smartcube.connected || training.inputMode) return;
       event.preventDefault();
       training.handleSpaceKeyDown();
     }
     function onKeyUp(event: KeyboardEvent) {
-      if (event.code !== 'Space' || smartcube.connected || training.inputMode) return;
+      if (activeView !== 'practice' || event.code !== 'Space' || smartcube.connected || training.inputMode) return;
       event.preventDefault();
       const shouldFlash = training.timerState === 'READY';
       training.handleSpaceKeyUp();
@@ -363,6 +386,7 @@ export function App() {
       document.removeEventListener('keyup', onKeyUp);
     };
   }, [
+    activeView,
     showFlashingIndicator,
     smartcube.connected,
     training.handleSpaceKeyDown,
@@ -570,18 +594,23 @@ export function App() {
     }
 
     if (view === 'practice') {
+      setConfirmedPracticeSession(practiceSessionKey);
+      setMainCubeStickeringDeferred(false);
       setAcknowledgedDisconnectToken(smartcube.disconnectToken);
       if (scramble.scrambleMode && (!options.alwaysScrambleTo || !PUZZLES[puzzle].smartcube)) {
         scramble.clearScramble();
         lastProcessedScrambleMoveRef.current = '';
       }
-      void training.trainCurrent(smartcube.currentPattern);
+      // Confirming the selection starts training when practiceCases updates.
+      if (practiceSelectionConfirmed) void training.trainCurrent(smartcube.currentPattern);
     }
 
     if (view !== 'practice') {
       lastProcessedScrambleMoveRef.current = '';
     }
   }, [
+    practiceSelectionConfirmed,
+    practiceSessionKey,
     algorithmActions.clearMessages,
     puzzle,
     options.alwaysScrambleTo,
@@ -872,8 +901,8 @@ export function App() {
           : (
             <DesktopTopbar
               screen={activeView}
-              selectedCategory={categoryName(selectedCategory ?? '')}
-              selectedCount={selectedCaseIds.length}
+              selectedCategory={activeView === 'practice' && !practiceSelectionConfirmed ? '' : categoryName(selectedCategory ?? '')}
+              selectedCount={activeView === 'practice' ? practiceCases.length : selectedCaseIds.length}
               smartcube={smartcube}
               showResetGyro={smartcube.connected && options.gyroscope && smartcube.gyroSupported}
               showResetOrientation={smartcube.connected && (!smartcube.gyroSupported || !options.gyroscope)}

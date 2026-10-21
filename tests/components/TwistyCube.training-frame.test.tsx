@@ -93,7 +93,7 @@ describe('TwistyCube training frame', () => {
       puzzle: size === 2 ? '2x2x2' as const : '3x3x3' as const, alg: "R U' R'",
       targetPattern: physical, fixedOrientation: true, sizePx: 420, visualization: '3D',
       hintFacelets: 'none', controlPanel: 'none', experimentalStickering: 'full',
-      setupAlg: 'z2', backView: 'none' as const, resetToken: 'after-guidance', gyroFrameQuaternion: frame,
+      setupAlg: '', backView: 'none' as const, resetToken: 'after-guidance', gyroFrameQuaternion: frame,
       orientationResetToken: 0, orientationResetAlg: null, gyroscopeEnabled: true, cubeQuaternionRef,
     };
     const { rerender, unmount } = render(<StrictMode><MainCubeArea {...props}
@@ -428,7 +428,7 @@ describe('TwistyCube training frame', () => {
       puzzle: '2x2x2' as const, alg: "R U' R'", resetToken: 'wand-setup',
       targetPattern: physical, fixedOrientation: true, sizePx: 420,
       visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
-      experimentalStickering: 'full', setupAlg: 'z2', backView: 'none' as const,
+      experimentalStickering: 'full', setupAlg: '', backView: 'none' as const,
       orientationResetToken: 1, orientationResetAlg: 'U2',
       appendMoveKey: 'setup-last-turn', appendMove: 'F', gyroscopeEnabled,
       cubeQuaternionRef: { current: { x: 1, y: 0, z: 0, w: 0 } },
@@ -444,6 +444,58 @@ describe('TwistyCube training frame', () => {
     rerender(<StrictMode><MainCubeArea {...props} targetPattern={next} appendMoveKey="first-algorithm-turn" appendMove="F" /></StrictMode>);
     expect(drawing.current?.isIdentical(next)).toBe(true);
     expect(drawing.moves).toEqual(['B']);
+  });
+
+  it.each([2, 3].flatMap(size => [false, true].flatMap(whiteOnBottom =>
+    [false, true].map(gyroscopeEnabled => ({ size: size as 2 | 3, whiteOnBottom, gyroscopeEnabled })))))
+    ('preserves the display reference after guidance and restores the next $size×$size case (white bottom $whiteOnBottom, gyro $gyroscopeEnabled)', async ({ size, whiteOnBottom, gyroscopeEnabled }) => {
+    const solved = await solvedPattern(size);
+    drawing.solved = solved;
+    drawing.moves = [];
+    const algorithm = "R U R' U'";
+    const inverse = new Alg(algorithm).invert().toString();
+    const physical = solved.applyAlg(inverse);
+    const props = {
+      puzzle: size === 2 ? '2x2x2' as const : '3x3x3' as const, alg: inverse, targetPattern: physical,
+      fixedOrientation: true, sizePx: 420, visualization: '3D', hintFacelets: 'none',
+      controlPanel: 'none', experimentalStickering: 'full', setupAlg: whiteOnBottom ? 'z2' : '',
+      backView: 'none' as const, resetToken: 'guided-case', orientationResetToken: 1,
+      // A reset from before guidance must not replace a later case on remount.
+      orientationResetAlg: '', gyroscopeEnabled, cubeQuaternionRef: { current: null },
+      appendMoveKey: 'setup-final-turn', appendMove: 'F',
+    };
+    const { rerender } = render(<StrictMode><MainCubeArea {...props} /></StrictMode>);
+    const reference = solved.applyAlg(props.setupAlg);
+    expect(drawing.current?.isIdentical(reference.applyAlg(inverse))).toBe(true);
+    const moved = physical.applyMove('R');
+    rerender(<StrictMode><MainCubeArea {...props} targetPattern={moved}
+      appendMoveKey="solve-first-turn" appendMove="R" /></StrictMode>);
+    expect(drawing.current?.isIdentical(reference.applyAlg(`${inverse} R`))).toBe(true);
+    rerender(<StrictMode><MainCubeArea {...props} targetPattern={solved}
+      appendMoveKey="solve-final-turn" appendMove="U'" /></StrictMode>);
+    expect(drawing.current?.isIdentical(reference)).toBe(true);
+    const nextInverse = new Alg("F R U R' U' F'").invert().toString();
+    rerender(<StrictMode><MainCubeArea {...props} alg={nextInverse} targetPattern={null}
+      fixedOrientation={false} resetToken="next-case" appendMoveKey="solve-final-turn" appendMove="U'" /></StrictMode>);
+    expect(drawing.current?.isIdentical(reference.applyAlg(nextInverse))).toBe(true);
+    expect(drawing.current?.isIdentical(reference)).toBe(false);
+  });
+
+  it('applies an orientation reset only when requested, preserving later cases and camera changes', async () => {
+    const solved = await solvedPattern(3);
+    drawing.solved = solved;
+    const props = {
+      alg: 'R U', visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      experimentalStickering: 'full', enableExternalOrientationLoop: false,
+      orientationResetToken: 0, orientationResetAlg: null as string | null,
+      cameraLatitude: 0, cameraLongitude: 0,
+    };
+    const { rerender } = render(<TwistyCube {...props} />);
+    rerender(<TwistyCube {...props} orientationResetToken={1} orientationResetAlg="F" />);
+    expect(drawing.current?.isIdentical(solved.applyAlg('F'))).toBe(true);
+    rerender(<TwistyCube {...props} alg="B U" resetToken="next-case"
+      orientationResetToken={1} orientationResetAlg="F" cameraLatitude={30} cameraLongitude={30} />);
+    expect(drawing.current?.isIdentical(solved.applyAlg('B U'))).toBe(true);
   });
 
   it('renders selected-case rotation and animates state-derived turns without appending raw aliases twice', async () => {

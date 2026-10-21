@@ -111,7 +111,6 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
   const activeCategory = categories.includes(selectedCategory) ? selectedCategory : categories[0] ?? '';
   useEffect(() => {
     setSelectedCategory(activeCategory);
-    setSelectedSubsets([]);
     setSelectedCaseIds([]);
     setSelectionChangeMode('bulk');
   }, [puzzle, activeCategory]);
@@ -131,7 +130,7 @@ export function useCaseLibrary(options: CaseLibraryOptions = {}): CaseLibrarySta
     const nextSubsets = getSubsetsForCategory(savedAlgorithms, selectedCategory).map((entry) => entry.subset);
     if (previousCategoryRef.current !== selectedCategory) {
       previousCategoryRef.current = selectedCategory;
-      setSelectedSubsets([]);
+      setSelectedSubsets(nextSubsets);
       return;
     }
 

@@ -59,14 +59,20 @@ export const OptionsView = memo(function OptionsView({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '0 14px',
+    padding: '8px 14px',
     minHeight: 44,
     background: 'var(--surface)',
     borderBottom: last ? 'none' : '1px solid var(--border)',
     gap: 8,
   });
 
-  const lbl: React.CSSProperties = { fontSize: 13, color: 'var(--fg)' };
+  const lbl: React.CSSProperties = { fontSize: 13, color: 'var(--fg)', minWidth: 0 };
+  const optionLabel = (title: string, description: string, style?: React.CSSProperties) => (
+    <div style={{ ...lbl, ...style }}>
+      {title}
+      <div style={{ fontSize: 12, color: 'var(--fg3)', marginTop: 4 }}>{description}</div>
+    </div>
+  );
 
   const btnStyle = (ghost = false): React.CSSProperties => ({
     padding: '5px 12px',
@@ -75,12 +81,14 @@ export const OptionsView = memo(function OptionsView({
     fontSize: 12,
     fontWeight: 700,
     cursor: 'pointer',
+    flexShrink: 0,
     ...(ghost
       ? { border: '1px solid var(--border)', background: 'var(--raised)', color: 'var(--fg2)' }
       : { border: 'none', background: 'var(--accent)', color: '#fff' }),
   });
 
   const sel: React.CSSProperties = {
+    flexShrink: 0,
     background: 'var(--raised)',
     border: '1px solid var(--border)',
     color: 'var(--fg)',
@@ -189,30 +197,12 @@ export const OptionsView = memo(function OptionsView({
           deviceInfoTable
         ) : (
           <>
-        {/* Algorithms */}
+        {/* Appearance */}
         <div style={section}>
-          <div style={sHdr}>Algorithms</div>
-          <div style={row()}>
-            <span style={lbl}>Export / Import Algs</span>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button style={btnStyle()} type="button" onClick={() => void algorithmActions.exportAll()}>
-                Export
-              </button>
-              <button style={btnStyle()} type="button" onClick={() => document.getElementById('import-file')?.click()}>
-                Import
-              </button>
-            </div>
-          </div>
+          <div style={sHdr}>Appearance</div>
           <div style={row(true)}>
-            <span style={lbl}>Export / Import Backup</span>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button style={btnStyle()} type="button" onClick={() => void algorithmActions.exportBackup()}>
-                Export
-              </button>
-              <button style={btnStyle()} type="button" onClick={() => document.getElementById('import-backup-file')?.click()}>
-                Import
-              </button>
-            </div>
+            {optionLabel('Dark Mode', 'Use a dark color theme throughout the app.')}
+            <Toggle ariaLabel="Dark Mode" checked={options.darkMode} onChange={(v) => options.setDarkMode(v)} />
           </div>
         </div>
 
@@ -220,15 +210,15 @@ export const OptionsView = memo(function OptionsView({
         <div style={section}>
           <div style={sHdr}>Practice</div>
           <div style={row()}>
-            <span style={lbl}>Countdown Mode</span>
+            {optionLabel('Countdown Mode', 'Show a 3-second countdown before each alg. Disabled in Time Attack.')}
             <Toggle ariaLabel="Countdown Mode" checked={options.countdownMode} onChange={(v) => options.setCountdownMode(v)} />
           </div>
           <div style={row()}>
-            <span style={lbl}>Always Keep "Scramble To" Enabled</span>
+            {optionLabel('Always Keep "Scramble To" Enabled', 'Automatically prepare a setup scramble for each alg.')}
             <Toggle ariaLabel='Always Keep "Scramble To" Enabled' checked={options.alwaysScrambleTo} onChange={(v) => options.setAlwaysScrambleTo(v)} />
           </div>
           <div style={row()}>
-            <span style={lbl}>Auto-update Learning State</span>
+            {optionLabel('Auto-update Learning State', 'Update Learning and Learned status automatically as you practice.')}
             <Toggle ariaLabel="Auto-update learning state" checked={options.autoUpdateLearningState} onChange={(v) => options.setAutoUpdateLearningState(v)} />
           </div>
           <div style={row()}>
@@ -250,11 +240,11 @@ export const OptionsView = memo(function OptionsView({
             <Toggle ariaLabel="Allow Alternative Algorithms" checked={options.allowAlternativeAlgorithms} onChange={options.setAllowAlternativeAlgorithms} />
           </div>
           <div style={row()}>
-            <span style={lbl}>Flashing Indicator</span>
+            {optionLabel('Flashing Indicator', 'Flash visual feedback for timer starts, mistakes, and completed algs.')}
             <Toggle ariaLabel="Flashing Indicator" checked={options.flashingIndicatorEnabled} onChange={(v) => options.setFlashingIndicatorEnabled(v)} />
           </div>
           <div style={row(true)}>
-            <span style={lbl}>Show Case Name</span>
+            {optionLabel('Show Case Name', 'Display the current case name during practice.')}
             <Toggle ariaLabel="Show Case Name" checked={options.showAlgName} onChange={(v) => options.setShowAlgName(v)} />
           </div>
         </div>
@@ -263,8 +253,8 @@ export const OptionsView = memo(function OptionsView({
         <div style={section}>
           <div style={sHdr}>Visualization</div>
           <div style={row()}>
-            <span style={lbl}>Cube Visualization Mode</span>
-            <select style={sel} value={options.visualization} onChange={(e) => options.setVisualization(e.target.value)}>
+            {optionLabel('Cube Visualization Mode', 'Choose a 3D cube, a flat view, or a last-layer view.')}
+            <select aria-label="Cube Visualization Mode" style={sel} value={options.visualization} onChange={(e) => options.setVisualization(e.target.value)}>
               <option value="PG3D">PG3D</option>
               <option value="2D">2D</option>
               <option value="3D">3D</option>
@@ -273,15 +263,15 @@ export const OptionsView = memo(function OptionsView({
             </select>
           </div>
           <div style={row()}>
-            <span style={lbl}>Back View</span>
-            <select style={sel} value={options.backview} onChange={(e) => options.setBackview(e.target.value)}>
+            {optionLabel('Back View', 'Add a second view to see the back of the virtual cube.')}
+            <select aria-label="Back View" style={sel} value={options.backview} onChange={(e) => options.setBackview(e.target.value)}>
               <option value="none">Disabled</option>
               <option value="side-by-side">Side-by-side</option>
               <option value="top-right">Top Right</option>
             </select>
           </div>
           <div style={row()}>
-            <span style={lbl}>Floating Mirror Stickers</span>
+            {optionLabel('Floating Mirror Stickers', 'Show hidden stickers beside the virtual cube.')}
             <Toggle
               ariaLabel="Floating Mirror Stickers"
               checked={options.hintFacelets === 'floating'}
@@ -289,11 +279,11 @@ export const OptionsView = memo(function OptionsView({
             />
           </div>
           <div style={row()}>
-            <span style={lbl}>Always Show Full Stickers</span>
+            {optionLabel('Always Show Full Stickers', 'Show every sticker instead of highlighting only the current case.')}
             <Toggle ariaLabel="Always Show Full Stickers" checked={options.fullStickering} onChange={(v) => options.setFullStickering(v)} />
           </div>
           <div style={row(!options.fullStickering)}>
-            <span style={{ ...lbl, opacity: options.fullStickering ? 1 : 0.45 }}>Virtual Cube White on Bottom</span>
+            {optionLabel('Virtual Cube White on Bottom', 'Display the virtual cube with white facing down.', { opacity: options.fullStickering ? 1 : 0.45 })}
             <Toggle
               ariaLabel="Virtual Cube White on Bottom"
               checked={options.whiteOnBottom}
@@ -307,7 +297,7 @@ export const OptionsView = memo(function OptionsView({
             </div>
           )}
           <div style={row()}>
-            <span style={lbl}>Virtual Cube Control Panel</span>
+            {optionLabel('Virtual Cube Control Panel', 'Show playback and move controls below the virtual cube.')}
             <Toggle
               ariaLabel="Virtual Cube Control Panel"
               checked={options.controlPanel === 'bottom-row'}
@@ -315,20 +305,16 @@ export const OptionsView = memo(function OptionsView({
             />
           </div>
           <div style={row(true)}>
-            <span style={lbl}>
-              Cube Size{' '}
-              <span style={{ fontFamily: 'var(--mono)', color: 'var(--fg3)', fontSize: 12 }}>
-                {options.cubeSizePx}px
-              </span>
-            </span>
+            {optionLabel(`Cube Size · ${options.cubeSizePx}px`, 'Adjust the size of the virtual cube during practice.')}
             <input
               type="range"
+              aria-label="Cube Size"
               min={240}
               max={600}
               step={10}
               value={options.cubeSizePx}
               onChange={(e) => options.setCubeSizePx(Number(e.target.value))}
-              style={{ width: 110, accentColor: 'var(--accent)' }}
+              style={{ width: 110, flexShrink: 0, accentColor: 'var(--accent)' }}
             />
           </div>
         </div>
@@ -337,7 +323,7 @@ export const OptionsView = memo(function OptionsView({
         <div style={section}>
           <div style={sHdr}>Smartcube</div>
           <div style={row()}>
-            <span style={lbl}>Animate Using Gyroscope</span>
+            {optionLabel('Animate Using Gyroscope', 'Rotate the virtual cube to follow how you hold your smartcube.')}
             <Toggle
               ariaLabel="Animate Virtual Cube Using Gyroscope"
               checked={smartcube.connected && !smartcube.gyroSupported ? false : options.gyroscope}
@@ -346,7 +332,7 @@ export const OptionsView = memo(function OptionsView({
             />
           </div>
           <div style={row()}>
-            <span style={lbl}>Auto-correct Gyro Drift</span>
+            {optionLabel('Auto-correct Gyro Drift', 'Corrects small tilts while resting flat and heading drift after rotation-free algorithms. Connect or reset with white on top and green in front.')}
             <Toggle
               ariaLabel="Auto-correct Gyro Drift"
               checked={options.autoCorrectGyroDrift}
@@ -354,13 +340,9 @@ export const OptionsView = memo(function OptionsView({
               onChange={options.setAutoCorrectGyroDrift}
             />
           </div>
-          <div style={{ padding: '9px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border)', fontSize: 12, color: 'var(--fg3)' }}>
-            Corrects small tilts while resting flat and heading drift after rotation-free algorithms.
-            Connect or reset with white on top and green in front.
-          </div>
           {GYRO_TESTING_ENABLED && (
             <>
-              <div style={row()}>
+              <div style={row(true)}>
                 <span style={lbl}>Gyro testing log</span>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button style={btnStyle()} type="button" onClick={() => {
@@ -380,7 +362,7 @@ export const OptionsView = memo(function OptionsView({
             </>
           )}
           <div style={row()}>
-            <span style={lbl}>Show All Bluetooth Devices</span>
+            {optionLabel('Show All Bluetooth Devices', 'Include unrecognized devices in the Bluetooth connection picker.')}
             <Toggle
               ariaLabel="Show all Bluetooth devices when connecting"
               checked={smartcube.showAllBluetoothDevices}
@@ -406,12 +388,30 @@ export const OptionsView = memo(function OptionsView({
           </div>
         </div>
 
-        {/* Appearance */}
+        {/* Algorithms */}
         <div style={section}>
-          <div style={sHdr}>Appearance</div>
+          <div style={sHdr}>Algorithms</div>
+          <div style={row()}>
+            {optionLabel('Export / Import Algs', 'Save or load your algorithm library as a JSON file.')}
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button style={btnStyle()} type="button" onClick={() => void algorithmActions.exportAll()}>
+                Export
+              </button>
+              <button style={btnStyle()} type="button" onClick={() => document.getElementById('import-file')?.click()}>
+                Import
+              </button>
+            </div>
+          </div>
           <div style={row(true)}>
-            <span style={lbl}>Dark Mode</span>
-            <Toggle ariaLabel="Dark Mode" checked={options.darkMode} onChange={(v) => options.setDarkMode(v)} />
+            {optionLabel('Export / Import Backup', 'Save or restore algorithms, times, and learning progress.')}
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button style={btnStyle()} type="button" onClick={() => void algorithmActions.exportBackup()}>
+                Export
+              </button>
+              <button style={btnStyle()} type="button" onClick={() => document.getElementById('import-backup-file')?.click()}>
+                Import
+              </button>
+            </div>
           </div>
         </div>
 

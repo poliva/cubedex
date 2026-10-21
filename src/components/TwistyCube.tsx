@@ -97,6 +97,7 @@ export function TwistyCube({
   const hostRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<TwistyPlayer | null>(null);
   const appendedMoveKeyRef = useRef('');
+  const appliedOrientationResetTokenRef = useRef(orientationResetToken);
   const targetPatternRef = useRef<KPattern | null>(null);
   const targetSeedRef = useRef<{ alg: string; resetToken: string | number | undefined } | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -264,6 +265,10 @@ export function TwistyCube({
     targetPatternRef.current = null;
     targetSeedRef.current = null;
     player.alg = alg;
+    // With a setup alg (including white-on-bottom z2), Twisty's automatic
+    // timestamp shows the setup alone. Show the full case before any turn.
+    // Animated guidance explicitly returns to the start in the autoplay effect.
+    player.timestamp = 'end';
   }, [alg, resetToken]);
 
   useEffect(() => {
@@ -331,7 +336,12 @@ export function TwistyCube({
       return;
     }
 
-    if (orientationResetAlg != null && !targetPattern) {
+    // Reset snapshots belong to the action that captured them. A camera
+    // change or a remount after guidance must keep the current case instead
+    // of restoring an older (often solved) physical snapshot.
+    const resetRequested = appliedOrientationResetTokenRef.current !== orientationResetToken;
+    appliedOrientationResetTokenRef.current = orientationResetToken;
+    if (resetRequested && orientationResetAlg != null && !targetPattern) {
       player.alg = orientationResetAlg;
     }
     if (cameraLatitude != null) {
@@ -386,6 +396,7 @@ export function TwistyCube({
       // animate a stale raw axis sequence over a different reference frame.
       player.pause();
       player.alg = patternToGuidanceAlg(targetPattern);
+      player.timestamp = 'end';
     } else {
       for (const move of delta.split(/\s+/).filter(Boolean)) {
         player.experimentalAddMove(move, { cancel: false });

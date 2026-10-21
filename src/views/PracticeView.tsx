@@ -366,7 +366,7 @@ export const PracticeView = memo(function PracticeView({
       <button type="button" aria-label="Previous case" title="Previous case — repeat the last case"
         disabled={caseNavigationDisabled || !training.canGoToPreviousCase} onClick={() => void changeCase(-1)}>
         <Icon d="M15 18l-6-6 6-6" size={18} />
-        <span>Previous</span>
+        <span>Prev</span>
       </button>
       <button type="button" aria-label="Next case" title="Next case — skip this case"
         disabled={caseNavigationDisabled} onClick={() => void changeCase(1)}>

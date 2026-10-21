@@ -56,7 +56,12 @@ vi.mock('../src/views/MainCubeArea', () => ({
 }));
 
 describe('main cube stickering after connecting a 2×2', () => {
-  it.each(['All', 'Ortega OLL'])('masks OLL after selecting the %s subset control without switching categories', async subset => {
+  it.each([
+    ['default selection', 'Practice'],
+    ['default selection', 'Practice Selected'],
+    ['All', 'Practice Selected'],
+    ['Ortega OLL', 'Practice Selected'],
+  ])('masks OLL after confirming %s via %s without switching categories', async (subset, action) => {
     connection.connected = false;
     const user = userEvent.setup();
     const { rerender } = render(<App />);
@@ -67,11 +72,46 @@ describe('main cube stickering after connecting a 2×2', () => {
     expect(screen.getByTestId('main-cube')).toHaveAttribute('data-puzzle', '2x2x2');
     expect(screen.getByTestId('main-cube')).toHaveAttribute('data-stickering', 'full');
 
-    await user.click(screen.getByRole('button', { name: 'Cases' }));
-    await user.click(screen.getAllByRole('button', { name: subset })[0]);
+    expect(screen.getByRole('button', { name: 'Practice Selected' })).toBeEnabled();
+    if (subset !== 'default selection') {
+      const subsetButton = screen.getAllByRole('button', { name: subset })[0];
+      await user.click(subsetButton);
+      expect(screen.getByRole('button', { name: 'Practice Selected' })).toBeDisabled();
+      await user.click(subsetButton);
+    }
     await waitFor(() => expect(screen.getByRole('button', { name: 'Practice Selected' })).toBeEnabled());
-    await user.click(screen.getByRole('button', { name: 'Practice Selected' }));
+    await user.click(screen.getByRole('button', { name: action }));
 
     expect(screen.getByTestId('main-cube')).toHaveAttribute('data-stickering', 'OLL');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Next case' })).toBeEnabled());
+  });
+});
+
+describe('switching puzzles on the Practice screen', () => {
+  it.each([false, true])('shows empty practice for the new puzzle (started practice: %s)', async startedPractice => {
+    connection.connected = false;
+    const user = userEvent.setup();
+    render(<App />);
+    await waitFor(() => expect(screen.queryByText('Loading saved data…')).toBeNull());
+    if (startedPractice) {
+      await user.click(screen.getByRole('button', { name: 'Practice' }));
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Next case' })).toBeEnabled());
+    }
+
+    for (const puzzle of ['2x2x2', '3x3x3']) {
+      await user.selectOptions(screen.getByRole('combobox', { name: 'Puzzle' }), puzzle);
+      expect(screen.getByTestId('main-cube')).toBeVisible();
+      expect(screen.getByTestId('main-cube')).toHaveAttribute('data-puzzle', puzzle);
+      expect(screen.getByTestId('main-cube')).toHaveAttribute('data-stickering', 'full');
+      expect(screen.getByTestId('stats-empty-state')).toBeVisible();
+      expect(screen.queryByRole('button', { name: 'Next case' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Practice Selected' })).not.toBeInTheDocument();
+      expect(screen.queryByText(/\d+ selected/)).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Open case library' }));
+      expect(screen.getByRole('button', { name: 'Practice Selected' })).toBeEnabled();
+      await user.click(screen.getByRole('button', { name: 'Practice Selected' }));
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Next case' })).toBeEnabled());
+    }
   });
 });

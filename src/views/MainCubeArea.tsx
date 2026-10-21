@@ -62,7 +62,7 @@ function MainCubeAreaComponent({
         hintFacelets={hintFacelets}
         controlPanel={controlPanel}
         experimentalStickering={experimentalStickering}
-        setupAlg={fixedOrientation ? '' : setupAlg}
+        setupAlg={setupAlg}
         cameraLatitude={fixedOrientation && !gyroscopeEnabled ? 30 : 0}
         cameraLongitude={fixedOrientation && !gyroscopeEnabled ? 30 : 0}
         dragInput={fixedOrientation ? 'none' : 'auto'}
