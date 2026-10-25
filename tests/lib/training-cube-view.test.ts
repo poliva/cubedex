@@ -224,7 +224,7 @@ describe('training reference view', () => {
     expect(orientation.target(initial, startFrame, { phase: 'ready', anchor: null }, 10).angleTo(ready)).toBeLessThan(1e-7);
   });
 
-  it('preserves the running pose across a gyro basis reset and continues subsequent motion', () => {
+  it('honors a gyro reset during execution and continues motion from the new reference', () => {
     const orientation = new TrainingCubeOrientation();
     const anchor = Object.assign(HOME_ORIENTATION.clone().multiply(turn('y', 30)), { basisVersion: 1 });
     const view: TrainingCubeView = { phase: 'executing', anchor };
@@ -232,9 +232,36 @@ describe('training reference view', () => {
     const before = orientation.target(running, new Quaternion(), view, 10);
     expect(orientation.target(null, new Quaternion(), view, 10).angleTo(before)).toBeLessThan(1e-7);
     const reset = Object.assign(HOME_ORIENTATION.clone(), { basisVersion: 2 });
-    expect(orientation.target(reset, new Quaternion(), view, 10).angleTo(before)).toBeLessThan(1e-7);
+    const reference = referenceViewOrientation(10);
+    expect(before.angleTo(reference)).toBeGreaterThan(.5);
+    expect(orientation.target(reset, new Quaternion(), view, 10).angleTo(reference)).toBeLessThan(1e-7);
     const next = Object.assign(reset.clone().multiply(turn('x', 20)), { basisVersion: 2 });
-    expect(orientation.target(next, new Quaternion(), view, 10).angleTo(before.clone().multiply(turn('x', 20)))).toBeLessThan(1e-7);
+    const expected = reference.clone().multiply(turn('x', 20));
+    expect(orientation.target(next, new Quaternion(), view, 10).angleTo(expected)).toBeLessThan(1e-7);
+    expect(orientation.target(next, new Quaternion(), { phase: 'ready', anchor: null }, 10)
+      .angleTo(expected)).toBeLessThan(1e-7);
+  });
+
+  it.each([-25, 0, 25])('keeps the new basis motion and sticker frame after a reset at view angle %i', angle => {
+    const orientation = new TrainingCubeOrientation();
+    const frame = turn('y', 90).multiply(turn('z', -90));
+    const anchor = Object.assign(HOME_ORIENTATION.clone().multiply(turn('y', 40)), { basisVersion: 1 });
+    const view: TrainingCubeView = { phase: 'executing', anchor };
+    const initial = Object.assign(anchor.clone().multiply(frame.clone().invert()), { basisVersion: 1 });
+    orientation.target(initial, frame, view, angle, 0);
+    // The renderer may first see the new reference after the cube has moved again.
+    const movement = turn('y', 15).multiply(turn('x', 20));
+    const reset = Object.assign(HOME_ORIENTATION.clone().multiply(movement), { basisVersion: 2 });
+    const expected = referenceViewOrientation(angle).multiply(movement).multiply(frame);
+    const before = reset.clone();
+    expect(orientation.target(reset, frame, view, angle, 100).angleTo(expected)).toBeLessThan(1e-7);
+    expect(reset.equals(before)).toBe(true);
+    expect(orientation.target(reset, frame, { phase: 'ready', anchor: null }, angle, 110)
+      .angleTo(expected)).toBeLessThan(1e-7);
+    // Resetting a second time must also discard the preceding view offset.
+    const second = Object.assign(HOME_ORIENTATION.clone(), { basisVersion: 3 });
+    expect(orientation.target(second, frame, view, angle, 200)
+      .angleTo(referenceViewOrientation(angle).multiply(frame))).toBeLessThan(1e-7);
   });
 
   it('changes the configured view angle without changing the execution anchor or physical delta', () => {

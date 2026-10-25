@@ -103,8 +103,12 @@ export class TrainingCubeOrientation {
     }
     this.readyView = null;
     if (this.basisVersion !== live.basisVersion) {
-      // Reset Gyro changes sensor coordinates, not the running virtual pose.
-      this.offset.copy(this.lastRelative).multiply(measured.clone().invert());
+      // A new gyro reference explicitly discards the old inspection offset.
+      // Keep motion already received in this basis, even during execution.
+      this.offset.identity();
+      this.readyHeading.identity();
+      this.readyOffset.identity();
+      this.readyBasis = live.basisVersion;
       this.basisVersion = live.basisVersion;
     }
     this.lastRelative.copy(this.offset).multiply(measured).normalize();
