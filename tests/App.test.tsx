@@ -17,7 +17,7 @@ const alwaysScrambleRegressDyn = vi.hoisted(() => ({
   startScrambleToSpyB: vi.fn(async () => true),
 }));
 
-const connectionDyn = vi.hoisted(() => ({ connected: false, cubeSize: 3,
+const connectionDyn = vi.hoisted(() => ({ connected: false, cubeSize: 3, disconnectToken: 0,
   lastProcessedMove: null as SmartcubeConnectionState['lastProcessedMove'],
 }));
 
@@ -263,7 +263,7 @@ vi.mock('../src/hooks/useSmartcubeConnection', () => ({
     connected: connectionDyn.connected,
     cubeSize: connectionDyn.cubeSize,
     connecting: false,
-    disconnectToken: 0,
+    disconnectToken: connectionDyn.disconnectToken,
     connectLabel: 'Connect',
     battery: { level: 100, color: 'green' },
     info: {
@@ -484,8 +484,36 @@ describe('App puzzle context', () => {
   beforeEach(() => {
     connectionDyn.connected = false;
     connectionDyn.cubeSize = 3;
+    connectionDyn.disconnectToken = 0;
     alwaysScrambleRegressDyn.alwaysScrambleTo = false;
   });
+
+  it.each([2, 3].flatMap(cubeSize => [
+    { tab: 'Practice', title: 'Practice' },
+    { tab: 'Cases', title: 'Case Library' },
+    { tab: 'New', title: 'New Alg' },
+    { tab: 'Options', title: 'Options' },
+    { tab: 'Help', title: 'Help' },
+  ].map(view => ({ ...view, cubeSize }))))
+    ('stays on $tab when a size $cubeSize cube disconnects', async ({ tab, title, cubeSize }) => {
+      connectionDyn.connected = true;
+      connectionDyn.cubeSize = cubeSize;
+      const { rerender } = render(<App />);
+      await userEvent.click(screen.getByRole('button', { name: tab }));
+      const expectCurrentTab = () => expect(screen.getAllByText(title)
+        .find(element => !element.closest('button'))).toBeVisible();
+      expectCurrentTab();
+      connectionDyn.connected = false;
+      connectionDyn.disconnectToken += 1;
+      rerender(<App />);
+      expectCurrentTab();
+      expect(mocks.useCaseLibrary).toHaveBeenLastCalledWith(expect.objectContaining({ puzzle: '3x3x3' }));
+      // A later disconnect notification must not navigate either.
+      connectionDyn.disconnectToken += 1;
+      rerender(<App />);
+      expectCurrentTab();
+      connectionDyn.disconnectToken = 0;
+    });
 
   it.each(['pyraminx', '4x4x4', '5x5x5', 'megaminx'])('remembers %s, follows a connected 2×2 and restores the manual choice on disconnect', async (manualPuzzle) => {
     const { rerender } = render(<App />);
@@ -627,7 +655,7 @@ describe('App practice selection confirmation', () => {
     await confirmSelection(action);
     connectionDyn.connected = false;
     rerender(<App />);
-    expect(screen.getByTestId('cases-view')).toBeInTheDocument();
+    expect(screen.queryByTestId('cases-view')).not.toBeInTheDocument();
     expect(mocks.useTrainingState).toHaveBeenLastCalledWith([], expect.anything(), expect.anything());
     connectionDyn.connected = true;
     rerender(<App />);

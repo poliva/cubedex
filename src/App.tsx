@@ -137,12 +137,15 @@ export function App() {
     const onlyPuzzleChanged = previousPracticeSessionRef.current.cubeConnectionKey === cubeConnectionKey;
     previousPracticeSessionRef.current = { key: practiceSessionKey, cubeConnectionKey };
     setConfirmedPracticeSession(null);
-    setActiveView((view) => onlyPuzzleChanged && view === 'practice' ? 'practice' : 'cases');
+    // Disconnecting resets the practice session while keeping the current tab.
+    if (smartcube.connected || onlyPuzzleChanged) {
+      setActiveView((view) => onlyPuzzleChanged && view === 'practice' ? 'practice' : 'cases');
+    }
     setInfoVisible(false);
     setAlgEditorVisible(false);
     training.resetDrill();
     scramble.clearScramble();
-  }, [practiceSessionKey, cubeConnectionKey, training.resetDrill, scramble.clearScramble]);
+  }, [practiceSessionKey, cubeConnectionKey, smartcube.connected, training.resetDrill, scramble.clearScramble]);
 
   useEffect(() => {
     const wasConnected = prevSmartcubeConnectedRef.current;
