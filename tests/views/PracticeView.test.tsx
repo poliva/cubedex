@@ -1002,8 +1002,10 @@ describe('puzzle-specific mistake guidance', () => {
     props.isMobile = isMobile;
     props.training.recoveryTarget = await solvedPattern(2);
     props.training.recoveryMoveCount = 1;
+    props.training.fixText = "R'";
     render(<PracticeView {...props} />);
     expect(screen.getByText('Turned the wrong way? Undo your last turn.')).toBeVisible();
+    expect(screen.getByText("Undo: R'")).toBeVisible();
     expect(screen.getByRole('button', { name: 'Help me recover' })).toBeVisible();
     expect(screen.queryByText(/WHITE on top/)).toBeNull();
   });
@@ -1013,14 +1015,68 @@ describe('puzzle-specific mistake guidance', () => {
     props.puzzle = '2x2x2';
     props.training.recoveryTarget = await solvedPattern(2);
     props.training.recoveryMoveCount = 3;
+    props.training.fixText = "F' R' U";
     const { rerender } = render(<PracticeView {...props} />);
     expect(screen.getByText(/Undo your recent turns/)).toBeVisible();
+    expect(screen.getByText("Undo: F' R' U")).toBeVisible();
     props.puzzle = '3x3x3';
     props.training.recoveryTarget = await solvedPattern(3);
     props.training.helpTone = 'red';
     rerender(<PracticeView {...props} training={{ ...props.training }} />);
     expect(screen.getByText(/Undo your recent turns/)).toBeVisible();
+    expect(screen.getByText("Undo: F' R' U")).toBeVisible();
     expect(screen.getByRole('button', { name: 'Help me recover' })).toBeVisible();
+  });
+
+  it.each(['2x2x2', '3x3x3'].flatMap(puzzle => [false, true].flatMap(isMobile => [
+    { fixText: '', shown: false },
+    { fixText: "F' R' U L2 B'", shown: true },
+    { fixText: "F' R' U L2 B' D", shown: false },
+  ].map(test => ({ ...test, puzzle, isMobile })))))
+    ('limits quick undo to fewer than six turns ($puzzle, mobile $isMobile, "$fixText")', async ({ puzzle, isMobile, fixText, shown }) => {
+      const props = makeProps({ puzzle, isMobile });
+      props.training.recoveryTarget = await solvedPattern(puzzle === '2x2x2' ? 2 : 3);
+      props.training.recoveryMoveCount = 8;
+      props.training.fixText = fixText;
+      render(<PracticeView {...props} />);
+      expect(screen.getByText(/Undo your recent turns/)).toBeVisible();
+      expect(screen.getByRole('button', { name: 'Help me recover' })).toBeVisible();
+      if (shown) expect(screen.getByText(`Undo: ${fixText}`)).toBeVisible();
+      else expect(screen.queryByText(/^Undo:/)).toBeNull();
+    });
+
+  it.each([2, 3] as const)('updates the inverse turns as a size %s cube is recovered without opening the guide', async size => {
+    const solved = await solvedPattern(size);
+    const props = makeProps({ puzzle: size === 2 ? '2x2x2' : '3x3x3' });
+    let training!: TrainingState;
+    function Practice() {
+      training = useTrainingState([], 'Custom', {
+        puzzle: size === 2 ? '2x2x2' : '3x3x3', selectionChangeMode: 'manual', countdownMode: false,
+        randomizeAUF: false, randomOrder: false, timeAttack: false, prioritizeSlowCases: false,
+        prioritizeFailedCases: false, smartReviewScheduling: false, smartcubeConnected: true,
+      });
+      return <PracticeView {...props} training={training} />;
+    }
+    render(<Practice />);
+    await act(async () => { await training.trainCurrent(solved, { algorithm: 'U F2 L B', preserveDisplayedAlgorithm: true }); });
+    let physical = solved;
+    const turn = (move: string) => {
+      physical = physical.applyMove(move);
+      act(() => { training.handleSmartcubeMove(physical, move); });
+    };
+    turn('U');
+    expect(training.displayMoves.filter(move => move.color === 'green')).toHaveLength(1);
+    turn('R');
+    expect(training.fixText).toBe("R'");
+    turn('F');
+    expect(await screen.findByText("Undo: F' R'")).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Help me recover' })).toBeVisible();
+    turn("F'");
+    expect(screen.getByText("Undo: R'")).toBeVisible();
+    turn("R'");
+    await waitFor(() => expect(screen.queryByText(/^Undo:/)).toBeNull());
+    expect(training.displayMoves.filter(move => move.color === 'green')).toHaveLength(1);
+    expect(screen.queryByRole('region', { name: /visual recovery/ })).toBeNull();
   });
 });
 

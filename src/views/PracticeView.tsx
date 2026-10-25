@@ -265,11 +265,15 @@ export const PracticeView = memo(function PracticeView({
   const isScrambleGrowHint = scramble.scrambleMode && scramble.helpTone === 'green';
   const useWarningStatusIcon = isDangerStatus || isScrambleGrowHint;
   const mergeFixIntoStatusBar = isDangerStatus && training.fixVisible && Boolean(training.fixText);
+  // fixText already reverses and simplifies the incorrect turns.
+  const undoMoves = training.fixText.trim().split(/\s+/).filter(Boolean);
+  const showQuickUndo = undoMoves.length > 0 && undoMoves.length < 6;
 
   let statusBody: ReactNode;
   if (undoRecovery || canGuide3x3) {
     statusBody = <>
-      <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{training.recoveryMoveCount > 1 || (canGuide3x3 && training.fixText.trim().split(/\s+/).length > 1)
+      {showQuickUndo && <span style={STATUS_BAR_MOVES_LINE_STYLE}>Undo: {undoMoves.join(' ')}</span>}
+      <span style={STATUS_BAR_REMINDER_LINE_STYLE}>{training.recoveryMoveCount > 1 || (canGuide3x3 && undoMoves.length > 1)
         ? 'Undo your recent turns to get back on track, or use visual recovery.'
         : 'Turned the wrong way? Undo your last turn.'}</span>
       <button type="button" className="recovery-button" onClick={() => {
