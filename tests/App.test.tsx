@@ -634,7 +634,7 @@ describe('App practice selection confirmation', () => {
 
   async function confirmSelection(action: 'Practice' | 'Practice Selected') {
     expect(mocks.useTrainingState).toHaveBeenLastCalledWith([], expect.anything(), expect.anything());
-    if (action === 'Practice Selected' && !screen.queryByTestId('cases-view')) {
+    if (!screen.queryByTestId('cases-view')) {
       await userEvent.click(screen.getByRole('button', { name: 'Cases' }));
     }
     await userEvent.click(screen.getByRole('button', { name: action }));

@@ -88,12 +88,39 @@ describe('main cube stickering after connecting a 2×2', () => {
 });
 
 describe('switching puzzles on the Practice screen', () => {
+  it.each(['Options', 'Help'])('keeps Practice empty after visiting %s until Cases has been opened', async tab => {
+    connection.connected = false;
+    const user = userEvent.setup();
+    render(<App />);
+    await waitFor(() => expect(screen.queryByText('Loading saved data…')).toBeNull());
+    const expectEmptyPractice = () => {
+      expect(screen.getByTestId('stats-empty-state')).toBeVisible();
+      expect(screen.queryByRole('button', { name: 'Next case' })).not.toBeInTheDocument();
+      expect(screen.queryByText(/\d+ selected/)).not.toBeInTheDocument();
+    };
+    expectEmptyPractice();
+    await user.click(screen.getByRole('button', { name: tab }));
+    await user.click(screen.getByRole('button', { name: 'Practice' }));
+    expectEmptyPractice();
+    await user.click(screen.getByRole('button', { name: 'Practice' }));
+    expectEmptyPractice();
+
+    await user.click(screen.getByRole('button', { name: 'Cases' }));
+    await user.click(screen.getByRole('button', { name: tab }));
+    await user.click(screen.getByRole('button', { name: 'Practice' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Next case' })).toBeEnabled());
+    await user.click(screen.getByRole('button', { name: tab }));
+    await user.click(screen.getByRole('button', { name: 'Practice' }));
+    expect(screen.getByRole('button', { name: 'Next case' })).toBeEnabled();
+  });
+
   it.each([false, true])('shows empty practice for the new puzzle (started practice: %s)', async startedPractice => {
     connection.connected = false;
     const user = userEvent.setup();
     render(<App />);
     await waitFor(() => expect(screen.queryByText('Loading saved data…')).toBeNull());
     if (startedPractice) {
+      await user.click(screen.getByRole('button', { name: 'Cases' }));
       await user.click(screen.getByRole('button', { name: 'Practice' }));
       await waitFor(() => expect(screen.getByRole('button', { name: 'Next case' })).toBeEnabled());
     }
@@ -107,6 +134,11 @@ describe('switching puzzles on the Practice screen', () => {
       expect(screen.queryByRole('button', { name: 'Next case' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Practice Selected' })).not.toBeInTheDocument();
       expect(screen.queryByText(/\d+ selected/)).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Options' }));
+      await user.click(screen.getByRole('button', { name: 'Practice' }));
+      expect(screen.getByTestId('stats-empty-state')).toBeVisible();
+      expect(screen.queryByRole('button', { name: 'Next case' })).not.toBeInTheDocument();
 
       await user.click(screen.getByRole('button', { name: 'Open case library' }));
       expect(screen.getByRole('button', { name: 'Practice Selected' })).toBeEnabled();

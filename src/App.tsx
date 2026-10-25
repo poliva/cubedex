@@ -78,6 +78,7 @@ export function App() {
   const cubeConnectionKey = `${smartcube.connected}:${smartcube.disconnectToken}:${smartcube.connected ? smartcube.info.deviceMAC : ''}`;
   const practiceSessionKey = `${puzzle}:${cubeConnectionKey}`;
   const [confirmedPracticeSession, setConfirmedPracticeSession] = useState<string | null>(null);
+  const [visitedCasesSession, setVisitedCasesSession] = useState<string | null>(null);
   const practiceSelectionConfirmed = confirmedPracticeSession === practiceSessionKey;
   const caseLibrary = useCaseLibrary({
     puzzle,
@@ -137,6 +138,7 @@ export function App() {
     const onlyPuzzleChanged = previousPracticeSessionRef.current.cubeConnectionKey === cubeConnectionKey;
     previousPracticeSessionRef.current = { key: practiceSessionKey, cubeConnectionKey };
     setConfirmedPracticeSession(null);
+    setVisitedCasesSession(null);
     // Disconnecting resets the practice session while keeping the current tab.
     if (smartcube.connected || onlyPuzzleChanged) {
       setActiveView((view) => onlyPuzzleChanged && view === 'practice' ? 'practice' : 'cases');
@@ -146,6 +148,10 @@ export function App() {
     training.resetDrill();
     scramble.clearScramble();
   }, [practiceSessionKey, cubeConnectionKey, smartcube.connected, training.resetDrill, scramble.clearScramble]);
+
+  useEffect(() => {
+    if (activeView === 'cases') setVisitedCasesSession(practiceSessionKey);
+  }, [activeView, practiceSessionKey]);
 
   useEffect(() => {
     const wasConnected = prevSmartcubeConnectedRef.current;
@@ -596,7 +602,7 @@ export function App() {
       algorithmActions.clearMessages();
     }
 
-    if (view === 'practice') {
+    if (view === 'practice' && (practiceSelectionConfirmed || visitedCasesSession === practiceSessionKey)) {
       setConfirmedPracticeSession(practiceSessionKey);
       setMainCubeStickeringDeferred(false);
       setAcknowledgedDisconnectToken(smartcube.disconnectToken);
@@ -614,6 +620,7 @@ export function App() {
   }, [
     practiceSelectionConfirmed,
     practiceSessionKey,
+    visitedCasesSession,
     algorithmActions.clearMessages,
     puzzle,
     options.alwaysScrambleTo,
