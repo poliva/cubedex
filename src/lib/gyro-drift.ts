@@ -141,13 +141,8 @@ export class GyroDriftCorrector {
 
   setEnabled(enabled: boolean, now: number) {
     if (enabled === this.enabled) return;
-    this.finishCorrection('setting-changed', now);
+    this.clearLearning('setting-changed', now);
     this.enabled = enabled;
-    this.steadyAnchor = null;
-    this.startSamples = [];
-    this.tableConsidered = false;
-    // Retain the accumulated reference to avoid a jump when switching off.
-    this.cancelAttempt('setting-changed', now);
   }
 
   snapshot(now: number) {
@@ -172,30 +167,37 @@ export class GyroDriftCorrector {
     };
   }
 
-  reset(reason: string, now: number) {
+  private clearLearning(reason: string, now: number) {
     this.finishCorrection(reason, now);
     this.cancelAttempt(reason, now);
     this.usualGrip?.reset();
     this.motionHeading?.reset(now);
     this.homeGrip?.reset();
     this.pendingHome = null;
-    this.homeGuidance = false;
-    this.resetTableFrame = null;
-    this.assertedResetPicture = reason === 'manual-reset' ? this.tablePictureFacelets : null;
-    this.resetPictureFacelets = null;
-    this.movedSinceReset = false;
     this.correction.identity();
     this.heading = null;
-    this.last = this.steadyAnchor = null;
+    this.steadyAnchor = null;
     this.lastMoveAt = -Infinity;
     this.tableConsidered = false;
     this.startSamples = [];
     this.startEvidence = null;
     this.lastDecision = null;
+  }
+
+  reset(reason: string, now: number) {
+    this.clearLearning(reason, now);
+    this.homeGuidance = false;
+    this.resetTableFrame = null;
+    this.assertedResetPicture = reason === 'manual-reset' ? this.tablePictureFacelets : null;
+    this.resetPictureFacelets = null;
+    this.movedSinceReset = false;
+    this.last = null;
     this.rejectedSamples = { invalid: 0, duplicate: 0, outOfOrder: 0 };
   }
 
   apply(q: Quaternion) { return q.clone().premultiply(this.correction).normalize(); }
+
+  currentOrientation() { return this.last ? this.apply(this.last.q) : null; }
 
   /** Measurement metadata only. A face turn invalidates the current frame;
    * requested, matched device stickers must establish it again. */
@@ -226,6 +228,7 @@ export class GyroDriftCorrector {
   }
 
   armAlgorithm(algorithm: string, reason: string | null, now: number) {
+    if (!this.enabled) return;
     // The next case can be shown before the preceding endpoint has settled.
     // Preserve that endpoint until the next physical move, not the next render.
     if (this.attempt || this.armed) this.cancelAttempt('case-changed', now);
@@ -239,6 +242,7 @@ export class GyroDriftCorrector {
       this.tableFrame = null;
       this.tablePictureFacelets = null;
     }
+    if (!this.enabled) return;
     this.usualGrip?.finishPending(now);
     this.finishCorrection('face-move', now);
     if (this.end) this.skipEnd('next-move-before-settling', now);
@@ -268,7 +272,7 @@ export class GyroDriftCorrector {
   }
 
   completeAlgorithm(frame: Quaternion | null, now: number) {
-    if (!this.attempt) return;
+    if (!this.enabled || !this.attempt) return;
     const attempt = this.attempt;
     this.attempt = null;
     if (attempt.gripEligible && frame) this.usualGrip?.completeAttempt(attempt.id, attempt.algorithm, frame, now);
@@ -310,6 +314,7 @@ export class GyroDriftCorrector {
   /** Matching stickers confirms a frame, not an exact physical holding angle. */
   observeGuidedGrip(frame: Quaternion | null, now: number, mode: 'setup' | 'recovery' = 'recovery') {
     this.homeGuidance = false;
+    if (!this.enabled) return;
     this.cancelAttempt('guided-grip-confirmed', now);
     this.finishCorrection('guided-grip-confirmed', now);
     const pose = this.last && frame ? this.apply(this.last.q).multiply(frame.clone().invert()) : null;
@@ -346,6 +351,11 @@ export class GyroDriftCorrector {
         this.resetPictureFacelets = this.resetTableFrame ? this.tablePictureFacelets : null;
       }
       this.movedSinceReset = false;
+    }
+    if (!this.enabled) {
+      // Keep live tracking and the physical reference, without feeding any collector.
+      this.last = { q: q.clone(), at: now };
+      return q.clone();
     }
     this.usualGrip?.observe(q, now);
     const previous = this.last;

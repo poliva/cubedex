@@ -303,6 +303,19 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
 
   useEffect(() => {
     driftRef.current!.setEnabled(gyroscopeEnabled && autoCorrectGyroDrift, performance.now());
+    // An execution anchor can contain compensation from before the setting changed.
+    // Use live tracking until the next ready state establishes a fresh view.
+    if (trainingViewRef.current.phase === 'executing') {
+      trainingViewRef.current = { phase: 'free', anchor: null };
+      trainingViewFrameRef.current = null;
+    }
+    const orientation = driftRef.current!.currentOrientation();
+    if (orientation) {
+      const displayed = orientation.premultiply(HOME_ORIENTATION);
+      const pose = { ...quaternionData(displayed), basisVersion: gyroBasisVersionRef.current };
+      cubeQuaternionRef.current = pose;
+      setCubeQuaternion(pose);
+    }
   }, [gyroscopeEnabled, autoCorrectGyroDrift]);
 
   useEffect(() => {

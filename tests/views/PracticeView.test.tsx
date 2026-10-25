@@ -20,10 +20,10 @@ vi.mock('../../src/components/TwistyCube', () => ({
 }));
 vi.mock('../../src/views/CaseGrid', () => ({ CaseGrid: () => <div data-testid="case-grid" /> }));
 vi.mock('../../src/views/MainCubeArea', () => ({
-  MainCubeArea: ({ puzzle, experimentalStickering, alg, appendMoveKey, appendMove, targetPattern, gyroscopeEnabled, gyroFrameQuaternion }: ComponentProps<typeof import('../../src/views/MainCubeArea').MainCubeArea>) => (
+  MainCubeArea: ({ puzzle, experimentalStickering, alg, appendMoveKey, appendMove, targetPattern, gyroscopeEnabled, gyroFrameQuaternion, trainingViewRef }: ComponentProps<typeof import('../../src/views/MainCubeArea').MainCubeArea>) => (
     <div data-testid="main-cube-area" data-puzzle={puzzle} data-stickering={experimentalStickering}
       data-alg={alg} data-append-key={appendMoveKey} data-append-move={appendMove} data-target={targetPattern ? JSON.stringify(targetPattern.patternData) : undefined}
-      data-gyro={String(gyroscopeEnabled)} data-gyro-frame={gyroFrameQuaternion ? JSON.stringify({
+      data-stable-view={String(Boolean(trainingViewRef))} data-gyro={String(gyroscopeEnabled)} data-gyro-frame={gyroFrameQuaternion ? JSON.stringify({
         x: gyroFrameQuaternion.x, y: gyroFrameQuaternion.y, z: gyroFrameQuaternion.z, w: gyroFrameQuaternion.w,
       }) : undefined} />
   ),
@@ -301,6 +301,22 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 }
 
 describe('PracticeView', () => {
+  it('gates training stabilization behind drift correction while keeping live gyro tracking', () => {
+    const props = makeProps();
+    props.options = { ...props.options, gyroscope: true, autoCorrectGyroDrift: true };
+    props.smartcube = { ...props.smartcube, connected: true,
+      trainingViewRef: { current: { phase: 'ready', anchor: null } } };
+    const { rerender } = render(<PracticeView {...props} />);
+    expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stable-view', 'true');
+    props.options = { ...props.options, autoCorrectGyroDrift: false };
+    rerender(<PracticeView {...props} />);
+    expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stable-view', 'false');
+    expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-gyro', 'true');
+    props.options = { ...props.options, autoCorrectGyroDrift: true };
+    rerender(<PracticeView {...props} />);
+    expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stable-view', 'true');
+  });
+
   it.each([false, true])('navigates a multi-case selection without adding a control row (mobile %s)', async isMobile => {
     const props = makeProps({ isMobile });
     props.training.selectedCases = [props.training.currentCase, { ...props.training.currentCase, id: 'case-2' }];

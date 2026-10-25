@@ -393,28 +393,52 @@ describe('home collector integration', () => {
     expect(engine.snapshot(2000).motionHeading!.appliedDeg).toBe(0);
   });
 
-  it('holds the render when disabled, keeps raw home learning, and eases toward it after re-enabling', () => {
+  it('clears learned compensation on disable and requires fresh evidence after re-enabling', () => {
     const engine = new GyroDriftCorrector({ adaptiveHeading: true });
     engine.update(new Quaternion(), 0);
-    engine.setEnabled(false, 1);
-    for (let index = 0; index < 4; index++) {
+    const attempt = (index: number, yaw: number) => {
       const start = index * 10_000 + 100;
       engine.armAlgorithm('R U', null, start);
-      for (let at = start; at <= start + 2000; at += 100) engine.update(hand(12, at), at);
+      for (let at = start; at <= start + 2000; at += 100) {
+        const raw = hand(yaw, at);
+        const result = engine.update(raw, at);
+        if (!engine.snapshot(at).enabled) expect(result.angleTo(raw)).toBeLessThan(1e-7);
+      }
       engine.noteMove(start + 2100, new Quaternion());
       engine.completeAlgorithm(new Quaternion(), start + 2200);
-    }
-    expect(engine.snapshot(32_300).motionHeading).toMatchObject({ appliedDeg: 0, landmarkAdjustmentDeg: 1 });
-    const before = engine.correction.clone();
-    engine.setEnabled(true, 32_300);
-    expect(engine.correction.angleTo(before)).toBeLessThan(1e-7);
-    engine.update(hand(12, 32_400), 32_400);
-    expect(engine.correction.angleTo(before)).toBeLessThanOrEqual(.2 * Math.PI / 180 + 1e-8);
-    const saved = engine.snapshot(32_400);
-    engine.snapshot(60_000);
-    expect(engine.snapshot(32_400)).toEqual(saved);
-    engine.reset('manual-reset', 32_500);
-    expect(engine.snapshot(32_500).homeGrip).toMatchObject({ observations: 0 });
-    expect(engine.snapshot(32_500).motionHeading!.homeGrip.episodes).toBe(0);
+    };
+    for (let index = 0; index < 4; index++) attempt(index, 12);
+    expect(engine.snapshot(32_300).motionHeading!.landmarkAdjustmentDeg).toBe(1);
+    expect(engine.correction.angleTo(new Quaternion())).toBeGreaterThan(0);
+
+    engine.setEnabled(false, 32_300);
+    expect(engine.correction.angleTo(new Quaternion())).toBe(0);
+    for (let index = 4; index < 8; index++) attempt(index, 30);
+    expect(engine.snapshot(72_300)).toMatchObject({ startEvidence: null, armedAlgorithm: null,
+      activeAttempt: null, activeCorrection: null, pendingEndpoint: null,
+      homeGrip: { observations: 0, pending: null },
+      motionHeading: { supported: false, observations: 0, appliedDeg: 0,
+        landmarkAdjustmentDeg: 0, integratedDriftDeg: 0, rate: 0, homeGrip: { episodes: 0 } } });
+
+    engine.setEnabled(true, 72_300);
+    for (let index = 8; index < 10; index++) attempt(index, 12);
+    expect(engine.snapshot(92_300).motionHeading!.landmarkAdjustmentDeg).toBe(0);
+    attempt(10, 12);
+    expect(engine.snapshot(102_300).motionHeading!.landmarkAdjustmentDeg).toBe(.5);
+  });
+
+  it('preserves known 2×2 sticker and reset frames when correction is toggled', () => {
+    const engine = new GyroDriftCorrector({ adaptiveHeading: true });
+    engine.setTableFrame(turn('y', 90), 0);
+    engine.reset('manual-reset', 0);
+    engine.update(new Quaternion(), 0);
+    engine.setTableFrame(turn('y', -90), 100);
+    const reference = engine.tableReference();
+    expect(reference.available).toBe(true);
+    engine.setEnabled(false, 200);
+    engine.update(hand(35, 300), 300);
+    engine.setEnabled(true, 400);
+    expect(engine.tableReference()).toEqual(reference);
+    expect(engine.snapshot(400).motionHeading!.homeGrip.episodes).toBe(0);
   });
 });

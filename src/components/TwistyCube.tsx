@@ -137,6 +137,12 @@ export function TwistyCube({
   }, [cubeQuaternion, cubeQuaternionRef, enableExternalOrientationLoop, gyroscopeEnabled]);
 
   useEffect(() => {
+    if (!gyroscopeEnabled || !trainingViewRef) {
+      (sharedTrainingOrientationRef ?? trainingOrientationRef).current = new TrainingCubeOrientation();
+    }
+  }, [gyroscopeEnabled, trainingViewRef, sharedTrainingOrientationRef]);
+
+  useEffect(() => {
     forceRefreshRef.current = true;
   }, [visualization, puzzle]);
 

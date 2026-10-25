@@ -166,6 +166,33 @@ describe('gyro drift connection integration', () => {
     expect(write.mock.calls.some(([key]) => key === 'cubedex.gyroDiagnostics.v1')).toBe(false);
   });
 
+  it('removes compensation immediately when disabled and does not reuse an execution anchor', async () => {
+    const { result, rerender } = renderHook(({ enabled }) => useSmartcubeConnection(true, enabled),
+      { initialProps: { enabled: true } });
+    await act(async () => result.current.connectOrDisconnect());
+    gyro(new Quaternion(), 0);
+    const raw = turn('x', 6);
+    for (let at = 100; at <= 2400; at += 20) gyro(raw, at);
+    const corrected = result.current.cubeQuaternionRef.current!;
+    expect(new Quaternion(corrected.x, corrected.y, corrected.z, corrected.w).angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
+    result.current.trainingViewRef.current = { phase: 'executing', anchor: corrected };
+    rerender({ enabled: false });
+    const uncorrected = result.current.cubeQuaternionRef.current!;
+    expect(new Quaternion(uncorrected.x, uncorrected.y, uncorrected.z, uncorrected.w)
+      .angleTo(HOME_ORIENTATION.clone().multiply(raw))).toBeLessThan(1e-7);
+    expect(uncorrected.basisVersion).toBe(corrected.basisVersion);
+    expect(result.current.cubeQuaternion).toEqual(uncorrected);
+    expect(result.current.trainingViewRef.current).toEqual({ phase: 'free', anchor: null });
+    gyro(turn('y', 25).multiply(raw), 2500);
+    expect(gyroState().motionHeading).toMatchObject({ supported: false, observations: 0, appliedDeg: 0 });
+    rerender({ enabled: true });
+    const resumed = result.current.cubeQuaternionRef.current!;
+    expect(new Quaternion(resumed.x, resumed.y, resumed.z, resumed.w)
+      .angleTo(HOME_ORIENTATION.clone().multiply(turn('y', 25)).multiply(raw))).toBeLessThan(1e-7);
+    expect(resumed.basisVersion).toBe(corrected.basisVersion);
+    expect(gyroState().motionHeading).toMatchObject({ supported: false, observations: 0, appliedDeg: 0 });
+  });
+
   it('corrects and resets gyro without creating diagnostic storage', async () => {
 
     const read = vi.spyOn(Storage.prototype, 'getItem');

@@ -130,6 +130,31 @@ describe('TwistyCube training frame', () => {
     expect(frames.pending.size).toBe(0);
   });
 
+  it('drops the old training center when stabilization is disabled and re-enabled', async () => {
+    vi.spyOn(performance, 'now').mockReturnValue(0);
+    const frames = orientationFrames();
+    drawing.solved = await solvedPattern(3);
+    const turn = (degrees: number) => new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), degrees * Math.PI / 180);
+    const cubeQuaternionRef = { current: HOME_ORIENTATION.clone().multiply(turn(40)) };
+    const trainingViewRef = { current: { phase: 'ready', anchor: null } as TrainingCubeView };
+    const props = { puzzle: '3x3x3' as const, alg: '', targetPattern: drawing.solved, fixedOrientation: true,
+      sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none', experimentalStickering: 'full',
+      setupAlg: '', backView: 'none' as const, resetToken: 'toggle-training-view', orientationResetToken: 0,
+      orientationResetAlg: null, gyroscopeEnabled: true, cubeQuaternionRef, trainingViewRef, viewAngleDeg: 0 };
+    const { rerender } = render(<MainCubeArea {...props} />);
+    await frames.advance(64);
+    expect(drawing.object!.quaternion.angleTo(referenceViewOrientation(0))).toBeLessThan(1e-6);
+    rerender(<MainCubeArea {...props} trainingViewRef={undefined} />);
+    await frames.advance(64);
+    expect(drawing.object!.quaternion.angleTo(referenceViewOrientation(0).multiply(turn(40)))).toBeLessThan(1e-6);
+    cubeQuaternionRef.current = HOME_ORIENTATION.clone().multiply(turn(80));
+    await frames.advance(64);
+    expect(drawing.object!.quaternion.angleTo(referenceViewOrientation(0).multiply(turn(80)))).toBeLessThan(1e-6);
+    rerender(<MainCubeArea {...props} />);
+    await frames.advance(64);
+    expect(drawing.object!.quaternion.angleTo(referenceViewOrientation(0))).toBeLessThan(1e-6);
+  });
+
   it('changes camera longitude rather than latitude for the signed view angle without gyro', async () => {
     drawing.solved = await solvedPattern(3);
     const props = { puzzle: '3x3x3' as const, alg: 'R U', targetPattern: drawing.solved,

@@ -274,7 +274,7 @@ export const OptionsView = memo(function OptionsView({
             <div style={{ ...lbl, flex: 1 }}>
               <label htmlFor="cube-view-angle">Default View Angle · {options.viewAngleDeg}°</label>
               <div id="cube-view-angle-description" style={{ fontSize: 12, color: 'var(--fg3)', marginTop: 4 }}>
-                Turn the default view left (negative) or right (positive). Small physical turns stay live and gently recenter between algorithms.
+                Turn the default view left (negative) or right (positive).
               </div>
               <input id="cube-view-angle" type="range" min={MIN_VIEW_ANGLE_DEG} max={MAX_VIEW_ANGLE_DEG} step={1}
                 value={options.viewAngleDeg} aria-label="Default View Angle" aria-valuetext={`${options.viewAngleDeg} degrees`}
@@ -335,7 +335,7 @@ export const OptionsView = memo(function OptionsView({
         <div style={section}>
           <div style={sHdr}>Smartcube</div>
           <div style={row()}>
-            {optionLabel('Animate Using Gyroscope', 'Follow tilts and small sideways turns between algorithms, with gentle heading recentering. Follow all rotations during execution.')}
+            {optionLabel('Animate Using Gyroscope', 'Rotate the virtual cube to follow how you hold your smartcube.')}
             <Toggle
               ariaLabel="Animate Virtual Cube Using Gyroscope"
               checked={smartcube.connected && !smartcube.gyroSupported ? false : options.gyroscope}
@@ -344,7 +344,7 @@ export const OptionsView = memo(function OptionsView({
             />
           </div>
           <div style={row()}>
-            {optionLabel('Auto-correct Gyro Drift', 'Corrects small tilts at rest and learns heading drift from repeated algorithms using this session’s gyro data. Connect or reset with white on top and green in front.')}
+            {optionLabel('Auto-correct Gyro Drift', 'Corrects small tilts at rest, learns heading drift during practice, and gently recenters the training view between algorithms. Turning this off clears learned correction. Connect or reset with white on top and green in front.')}
             <Toggle
               ariaLabel="Auto-correct Gyro Drift"
               checked={options.autoCorrectGyroDrift}

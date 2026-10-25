@@ -196,16 +196,17 @@ describe('gyro drift correction', () => {
     engine.setEnabled(false, 0);
     const q = rotation('x', 6);
     expect(samples(q, 0, 2200).angleTo(q)).toBeLessThan(1e-6);
-    expect(engine.snapshot(2200).lastDecision?.reason).toBe('disabled');
+    expect(engine.snapshot(2200).lastDecision).toBeNull();
     expect(engine.snapshot(0).activeCorrection).toBeNull();
   });
 
-  it('retains applied corrections on opt-out and clears all estimator history on reset', () => {
+  it('clears applied correction immediately on opt-out without changing the physical reference', () => {
     const { engine, samples } = harness();
     samples(rotation('x', 4), 0, 2000);
-    const correction = engine.correction.clone();
+    expect(engine.correction.angleTo(new Quaternion())).toBeGreaterThan(0);
     engine.setEnabled(false, 2010);
-    expect(engine.correction.angleTo(correction)).toBeLessThan(1e-7);
+    expect(engine.correction.angleTo(new Quaternion())).toBe(0);
+    expect(engine.currentOrientation()!.angleTo(rotation('x', 4))).toBeLessThan(1e-7);
     engine.reset('manual-reset', 2020);
     expect(engine.correction.angleTo(new Quaternion())).toBe(0);
     expect(engine.snapshot(2020).uncorrected).toBeNull();
@@ -339,7 +340,8 @@ describe('gyro drift correction', () => {
       engine.update(q, 0);
       engine.observeGuidedGrip(scenario === 'unknown-frame' ? null : new Quaternion(), scenario === 'stale' ? 300 : 30);
       expect(engine.correction.angleTo(new Quaternion())).toBe(0);
-      expect(engine.snapshot(300).lastDecision?.applied).toBe(false);
+      if (scenario === 'disabled') expect(engine.snapshot(300).lastDecision).toBeNull();
+      else expect(engine.snapshot(300).lastDecision?.applied).toBe(false);
     });
 });
 
