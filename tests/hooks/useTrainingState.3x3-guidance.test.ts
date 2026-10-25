@@ -88,6 +88,31 @@ describe('3×3 setup and recovery', () => {
       if (matchVirtualCube) expect(fixOrientation(physical).isIdentical(solved)).toBe(true);
     });
 
+  it.each([2, 3] as const)('matches the virtual case after an earlier physical-only recovery on a cube of size %s', async size => {
+    const solved = await solvedPattern(size);
+    const start = solved.applyAlg('D R B y');
+    const algorithm = 'R U F';
+    const { result } = renderHook(() => useTrainingState([], 'Custom', {
+      ...options, puzzle: size === 2 ? '2x2x2' : '3x3x3',
+    }));
+    await act(async () => { await result.current.trainCurrent(start, { algorithm, preserveDisplayedAlgorithm: true }); });
+    const anchor = start.applyMove('R');
+    act(() => { result.current.handleSmartcubeMove(anchor, 'R'); });
+    act(() => { result.current.handleSmartcubeMove(anchor.applyMove('B'), 'B'); });
+    act(() => result.current.beginRecovery(false));
+    act(() => { expect(result.current.checkRecovery(anchor)).toBe(true); });
+    expect(result.current.casePicturePattern).toBeNull();
+    act(() => { result.current.handleSmartcubeMove(anchor.applyMove('F'), 'F'); });
+    act(() => result.current.beginRecovery(true));
+    const virtualStart = solved.applyAlg(new Alg(algorithm).invert());
+    const target = virtualStart.applyMove('R');
+    expect(result.current.recoveryTarget?.isIdentical(target)).toBe(true);
+    expect(result.current.checkRecovery(anchor)).toBe(false);
+    act(() => { expect(result.current.checkRecovery(target)).toBe(true); });
+    expect(result.current.caseStartPattern?.isIdentical(virtualStart)).toBe(true);
+    expect(result.current.displayMoves.filter(move => move.color === 'green')).toHaveLength(1);
+  });
+
   it.each([2, 3] as const)('returns to the physical undo target when canceling matching on a cube of size %s', async size => {
     const solved = await solvedPattern(size);
     const start = solved.applyAlg('D R B y');

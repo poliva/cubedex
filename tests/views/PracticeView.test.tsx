@@ -10,7 +10,7 @@ import { alignForGuidance, fixOrientation, patternToPlayerAlg } from '../../src/
 import { useScrambleState } from '../../src/hooks/useScrambleState';
 import { useTrainingState, type TrainingState } from '../../src/hooks/useTrainingState';
 import { PracticeView } from '../../src/views/PracticeView';
-import { getTrainingVisualDelta } from '../../src/lib/training-visual';
+import { getTrainingVisualDelta, projectTrainingPattern } from '../../src/lib/training-visual';
 import { guidanceFrameRotation, HOME_ORIENTATION } from '../../src/lib/cube-orientation';
 import { getStickeringForCategory } from '../../src/lib/stickering';
 
@@ -805,7 +805,7 @@ describe('PracticeView', () => {
   });
 });
 
-it('keeps the actual 3×3 stickers after recovering an attempt that started without wand setup', async () => {
+it('restores the selected 3×3 case after recovering an attempt that started without wand setup', async () => {
   const solved = await solvedPattern(3);
   const physical = solved.applyAlg('D R U y');
   const props = makeProps({ puzzle: '3x3x3' });
@@ -815,7 +815,8 @@ it('keeps the actual 3×3 stickers after recovering an attempt that started with
   props.training.casePicturePattern = null;
   props.training.recoveredAt = 1;
   render(<PracticeView {...props} />);
-  expect(JSON.parse(screen.getByTestId('main-cube-area').dataset.target!)).toEqual(physical.patternData);
+  const expected = solved.applyAlg(new Alg(props.training.displayAlg).invert()).applyMove('U');
+  expect(JSON.parse(screen.getByTestId('main-cube-area').dataset.target!)).toEqual(expected.patternData);
   expect(screen.getByTestId('main-cube-area')).toHaveAttribute('data-stickering', 'PLL');
 });
 
@@ -912,6 +913,8 @@ it.each([false, true].flatMap(prepared => [false, true].map(matchVirtualCube => 
     }
     const shown = () => new KPattern(solved.kpuzzle,
       JSON.parse(screen.getByTestId('main-cube-area').dataset.target!));
+    const picture = (pattern: KPattern) => projectTrainingPattern(training.displayAlg,
+      training.caseStartPattern!, pattern, training.casePicturePattern);
     let confirmedGrip = start;
     for (const [index, move] of moves.entries()) {
       physical = physical.applyMove(move);
@@ -932,15 +935,16 @@ it.each([false, true].flatMap(prepared => [false, true].map(matchVirtualCube => 
         confirmedGrip = physical;
         // Use only the pictured centers as a frame. The hand pose must not
         // become a new gyro zero when recovery closes.
-        expect(shown().isIdentical(confirmedGrip)).toBe(true);
+        expect(shown().isIdentical(picture(confirmedGrip))).toBe(true);
         const frame = JSON.parse(screen.getByTestId('main-cube-area').dataset.gyroFrame!);
         expect(new Quaternion(frame.x, frame.y, frame.z, frame.w)
-          .angleTo(guidanceFrameRotation(confirmedGrip, fixOrientation(confirmedGrip))!)).toBeLessThan(1e-6);
+          .angleTo(guidanceFrameRotation(picture(confirmedGrip), fixOrientation(picture(confirmedGrip)))!)).toBeLessThan(1e-6);
       } else if (training.casePicturePattern || training.recoveredAt) {
-        expect(shown().isIdentical(alignForGuidance(physical, confirmedGrip))).toBe(true);
+        expect(shown().isIdentical(alignForGuidance(picture(physical), picture(confirmedGrip)))).toBe(true);
       }
     }
     expect(training.timerState).toBe('STOPPED');
+    expect(fixOrientation(shown()).isIdentical(solved)).toBe(true);
     await act(async () => { await training.trainCurrent(physical, { algorithm, preserveDisplayedAlgorithm: true }); });
     expect(training.caseGripPattern?.isIdentical(physical)).toBe(true);
   });

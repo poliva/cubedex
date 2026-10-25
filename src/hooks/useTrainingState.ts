@@ -683,7 +683,7 @@ export function useTrainingState(
     // Explicit recovery can make those virtual stickers physical too, including
     // when 2×2 undo recovery was already started by a wrong turn.
     const virtualStart = matchVirtualCube
-      ? casePicturePattern ?? (recoveredAt ? start : start.kpuzzle.defaultPattern().applyAlg(new Alg(displayAlg).invert()))
+      ? casePicturePattern ?? start.kpuzzle.defaultPattern().applyAlg(new Alg(displayAlg).invert())
       : null;
     const target = virtualStart
       ? virtualStart.applyAlg(expectedMovesRef.current.slice(0, currentMoveIndex + 1).join(' '))
