@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { readOption, writeOption } from '../lib/storage';
+import { DEFAULT_VIEW_ANGLE_DEG, MIN_VIEW_ANGLE_DEG, MAX_VIEW_ANGLE_DEG } from '../lib/training-cube-view';
 
 export interface AppSettingsState {
   darkMode: boolean;
@@ -20,6 +21,7 @@ export interface AppSettingsState {
   controlPanel: string;
   flashingIndicatorEnabled: boolean;
   cubeSizePx: number;
+  viewAngleDeg: number;
   showTimesInsteadOfGraph: boolean;
   setDarkMode: (value: boolean) => void;
   setShowAlgName: (value: boolean) => void;
@@ -39,6 +41,7 @@ export interface AppSettingsState {
   setControlPanel: (value: string) => void;
   setFlashingIndicatorEnabled: (value: boolean) => void;
   setCubeSizePx: (value: number) => void;
+  setViewAngleDeg: (value: number) => void;
   setShowTimesInsteadOfGraph: Dispatch<SetStateAction<boolean>>;
 }
 
@@ -85,6 +88,11 @@ export function useAppSettings(): AppSettingsState {
   const [cubeSizePx, setCubeSizePxState] = useState(
     clampInt(readOption('cubeSizePx'), 240, 600, 400),
   );
+  const [viewAngleDeg, setViewAngleDegState] = useState(() => {
+    const saved = readOption('viewAngleDeg');
+    return saved == null || saved.trim() === '' ? DEFAULT_VIEW_ANGLE_DEG
+      : clampInt(saved, MIN_VIEW_ANGLE_DEG, MAX_VIEW_ANGLE_DEG, DEFAULT_VIEW_ANGLE_DEG);
+  });
   const [showTimesInsteadOfGraph, setShowTimesInsteadOfGraph] = useState(
     readOption('showTimesInsteadOfGraph') === 'true',
   );
@@ -163,11 +171,18 @@ export function useAppSettings(): AppSettingsState {
   }, [cubeSizePx]);
 
   useEffect(() => {
+    writeOption('viewAngleDeg', String(viewAngleDeg));
+  }, [viewAngleDeg]);
+
+  useEffect(() => {
     writeOption('showTimesInsteadOfGraph', String(showTimesInsteadOfGraph));
   }, [showTimesInsteadOfGraph]);
 
   const setCubeSizePx = useCallback((value: number) => {
     setCubeSizePxState(clampInt(value, 240, 600, 400));
+  }, []);
+  const setViewAngleDeg = useCallback((value: number) => {
+    setViewAngleDegState(clampInt(value, MIN_VIEW_ANGLE_DEG, MAX_VIEW_ANGLE_DEG, DEFAULT_VIEW_ANGLE_DEG));
   }, []);
 
   return useMemo(() => ({
@@ -189,6 +204,7 @@ export function useAppSettings(): AppSettingsState {
     controlPanel,
     flashingIndicatorEnabled,
     cubeSizePx,
+    viewAngleDeg,
     showTimesInsteadOfGraph,
     setDarkMode: setDarkModeState,
     setShowAlgName: setShowAlgNameState,
@@ -208,6 +224,7 @@ export function useAppSettings(): AppSettingsState {
     setControlPanel: setControlPanelState,
     setFlashingIndicatorEnabled: setFlashingIndicatorEnabledState,
     setCubeSizePx,
+    setViewAngleDeg,
     setShowTimesInsteadOfGraph,
   }), [
     alwaysScrambleTo,
@@ -219,6 +236,7 @@ export function useAppSettings(): AppSettingsState {
     countdownMode,
     controlPanel,
     cubeSizePx,
+    viewAngleDeg,
     darkMode,
     flashingIndicatorEnabled,
     fullStickering,
@@ -226,6 +244,7 @@ export function useAppSettings(): AppSettingsState {
     autoCorrectGyroDrift,
     hintFacelets,
     setCubeSizePx,
+    setViewAngleDeg,
     showAlgName,
     showTimesInsteadOfGraph,
     visualization,

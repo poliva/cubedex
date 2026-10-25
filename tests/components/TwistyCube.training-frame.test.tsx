@@ -13,6 +13,7 @@ import { useScrambleState } from '../../src/hooks/useScrambleState';
 import { getCaseCards } from '../../src/lib/case-cards';
 import { align2x2RecoveryPattern, alignForGuidance, fixOrientation, get2x2RecoveryMoves } from '../../src/lib/scramble';
 import { guidanceFrameRotation, HOME_ORIENTATION } from '../../src/lib/cube-orientation';
+import { referenceViewOrientation, type TrainingCubeView } from '../../src/lib/training-cube-view';
 
 const drawing = vi.hoisted(() => ({
   solved: null as KPattern | null,
@@ -78,6 +79,70 @@ describe('TwistyCube training frame', () => {
       },
     };
   }
+
+  it.each([2, 3] as const)('keeps size %i tilt live while ready and preserves it through execution and completion', async size => {
+    vi.spyOn(performance, 'now').mockReturnValue(0);
+    const frames = orientationFrames();
+    drawing.solved = await solvedPattern(size);
+    const picture = drawing.solved.applyAlg('R U F');
+    const frame = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+    const turn = (axis: 'x' | 'y', degrees: number) => new THREE.Quaternion().setFromAxisAngle(
+      new THREE.Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, 0), degrees * Math.PI / 180);
+    const drifted = HOME_ORIENTATION.clone().multiply(turn('y', 40)).multiply(turn('x', 20));
+    const cubeQuaternionRef = { current: drifted.clone().multiply(frame.clone().invert()) };
+    const trainingViewRef = { current: { phase: 'ready', anchor: null } as TrainingCubeView };
+    const props = { puzzle: size === 2 ? '2x2x2' as const : '3x3x3' as const, alg: '', targetPattern: picture,
+      fixedOrientation: true, sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      experimentalStickering: 'full', setupAlg: '', backView: 'none' as const, resetToken: 'reference-view',
+      orientationResetToken: 0, orientationResetAlg: null, gyroscopeEnabled: true, gyroFrameQuaternion: frame,
+      cubeQuaternionRef, trainingViewRef, viewAngleDeg: 10 };
+    const { rerender, unmount } = render(<MainCubeArea {...props} />);
+    await frames.advance(64);
+    expect(drawing.object!.quaternion.angleTo(referenceViewOrientation(10).multiply(turn('x', 20)))).toBeLessThan(1e-6);
+    expect(drawing.current!.isIdentical(picture)).toBe(true);
+    // New sensor packets must move the waiting cube without a React render.
+    cubeQuaternionRef.current = HOME_ORIENTATION.clone().multiply(turn('y', 80)).multiply(turn('x', -30))
+      .multiply(frame.clone().invert());
+    await frames.advance(64);
+    const inspection = referenceViewOrientation(10).multiply(turn('y', 40)).multiply(turn('x', -30));
+    expect(drawing.object!.quaternion.angleTo(inspection)).toBeLessThan(1e-6);
+    const anchor = cubeQuaternionRef.current.clone().multiply(frame);
+    trainingViewRef.current = { phase: 'executing', anchor };
+    // Preserve the inspection offset even if the sticker layout remounts Twisty.
+    rerender(<MainCubeArea {...props} fixedOrientation={false} />);
+    await frames.advance(64);
+    expect(drawing.object!.quaternion.angleTo(inspection)).toBeLessThan(1e-6);
+    const rotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2);
+    cubeQuaternionRef.current = anchor.clone().multiply(rotation).multiply(frame.clone().invert());
+    await frames.advance(64);
+    expect(drawing.object!.quaternion.angleTo(referenceViewOrientation(10).multiply(turn('y', 40)).multiply(turn('x', 60)))).toBeLessThan(1e-6);
+    trainingViewRef.current = { phase: 'ready', anchor: null };
+    await frames.advance(64);
+    expect(drawing.object!.quaternion.angleTo(referenceViewOrientation(10).multiply(turn('y', 40)).multiply(turn('x', 60)))).toBeLessThan(1e-6);
+    cubeQuaternionRef.current = HOME_ORIENTATION.clone().multiply(turn('y', 40)).multiply(frame.clone().invert());
+    await frames.advance(64);
+    expect(drawing.object!.quaternion.angleTo(referenceViewOrientation(10))).toBeLessThan(1e-6);
+    rerender(<MainCubeArea {...props} viewAngleDeg={25} />);
+    await frames.advance(64);
+    expect(drawing.object!.quaternion.angleTo(referenceViewOrientation(25))).toBeLessThan(1e-6);
+    expect(drawing.current!.isIdentical(picture)).toBe(true);
+    unmount();
+    expect(frames.pending.size).toBe(0);
+  });
+
+  it('changes camera longitude rather than latitude for the signed view angle without gyro', async () => {
+    drawing.solved = await solvedPattern(3);
+    const props = { puzzle: '3x3x3' as const, alg: 'R U', targetPattern: drawing.solved,
+      fixedOrientation: true, sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      experimentalStickering: 'full', setupAlg: '', backView: 'none' as const, resetToken: 'camera-view',
+      orientationResetToken: 0, orientationResetAlg: null, gyroscopeEnabled: false, cubeQuaternionRef: { current: null } };
+    const { rerender } = render(<MainCubeArea {...props} viewAngleDeg={25} />);
+    expect(drawing.player?.cameraLatitude).toBe(30);
+    expect(drawing.player?.cameraLongitude).toBe(25);
+    rerender(<MainCubeArea {...props} viewAngleDeg={-25} />);
+    expect(drawing.player?.cameraLatitude).toBe(30);
+    expect(drawing.player?.cameraLongitude).toBe(-25);
+  });
 
   it.each([2, 3] as const)('preserves the calibrated %i× hand pose through prepared training and gyro resets', async size => {
     const frames = orientationFrames();

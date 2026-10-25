@@ -1,15 +1,11 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { OptionsView } from '../../src/views/OptionsView';
 import type { AlgorithmImportExportState } from '../../src/hooks/useAlgorithmImportExport';
 import type { AppSettingsState } from '../../src/hooks/useAppSettings';
 import type { SmartcubeConnectionState } from '../../src/hooks/useSmartcubeConnection';
 import { solvedPattern } from '../../src/lib/cube-utils';
-
-const buildFlags = vi.hoisted(() => ({ gyroTesting: true }));
-vi.mock('../../src/lib/build-flags', () => ({ get GYRO_TESTING_ENABLED() { return buildFlags.gyroTesting; } }));
-beforeEach(() => { buildFlags.gyroTesting = true; });
 
 function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsState {
   return {
@@ -31,6 +27,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     controlPanel: 'none',
     flashingIndicatorEnabled: true,
     cubeSizePx: 400,
+    viewAngleDeg: 0,
     showTimesInsteadOfGraph: false,
     setDarkMode: vi.fn(),
     setShowAlgName: vi.fn(),
@@ -50,6 +47,7 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     setControlPanel: vi.fn(),
     setFlashingIndicatorEnabled: vi.fn(),
     setCubeSizePx: vi.fn(),
+    setViewAngleDeg: vi.fn(),
     setShowTimesInsteadOfGraph: vi.fn(),
     ...overrides,
   };
@@ -89,14 +87,13 @@ function createSmartcube(overrides: Partial<SmartcubeConnectionState> = {}): Sma
     resetState: vi.fn(async () => undefined),
     resetGyro: vi.fn(),
     handleGyroTrainingEvent: vi.fn(),
-    exportGyroDiagnostics: vi.fn(),
-    clearGyroDiagnostics: vi.fn(),
     resetOrientation: vi.fn(),
     gyroSupported: true,
     gyroSupportResolved: true,
     gyroscopeToggleDisabled: false,
     cubeQuaternion: null,
     cubeQuaternionRef: { current: null },
+    trainingViewRef: { current: { phase: 'free', anchor: null } },
     ...overrides,
   };
 }
@@ -123,6 +120,22 @@ function createAlgorithmActions(overrides: Partial<AlgorithmImportExportState> =
 }
 
 describe('OptionsView', () => {
+  it('offers an accessible view-angle slider while disconnected and forwards changes', () => {
+    const options = createOptions();
+    render(<OptionsView visible infoVisible={false} setInfoVisible={vi.fn()}
+      options={options} smartcube={createSmartcube()} algorithmActions={createAlgorithmActions()} />);
+    const slider = screen.getByRole('slider', { name: 'Default View Angle' });
+    expect(slider).toHaveValue('0');
+    expect(slider).toHaveAttribute('aria-valuetext', '0 degrees');
+    expect(slider).toBeEnabled();
+    expect(slider).toHaveAttribute('min', '-45');
+    expect(slider).toHaveAttribute('max', '45');
+    fireEvent.change(slider, { target: { value: '25' } });
+    expect(options.setViewAngleDeg).toHaveBeenCalledWith(25);
+    fireEvent.change(slider, { target: { value: '-25' } });
+    expect(options.setViewAngleDeg).toHaveBeenCalledWith(-25);
+  });
+
   it('lets users enable alternative algorithms', async () => {
     const options = createOptions();
     render(<OptionsView visible infoVisible={false} setInfoVisible={vi.fn()}
@@ -203,10 +216,9 @@ describe('OptionsView', () => {
     expect(screen.getByRole('button', { name: 'Mark cube as solved' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Reset Gyro' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Device Info' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Export gyro log' })).toBeEnabled();
   });
 
-  it('allows opting out of correction and exporting or clearing recordings after disconnect', async () => {
+  it('allows opting out of gyro correction', async () => {
     const options = createOptions();
     const smartcube = createSmartcube();
     const user = userEvent.setup();
@@ -215,15 +227,10 @@ describe('OptionsView', () => {
     expect(screen.getByLabelText('Auto-correct Gyro Drift')).toBeChecked();
     await user.click(screen.getByLabelText('Auto-correct Gyro Drift'));
     expect(options.setAutoCorrectGyroDrift).toHaveBeenCalledWith(false);
-    await user.click(screen.getByRole('button', { name: 'Export gyro log' }));
-    expect(smartcube.exportGyroDiagnostics).toHaveBeenCalledOnce();
-    expect(screen.getByRole('status')).toHaveTextContent('Gyro testing log exported.');
-    await user.click(screen.getByRole('button', { name: 'Clear gyro log' }));
-    expect(smartcube.clearGyroDiagnostics).toHaveBeenCalledOnce();
   });
 
-  it('hides testing controls and instructions in normal builds while keeping gyro correction available', () => {
-    buildFlags.gyroTesting = false;
+  it('keeps gyro correction and reset available without development logging controls', () => {
+
     render(<OptionsView visible infoVisible={false} setInfoVisible={vi.fn()}
       options={createOptions()} smartcube={createSmartcube({ connected: true })} algorithmActions={createAlgorithmActions()} />);
     expect(screen.queryByText('Gyro testing log')).not.toBeInTheDocument();
@@ -337,7 +344,7 @@ describe('OptionsView', () => {
     expect(screen.getByDisplayValue('Side-by-side')).toBeVisible();
     expect(screen.getByLabelText('Virtual Cube White on Bottom')).toBeEnabled();
 
-    fireEvent.change(screen.getByRole('slider'), { target: { value: '480' } });
+    fireEvent.change(screen.getByRole('slider', { name: 'Cube Size' }), { target: { value: '480' } });
     expect(options.setCubeSizePx).toHaveBeenCalledWith(480);
   });
 

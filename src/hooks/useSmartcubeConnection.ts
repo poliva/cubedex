@@ -14,10 +14,9 @@ import {
 } from 'smartcube-web-bluetooth';
 import { faceletsToPattern, patternToFacelets, solvedPattern, solvedFacelets, type CubeSize } from '../lib/cube-utils';
 import { readOption, writeOption } from '../lib/storage';
-import { HOME_ORIENTATION, guidanceFrameRotation } from '../lib/cube-orientation';
-import { GyroDriftCorrector, gyroPoseMetrics, gyroQuaternion, quaternionData } from '../lib/gyro-drift';
-import { GyroDiagnostics } from '../lib/gyro-diagnostics';
-import { GYRO_TESTING_ENABLED } from '../lib/build-flags';
+import { HOME_ORIENTATION, guidanceFrameRotation, tableFrameRotation } from '../lib/cube-orientation';
+import type { TrainingCubeView } from '../lib/training-cube-view';
+import { GyroDriftCorrector, gyroQuaternion, quaternionData } from '../lib/gyro-drift';
 import {
   getSliceForPair,
   IDENTITY,
@@ -111,7 +110,6 @@ export type GyroTrainingEvent =
   | { phase: 'guided-setup-start' }
   | { phase: 'guided-setup-cancel' }
   | { phase: 'guided-setup-complete'; pattern: KPattern }
-  | { phase: 'context'; alwaysScrambleTo: boolean }
   | { phase: 'cancel'; reason: string };
 
 export interface SmartcubeConnectionState {
@@ -134,14 +132,13 @@ export interface SmartcubeConnectionState {
   stateSyncing: boolean;
   resetGyro: () => void;
   handleGyroTrainingEvent: (event: GyroTrainingEvent) => void;
-  exportGyroDiagnostics: () => void;
-  clearGyroDiagnostics: () => void;
   resetOrientation: () => void;
   gyroSupported: boolean;
   gyroSupportResolved: boolean;
   gyroscopeToggleDisabled: boolean;
   cubeQuaternion: SmartcubeQuaternion | null;
   cubeQuaternionRef: MutableRefObject<SmartcubeQuaternion | null>;
+  trainingViewRef: MutableRefObject<TrainingCubeView>;
 }
 
 const EMPTY_INFO: SmartcubeDeviceInfo = {
@@ -176,6 +173,10 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
   const connRef = useRef<SmartCubeConnection | null>(null);
   const pending2x2MovesRef = useRef<Array<SmartCubeMoveEvent & { timestamp: number }>>([]);
   const pending2x2SnapshotRef = useRef<{ pattern: KPattern; event: SmartCubeEvent & { type: 'FACELETS' } } | null>(null);
+  const authoritative2x2Ref = useRef<KPattern | null>(null);
+  const measurementPictureRef = useRef<KPattern | null>(null);
+  const faceTurnVersionRef = useRef(0);
+  const last2x2SerialRef = useRef<number | null>(null);
   const snapshotVersionRef = useRef(0);
   const refreshRef = useRef<{ promise: Promise<KPattern>; resolve: (pattern: KPattern) => void; reject: (error: Error) => void; timer: number } | null>(null);
   const [stateSyncing, setStateSyncing] = useState(false);
@@ -233,18 +234,9 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
   const recentMovesRef = useRef<SmartCubeMoveEvent[]>([]);
   const gyroBasisRef = useRef<THREE.Quaternion | null>(null);
   const gyroBasisVersionRef = useRef(0);
-  const diagnosticsRef = useRef<GyroDiagnostics | null>(null);
-  if (GYRO_TESTING_ENABLED && !diagnosticsRef.current) {
-    let storage: Storage | null = null;
-    try { storage = window.localStorage; } catch { /* Recording still works in memory. */ }
-    diagnosticsRef.current = new GyroDiagnostics(storage);
-  }
   const driftRef = useRef<GyroDriftCorrector | null>(null);
-  if (!driftRef.current) driftRef.current = new GyroDriftCorrector(diagnosticsRef.current?.record);
+  if (!driftRef.current) driftRef.current = new GyroDriftCorrector({ adaptiveHeading: true });
   const gyroTrainingPatternRef = useRef<KPattern | null>(null);
-  const pendingGyroResetRef = useRef<{
-    basis: THREE.Quaternion; correction: THREE.Quaternion; clickedAt: number; before: Record<string, unknown>;
-  } | null>(null);
   const previousFaceletsRef = useRef<string>('');
   const isBuggedRef = useRef(false);
 
@@ -262,6 +254,9 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
     storedSmartCubeDeviceSelection() === 'any',
   );
   const cubeQuaternionRef = useRef<SmartcubeQuaternion | null>(null);
+  const trainingViewRef = useRef<TrainingCubeView>({ phase: 'free', anchor: null });
+  const trainingViewPatternRef = useRef<KPattern | null>(null);
+  const trainingViewFrameRef = useRef<THREE.Quaternion | null>(null);
   const [cubeQuaternion, setCubeQuaternion] = useState<SmartcubeQuaternion | null>(null);
   const cubeQuaternionRefMirrorThrottleRef = useRef<number>(0);
   const gyroInfoThrottleRef = useRef<number>(0);
@@ -309,18 +304,6 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
   useEffect(() => {
     driftRef.current!.setEnabled(gyroscopeEnabled && autoCorrectGyroDrift, performance.now());
   }, [gyroscopeEnabled, autoCorrectGyroDrift]);
-
-  useEffect(() => {
-    if (!GYRO_TESTING_ENABLED) return;
-    const flush = () => diagnosticsRef.current?.flush();
-    window.addEventListener('pagehide', flush);
-    document.addEventListener('visibilitychange', flush);
-    return () => {
-      window.removeEventListener('pagehide', flush);
-      document.removeEventListener('visibilitychange', flush);
-      flush();
-    };
-  }, []);
 
   useEffect(() => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -373,55 +356,80 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
 
   const resetGyro = useCallback(() => {
     const now = performance.now();
-    if (GYRO_TESTING_ENABLED && gyroBasisRef.current) {
-      pendingGyroResetRef.current = { basis: gyroBasisRef.current.clone(), correction: driftRef.current!.correction.clone(),
-        clickedAt: now, before: driftRef.current!.snapshot(now) };
-      diagnosticsRef.current?.record('manual-reset-request', { at: now, ...pendingGyroResetRef.current.before });
-    } else {
-      diagnosticsRef.current?.record('manual-reset-request', { at: now, reason: 'no-reference-yet' });
-    }
     driftRef.current!.reset('manual-reset', now);
     gyroTrainingPatternRef.current = null;
     gyroBasisRef.current = null;
     cubeQuaternionRef.current = null;
     setCubeQuaternion(null);
-    diagnosticsRef.current?.flush();
+  }, []);
+
+  const updateTableReference = useCallback((device: KPattern, at: number, serial?: number) => {
+    let picture = measurementPictureRef.current;
+    let frame = picture ? guidanceFrameRotation(picture, device) : null;
+    if (!frame) {
+      frame = tableFrameRotation(device);
+      picture = null;
+    }
+    if (!frame) {
+      // The user can match an exact authoritative sticker picture even when
+      // a scrambled centerless state cannot establish white up / green front.
+      picture = device;
+      frame = new THREE.Quaternion();
+    }
+    driftRef.current!.setTableFrame(frame, at, true, { source: 'device', serial: serial ?? null,
+      pictureFacelets: picture ? patternToFacelets(picture) : null });
   }, []);
 
   const handleGyroTrainingEvent = useCallback((event: GyroTrainingEvent) => {
     const now = performance.now();
+    if (event.phase === 'ready' || event.phase === 'complete'
+      || event.phase === 'guided-recovery-complete' || event.phase === 'guided-setup-complete') {
+      trainingViewRef.current = { phase: 'ready', anchor: null };
+      trainingViewPatternRef.current = event.pattern;
+      trainingViewFrameRef.current = null;
+    } else if (!(event.phase === 'cancel'
+      && ['wrong-move', 'nonsequential-progress', 'unreliable-move'].includes(event.reason))) {
+      trainingViewRef.current = { phase: 'free', anchor: null };
+      trainingViewPatternRef.current = null;
+      trainingViewFrameRef.current = null;
+    }
     if (event.phase === 'ready') {
       gyroTrainingPatternRef.current = event.pattern;
       driftRef.current!.armAlgorithm(event.algorithm, event.reason ?? null, now);
+      if (cubeSizeRef.current === 2 && event.pattern && authoritative2x2Ref.current
+        && guidanceFrameRotation(event.pattern, authoritative2x2Ref.current)) {
+        measurementPictureRef.current = event.pattern;
+        updateTableReference(authoritative2x2Ref.current, now);
+      }
     } else if (event.phase === 'complete') {
-      const device = currentPatternRef.current;
+      const device = cubeSizeRef.current === 2 ? authoritative2x2Ref.current : currentPatternRef.current;
       driftRef.current!.completeAlgorithm(device ? guidanceFrameRotation(event.pattern, device) : null, now);
+      if (cubeSizeRef.current === 2 && device) {
+        measurementPictureRef.current = event.pattern;
+        updateTableReference(device, now);
+      }
       gyroTrainingPatternRef.current = null;
-    } else if (event.phase === 'context') {
-      diagnosticsRef.current?.record('training-context', { at: now, alwaysScrambleTo: event.alwaysScrambleTo });
     } else if (event.phase === 'guided-recovery-start' || event.phase === 'guided-setup-start') {
       driftRef.current!.guidanceStarted(now, event.phase === 'guided-setup-start' ? 'setup' : 'recovery');
       gyroTrainingPatternRef.current = null;
     } else if (event.phase === 'guided-recovery-cancel' || event.phase === 'guided-setup-cancel') {
       driftRef.current!.guidanceCancelled(now, event.phase === 'guided-setup-cancel' ? 'setup' : 'recovery');
     } else if (event.phase === 'guided-recovery-complete' || event.phase === 'guided-setup-complete') {
-      const device = currentPatternRef.current;
+      const device = cubeSizeRef.current === 2 ? authoritative2x2Ref.current : currentPatternRef.current;
       // Guidance's frame maps device stickers to the pictured target. This is
       // the inverse of the frame used to render algorithm progress on a 2×2.
       driftRef.current!.observeGuidedGrip(device ? guidanceFrameRotation(device, event.pattern) : null, now,
         event.phase === 'guided-setup-complete' ? 'setup' : 'recovery');
+      if (cubeSizeRef.current === 2 && device) {
+        measurementPictureRef.current = event.pattern;
+        updateTableReference(device, now);
+      }
       gyroTrainingPatternRef.current = null;
     } else {
       driftRef.current!.cancelAttempt(event.reason, now);
       gyroTrainingPatternRef.current = null;
     }
-  }, []);
-  const exportGyroDiagnostics = useCallback(() => {
-    diagnosticsRef.current?.record('estimator-snapshot', driftRef.current!.snapshot(performance.now()));
-    diagnosticsRef.current?.download();
-  }, []);
-  const clearGyroDiagnostics = useCallback(() => diagnosticsRef.current?.clear(), []);
-
+  }, [updateTableReference]);
   const resetOrientation = useCallback(() => {
     clearSliceBuffer();
     sliceOrientationRef.current = { ...IDENTITY };
@@ -429,8 +437,10 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
 
   const disconnect = useCallback(() => {
     driftRef.current!.reset('disconnect', performance.now());
-    diagnosticsRef.current?.flush();
-    pendingGyroResetRef.current = null;
+    driftRef.current!.setTableFrame(null, performance.now(), false);
+    authoritative2x2Ref.current = null;
+    measurementPictureRef.current = null;
+    last2x2SerialRef.current = null;
     gyroTrainingPatternRef.current = null;
     snapshotVersionRef.current += 1;
     pending2x2MovesRef.current = [];
@@ -465,6 +475,9 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
     cubeQuaternionRef.current = null;
     setCubeQuaternion(null);
     setDisconnectToken((value) => value + 1);
+    trainingViewRef.current = { phase: 'free', anchor: null };
+    trainingViewPatternRef.current = null;
+    trainingViewFrameRef.current = null;
     void releaseWakeLock();
   }, [clearSliceBuffer]);
 
@@ -554,17 +567,19 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
     const last = moves.at(-1);
     if (!last) return false;
     pending2x2SnapshotRef.current = null;
+    if (!queue.length) {
+      authoritative2x2Ref.current = pattern;
+      updateTableReference(pattern, performance.now(), event.serial);
+    }
     flushSync(() => setLastProcessedMove({
       key: `${event.timestamp}:${snapshotVersionRef.current}`, move: last.move, rawMoves: moves,
       visualMove: moves.map(move => move.move).join(' '), currentPattern: pattern, isBugged: false,
     }));
     return true;
-  }, []);
+  }, [updateTableReference]);
 
   const handleCubeEvent = useCallback((event: SmartCubeEvent) => {
     if (event.type === 'HARDWARE') {
-      diagnosticsRef.current?.updateDevice({ hardwareName: event.hardwareName, hardwareVersion: event.hardwareVersion,
-        softwareVersion: event.softwareVersion, productDate: event.productDate });
       setInfo((current) => ({
         ...current,
         deviceProtocol: connRef.current?.protocol.name || '- n/a -',
@@ -589,10 +604,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
     if (event.type === 'GYRO') {
       const rawQuaternion = gyroQuaternion({ x: event.quaternion.x, y: event.quaternion.z,
         z: -event.quaternion.y, w: event.quaternion.w });
-      if (!rawQuaternion) {
-        diagnosticsRef.current?.record('invalid-sample', { quaternion: event.quaternion });
-        return;
-      }
+      if (!rawQuaternion) return;
       // This data is primarily for display/debug panels; updating it at gyro-rate
       // causes large React rerender storms. Keep a ref updated always, and
       // throttle state updates.
@@ -612,27 +624,9 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
       }
 
       const gyroNow = performance.now();
-      const reset = pendingGyroResetRef.current;
-      if (reset) {
-        const oldPose = rawQuaternion.clone().premultiply(reset.basis);
-        const oldCorrectedPose = oldPose.clone().premultiply(reset.correction);
-        diagnosticsRef.current?.record('manual-reset-comparison', {
-          at: gyroNow, delayAfterClickMs: gyroNow - reset.clickedAt, beforeClick: reset.before,
-          rawAfterClick: quaternionData(rawQuaternion), oldReferencePose: quaternionData(oldPose),
-          oldCorrectedPose: quaternionData(oldCorrectedPose),
-          residualWithoutAutoCorrection: gyroPoseMetrics(oldPose), residualAfterAutoCorrection: gyroPoseMetrics(oldCorrectedPose),
-          requiredCorrection: quaternionData(oldCorrectedPose.clone().invert()),
-          newReferencePose: quaternionData(new THREE.Quaternion()),
-          assumption: 'white-up-green-front-at-reset',
-        });
-        pendingGyroResetRef.current = null;
-        diagnosticsRef.current?.flush();
-      }
       if (!gyroBasisRef.current) {
         gyroBasisRef.current = rawQuaternion.clone().conjugate();
         gyroBasisVersionRef.current += 1;
-        diagnosticsRef.current?.record('reference-established', { at: gyroNow, raw: quaternionData(rawQuaternion),
-          basisVersion: gyroBasisVersionRef.current });
       }
 
       const physicalQuaternion = rawQuaternion.clone().premultiply(gyroBasisRef.current);
@@ -647,6 +641,10 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
 
       // Store in ref so consumers (e.g. cube renderer) can read without rerendering App.
       cubeQuaternionRef.current = next;
+      if (trainingViewRef.current.phase === 'executing' && !trainingViewRef.current.anchor && trainingViewFrameRef.current) {
+        const anchor = displayQuaternion.clone().multiply(trainingViewFrameRef.current);
+        trainingViewRef.current = { phase: 'executing', anchor: { ...quaternionData(anchor)!, basisVersion: next.basisVersion } };
+      }
 
       // Keep the persisted option state in sync, but throttle to reduce whole-app rerenders.
       const now2 = Date.now();
@@ -662,7 +660,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
       const size = event.facelets.length === 24 ? 2 : 3;
       if (size !== cubeSizeRef.current) {
         driftRef.current!.cancelAttempt('puzzle-size-changed', performance.now());
-        diagnosticsRef.current?.updateDevice({ cubeSize: size });
+
         clearSliceBuffer();
         sliceOrientationRef.current = { ...IDENTITY };
         currentPatternRef.current = null;
@@ -672,6 +670,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
         isBuggedRef.current = false;
         cubeSizeRef.current = size;
         setCubeSize(size);
+        driftRef.current!.setTableFrame(null, performance.now(), size === 2);
       }
       // Sticker count identifies the puzzle even when this report cannot be
       // used as a physical state. Never leave a MY22 at the 3×3 default just
@@ -698,6 +697,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
       // the pattern itself and will call setCurrentPattern when the pair resolves.
       if (!hasBufferedMove) {
         const version = ++snapshotVersionRef.current;
+        const faceTurnVersion = faceTurnVersionRef.current;
         const connection = connRef.current;
         void faceletsToPattern(event.facelets).then((pattern) => {
           if (version !== snapshotVersionRef.current || connection !== connRef.current) return;
@@ -714,6 +714,12 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
           if (size === 2) {
             pending2x2SnapshotRef.current = { pattern, event };
             publish2x2Snapshot();
+            const matchesCounter = event.serial == null || last2x2SerialRef.current == null
+              || (event.serial & 0xff) === last2x2SerialRef.current;
+            if (faceTurnVersion === faceTurnVersionRef.current && !pending2x2MovesRef.current.length && matchesCounter) {
+              authoritative2x2Ref.current = pattern;
+              updateTableReference(pattern, performance.now(), event.serial);
+            }
             // Without a counter a snapshot can only confirm turns that had
             // arrived before it; it cannot be paired with future telemetry.
             if (event.serial == null) pending2x2SnapshotRef.current = null;
@@ -740,12 +746,23 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
     }
 
     const startPattern = gyroTrainingPatternRef.current;
-    const devicePattern = currentPatternRef.current;
+    const devicePattern = cubeSizeRef.current === 2 ? authoritative2x2Ref.current : currentPatternRef.current;
+    if (trainingViewRef.current.phase === 'ready') {
+      const picture = trainingViewPatternRef.current;
+      const frame = picture && devicePattern ? guidanceFrameRotation(picture, devicePattern) : null;
+      trainingViewFrameRef.current = frame;
+      const pose = cubeQuaternionRef.current;
+      const anchor = pose && frame ? new THREE.Quaternion(pose.x, pose.y, pose.z, pose.w).multiply(frame) : null;
+      trainingViewRef.current = { phase: 'executing', anchor: anchor && { ...quaternionData(anchor)!, basisVersion: pose!.basisVersion } };
+    }
     driftRef.current!.noteMove(performance.now(), startPattern && devicePattern
-      ? guidanceFrameRotation(startPattern, devicePattern) : null);
+      ? guidanceFrameRotation(startPattern, devicePattern) : null, { cubeSize: cubeSizeRef.current });
     gyroTrainingPatternRef.current = null;
+    faceTurnVersionRef.current += 1;
+    authoritative2x2Ref.current = null;
 
     if (cubeSizeRef.current === 2) {
+      last2x2SerialRef.current = event.serial == null ? null : event.serial & 0xff;
       pending2x2MovesRef.current.push(event);
       // Requested sticker reports can arrive before the corresponding turn
       // notification. Pair late telemetry with that report without another read.
@@ -804,7 +821,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
       return;
     }
     void processResolvedMove(event, [event]);
-  }, [clearSliceBuffer, disconnect, flushBufferedMove, processResolvedMove, publish2x2Snapshot, refreshPattern]);
+  }, [clearSliceBuffer, disconnect, flushBufferedMove, processResolvedMove, publish2x2Snapshot, refreshPattern, updateTableReference]);
 
   const connectOrDisconnect = useCallback(async () => {
     if (connRef.current) {
@@ -859,9 +876,8 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
     if (/^(?:WCU_MY22_|gan(?:251ui|ic251)(?:[_-]|$))/i.test(newConn.deviceName)) {
       cubeSizeRef.current = 2;
       setCubeSize(2);
+      driftRef.current!.setTableFrame(null, performance.now(), true);
     }
-    diagnosticsRef.current?.startSession({ deviceName: newConn.deviceName, protocol: newConn.protocol.name,
-      protocolId: newConn.protocol.id, cubeSize: cubeSizeRef.current });
     subscriptionRef.current = connRef.current.events$.subscribe(handleCubeEvent);
 
     if (connRef.current.capabilities.hardware) {
@@ -896,6 +912,9 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
   }, [connecting, customMacAddressProvider, disconnect, handleCubeEvent, showAllBluetoothDevices]);
 
   const resetState = useCallback(async () => {
+    trainingViewRef.current = { phase: 'free', anchor: null };
+    trainingViewPatternRef.current = null;
+    trainingViewFrameRef.current = null;
     driftRef.current!.cancelAttempt('cube-state-reset', performance.now());
     gyroTrainingPatternRef.current = null;
     await connRef.current?.sendCommand({ type: 'REQUEST_RESET' });
@@ -942,14 +961,13 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
     stateSyncing,
     resetGyro,
     handleGyroTrainingEvent,
-    exportGyroDiagnostics,
-    clearGyroDiagnostics,
     resetOrientation,
     gyroSupported,
     gyroSupportResolved,
     gyroscopeToggleDisabled,
     cubeQuaternion,
     cubeQuaternionRef,
+    trainingViewRef,
   }), [
     battery,
     cubeSize,
@@ -968,8 +986,6 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
     lastProcessedMove,
     resetGyro,
     handleGyroTrainingEvent,
-    exportGyroDiagnostics,
-    clearGyroDiagnostics,
     resetOrientation,
     resetState,
     refreshPattern,

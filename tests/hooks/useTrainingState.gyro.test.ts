@@ -13,17 +13,14 @@ const options = {
 };
 
 describe('training gyro calibration boundaries', () => {
-  it('records Always Scramble To changes as context without changing the reference', () => {
+  it('does not send gyro events for presentation option changes', () => {
     const onGyroTrainingEvent = vi.fn<(event: GyroTrainingEvent) => void>();
     const { rerender } = renderHook(({ alwaysScrambleTo }) => useTrainingState([], 'Custom', {
       ...options, alwaysScrambleTo, onGyroTrainingEvent,
     }), { initialProps: { alwaysScrambleTo: false } });
     rerender({ alwaysScrambleTo: true });
     rerender({ alwaysScrambleTo: false });
-    expect(onGyroTrainingEvent.mock.calls.map(([event]) => event)).toEqual([
-      { phase: 'context', alwaysScrambleTo: false }, { phase: 'context', alwaysScrambleTo: true },
-      { phase: 'context', alwaysScrambleTo: false },
-    ]);
+    expect(onGyroTrainingEvent).not.toHaveBeenCalled();
   });
   it.each([2, 3] as const)('emits a single physical start frame and completion for a clean %i× attempt, including split half turns', async size => {
     const algorithm = "R U2 R'";
@@ -39,7 +36,7 @@ describe('training gyro calibration boundaries', () => {
       physical = physical.applyMove(move);
       act(() => { result.current.handleSmartcubeMove(size === 2 ? fixOrientation(physical) : physical, move); });
     }
-    expect(onGyroTrainingEvent.mock.calls.map(([event]) => event.phase)).toEqual(['context', 'ready', 'complete']);
+    expect(onGyroTrainingEvent.mock.calls.map(([event]) => event.phase)).toEqual(['ready', 'complete']);
     const completed = onGyroTrainingEvent.mock.calls.find(([event]) => event.phase === 'complete')![0];
     expect(completed.phase === 'complete' && completed.pattern.isIdentical(physical)).toBe(true);
   });

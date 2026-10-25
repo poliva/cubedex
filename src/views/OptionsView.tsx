@@ -4,7 +4,7 @@ import type { AppSettingsState } from '../hooks/useAppSettings';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
 import { Toggle } from '../components/ui/Toggle';
 import { Icon } from '../components/ui/Icon';
-import { GYRO_TESTING_ENABLED } from '../lib/build-flags';
+import { MIN_VIEW_ANGLE_DEG, MAX_VIEW_ANGLE_DEG } from '../lib/training-cube-view';
 
 export const OptionsView = memo(function OptionsView({
   visible,
@@ -271,6 +271,18 @@ export const OptionsView = memo(function OptionsView({
             </select>
           </div>
           <div style={row()}>
+            <div style={{ ...lbl, flex: 1 }}>
+              <label htmlFor="cube-view-angle">Default View Angle · {options.viewAngleDeg}°</label>
+              <div id="cube-view-angle-description" style={{ fontSize: 12, color: 'var(--fg3)', marginTop: 4 }}>
+                Turn the default view left (negative) or right (positive). Small physical turns stay live and gently recenter between algorithms.
+              </div>
+              <input id="cube-view-angle" type="range" min={MIN_VIEW_ANGLE_DEG} max={MAX_VIEW_ANGLE_DEG} step={1}
+                value={options.viewAngleDeg} aria-label="Default View Angle" aria-valuetext={`${options.viewAngleDeg} degrees`}
+                aria-describedby="cube-view-angle-description" onChange={e => options.setViewAngleDeg(Number(e.target.value))}
+                style={{ width: '100%', marginTop: 8, accentColor: 'var(--accent)', cursor: 'pointer' }} />
+            </div>
+          </div>
+          <div style={row()}>
             {optionLabel('Floating Mirror Stickers', 'Show hidden stickers beside the virtual cube.')}
             <Toggle
               ariaLabel="Floating Mirror Stickers"
@@ -323,7 +335,7 @@ export const OptionsView = memo(function OptionsView({
         <div style={section}>
           <div style={sHdr}>Smartcube</div>
           <div style={row()}>
-            {optionLabel('Animate Using Gyroscope', 'Rotate the virtual cube to follow how you hold your smartcube.')}
+            {optionLabel('Animate Using Gyroscope', 'Follow tilts and small sideways turns between algorithms, with gentle heading recentering. Follow all rotations during execution.')}
             <Toggle
               ariaLabel="Animate Virtual Cube Using Gyroscope"
               checked={smartcube.connected && !smartcube.gyroSupported ? false : options.gyroscope}
@@ -332,7 +344,7 @@ export const OptionsView = memo(function OptionsView({
             />
           </div>
           <div style={row()}>
-            {optionLabel('Auto-correct Gyro Drift', 'Corrects small tilts while resting flat and heading drift after rotation-free algorithms. Connect or reset with white on top and green in front.')}
+            {optionLabel('Auto-correct Gyro Drift', 'Corrects small tilts at rest and learns heading drift from repeated algorithms using this session’s gyro data. Connect or reset with white on top and green in front.')}
             <Toggle
               ariaLabel="Auto-correct Gyro Drift"
               checked={options.autoCorrectGyroDrift}
@@ -340,27 +352,6 @@ export const OptionsView = memo(function OptionsView({
               onChange={options.setAutoCorrectGyroDrift}
             />
           </div>
-          {GYRO_TESTING_ENABLED && (
-            <>
-              <div style={row(true)}>
-                <span style={lbl}>Gyro testing log</span>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button style={btnStyle()} type="button" onClick={() => {
-                    smartcube.exportGyroDiagnostics();
-                    setActionFeedback({ message: 'Gyro testing log exported.', error: false });
-                  }}>Export gyro log</button>
-                  <button style={btnStyle(true)} type="button" onClick={() => {
-                    smartcube.clearGyroDiagnostics();
-                    setActionFeedback({ message: 'Gyro testing log cleared.', error: false });
-                  }}>Clear gyro log</button>
-                </div>
-              </div>
-              <div style={{ padding: '9px 14px', background: 'var(--surface)', borderBottom: '1px solid var(--border)', fontSize: 12, color: 'var(--fg3)' }}>
-                Recent corrections, skipped corrections, and Reset Gyro comparisons are saved locally.
-                To measure remaining drift, hold white up and green forward before resetting. Export after testing each cube.
-              </div>
-            </>
-          )}
           <div style={row()}>
             {optionLabel('Show All Bluetooth Devices', 'Include unrecognized devices in the Bluetooth connection picker.')}
             <Toggle

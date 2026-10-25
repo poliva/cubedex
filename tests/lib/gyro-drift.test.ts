@@ -4,20 +4,73 @@ import { GyroDriftCorrector, gyroAlgorithmEligibility, gyroPoseMetrics, gyroQuat
 
 const rotation = (axis: 'x' | 'y' | 'z', degrees: number) => new Quaternion().setFromAxisAngle(
   new Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, axis === 'z' ? 1 : 0), degrees * Math.PI / 180);
+function stableStart(engine: GyroDriftCorrector, q = new Quaternion(), now = 0) {
+  for (let at = now - 200; at <= now; at += 20) engine.update(q, at);
+}
 function harness() {
-  const events: Array<{ event: string; data: Record<string, any> }> = [];
-  const engine = new GyroDriftCorrector((event, data) => events.push({ event, data }));
+  const engine = new GyroDriftCorrector();
   const samples = (q: Quaternion, from: number, to: number) => {
     let result = q;
     for (let at = from; at <= to; at += 20) result = engine.update(q, at);
     return result;
   };
-  return { engine, events, samples };
+  return { engine, samples };
 }
 
+it('rejects duplicate, older and invalid packets before they can clear a stable start or affect rendering', () => {
+  const { engine, samples } = harness();
+  const raw = rotation('x', 25);
+  samples(raw, 0, 400);
+  const before = engine.snapshot(410);
+  const rendered = engine.apply(raw);
+  for (const [q, at] of [[rotation('y', 80), 400], [rotation('y', -60), 350],
+    [new Quaternion(0, 0, 0, 0), 420], [new Quaternion(1e300, 0, 0, 1), 430], [raw, NaN]] as const) {
+    expect(engine.update(q, at).angleTo(rendered)).toBeLessThan(1e-7);
+  }
+  expect(engine.snapshot(410)).toEqual({ ...before, rejectedSamples: { invalid: 3, duplicate: 1, outOfOrder: 1 } });
+  engine.armAlgorithm('R', null, 410);
+  engine.noteMove(410, new Quaternion());
+  expect(engine.snapshot(410).startEvidence!.reason).toBe('stable-start-window');
+});
+
 describe('gyro drift correction', () => {
+  it('averages a stable start window, including equivalent opposite-sign quaternions', () => {
+    const { engine, samples } = harness();
+    const grip = rotation('x', 25);
+    for (let i = 0; i < 6; i++) {
+      const q = rotation('y', 20 + (i % 2 ? .2 : -.2)).multiply(grip);
+      if (i % 2) q.set(-q.x, -q.y, -q.z, -q.w);
+      engine.update(q, i * 60);
+    }
+    engine.armAlgorithm('R U', null, 300);
+    engine.noteMove(310, new Quaternion());
+    const start = engine.snapshot(310).activeAttempt!;
+    expect(start.startEvidence).toMatchObject({ reason: 'stable-start-window', sampleCount: 6,
+      spanMs: 300, spreadDeg: expect.closeTo(.4, 4), sampleAgeMs: 10 });
+    const measured = gyroQuaternion(start.start!)!;
+    expect(measured.angleTo(rotation('y', 20).multiply(grip))).toBeLessThan(1e-6);
+    engine.completeAlgorithm(new Quaternion(), 320);
+    const result = samples(rotation('y', 24).multiply(grip), 340, 1800);
+    expect(result.angleTo(rotation('y', 22).multiply(grip))).toBeLessThan(1e-6);
+  });
+
+  it('rejects a fresh moving start and does not reuse a preceding stable table pose', () => {
+    const { engine, samples } = harness();
+    samples(rotation('x', 25), 0, 300);
+    engine.update(rotation('x', 40), 320);
+    engine.armAlgorithm('R', null, 320);
+    engine.noteMove(330, new Quaternion());
+    const attempt = engine.snapshot(330).activeAttempt;
+    engine.completeAlgorithm(new Quaternion(), 340);
+    samples(rotation('y', 4).multiply(rotation('x', 40)), 360, 1600);
+    expect(attempt).toMatchObject({
+      reason: 'start-grip-not-stable', start: null,
+      startEvidence: { sampleAgeMs: 10, sampleCount: 1, confidence: 0 } });
+    expect(engine.correction.angleTo(new Quaternion())).toBe(0);
+  });
+
   it('requires 600ms of samples, smoothly corrects tilt, and preserves yaw', () => {
-    const { engine, events, samples } = harness();
+    const { engine, samples } = harness();
     const q = rotation('y', 40).multiply(rotation('x', 6));
     samples(q, 0, 580);
     expect(engine.correction.angleTo(new Quaternion())).toBe(0);
@@ -27,8 +80,7 @@ describe('gyro drift correction', () => {
     expect(gyroPoseMetrics(result).tiltDeg).toBeLessThan(.001);
     expect(gyroPoseMetrics(result).yawDeg).toBeCloseTo(40, 5);
     samples(q, 2620, 6000);
-    expect(events.filter(e => e.event === 'correction-start')).toHaveLength(1);
-    expect(events.find(e => e.event === 'correction-applied')?.data).toMatchObject({ reason: 'completed', appliedDeg: expect.closeTo(6, 5) });
+    expect(engine.snapshot(6000).activeCorrection).toBeNull();
   });
 
   it('supports resting on any face and does not flatten a clearly tilted grip', () => {
@@ -38,7 +90,7 @@ describe('gyro drift correction', () => {
     const tilted = harness();
     const q = rotation('x', 25);
     expect(tilted.samples(q, 0, 2500).angleTo(q)).toBeLessThan(.00001);
-    expect(tilted.events.find(e => e.event === 'correction-decision')?.data.reason).toBe('face-not-flat-enough');
+    expect(tilted.engine.snapshot(2500).lastDecision?.reason).toBe('face-not-flat-enough');
   });
 
   it('does not treat packet silence or a face turn as sustained rest', () => {
@@ -56,7 +108,7 @@ describe('gyro drift correction', () => {
   });
 
   it('stops an in-progress adjustment on motion or a new face turn', () => {
-    const { engine, events, samples } = harness();
+    const { engine, samples } = harness();
     const q = rotation('x', 8);
     samples(q, 0, 800);
     const partial = engine.correction.clone();
@@ -64,13 +116,13 @@ describe('gyro drift correction', () => {
     engine.noteMove(810, null);
     engine.update(rotation('z', 25), 820);
     expect(engine.correction.angleTo(partial)).toBeLessThan(1e-7);
-    expect(events.find(e => e.event === 'correction-applied')?.data.reason).toBe('face-move');
+    expect(engine.snapshot(820).activeCorrection).toBeNull();
   });
 
   it('compares actual start and end grips, correcting only part of a small heading change', () => {
-    const { engine, events, samples } = harness();
+    const { engine, samples } = harness();
     const grip = rotation('y', 25).multiply(rotation('x', 30));
-    samples(grip, 0, 100);
+    samples(grip, -100, 100);
     engine.armAlgorithm("R U R'", null, 100);
     engine.noteMove(110, new Quaternion());
     samples(grip, 120, 900);
@@ -80,47 +132,45 @@ describe('gyro drift correction', () => {
     const end = rotation('y', 6).multiply(grip);
     const result = samples(end, 920, 2200);
     expect(result.angleTo(rotation('y', 3).multiply(grip))).toBeLessThan(1e-6);
-    expect(events.find(e => e.event === 'correction-decision' && e.data.source === 'algorithm')?.data.reason).toBe('accepted');
+    expect(engine.snapshot(2200).lastDecision?.reason).toBe('accepted');
   });
 
   it.each([['heading-change-too-large', rotation('y', 90)], ['grip-tilt-changed', rotation('x', 20)]])
     ('rejects intentional grip changes: %s', (reason, end) => {
-      const { engine, events, samples } = harness();
-      engine.update(new Quaternion(), 0);
+      const { engine, samples } = harness();
+      stableStart(engine);
       engine.armAlgorithm('R', null, 0);
       engine.noteMove(10, new Quaternion());
       engine.completeAlgorithm(new Quaternion(), 20);
       samples(end as Quaternion, 40, 300);
-      expect(events.find(e => e.data.source === 'algorithm')?.data.reason).toBe(reason);
+      expect(engine.snapshot(300).lastDecision?.reason).toBe(reason);
       expect(engine.correction.angleTo(new Quaternion())).toBe(0);
     });
 
   it('compensates changing 2×2 sensor frames at both algorithm boundaries', () => {
-    const { engine, events, samples } = harness();
+    const { engine, samples } = harness();
     const startFrame = rotation('x', 90), endFrame = rotation('z', -90);
     const grip = rotation('x', 25);
-    engine.update(grip.clone().multiply(startFrame.clone().invert()), 0);
+    stableStart(engine, grip.clone().multiply(startFrame.clone().invert()));
     engine.armAlgorithm('R D B', null, 0);
     engine.noteMove(10, startFrame);
     engine.completeAlgorithm(endFrame, 20);
     const end = rotation('y', -4).multiply(grip).multiply(endFrame.clone().invert());
     const result = samples(end, 40, 1600).multiply(endFrame);
     expect(result.angleTo(rotation('y', -2).multiply(grip))).toBeLessThan(1e-6);
-    const decision = events.find(e => e.data.source === 'algorithm');
-    expect(decision?.data.delta.yawDeg).toBeCloseTo(-4);
+    expect(gyroPoseMetrics(engine.correction).yawDeg).toBeCloseTo(2);
   });
 
   it('preserves the previous endpoint when the next case is displayed but skips it on another move', () => {
-    const { engine, events, samples } = harness();
-    engine.update(new Quaternion(), 0);
+    const { engine, samples } = harness();
+    stableStart(engine);
     engine.armAlgorithm('R', null, 0);
     engine.noteMove(10, new Quaternion());
     engine.completeAlgorithm(new Quaternion(), 20);
     engine.armAlgorithm('U', null, 25);
     samples(rotation('y', 4), 40, 100);
     engine.noteMove(110, new Quaternion());
-    expect(events.find(e => e.data.reason === 'next-move-before-settling')).toBeDefined();
-    expect(events.find(e => e.data.reason === 'next-move-before-settling')?.data).toMatchObject({
+    expect(engine.snapshot(110).lastDecision).toMatchObject({
       durationMs: 100, endpointWaitMs: 90, sampleAgeMs: 10, sampleAfterCompletion: true,
       delta: { yawDeg: expect.closeTo(4, 5), tiltDeg: expect.closeTo(0, 5) },
       headingEvidence: { sampleCount: 4, spanMs: 60, yawSpreadDeg: 0, steady: false },
@@ -129,25 +179,25 @@ describe('gyro drift correction', () => {
   });
 
   it('identifies skipped endpoints that have no post-completion sensor evidence', () => {
-    const { engine, events } = harness();
-    engine.update(rotation('y', 2), 0);
+    const { engine } = harness();
+    stableStart(engine, rotation('y', 2));
     engine.armAlgorithm('R', null, 0);
     engine.noteMove(10, new Quaternion());
     engine.completeAlgorithm(new Quaternion(), 20);
     engine.cancelAttempt('training-cleared', 500);
-    expect(events.find(e => e.data.reason === 'training-cleared' && e.event === 'correction-decision')?.data)
+    expect(engine.snapshot(500).lastDecision)
       .toMatchObject({ sampleAfterCompletion: false, sampleAgeMs: 500, endpointWaitMs: 480,
         headingEvidence: { sampleCount: 0, spanMs: 0, yawSpreadDeg: null, steady: false } });
     expect(engine.correction.angleTo(new Quaternion())).toBe(0);
   });
 
-  it('logs proposed corrections while disabled, without changing the reference', () => {
-    const { engine, events, samples } = harness();
+  it('leaves the reference unchanged when correction is disabled', () => {
+    const { engine, samples } = harness();
     engine.setEnabled(false, 0);
     const q = rotation('x', 6);
     expect(samples(q, 0, 2200).angleTo(q)).toBeLessThan(1e-6);
-    expect(events.find(e => e.data.source === 'table')?.data.reason).toBe('disabled');
-    expect(events.some(e => e.event === 'correction-start')).toBe(false);
+    expect(engine.snapshot(2200).lastDecision?.reason).toBe('disabled');
+    expect(engine.snapshot(0).activeCorrection).toBeNull();
   });
 
   it('retains applied corrections on opt-out and clears all estimator history on reset', () => {
@@ -162,23 +212,24 @@ describe('gyro drift correction', () => {
   });
 
   it('rejects stale start samples, cancellation, and endpoints that never settle', () => {
-    const { engine, events, samples } = harness();
-    engine.update(new Quaternion(), 0);
+    const { engine, samples } = harness();
+    stableStart(engine);
     engine.armAlgorithm('R', null, 0);
     engine.noteMove(1000, new Quaternion());
     engine.completeAlgorithm(new Quaternion(), 1010);
-    expect(events.some(e => e.data.reason === 'missing-fresh-start-sample')).toBe(true);
+    expect(engine.snapshot(1010).lastDecision?.reason).toBe('missing-fresh-start-sample');
     samples(new Quaternion(), 1020, 1100);
     engine.armAlgorithm('U', null, 1100);
     engine.noteMove(1110, new Quaternion());
     engine.cancelAttempt('recovery', 1120);
     engine.completeAlgorithm(new Quaternion(), 1130);
-    expect(events.some(e => e.event === 'algorithm-cancelled' && e.data.reason === 'recovery')).toBe(true);
-    engine.armAlgorithm('F', null, 1130);
-    engine.noteMove(1140, new Quaternion());
-    engine.completeAlgorithm(new Quaternion(), 1150);
-    engine.update(rotation('y', 4), 4300);
-    expect(events.some(e => e.data.reason === 'endpoint-did-not-settle')).toBe(true);
+    expect(engine.snapshot(1130).activeAttempt).toBeNull();
+    samples(new Quaternion(), 1140, 1340);
+    engine.armAlgorithm('F', null, 1350);
+    engine.noteMove(1360, new Quaternion());
+    engine.completeAlgorithm(new Quaternion(), 1370);
+    engine.update(rotation('y', 4), 4600);
+    expect(engine.snapshot(4600).lastDecision?.reason).toBe('endpoint-did-not-settle');
   });
 
   it('handles quaternion sign equivalence and rejects invalid readings', () => {
@@ -195,9 +246,9 @@ describe('gyro drift correction', () => {
   });
 
   it.each([60, 90, 135])('uses heading stability while the hand pitches at a %ims BLE cadence', cadence => {
-    const { engine, events } = harness();
+    const { engine } = harness();
     const grip = rotation('x', 25);
-    engine.update(grip, 0);
+    stableStart(engine, grip);
     engine.armAlgorithm('R U', null, 0);
     engine.noteMove(10, new Quaternion());
     engine.completeAlgorithm(new Quaternion(), 20);
@@ -205,27 +256,25 @@ describe('gyro drift correction', () => {
       const q = rotation('y', 4).multiply(rotation('x', 25 + (i % 2 ? 2 : -2)));
       engine.update(q, at);
     }
-    expect(events.some(e => e.event === 'correction-decision' && e.data.source === 'algorithm' && e.data.reason === 'accepted')).toBe(true);
-    expect(events.find(e => e.event === 'correction-applied')?.data.appliedDeg).toBeCloseTo(2);
+    expect(engine.snapshot(1800).lastDecision?.reason).toBe('accepted');
     expect(gyroPoseMetrics(engine.correction).tiltDeg).toBeLessThan(.0001);
     expect(gyroPoseMetrics(engine.correction).yawDeg).toBeCloseTo(-2);
   });
 
   it('allows a delayed endpoint without assuming that the cube is steady during missing packets', () => {
-    const { engine, events } = harness();
-    engine.update(new Quaternion(), 0);
+    const { engine } = harness();
+    stableStart(engine);
     engine.armAlgorithm('R', null, 0);
     engine.noteMove(10, new Quaternion());
     engine.completeAlgorithm(new Quaternion(), 20);
     for (let at = 90; at <= 1800; at += 90) engine.update(rotation('y', at % 180 ? 20 : -20), at);
-    expect(events.some(e => e.data.source === 'algorithm')).toBe(false);
+    expect(engine.snapshot(1800).pendingEndpoint).not.toBeNull();
     for (let at = 1890; at <= 2790; at += 90) engine.update(rotation('y', 4), at);
-    expect(events.find(e => e.event === 'correction-applied')?.data.appliedDeg).toBeCloseTo(2);
   });
 
   it('stops heading correction immediately on yaw motion, even after accepting the endpoint', () => {
-    const { engine, events, samples } = harness();
-    engine.update(new Quaternion(), 0);
+    const { engine, samples } = harness();
+    stableStart(engine);
     engine.armAlgorithm('R', null, 0);
     engine.noteMove(10, new Quaternion());
     engine.completeAlgorithm(new Quaternion(), 20);
@@ -233,27 +282,27 @@ describe('gyro drift correction', () => {
     const partial = engine.correction.clone();
     engine.update(rotation('y', 20), 380);
     expect(engine.correction.angleTo(partial)).toBeLessThan(1e-6);
-    expect(events.find(e => e.event === 'correction-applied')?.data.reason).toBe('heading-motion');
+    expect(engine.snapshot(380).activeCorrection).toBeNull();
   });
 
   it('requires three fresh endpoint samples and does not apply correction time from before acceptance', () => {
-    const { engine, events } = harness();
-    engine.update(new Quaternion(), 0);
+    const { engine } = harness();
+    stableStart(engine);
     engine.armAlgorithm('R', null, 0);
     engine.noteMove(10, new Quaternion());
     engine.completeAlgorithm(new Quaternion(), 20);
     engine.update(rotation('y', 4), 100);
     engine.update(rotation('y', 4), 280);
-    expect(events.some(e => e.event === 'correction-start')).toBe(false);
+    expect(engine.snapshot(0).activeCorrection).toBeNull();
     engine.update(rotation('y', 4), 400);
-    expect(events.some(e => e.event === 'correction-start')).toBe(true);
+    expect(engine.snapshot(400).activeCorrection).not.toBeNull();
     expect(engine.correction.angleTo(new Quaternion())).toBe(0);
     engine.update(rotation('y', 4), 500);
     expect(Math.abs(gyroPoseMetrics(engine.correction).yawDeg!)).toBeCloseTo(.4);
   });
 
-  it('records the GAN recovery pose without treating an approximate holding angle as calibration', () => {
-    const { engine, events } = harness();
+  it('preserves the GAN recovery pose without treating an approximate holding angle as calibration', () => {
+    const { engine } = harness();
     // Mid-session reset pose from the second GAN16ui recording, in its old
     // calibrated frame, including the correction accumulated before recovery.
     const raw = new Quaternion(.005981426129830419, -.3138379011962908, .0035112620044616353, -.9494512443265828);
@@ -266,8 +315,7 @@ describe('gyro drift correction', () => {
     const after = engine.apply(raw);
     expect(gyroPoseMetrics(after).yawDeg).toBeCloseTo(before.yawDeg!, 6);
     expect(gyroPoseMetrics(after).tiltDeg).toBeCloseTo(before.tiltDeg, 6);
-    const reference = events.find(e => e.event === 'guided-reference')!;
-    expect(reference.data).toMatchObject({ reason: 'observed-grip-only', applied: false, headingAdjustmentDeg: 0 });
+    expect(engine.snapshot(120).lastDecision).toMatchObject({ reason: 'observed-grip-only', applied: false, headingAdjustmentDeg: 0 });
     engine.armAlgorithm('R U', null, 130);
     expect(gyroPoseMetrics(engine.update(raw, 140)).yawDeg).toBeCloseTo(before.yawDeg!, 6);
   });
@@ -285,13 +333,13 @@ describe('gyro drift correction', () => {
 
   it.each(['disabled', 'stale', 'unknown-frame', 'quarter-turn'] as const)
     ('does not reanchor an untrusted guided pose: %s', scenario => {
-      const { engine, events } = harness();
+      const { engine } = harness();
       if (scenario === 'disabled') engine.setEnabled(false, 0);
       const q = rotation('y', scenario === 'quarter-turn' ? 90 : 20);
       engine.update(q, 0);
       engine.observeGuidedGrip(scenario === 'unknown-frame' ? null : new Quaternion(), scenario === 'stale' ? 300 : 30);
       expect(engine.correction.angleTo(new Quaternion())).toBe(0);
-      expect(events.find(e => e.event === 'guided-reference')?.data.applied).toBe(false);
+      expect(engine.snapshot(300).lastDecision?.applied).toBe(false);
     });
 });
 

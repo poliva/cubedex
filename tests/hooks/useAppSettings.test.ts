@@ -3,6 +3,32 @@ import { describe, expect, it } from 'vitest';
 import { useAppSettings } from '../../src/hooks/useAppSettings';
 
 describe('useAppSettings', () => {
+  it('defaults the view angle to 0 degrees and remembers slider changes', () => {
+    const hook = renderHook(() => useAppSettings());
+    expect(hook.result.current.viewAngleDeg).toBe(0);
+    act(() => hook.result.current.setViewAngleDeg(28));
+    expect(localStorage.getItem('viewAngleDeg')).toBe('28');
+    hook.unmount();
+    expect(renderHook(() => useAppSettings()).result.current.viewAngleDeg).toBe(28);
+  });
+
+  it('persists a negative view angle for inspecting the left side', () => {
+    const hook = renderHook(() => useAppSettings());
+    act(() => hook.result.current.setViewAngleDeg(-25));
+    expect(localStorage.getItem('viewAngleDeg')).toBe('-25');
+    hook.unmount();
+    expect(renderHook(() => useAppSettings()).result.current.viewAngleDeg).toBe(-25);
+  });
+
+  it.each([['', 0], ['invalid', 0], ['-20', -20], ['-999', -45], ['999', 45], ['0', 0]])(
+    'validates the saved view angle %s as %i', (saved, expected) => {
+      localStorage.setItem('viewAngleDeg', saved);
+      const hook = renderHook(() => useAppSettings());
+      expect(hook.result.current.viewAngleDeg).toBe(expected);
+      act(() => hook.result.current.setViewAngleDeg(Number.NaN));
+      expect(hook.result.current.viewAngleDeg).toBe(0);
+    });
+
   it('enables gyro drift correction by default and remembers opting out', () => {
     const hook = renderHook(() => useAppSettings());
     expect(hook.result.current.autoCorrectGyroDrift).toBe(true);

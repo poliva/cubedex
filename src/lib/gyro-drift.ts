@@ -1,16 +1,21 @@
 import { Alg, Move } from 'cubing/alg';
 import { Quaternion, Vector3 } from 'three';
+import { GyroGripDriftEstimator } from './gyro-grip-drift';
+import { GyroMotionDriftEstimator } from './gyro-motion-drift';
+import { GYRO_HOME_THRESHOLDS, GyroHomeGripObserver, type GyroHomeObservation } from './gyro-home-grip';
 
-export const GYRO_ESTIMATOR_VERSION = 4;
-
-// All angles are in degrees and all times in milliseconds. Keep these in the
-// exported report so recordings remain interpretable after thresholds change.
+// All angles are in degrees and all times in milliseconds.
 export const GYRO_DRIFT_THRESHOLDS = {
   steadyMs: 600,
   steadySpreadDeg: 0.8,
   steadySpeedDegPerSecond: 12,
   maxSampleGapMs: 200,
   maxSampleAgeMs: 200,
+  startWindowMs: 450,
+  startSteadyMs: 150,
+  startMinSamples: 3,
+  startSpreadDeg: 0.8,
+  startSpeedDegPerSecond: 12,
   minCorrectionDeg: 0.3,
   maxTableTiltDeg: 10,
   endpointSteadyMs: 150,
@@ -26,7 +31,6 @@ export const GYRO_DRIFT_THRESHOLDS = {
 } as const;
 
 export type GyroQuaternion = { x: number; y: number; z: number; w: number };
-export type GyroLog = (event: string, data: Record<string, unknown>) => void;
 const DEG = 180 / Math.PI;
 const UP = new Vector3(0, 1, 0);
 const FACE_NORMALS = [new Vector3(0, 1, 0), new Vector3(0, -1, 0),
@@ -36,7 +40,7 @@ const FACE_NAMES = ['U', 'D', 'R', 'L', 'F', 'B'];
 export function gyroQuaternion(q: GyroQuaternion) {
   if (![q.x, q.y, q.z, q.w].every(Number.isFinite)) return null;
   const result = new Quaternion(q.x, q.y, q.z, q.w);
-  return result.lengthSq() > 1e-8 ? result.normalize() : null;
+  return Number.isFinite(result.lengthSq()) && result.lengthSq() > 1e-8 ? result.normalize() : null;
 }
 
 export function quaternionData(q: GyroQuaternion): GyroQuaternion {
@@ -81,7 +85,10 @@ export function gyroAlgorithmEligibility(algorithm: string): string | null {
 }
 
 type Sample = { q: Quaternion; at: number };
-type Attempt = { algorithm: string; reason: string | null; start: Quaternion | null; at: number };
+type StartEvidence = { reason: string; sampleCount: number; spanMs: number; sampleAgeMs: number | null;
+  spreadDeg: number | null; maxSpeedDegPerSecond: number | null; confidence: number };
+type Attempt = { id: number; algorithm: string; reason: string | null; start: Quaternion | null;
+  startEvidence: StartEvidence; gripEligible: boolean; at: number };
 type End = { attempt: Attempt; frame: Quaternion; at: number };
 type HeadingWindow = { correction: Quaternion; frame: Quaternion; start: Quaternion;
   points: Array<{ at: number; yawDeg: number }>; steady: boolean; tiltDeg: number | null };
@@ -102,74 +109,160 @@ export class GyroDriftCorrector {
   private end: End | null = null;
   private heading: HeadingWindow | null = null;
   private pending: Correction | null = null;
-  private recent: Array<Record<string, unknown>> = [];
-  private recentAt = -Infinity;
-  private sampleLogAt = -Infinity;
+  private startSamples: Sample[] = [];
+  private startEvidence: StartEvidence | null = null;
+  private attemptId = 0;
   private lastDecision: Record<string, unknown> | null = null;
+  private tableFrameRequired = false;
+  private tableFrame: Quaternion | null = null;
+  private resetTableFrame: Quaternion | null = null;
+  private tablePictureFacelets: string | null = null;
+  private resetPictureFacelets: string | null = null;
+  private assertedResetPicture: string | null = null;
+  private movedSinceReset = false;
+  private rejectedSamples = { invalid: 0, duplicate: 0, outOfOrder: 0 };
+  private usualGrip: GyroGripDriftEstimator | null;
+  private motionHeading: GyroMotionDriftEstimator | null;
+  private homeGrip: GyroHomeGripObserver | null;
+  private pendingHome: { observation: GyroHomeObservation; reference: string } | null = null;
+  private homeGuidance = false;
 
-  constructor(private log: GyroLog = () => {}) {}
+  constructor(options: { adaptiveHeading?: boolean } = {}) {
+    this.motionHeading = options.adaptiveHeading ? new GyroMotionDriftEstimator() : null;
+    this.homeGrip = options.adaptiveHeading ? new GyroHomeGripObserver() : null;
+    this.usualGrip = this.motionHeading ? new GyroGripDriftEstimator(o => {
+      const wasReady = this.motionHeading?.snapshot().ready;
+      this.motionHeading?.completeObservation(o);
+      if (!wasReady && this.motionHeading?.snapshot().ready) {
+        this.motionHeading.synchronizeAppliedHeading(-(yawDegrees(this.correction) ?? 0));
+      }
+    }) : null;
+  }
 
   setEnabled(enabled: boolean, now: number) {
     if (enabled === this.enabled) return;
     this.finishCorrection('setting-changed', now);
     this.enabled = enabled;
     this.steadyAnchor = null;
+    this.startSamples = [];
     this.tableConsidered = false;
     // Retain the accumulated reference to avoid a jump when switching off.
     this.cancelAttempt('setting-changed', now);
-    this.log('setting', { enabled, at: now, correction: quaternionData(this.correction) });
   }
 
   snapshot(now: number) {
     return {
-      enabled: this.enabled, sampleAgeMs: this.last ? now - this.last.at : null,
+      enabled: this.enabled, sampleAt: this.last?.at ?? null, sampleAgeMs: this.last ? now - this.last.at : null,
       uncorrected: this.last ? quaternionData(this.last.q) : null,
       corrected: this.last ? quaternionData(this.apply(this.last.q)) : null,
       correction: quaternionData(this.correction), lastDecision: this.lastDecision,
-      pendingEndpoint: this.end ? { at: this.end.at, algorithm: this.end.attempt.algorithm } : null,
+      startEvidence: this.startEvidence,
+      motionHeading: this.motionHeading?.snapshot(now) ?? null,
+      homeGrip: this.homeGripSnapshot(),
+      headingReference: this.tableReference(),
+      rejectedSamples: { ...this.rejectedSamples },
+      armedAlgorithm: this.armed,
+      activeAttempt: this.attempt ? { ...this.attempt, start: this.attempt.start && quaternionData(this.attempt.start) } : null,
+      activeCorrection: this.pending ? { source: this.pending.source, at: this.pending.at, appliedAt: this.pending.appliedAt,
+        requestedDeg: this.pending.requestedDeg, from: quaternionData(this.pending.from), target: quaternionData(this.pending.target) } : null,
+      pendingEndpoint: this.end ? { at: this.end.at, algorithm: this.end.attempt.algorithm,
+        attemptId: this.end.attempt.id, frame: quaternionData(this.end.frame), start: quaternionData(this.end.attempt.start!) } : null,
       headingStability: this.heading ? { steady: this.heading.steady, tiltDeg: this.heading.tiltDeg,
         points: [...this.heading.points] } : null,
-      recentSamples: [...this.recent],
     };
   }
 
   reset(reason: string, now: number) {
     this.finishCorrection(reason, now);
     this.cancelAttempt(reason, now);
-    this.log('reference-cleared', { reason, at: now, ...this.snapshot(now) });
+    this.usualGrip?.reset();
+    this.motionHeading?.reset(now);
+    this.homeGrip?.reset();
+    this.pendingHome = null;
+    this.homeGuidance = false;
+    this.resetTableFrame = null;
+    this.assertedResetPicture = reason === 'manual-reset' ? this.tablePictureFacelets : null;
+    this.resetPictureFacelets = null;
+    this.movedSinceReset = false;
     this.correction.identity();
     this.heading = null;
     this.last = this.steadyAnchor = null;
     this.lastMoveAt = -Infinity;
     this.tableConsidered = false;
-    this.recent = [];
-    this.recentAt = this.sampleLogAt = -Infinity;
+    this.startSamples = [];
+    this.startEvidence = null;
     this.lastDecision = null;
+    this.rejectedSamples = { invalid: 0, duplicate: 0, outOfOrder: 0 };
   }
 
   apply(q: Quaternion) { return q.clone().premultiply(this.correction).normalize(); }
+
+  /** Measurement metadata only. A face turn invalidates the current frame;
+   * requested, matched device stickers must establish it again. */
+  setTableFrame(frame: Quaternion | null, _now: number, required = true, context: Record<string, unknown> = {}) {
+    this.tableFrameRequired = required;
+    this.tableFrame = frame && gyroQuaternion(frame);
+    this.tablePictureFacelets = this.tableFrame && typeof context.pictureFacelets === 'string'
+      && /^[URFDLB]{24}$/.test(context.pictureFacelets) ? context.pictureFacelets : null;
+    if (this.last && !this.movedSinceReset && !this.resetTableFrame && this.tableFrame
+      && (!this.tablePictureFacelets || this.tablePictureFacelets === this.assertedResetPicture)) {
+      this.resetTableFrame = this.tableFrame.clone();
+      this.resetPictureFacelets = this.tablePictureFacelets;
+    }
+    if (!required) {
+      this.tableFrame = this.resetTableFrame = null;
+      this.tablePictureFacelets = this.resetPictureFacelets = this.assertedResetPicture = null;
+    }
+  }
+
+  tableReference() {
+    const available = !this.tableFrameRequired || !!(this.tableFrame && this.resetTableFrame);
+    return { required: this.tableFrameRequired, available,
+      reason: available ? 'known-reference-frame' : !this.resetTableFrame ? 'unknown-reset-frame' : 'unknown-current-frame',
+      frame: this.tableFrame && quaternionData(this.tableFrame),
+      pose: this.tablePictureFacelets ? 'pictured-stickers' : 'white-up-green-front',
+      pictureFacelets: this.tablePictureFacelets, resetPictureFacelets: this.resetPictureFacelets,
+      resetFrame: this.resetTableFrame && quaternionData(this.resetTableFrame) };
+  }
 
   armAlgorithm(algorithm: string, reason: string | null, now: number) {
     // The next case can be shown before the preceding endpoint has settled.
     // Preserve that endpoint until the next physical move, not the next render.
     if (this.attempt || this.armed) this.cancelAttempt('case-changed', now);
     this.armed = { algorithm, reason: reason ?? gyroAlgorithmEligibility(algorithm) };
-    this.log('algorithm-ready', { at: now, ...this.armed });
   }
 
-  noteMove(now: number, startFrame: Quaternion | null) {
+  noteMove(now: number, startFrame: Quaternion | null, move: Record<string, unknown> = {}) {
+    const homeReference = this.homeReferenceKey();
+    this.movedSinceReset = true;
+    if (this.tableFrameRequired) {
+      this.tableFrame = null;
+      this.tablePictureFacelets = null;
+    }
+    this.usualGrip?.finishPending(now);
     this.finishCorrection('face-move', now);
     if (this.end) this.skipEnd('next-move-before-settling', now);
+    // Drain the previous attempt before assigning its successor's budget. A
+    // short ready hold can be used here without asking the user to keep waiting.
+    this.deliverPendingHome(now, 'next-move', homeReference);
     if (this.armed) {
       const { algorithm, reason } = this.armed;
-      const fresh = this.last && now - this.last.at <= GYRO_DRIFT_THRESHOLDS.maxSampleAgeMs;
-      const start = fresh && startFrame ? this.apply(this.last!.q).multiply(startFrame) : null;
-      this.attempt = { algorithm, reason: reason ?? (!startFrame ? 'unknown-sticker-frame' : !fresh ? 'missing-fresh-start-sample' : null), start, at: now };
+      const anchor = this.selectStart(now);
+      this.startEvidence = anchor.evidence;
+      const start = anchor.q && startFrame ? this.apply(anchor.q).multiply(startFrame) : null;
+      this.attempt = { id: ++this.attemptId, algorithm,
+        reason: reason ?? (!startFrame ? 'unknown-sticker-frame' : !anchor.q ? anchor.evidence.reason : null),
+        start, startEvidence: anchor.evidence, gripEligible: reason == null && startFrame != null, at: now };
+      if (this.attempt.gripEligible) {
+        this.usualGrip?.beginAttempt(this.attempt.id, algorithm, startFrame!, now, move.cubeSize !== 2);
+        if (this.last && now - this.last.at <= GYRO_DRIFT_THRESHOLDS.maxSampleAgeMs) {
+          this.usualGrip?.observeStart(this.attempt.id, algorithm, startFrame!, this.startSamples, now);
+        }
+      }
       this.armed = null;
-      this.log('algorithm-start', { ...this.attempt, start: start && quaternionData(start),
-        frame: startFrame && quaternionData(startFrame), ...this.snapshot(now) });
     }
     this.lastMoveAt = now;
+    this.startSamples = [];
     this.steadyAnchor = null;
     this.tableConsidered = false;
   }
@@ -178,12 +271,15 @@ export class GyroDriftCorrector {
     if (!this.attempt) return;
     const attempt = this.attempt;
     this.attempt = null;
-    this.log('algorithm-complete', { at: now, algorithm: attempt.algorithm, reason: attempt.reason,
-      durationMs: now - attempt.at, start: attempt.start && quaternionData(attempt.start),
-      frame: frame && quaternionData(frame), endpoint: frame && this.last ? quaternionData(this.apply(this.last.q).multiply(frame)) : null,
-      ...this.snapshot(now) });
+    if (attempt.gripEligible && frame) this.usualGrip?.completeAttempt(attempt.id, attempt.algorithm, frame, now);
+    else this.usualGrip?.cancelAttempt('unknown-or-ineligible-frame', now);
+    if (this.motionHeading?.snapshot(now).ready) {
+      this.decision('algorithm', 'motion-heading-active', now, { algorithm: attempt.algorithm, attemptId: attempt.id });
+      return;
+    }
     if (attempt.reason || !frame) {
-      this.decision('algorithm', attempt.reason ?? 'unknown-sticker-frame', now, { algorithm: attempt.algorithm });
+      this.decision('algorithm', attempt.reason ?? 'unknown-sticker-frame', now, { algorithm: attempt.algorithm,
+        attemptId: attempt.id, startEvidence: attempt.startEvidence });
       return;
     }
     this.end = { attempt, frame: frame.clone(), at: now };
@@ -194,28 +290,28 @@ export class GyroDriftCorrector {
   }
 
   cancelAttempt(reason: string, now: number) {
+    this.discardPendingHome(reason, now);
+    this.usualGrip?.cancelAttempt(reason, now);
     if (this.pending?.source === 'algorithm') this.finishCorrection(reason, now);
-    if (this.attempt || this.armed) this.log('algorithm-cancelled', { reason, at: now,
-      algorithm: this.attempt?.algorithm ?? this.armed?.algorithm });
     this.attempt = this.armed = null;
     if (this.end) this.skipEnd(reason, now);
   }
 
   guidanceStarted(now: number, mode: 'setup' | 'recovery' = 'recovery') {
+    this.homeGuidance = true;
     this.cancelAttempt(`guided-${mode}`, now);
     this.finishCorrection(`guided-${mode}`, now);
-    this.log(`guided-${mode}-start`, { at: now, ...this.snapshot(now) });
   }
 
-  guidanceCancelled(now: number, mode: 'setup' | 'recovery' = 'recovery') {
-    this.log(`guided-${mode}-cancel`, { at: now, ...this.snapshot(now) });
+  guidanceCancelled(_now: number, _mode: 'setup' | 'recovery' = 'recovery') {
+    this.homeGuidance = false;
   }
 
   /** Matching stickers confirms a frame, not an exact physical holding angle. */
   observeGuidedGrip(frame: Quaternion | null, now: number, mode: 'setup' | 'recovery' = 'recovery') {
+    this.homeGuidance = false;
     this.cancelAttempt('guided-grip-confirmed', now);
     this.finishCorrection('guided-grip-confirmed', now);
-    const before = this.snapshot(now);
     const pose = this.last && frame ? this.apply(this.last.q).multiply(frame.clone().invert()) : null;
     const metrics = pose && gyroPoseMetrics(pose);
     const reason = !frame ? 'unknown-sticker-frame'
@@ -227,16 +323,39 @@ export class GyroDriftCorrector {
       headingAdjustmentDeg: 0,
       frame: frame && quaternionData(frame), picturedGripBefore: metrics,
       correction: quaternionData(this.correction) };
-    this.log('guided-reference', { ...this.lastDecision, before });
     this.steadyAnchor = null;
     this.tableConsidered = false;
   }
 
   update(q: Quaternion, now: number): Quaternion {
+    const normalized = gyroQuaternion(q);
+    const rejected = !normalized || !Number.isFinite(now) ? 'invalid'
+      : this.last && now === this.last.at ? 'duplicate'
+      : this.last && now < this.last.at ? 'outOfOrder' : null;
+    if (rejected) {
+      this.rejectedSamples[rejected]++;
+      return this.last ? this.apply(this.last.q) : this.correction.clone();
+    }
+    q = normalized!;
+    if (!this.last) {
+      // The connection establishes its gyro basis at this first packet, which
+      // may follow the reset click and intervening face turns.
+      if (!this.resetTableFrame) {
+        const asserted = !this.tablePictureFacelets || this.tablePictureFacelets === this.assertedResetPicture;
+        this.resetTableFrame = asserted ? this.tableFrame?.clone() ?? null : null;
+        this.resetPictureFacelets = this.resetTableFrame ? this.tablePictureFacelets : null;
+      }
+      this.movedSinceReset = false;
+    }
+    this.usualGrip?.observe(q, now);
     const previous = this.last;
     const gap = previous ? now - previous.at : Infinity;
     const angle = previous ? previous.q.angleTo(q) * DEG : Infinity;
     const validGap = gap > 0 && gap <= GYRO_DRIFT_THRESHOLDS.maxSampleGapMs;
+    if (!validGap) this.startSamples = [];
+    this.startSamples.push({ q: q.clone(), at: now });
+    while (this.startSamples.length > 1 && (now - this.startSamples[0].at > GYRO_DRIFT_THRESHOLDS.startWindowMs
+      || this.startSamples.length > 128)) this.startSamples.shift();
     const steady = validGap && angle / (gap / 1000) <= GYRO_DRIFT_THRESHOLDS.steadySpeedDegPerSecond
       && this.steadyAnchor != null && this.steadyAnchor.q.angleTo(q) * DEG <= GYRO_DRIFT_THRESHOLDS.steadySpreadDeg;
     this.updateHeading(q, now, validGap);
@@ -253,11 +372,25 @@ export class GyroDriftCorrector {
     }
     this.last = { q: q.clone(), at: now };
     const steadyMs = now - Math.max(this.steadyAnchor!.at, this.lastMoveAt);
+    this.observeHomeGrip(q, now);
+    const motionBefore = this.motionHeading?.snapshot().appliedDeg ?? 0;
+    this.motionHeading?.observe(q, now, steadyMs, this.enabled);
+    const motionStep = (this.motionHeading?.snapshot().appliedDeg ?? 0) - motionBefore;
+    if (motionStep) {
+      const delta = new Quaternion().setFromAxisAngle(UP, -motionStep / DEG);
+      this.correction.premultiply(delta).normalize();
+      // Keep a concurrent tilt interpolation in the updated heading frame.
+      if (this.pending) {
+        this.pending.from.premultiply(delta).normalize();
+        this.pending.target.premultiply(delta).normalize();
+      }
+    }
 
     if (this.end) {
       if (now - this.end.at > GYRO_DRIFT_THRESHOLDS.endpointTimeoutMs) this.skipEnd('endpoint-did-not-settle', now);
       else if (this.heading?.steady) this.considerEnd(now);
     }
+    this.deliverPendingHome(now, 'ready');
     if (!this.attempt && !this.end && !this.pending && !this.tableConsidered && steadyMs >= GYRO_DRIFT_THRESHOLDS.steadyMs) {
       this.tableConsidered = true;
       this.considerTable(now, steadyMs);
@@ -274,18 +407,110 @@ export class GyroDriftCorrector {
       if (this.correction.angleTo(this.pending.target) < 1e-6) this.finishCorrection('completed', now);
     }
     const corrected = this.apply(q);
-    const sample = { at: now, uncorrected: quaternionData(q), corrected: quaternionData(corrected), steadyMs,
-      sampleGapMs: Number.isFinite(gap) ? gap : null, angularSpeedDegPerSecond: validGap ? angle / (gap / 1000) : null };
-    if (now - this.recentAt >= 100) {
-      this.recent.push(sample);
-      if (this.recent.length > 30) this.recent.shift();
-      this.recentAt = now;
-    }
-    if (now - this.sampleLogAt >= 1000) {
-      this.sampleLogAt = now;
-      this.log('sample', sample);
-    }
     return corrected;
+  }
+
+  private observeHomeGrip(q: Quaternion, now: number) {
+    if (!this.homeGrip || !this.motionHeading) return;
+    const unknown = this.tableFrameRequired && (!this.tableFrame || !this.resetTableFrame);
+    // A reset frame that tilts world-up needs a different correction axis.
+    // Keep that relation unknown for home learning instead of guessing yaw.
+    const tiltedReset = this.tableFrameRequired && this.resetTableFrame
+      && UP.clone().applyQuaternion(this.resetTableFrame).angleTo(UP) * DEG > 1;
+    // Execution eligibility constrains observations made while performing an
+    // algorithm. A ready-state home hold uses its own pose/frame evidence and
+    // must not inherit restrictions on the upcoming moves or execution mode.
+    const reason = this.homeGuidance ? 'guidance-active' : this.attempt ? 'algorithm-active'
+      : !this.armed ? 'waiting-for-training'
+      : unknown ? 'unknown-reference-frame' : tiltedReset ? 'tilted-reset-frame' : null;
+    const inReference = (pose: Quaternion) => this.tableFrameRequired && this.tableFrame && this.resetTableFrame
+      ? pose.clone().premultiply(this.resetTableFrame.clone().invert()).multiply(this.tableFrame) : pose;
+    const observation = this.homeGrip.observe(unknown ? null : inReference(q),
+      unknown ? null : inReference(this.apply(q)), now, this.attemptId + 1, reason);
+    if (observation && (!this.pendingHome || observation.exposureMs >= this.pendingHome.observation.exposureMs)) {
+      this.pendingHome = { observation, reference: this.homeReferenceKey() };
+    }
+    this.deliverPendingHome(now, 'ready');
+  }
+
+  private homeReferenceKey() {
+    return [this.tableFrameRequired, ...(this.tableFrame?.toArray() ?? []), ...(this.resetTableFrame?.toArray() ?? [])].join(',');
+  }
+
+  private homeGripSnapshot() {
+    return this.homeGrip ? { ...this.homeGrip.snapshot(), pending: this.pendingHome && { ...this.pendingHome.observation } } : null;
+  }
+
+  private discardPendingHome(reason: string, _now: number) {
+    if (!this.pendingHome) return;
+    // A rejected provisional window was never a learner vote. Allow a fresh
+    // window from this same hold, without counting another independent episode.
+    if (reason !== 'observation-expired') this.homeGrip?.clearWindow();
+    this.pendingHome = null;
+  }
+
+  private deliverPendingHome(now: number, source: 'ready' | 'next-move', reference = this.homeReferenceKey()) {
+    const pending = this.pendingHome;
+    if (!pending || !this.motionHeading) return;
+    const o = pending.observation;
+    if (!this.armed || this.attempt || this.homeGuidance || o.attemptId !== this.attemptId + 1
+      || pending.reference !== reference) {
+      this.discardPendingHome('context-changed', now); return;
+    }
+    if (now - o.measuredAt > GYRO_DRIFT_THRESHOLDS.maxSampleGapMs * 4
+      || !this.last || now - this.last.at > GYRO_DRIFT_THRESHOLDS.maxSampleAgeMs) {
+      this.discardPendingHome('observation-expired', now); return;
+    }
+    if (this.end || this.usualGrip?.hasPendingFinish()) return;
+    // Short holds never make the user wait for a longer window. Submit them
+    // when the next move begins; if the user is still holding, keep improving
+    // this same episode and prefer a full-quality measurement automatically.
+    if (source === 'ready' && o.exposureMs < GYRO_HOME_THRESHOLDS.fullWindowMs) return;
+    this.pendingHome = null;
+    this.homeGrip?.closeEpisode(o.attemptId);
+    const wasReady = this.motionHeading.snapshot(now).ready;
+    this.motionHeading.completeHomeObservation({ ...o, at: now });
+    if (!wasReady && this.motionHeading.snapshot(now).ready) {
+      this.motionHeading.synchronizeAppliedHeading(-(yawDegrees(this.correction) ?? 0));
+    }
+  }
+
+  private selectStart(now: number): { q: Quaternion | null; evidence: StartEvidence } {
+    const age = this.last ? now - this.last.at : null;
+    const evidence: StartEvidence = { reason: 'missing-fresh-start-sample', sampleCount: 0, spanMs: 0,
+      sampleAgeMs: age, spreadDeg: null, maxSpeedDegPerSecond: null, confidence: 0 };
+    if (age == null || age < 0 || age > GYRO_DRIFT_THRESHOLDS.maxSampleAgeMs) return { q: null, evidence };
+    const points = this.startSamples;
+    let start = points.length - 1;
+    let maxSpeed = 0;
+    // Use a contiguous suffix ending at the latest sample. An old rest on
+    // the table cannot qualify after the cube has been picked up or regripped.
+    for (let i = points.length - 2; i >= 0; i--) {
+      const dt = points[i + 1].at - points[i].at;
+      const speed = points[i].q.angleTo(points[i + 1].q) * DEG / (dt / 1000);
+      if (dt <= 0 || dt > GYRO_DRIFT_THRESHOLDS.maxSampleGapMs || speed > GYRO_DRIFT_THRESHOLDS.startSpeedDegPerSecond) break;
+      // Pairwise spread avoids a gradually moving window looking steady.
+      if (points.slice(i + 1).some(point => point.q.angleTo(points[i].q) * DEG > GYRO_DRIFT_THRESHOLDS.startSpreadDeg)) break;
+      start = i;
+      maxSpeed = Math.max(maxSpeed, speed);
+    }
+    const window = points.slice(start);
+    const spanMs = window.length ? window.at(-1)!.at - window[0].at : 0;
+    let spread = 0;
+    for (const a of window) for (const b of window) spread = Math.max(spread, a.q.angleTo(b.q) * DEG);
+    const valid = window.length >= GYRO_DRIFT_THRESHOLDS.startMinSamples && spanMs >= GYRO_DRIFT_THRESHOLDS.startSteadyMs;
+    const confidence = valid ? Math.min(1, spanMs / GYRO_DRIFT_THRESHOLDS.startWindowMs)
+      * (1 - .5 * spread / GYRO_DRIFT_THRESHOLDS.startSpreadDeg) : 0;
+    // Quaternion mean aligned to one hemisphere also handles q and -q.
+    const mean = new Quaternion(0, 0, 0, 0);
+    for (const point of window) {
+      const sign = point.q.dot(window[0].q) < 0 ? -1 : 1;
+      mean.set(mean.x + sign * point.q.x, mean.y + sign * point.q.y,
+        mean.z + sign * point.q.z, mean.w + sign * point.q.w);
+    }
+    return { q: valid ? mean.normalize() : null, evidence: { ...evidence,
+      reason: valid ? 'stable-start-window' : 'start-grip-not-stable', sampleCount: window.length, spanMs,
+      spreadDeg: spread, maxSpeedDegPerSecond: maxSpeed, confidence } };
   }
 
   private updateHeading(q: Quaternion, now: number, validGap: boolean) {
@@ -317,7 +542,6 @@ export class GyroDriftCorrector {
 
   private decision(source: string, reason: string, now: number, data: Record<string, unknown>) {
     this.lastDecision = { source, reason, at: now, ...data };
-    this.log('correction-decision', { ...this.lastDecision, enabled: this.enabled, recentSamples: [...this.recent] });
   }
 
   private considerTable(now: number, steadyMs: number) {
@@ -370,6 +594,7 @@ export class GyroDriftCorrector {
     // are evicted. A pre-completion or stale pose is explicitly identified.
     return {
       durationMs: now - endpoint.attempt.at, endpointWaitMs: now - endpoint.at,
+      attemptId: endpoint.attempt.id, startEvidence: endpoint.attempt.startEvidence,
       sampleAgeMs: this.last ? now - this.last.at : null,
       sampleAfterCompletion: this.last ? this.last.at > endpoint.at : false,
       delta: pose ? gyroPoseMetrics(pose.multiply(endpoint.attempt.start!.clone().invert())) : null,
@@ -382,17 +607,10 @@ export class GyroDriftCorrector {
   private startCorrection(source: Correction['source'], delta: Quaternion, now: number) {
     this.pending = { source, from: this.correction.clone(), target: this.correction.clone().premultiply(delta).normalize(),
       at: now, appliedAt: now, requestedDeg: delta.angleTo(new Quaternion()) * DEG };
-    this.log('correction-start', { at: now, source, requestedDeg: this.pending.requestedDeg,
-      from: quaternionData(this.pending.from), target: quaternionData(this.pending.target) });
   }
 
-  private finishCorrection(reason: string, now: number) {
+  private finishCorrection(_reason: string, _now: number) {
     if (!this.pending) return;
-    this.log('correction-applied', { at: now, source: this.pending.source, reason,
-      durationMs: now - this.pending.at, requestedDeg: this.pending.requestedDeg,
-      appliedDeg: this.pending.from.angleTo(this.correction) * DEG,
-      from: quaternionData(this.pending.from),
-      ...this.snapshot(now) });
     if (this.pending.source === 'algorithm') this.heading = null;
     this.pending = null;
   }

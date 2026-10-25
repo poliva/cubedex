@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { Euler, Quaternion, Vector3 } from 'three';
 import { solvedPattern } from '../../src/lib/cube-utils';
-import { guidanceFrameRotation, guidanceGripRotation, HOME_ORIENTATION } from '../../src/lib/cube-orientation';
+import { guidanceFrameRotation, guidanceGripRotation, HOME_ORIENTATION, tableFrameRotation } from '../../src/lib/cube-orientation';
 
 const rotations = ['', 'x', 'x2', "x'", 'z', "z'"].flatMap(x =>
   ['', 'y', 'y2', "y'"].map(y => `${x} ${y}`.trim()));
+
+it.each(rotations)('establishes a 2×2 table frame from exact solved stickers under %s', async rotation => {
+  const solved = await solvedPattern(2);
+  const device = solved.applyAlg(rotation);
+  expect(tableFrameRotation(device)!.angleTo(guidanceFrameRotation(solved, device)!)).toBeLessThan(1e-5);
+  expect(tableFrameRotation(device.applyMove('U'))).toBeNull();
+});
 
 describe.each([2, 3] as const)('%i× physical guidance orientation', size => {
   it.each(rotations)('recognizes the exact pictured grip %s from the connection reference', async rotation => {

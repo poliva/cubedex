@@ -458,6 +458,9 @@ export const PracticeView = memo(function PracticeView({
           gyroscopeEnabled={options.gyroscope && smartcube.connected}
           gyroFrameQuaternion={gyroFrameQuaternion}
           cubeQuaternionRef={smartcube.cubeQuaternionRef}
+          trainingViewRef={!training.inputMode && !scramble.scrambleMode && !showAlgEditor && training.displayAlg
+            ? smartcube.trainingViewRef : undefined}
+          viewAngleDeg={options.viewAngleDeg}
         />
       </div>
       {training.countdownActive ? (

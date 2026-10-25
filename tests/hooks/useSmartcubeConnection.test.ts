@@ -13,12 +13,10 @@ vi.mock('smartcube-web-bluetooth', () => ({
 import { connectSmartCube } from 'smartcube-web-bluetooth';
 import { useSmartcubeConnection } from '../../src/hooks/useSmartcubeConnection';
 import { faceletsToPattern, patternToFacelets, solvedFacelets, solvedPattern } from '../../src/lib/cube-utils';
-import { GyroDiagnostics } from '../../src/lib/gyro-diagnostics';
+import { GyroDriftCorrector } from '../../src/lib/gyro-drift';
 import { HOME_ORIENTATION, guidanceFrameRotation } from '../../src/lib/cube-orientation';
 import { fixOrientation } from '../../src/lib/scramble';
 
-const buildFlags = vi.hoisted(() => ({ gyroTesting: true }));
-vi.mock('../../src/lib/build-flags', () => ({ get GYRO_TESTING_ENABLED() { return buildFlags.gyroTesting; } }));
 
 let events: Subject<SmartCubeEvent>;
 let size: 2 | 3;
@@ -28,6 +26,11 @@ let timestamp: number;
 let physicalFacelets: string;
 let sendCommand: ReturnType<typeof vi.fn>;
 
+function gyroState() {
+  const engine = vi.mocked(GyroDriftCorrector.prototype.update).mock.contexts.at(-1)! as GyroDriftCorrector;
+  return engine.snapshot(performance.now());
+}
+
 function emitMove(move: string) {
   events.next({
     type: 'MOVE', move, face: 'URFDLB'.indexOf(move[0]), direction: move.endsWith("'") ? 1 : 0,
@@ -36,7 +39,8 @@ function emitMove(move: string) {
 }
 
 beforeEach(() => {
-  buildFlags.gyroTesting = true;
+  vi.spyOn(GyroDriftCorrector.prototype, 'update');
+
   events = new Subject<SmartCubeEvent>();
   size = 2;
   deviceName = 'Smart cube';
@@ -70,7 +74,7 @@ it('marks a fresh gyro reference after Reset Gyro so guided grips can recalibrat
   expect([after.x, after.y, after.z, after.w]).toEqual([before.x, before.y, before.z, before.w]);
 });
 
-describe('gyro drift recordings and connection integration', () => {
+describe('gyro drift connection integration', () => {
   let now: number;
   const turn = (axis: 'x' | 'y', degrees: number) => new Quaternion().setFromAxisAngle(
     new Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, 0), degrees * Math.PI / 180);
@@ -84,49 +88,88 @@ describe('gyro drift recordings and connection integration', () => {
     vi.spyOn(performance, 'now').mockImplementation(() => now);
   });
 
-  it('records remaining heading error in the OLD basis at the first post-reset sample', async () => {
-    const { result } = renderHook(() => useSmartcubeConnection(true));
-    await act(async () => result.current.connectOrDisconnect());
-    const base = turn('x', 35);
-    gyro(base, 0);
-    gyro(base.clone().multiply(turn('y', 5)), 100);
-    now = 120;
-    act(() => result.current.resetGyro());
-    // The next sample arrives with a slightly larger error than at the click.
-    gyro(base.clone().multiply(turn('y', 7)), 140);
-    const report = new GyroDiagnostics(localStorage).report();
-    const comparison = report.entries.find(e => e.event === 'manual-reset-comparison')!;
-    expect(comparison.data).toMatchObject({ delayAfterClickMs: 20,
-      residualWithoutAutoCorrection: { yawDeg: expect.closeTo(7, 5) },
-      residualAfterAutoCorrection: { yawDeg: expect.closeTo(7, 5) } });
-    const pose = result.current.cubeQuaternionRef.current!;
-    expect(new Quaternion(pose.x, pose.y, pose.z, pose.w).angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
-  });
-
-  it('records applied tilt correction and quantifies its benefit on manual reset', async () => {
+  it.each([2, 3] as const)('anchors the size %i reference view on the first physical turn without changing gyro measurements', async cubeSize => {
+    size = cubeSize;
+    const solved = await solvedPattern(size);
+    const picture = size === 2 ? solved.applyAlg('R U F') : solved;
+    const device = size === 2 ? picture.applyAlg('x y') : picture;
+    physicalFacelets = patternToFacelets(device);
     const { result } = renderHook(() => useSmartcubeConnection(true));
     await act(async () => result.current.connectOrDisconnect());
     gyro(new Quaternion(), 0);
-    for (let at = 100; at <= 2400; at += 20) gyro(turn('x', 6), at);
-    const pose = result.current.cubeQuaternionRef.current!;
-    expect(new Quaternion(pose.x, pose.y, pose.z, pose.w).angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
-    now = 2420;
-    act(() => result.current.resetGyro());
-    gyro(turn('x', 6), 2440);
-    const entries = new GyroDiagnostics(localStorage).report().entries;
-    expect(entries.find(e => e.event === 'correction-applied')?.data.appliedDeg).toBeCloseTo(6);
-    const comparison = entries.find(e => e.event === 'manual-reset-comparison')!;
-    expect(comparison.data).toMatchObject({
-      residualWithoutAutoCorrection: { tiltDeg: expect.closeTo(6, 5) },
-      residualAfterAutoCorrection: { angleDeg: expect.closeTo(0, 5) } });
+    gyro(turn('y', 35).multiply(turn('x', 20)), 100);
+    act(() => result.current.handleGyroTrainingEvent({ phase: 'ready', algorithm: 'R U', pattern: picture }));
+    expect(result.current.trainingViewRef.current).toEqual({ phase: 'ready', anchor: null });
+    const before = result.current.cubeQuaternionRef.current!;
+    const frame = guidanceFrameRotation(picture, result.current.currentPattern!)!;
+    expect(frame).not.toBeNull();
+    const expected = new Quaternion(before.x, before.y, before.z, before.w).multiply(frame);
+    await act(async () => emitMove('R'));
+    const anchor = result.current.trainingViewRef.current.anchor!;
+    expect(result.current.trainingViewRef.current.phase).toBe('executing');
+    expect(new Quaternion(anchor.x, anchor.y, anchor.z, anchor.w).angleTo(expected)).toBeLessThan(1e-7);
+    expect(anchor.basisVersion).toBe(before.basisVersion);
+    expect(result.current.cubeQuaternionRef.current).toBe(before);
+    act(() => result.current.handleGyroTrainingEvent({ phase: 'cancel', reason: 'wrong-move' }));
+    expect(result.current.trainingViewRef.current.anchor).toBe(anchor);
+    gyro(turn('y', 60), 200);
+    expect(result.current.trainingViewRef.current.anchor).toBe(anchor);
+    act(() => result.current.handleGyroTrainingEvent({ phase: 'complete', pattern: picture.applyAlg('R U') }));
+    expect(result.current.trainingViewRef.current).toEqual({ phase: 'ready', anchor: null });
+    act(() => result.current.handleGyroTrainingEvent({ phase: 'guided-recovery-start' }));
+    expect(result.current.trainingViewRef.current.phase).toBe('free');
+    act(() => result.current.handleGyroTrainingEvent({ phase: 'guided-recovery-complete', pattern: picture }));
+    expect(result.current.trainingViewRef.current.phase).toBe('ready');
+    await act(async () => result.current.connectOrDisconnect());
+    expect(result.current.trainingViewRef.current).toEqual({ phase: 'free', anchor: null });
   });
 
-  it('corrects and resets gyro without accessing the testing log in normal builds', async () => {
-    buildFlags.gyroTesting = false;
+  it.each([undefined, 'GAN16ui', 'Another gyro cube'])('starts neutral with hardware %s and clears session learning on disconnect', async hardwareName => {
+    const { result } = renderHook(() => useSmartcubeConnection(true));
+    await act(async () => result.current.connectOrDisconnect());
+    if (hardwareName) act(() => events.next({ type: 'HARDWARE', timestamp: ++timestamp, hardwareName,
+      hardwareVersion: '99.0', softwareVersion: 'future', gyroSupported: true }));
+    for (let i = 0; i <= 360; i++) gyro(turn('y', i * .039).multiply(turn('x', i * 10)), i * 100);
+    const state = gyroState();
+    expect(state?.motionHeading).toMatchObject({ supported: true, rate: 0, appliedDeg: 0, ready: false });
+    expect(gyroState()?.motionHeading?.observations).toBe(0);
+    now = 36_010;
+    act(() => result.current.resetGyro());
+    expect(gyroState()?.motionHeading).toMatchObject({ supported: false, appliedDeg: 0 });
+    await act(async () => result.current.connectOrDisconnect());
+    expect(gyroState()?.motionHeading).toMatchObject({ supported: false, appliedDeg: 0 });
+  });
+
+  it('learns and applies heading compensation without hardware metadata or diagnostic storage', async () => {
+
     const read = vi.spyOn(Storage.prototype, 'getItem');
     const write = vi.spyOn(Storage.prototype, 'setItem');
-    const download = vi.spyOn(GyroDiagnostics.prototype, 'download').mockImplementation(() => {});
-    const clear = vi.spyOn(GyroDiagnostics.prototype, 'clear');
+    const update = vi.spyOn(GyroDriftCorrector.prototype, 'update');
+    const { result } = renderHook(() => useSmartcubeConnection(true));
+    await act(async () => result.current.connectOrDisconnect());
+    gyro(new Quaternion(), 0);
+    for (let i = 0; i < 12; i++) {
+      now = i * 8000 + 1;
+      const start = result.current.currentPattern!;
+      act(() => result.current.handleGyroTrainingEvent({ phase: 'ready', algorithm: 'R', pattern: start }));
+      await act(async () => { emitMove('R'); });
+      for (let offset = 100; offset <= 7900; offset += 100) {
+        const at = i * 8000 + offset;
+        gyro(turn('y', at * .0002).multiply(turn('x', 25)), at);
+        if (offset === 1000) act(() => result.current.handleGyroTrainingEvent({ phase: 'complete', pattern: start.applyMove('R') }));
+      }
+    }
+    const engine = update.mock.contexts[0] as GyroDriftCorrector;
+    expect(engine.snapshot(now).motionHeading).toMatchObject({ ready: true, basis: 'time' });
+    expect(engine.snapshot(now).motionHeading!.appliedDeg).toBeGreaterThan(5);
+    expect(read.mock.calls.some(([key]) => key === 'cubedex.gyroDiagnostics.v1')).toBe(false);
+    expect(write.mock.calls.some(([key]) => key === 'cubedex.gyroDiagnostics.v1')).toBe(false);
+  });
+
+  it('corrects and resets gyro without creating diagnostic storage', async () => {
+
+    const read = vi.spyOn(Storage.prototype, 'getItem');
+    const write = vi.spyOn(Storage.prototype, 'setItem');
     const { result, unmount } = renderHook(() => useSmartcubeConnection(true));
     await act(async () => result.current.connectOrDisconnect());
     gyro(new Quaternion(), 0);
@@ -135,14 +178,11 @@ describe('gyro drift recordings and connection integration', () => {
     expect(new Quaternion(pose.x, pose.y, pose.z, pose.w).angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
     act(() => result.current.resetGyro());
     gyro(turn('x', 6), 2420);
-    act(() => { result.current.exportGyroDiagnostics(); result.current.clearGyroDiagnostics(); });
     const reset = result.current.cubeQuaternionRef.current!;
     expect(new Quaternion(reset.x, reset.y, reset.z, reset.w).angleTo(HOME_ORIENTATION)).toBeLessThan(1e-6);
     unmount();
     expect(read.mock.calls.some(([key]) => key === 'cubedex.gyroDiagnostics.v1')).toBe(false);
     expect(write.mock.calls.some(([key]) => key === 'cubedex.gyroDiagnostics.v1')).toBe(false);
-    expect(download).not.toHaveBeenCalled();
-    expect(clear).not.toHaveBeenCalled();
   });
 
   it('does not apply drift corrections with the setting off and safely ignores corrupt samples', async () => {
@@ -154,9 +194,6 @@ describe('gyro drift recordings and connection integration', () => {
     gyro(new Quaternion(NaN, 0, 0, 1), 2420);
     expect(result.current.cubeQuaternionRef.current).toBe(before);
     expect(new Quaternion(before.x, before.y, before.z, before.w).angleTo(HOME_ORIENTATION) * 180 / Math.PI).toBeCloseTo(6);
-    const download = vi.spyOn(GyroDiagnostics.prototype, 'download').mockImplementation(() => {});
-    act(() => result.current.exportGyroDiagnostics());
-    expect(download).toHaveBeenCalledOnce();
   });
 
   it.each([2, 3] as const)('corrects heading after real %i× move events in the training sticker frame', async cubeSize => {
@@ -165,8 +202,7 @@ describe('gyro drift recordings and connection integration', () => {
     const { result } = renderHook(() => useSmartcubeConnection(true));
     await act(async () => result.current.connectOrDisconnect());
     const start = result.current.currentPattern!;
-    gyro(new Quaternion(), 0);
-    gyro(new Quaternion(), 80);
+    for (let at = -200; at <= 80; at += 20) gyro(new Quaternion(), at);
     act(() => result.current.handleGyroTrainingEvent({ phase: 'ready', algorithm: 'D', pattern: start }));
     const canonicalEnd = start.applyMove('D');
     if (cubeSize === 2) physicalFacelets = patternToFacelets(fixOrientation(canonicalEnd));
@@ -181,11 +217,6 @@ describe('gyro drift recordings and connection integration', () => {
     const pose = result.current.cubeQuaternionRef.current!;
     const shown = new Quaternion(pose.x, pose.y, pose.z, pose.w).multiply(frame);
     expect(shown.angleTo(HOME_ORIENTATION.clone().multiply(turn('y', 3)))).toBeLessThan(1e-6);
-    const download = vi.spyOn(GyroDiagnostics.prototype, 'download').mockImplementation(function (this: GyroDiagnostics) { this.flush(); });
-    act(() => result.current.exportGyroDiagnostics());
-    expect(download).toHaveBeenCalledOnce();
-    const entries = new GyroDiagnostics(localStorage).report().entries;
-    expect(entries.some(e => e.event === 'correction-decision' && e.data.source === 'algorithm' && e.data.reason === 'accepted')).toBe(true);
   });
 
   it.each([2, 3] as const)('preserves the calibrated %i× heading through guidance and the next case', async cubeSize => {
@@ -210,11 +241,6 @@ describe('gyro drift recordings and connection integration', () => {
     gyro(drifted, 180);
     pose = result.current.cubeQuaternionRef.current!;
     expect(new Quaternion(pose.x, pose.y, pose.z, pose.w).angleTo(HOME_ORIENTATION.clone().multiply(drifted))).toBeLessThan(1e-6);
-    const download = vi.spyOn(GyroDiagnostics.prototype, 'download').mockImplementation(function (this: GyroDiagnostics) { this.flush(); });
-    act(() => result.current.exportGyroDiagnostics());
-    expect(download).toHaveBeenCalledOnce();
-    const confirmation = new GyroDiagnostics(localStorage).report().entries.find(e => e.event === 'guided-reference');
-    expect(confirmation?.data).toMatchObject({ applied: false, reason: 'observed-grip-only', headingAdjustmentDeg: 0 });
   });
 });
 
@@ -358,6 +384,23 @@ describe('smartcube puzzle size', () => {
 });
 
 describe('authoritative 2×2 state refresh', () => {
+
+  it('offers an exact authoritative picture when connecting scrambled and captures it only at the manual reset', async () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    physicalFacelets = patternToFacelets((await solvedPattern(2)).applyAlg('R U F'));
+    const { result } = renderHook(() => useSmartcubeConnection(true));
+    await act(async () => result.current.connectOrDisconnect());
+    act(() => events.next({ type: 'GYRO', timestamp: ++timestamp, quaternion: { x: 0, y: 0, z: 0, w: 1 } }));
+    expect(gyroState()!.headingReference).toMatchObject({ pictureFacelets: physicalFacelets, reason: 'unknown-reset-frame' });
+    now = 10;
+    act(() => result.current.resetGyro());
+    now = 20;
+    act(() => events.next({ type: 'GYRO', timestamp: ++timestamp, quaternion: { x: 0, y: 0, z: 0, w: 1 } }));
+    expect(gyroState()!.headingReference).toMatchObject({ available: true, pictureFacelets: physicalFacelets,
+      resetPictureFacelets: physicalFacelets });
+  });
+
   it.each([40, 254])('finishes the PBL final R2 when its snapshot overtakes the last notification (counter %i)', async serial => {
     const { result } = renderHook(() => useSmartcubeConnection(false));
     await act(async () => result.current.connectOrDisconnect());

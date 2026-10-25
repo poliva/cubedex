@@ -52,6 +52,7 @@ export const STORAGE_KEYS = {
   countdownMode: 'countdownMode',
   alwaysScrambleTo: 'alwaysScrambleTo',
   cubeSizePx: 'cubeSizePx',
+  viewAngleDeg: 'viewAngleDeg',
   theme: 'theme',
   smartcubeDeviceSelection: 'smartcubeDeviceSelection',
   autoUpdateLearningState: 'autoUpdateLearningState',

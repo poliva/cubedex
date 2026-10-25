@@ -634,10 +634,6 @@ export function useTrainingState(
   const [recoveredAt, setRecoveredAt] = useState(0);
   const gyroTrainingArmedRef = useRef(false);
 
-  useEffect(() => {
-    if (options.smartcubeConnected) options.onGyroTrainingEvent?.({ phase: 'context', alwaysScrambleTo: Boolean(options.alwaysScrambleTo) });
-  }, [options.smartcubeConnected, options.alwaysScrambleTo, options.onGyroTrainingEvent]);
-
   function cancelGyroTraining(reason: string) {
     if (!gyroTrainingArmedRef.current) return;
     gyroTrainingArmedRef.current = false;

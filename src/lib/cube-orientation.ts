@@ -31,6 +31,12 @@ export function guidanceFrameRotation(sensor: KPattern, picture: KPattern): Quat
   return null; // A layer turn is still being reconciled with the next picture.
 }
 
+/** A centerless cube has a white-up/green-front table frame only when its
+ * authoritative stickers match solved colors under an exact cube rotation. */
+export function tableFrameRotation(device: KPattern): Quaternion | null {
+  return guidanceFrameRotation(device.kpuzzle.defaultPattern(), device);
+}
+
 export type GripRotation = {
   angle: number;
   axis: 'x' | 'y' | 'z';

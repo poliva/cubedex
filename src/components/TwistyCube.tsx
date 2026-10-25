@@ -7,6 +7,8 @@ import { getTrainingVisualDelta } from '../lib/training-visual';
 import type { PuzzleId } from '../lib/puzzles';
 import type { SmartcubeQuaternion } from '../hooks/useSmartcubeConnection';
 import { HOME_ORIENTATION } from '../lib/cube-orientation';
+import { DEFAULT_VIEW_ANGLE_DEG, TrainingCubeOrientation,
+  referenceViewOrientation, type TrainingCubeView } from '../lib/training-cube-view';
 
 export interface TwistyCubeProps {
   puzzle?: PuzzleId;
@@ -37,6 +39,9 @@ export interface TwistyCubeProps {
   gyroFrameQuaternion?: SmartcubeQuaternion | null;
   cubeQuaternion?: SmartcubeQuaternion | null;
   cubeQuaternionRef?: MutableRefObject<SmartcubeQuaternion | null>;
+  trainingViewRef?: MutableRefObject<TrainingCubeView>;
+  trainingOrientationRef?: MutableRefObject<TrainingCubeOrientation>;
+  viewAngleDeg?: number;
   enableExternalOrientationLoop?: boolean;
   nudgeRenderOnMount?: boolean;
   className?: string;
@@ -90,6 +95,9 @@ export function TwistyCube({
   gyroFrameQuaternion,
   cubeQuaternion = null,
   cubeQuaternionRef,
+  trainingViewRef,
+  trainingOrientationRef: sharedTrainingOrientationRef,
+  viewAngleDeg,
   enableExternalOrientationLoop = true,
   nudgeRenderOnMount = false,
   className,
@@ -108,6 +116,9 @@ export function TwistyCube({
   const forceRefreshRef = useRef(false);
   const targetQuaternionRef = useRef(new THREE.Quaternion());
   const gyroFrameRef = useRef(new THREE.Quaternion());
+  const trainingOrientationRef = useRef(new TrainingCubeOrientation());
+  const presentationRef = useRef({ trainingViewRef, viewAngleDeg });
+  presentationRef.current = { trainingViewRef, viewAngleDeg };
 
   useEffect(() => {
     // A new sticker packet can precede its tracked training state. Keep the
@@ -218,18 +229,29 @@ export function TwistyCube({
       const puzzleObject = puzzleObjectRef.current;
       if (puzzleObject) {
         const liveQuaternion = cubeQuaternionRef ? cubeQuaternionRef.current : latestQuaternionRef.current;
-        if (latestGyroscopeEnabledRef.current && liveQuaternion) {
+        const presentation = presentationRef.current;
+        const trainingView = presentation.trainingViewRef?.current;
+        const controller = (sharedTrainingOrientationRef ?? trainingOrientationRef).current;
+        if (latestGyroscopeEnabledRef.current && trainingView && trainingView.phase !== 'free') {
+          targetQuaternionRef.current.copy(controller.target(liveQuaternion, gyroFrameRef.current,
+            trainingView, presentation.viewAngleDeg ?? DEFAULT_VIEW_ANGLE_DEG));
+        } else if (latestGyroscopeEnabledRef.current && liveQuaternion) {
           targetQuaternionRef.current.set(liveQuaternion.x, liveQuaternion.y, liveQuaternion.z, liveQuaternion.w)
             .multiply(gyroFrameRef.current);
+          if (presentation.viewAngleDeg != null) targetQuaternionRef.current.premultiply(
+            referenceViewOrientation(presentation.viewAngleDeg).multiply(HOME_ORIENTATION.clone().invert()));
           // The frame comes from stickers. Capturing a live pose here would
           // turn every setup remount, gyro toggle, and Reset Gyro into a new
           // zero at whatever angle the user happened to be holding the cube.
-          puzzleObject.quaternion.slerp(targetQuaternionRef.current, 0.25);
         } else {
-          puzzleObject.quaternion.slerp(fixedOrientation
-            ? latestGyroscopeEnabledRef.current ? HOME_ORIENTATION : targetQuaternionRef.current.identity()
-            : DR_LOCK_ORIENTATION, 0.25);
+          targetQuaternionRef.current.copy(fixedOrientation
+            ? latestGyroscopeEnabledRef.current
+              ? presentation.viewAngleDeg == null ? HOME_ORIENTATION : referenceViewOrientation(presentation.viewAngleDeg)
+              : targetQuaternionRef.current.identity()
+            : presentation.viewAngleDeg == null ? DR_LOCK_ORIENTATION : referenceViewOrientation(presentation.viewAngleDeg));
         }
+
+        puzzleObject.quaternion.slerp(targetQuaternionRef.current, 0.25);
         vantageRef.current?.render?.();
       }
 
