@@ -84,6 +84,8 @@ export interface SmartcubeQuaternion {
   w: number;
   /** Changes when Reset Gyro establishes a new sensor reference. */
   basisVersion?: number;
+  /** Shared gyro compensation, so a training camera can retain its center. */
+  headingCorrectionDeg?: number;
 }
 
 interface SmartcubeProcessedMove {
@@ -312,7 +314,8 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
     const orientation = driftRef.current!.currentOrientation();
     if (orientation) {
       const displayed = orientation.premultiply(HOME_ORIENTATION);
-      const pose = { ...quaternionData(displayed), basisVersion: gyroBasisVersionRef.current };
+      const pose = { ...quaternionData(displayed), basisVersion: gyroBasisVersionRef.current,
+        headingCorrectionDeg: driftRef.current!.headingCorrectionDegrees() };
       cubeQuaternionRef.current = pose;
       setCubeQuaternion(pose);
     }
@@ -650,6 +653,7 @@ export function useSmartcubeConnection(gyroscopeEnabled: boolean, autoCorrectGyr
         z: displayQuaternion.z,
         w: displayQuaternion.w,
         basisVersion: gyroBasisVersionRef.current,
+        headingCorrectionDeg: driftRef.current!.headingCorrectionDegrees(),
       };
 
       // Store in ref so consumers (e.g. cube renderer) can read without rerendering App.

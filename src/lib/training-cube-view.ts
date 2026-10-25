@@ -37,6 +37,25 @@ export class TrainingCubeOrientation {
   private readyAt: number | null = null;
   private readyBasis: number | undefined;
   private readyView: TrainingCubeView | null = null;
+  private correctionHeadingDeg: number | undefined;
+  private correctionBasis: number | undefined;
+
+  private followCorrection(live: SmartcubeQuaternion | null) {
+    if (!live) return;
+    const heading = live.headingCorrectionDeg;
+    if (heading != null && Number.isFinite(heading) && this.correctionHeadingDeg != null
+      && this.correctionBasis === live.basisVersion) {
+      const delta = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0),
+        (heading - this.correctionHeadingDeg) * Math.PI / 180);
+      // A change in gyro compensation is a change of coordinates, not an
+      // inspection turn. Carry both camera centers into the corrected frame.
+      this.readyHeading.premultiply(delta).normalize();
+      this.readyOffset.multiply(delta.clone().invert()).normalize();
+      this.offset.multiply(delta.invert()).normalize();
+    }
+    this.correctionHeadingDeg = heading != null && Number.isFinite(heading) ? heading : undefined;
+    this.correctionBasis = live.basisVersion;
+  }
 
   private readyPose(measured: Quaternion, live: SmartcubeQuaternion, view: TrainingCubeView, at: number) {
     const yaw = heading(measured);
@@ -63,6 +82,7 @@ export class TrainingCubeOrientation {
   }
 
   target(live: SmartcubeQuaternion | null, frame: Quaternion, view: TrainingCubeView, angleDeg: number, at = performance.now()) {
+    this.followCorrection(live);
     const reference = referenceViewOrientation(angleDeg);
     const measured = live ? HOME_ORIENTATION.clone().invert()
       .multiply(new Quaternion(live.x, live.y, live.z, live.w)).multiply(frame) : null;

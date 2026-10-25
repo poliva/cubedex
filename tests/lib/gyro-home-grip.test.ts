@@ -4,6 +4,7 @@ import { Quaternion, Vector3 } from 'three';
 import { GyroHomeGripObserver } from '../../src/lib/gyro-home-grip';
 import { GyroMotionDriftEstimator } from '../../src/lib/gyro-motion-drift';
 import { GyroDriftCorrector } from '../../src/lib/gyro-drift';
+import { HOME_ORIENTATION, guidanceGripRotation } from '../../src/lib/cube-orientation';
 
 const turn = (axis: 'x' | 'y', degrees: number) => new Quaternion().setFromAxisAngle(
   new Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, 0), degrees * Math.PI / 180);
@@ -101,6 +102,13 @@ describe('home holding observations', () => {
     expect(collector.snapshot().observations).toBe(0);
     expect(collector.snapshot().reason).toBe('resting-or-smooth-motion');
   });
+
+  it('keeps requiring hand motion even when an outside heading follows the prediction', () => {
+    const collector = new GyroHomeGripObserver();
+    const q = turn('y', 180).multiply(turn('x', 20));
+    for (let at = 0; at <= 2000; at += 100) expect(collector.observe(q, q, at, 1, null, 180)).toBeNull();
+    expect(collector.snapshot()).toMatchObject({ observations: 0, reason: 'resting-or-uncertain' });
+  });
 });
 
 function homeLearning(sign: number, drifting = false) {
@@ -114,25 +122,33 @@ function homeLearning(sign: number, drifting = false) {
 }
 
 describe('home heading learning', () => {
-  it.each([-1, 1])('learns fast %i drift without absolute-angle consensus or a startup heading jump', sign => {
+  it.each([-1, 1])('qualifies a drifting home pose before independently confirming its future rate (sign %i)', sign => {
     const { model, changes } = trackMotionChanges();
     for (let at = 0; at <= 75_000; at += 100) {
       model.observe(hand(sign * at * .0005, at), at, 0, true);
       if (at > 0 && at % 10_000 === 0) model.completeHomeObservation({ attemptId: at / 10_000,
         at, measuredAt: at, yawDeg: sign * at * .0005, spreadDeg: .5, sampleCount: 8, exposureMs: 700 });
       if (at === 50_000 || at === 60_000) {
-        expect(model.snapshot()).toMatchObject({ rateReady: false, homeGrip: { evidenceAt: null,
+        expect(model.snapshot()).toMatchObject({ rateReady: false, homeGrip: { evidenceAt: at,
           rateConfirmation: [expect.objectContaining({ basis: 'time', episodes: at / 10_000 - 4 })] } });
+        expect(model.predictHomeHeading(at)).toBeNull();
       }
     }
     const fits = changes.filter(e => e.kind === 'fit');
     expect(fits).toHaveLength(1);
     expect(fits[0].data).toMatchObject({ at: 70_000, basis: 'time', fittedRate: expect.closeTo(sign * .5, 8),
       lastFit: { rateChange: sign * .05, landmarkTargetDeg: null, revisionDeg: 0, landmarkAdjustmentDeg: 0 } });
-    expect(model.snapshot()).toMatchObject({ rateReady: true, headingEvidence: null,
-      homeGrip: { evidenceAt: null, lastAdjustment: null }, historyRevisionDeg: 0, landmarkAdjustmentDeg: 0 });
+    expect(model.snapshot()).toMatchObject({ rateReady: true, headingEvidence: 'home-grip',
+      homeGrip: { evidenceAt: 70_000, lastAdjustment: null, lastRecenter: null }, historyRevisionDeg: 0, landmarkAdjustmentDeg: 0 });
     expect(model.snapshot().integratedDriftDeg).toBeCloseTo(sign * .25, 8);
     expect(changes.filter(e => e.kind === 'home-adjustment')).toHaveLength(0);
+    expect(model.predictHomeHeading(75_000)).toBeCloseTo(sign * 37.5, 8);
+    expect(model.predictHomeHeading(75_201)).toBeNull();
+    model.observe(hand(sign * 45.5, 91_000), 91_000, 0, true);
+    expect(model.snapshot().rateReady).toBe(true);
+    expect(model.predictHomeHeading(91_000)).toBeNull();
+    model.reset(91_000);
+    expect(model.predictHomeHeading(91_000)).toBeNull();
   });
 
   it.each([0, .005, -.005])('does not invent a rate from %s degrees/second of insignificant home change', rate => {
@@ -146,7 +162,7 @@ describe('home heading learning', () => {
       homeGrip: { ready: true, rateConfirmation: [] } });
   });
 
-  it('keeps a confirmed home rate ahead of algorithm fits without requiring absolute-angle support', () => {
+  it('keeps a confirmed home rate ahead of algorithm fits', () => {
     const model = new GyroMotionDriftEstimator();
     for (let at = 0; at <= 70_000; at += 100) {
       model.observe(hand(at * .0005, at), at, 0, true);
@@ -158,7 +174,7 @@ describe('home heading learning', () => {
       }
     }
     const before = model.snapshot();
-    expect(before).toMatchObject({ rateReady: true, headingEvidence: null, fitEvidence: 'home-grip' });
+    expect(before).toMatchObject({ rateReady: true, headingEvidence: 'home-grip', fitEvidence: 'home-grip' });
     model.completeObservation({ attemptId: 8, at: 70_000, measuredAt: 70_000, yawDeg: 35,
       spreadDeg: .5, algorithm: 'R U', phase: 'during' });
     expect(model.snapshot()).toMatchObject({ fitAt: before.fitAt, rate: before.rate,
@@ -319,6 +335,127 @@ describe('home heading learning', () => {
 });
 
 describe('home collector integration', () => {
+  function confirmedHome(yaw = 30) {
+    const engine = new GyroDriftCorrector({ adaptiveHeading: true });
+    engine.update(new Quaternion(), 0);
+    let at = 0;
+    for (let index = 0; index < 3; index++) {
+      const start = index * 5000 + 100;
+      engine.armAlgorithm('R U', 'alternative-algorithms-enabled', start);
+      for (at = start; at <= start + 2200; at += 100) engine.update(hand(yaw, at), at);
+      at -= 100;
+      if (index < 2) {
+        engine.noteMove(at + 100, new Quaternion());
+        engine.completeAlgorithm(new Quaternion(), at + 200);
+      }
+    }
+    return { engine, at, yaw, tilt: 15 + .5 * Math.sin(at / 150) };
+  }
+
+  it.each([-40, 40])('recenters a confirmed %i° home heading within two seconds, preserving tilt in recovery', yaw => {
+    const { engine, at } = confirmedHome(yaw);
+    const raw = hand(yaw, at), corrected = engine.apply(raw);
+    const rotation = guidanceGripRotation(HOME_ORIENTATION.clone().multiply(corrected), new Quaternion())!;
+    expect(Math.abs(new Vector3(0, 0, 1).applyQuaternion(corrected).x)).toBeLessThan(Math.sin(Math.PI / 180));
+    expect(rotation.angle).toBeLessThan(17);
+    expect(new Vector3(0, 1, 0).applyQuaternion(corrected).y)
+      .toBeCloseTo(new Vector3(0, 1, 0).applyQuaternion(raw).y, 8);
+    expect(engine.snapshot(at).motionHeading!.rateReady).toBe(false);
+  });
+
+  it('keeps correcting one steady home hold across 180° of raw drift without inventing learner votes', () => {
+    const { engine, at: start, yaw, tilt } = confirmedHome();
+    for (let at = start + 100; at <= start + 360_000; at += 100) {
+      const raw = turn('y', yaw + (at - start) * .0005).multiply(turn('x', tilt));
+      const corrected = engine.update(raw, at);
+      expect(Math.abs(new Vector3(0, 0, 1).applyQuaternion(corrected).x)).toBeLessThan(Math.sin(Math.PI / 180));
+    }
+    expect(engine.snapshot(start + 360_000).motionHeading).toMatchObject({ rateReady: false,
+      homeGrip: { episodes: 3, ready: true, lastRecenter: { at: start + 360_000 } } });
+  });
+
+  it.each(['move', 'guidance', 'sample-gap', 'inspection', 'put-down'] as const)(
+    'stops rapid home correction on %s', action => {
+      const { engine, at: start, yaw, tilt } = confirmedHome();
+      if (action === 'move') engine.noteMove(start + 1, new Quaternion());
+      if (action === 'guidance') engine.guidanceStarted(start + 1);
+      const lastRecenter = engine.snapshot(start).motionHeading!.homeGrip.lastRecenter;
+      for (let offset = 100; offset <= 3000; offset += 100) {
+        const at = start + offset + (action === 'sample-gap' ? 50_000 : 0);
+        const raw = turn('y', yaw + (action === 'inspection' ? 30 : 0))
+          .multiply(turn('x', action === 'put-down' ? 0 : tilt));
+        engine.update(raw, at);
+      }
+      const state = engine.snapshot(start + 53_000).motionHeading!;
+      expect(state.homeGrip.lastRecenter).toEqual(lastRecenter);
+      expect(state.homeGrip.episodes).toBe(3);
+    });
+
+  it.each([-30, 30])('preserves a deliberate %i° inspection immediately after an algorithm', inspection => {
+    const { engine, at: start, yaw, tilt } = confirmedHome();
+    const before = engine.snapshot(start).motionHeading!.homeGrip.lastRecenter;
+    engine.noteMove(start + 1, new Quaternion());
+    engine.completeAlgorithm(new Quaternion(), start + 2);
+    engine.armAlgorithm('R U', 'alternative-algorithms-enabled', start + 3);
+    let corrected = new Quaternion();
+    for (let at = start + 100; at <= start + 2000; at += 100) {
+      corrected = engine.update(hand(yaw + inspection, at, tilt), at);
+    }
+    expect(engine.snapshot(start + 2000).motionHeading!.homeGrip.lastRecenter).toEqual(before);
+    const front = new Vector3(0, 0, 1).applyQuaternion(corrected);
+    expect(Math.atan2(front.x, front.z) * 180 / Math.PI).toBeCloseTo(inspection, 0);
+  });
+
+  function practiceHomeDrift(sign: number, size: number, until: number, regrip = 0, regripAt = Infinity) {
+    const engine = new GyroDriftCorrector({ adaptiveHeading: true });
+    const resetFrame = turn('y', 90), frame = turn('y', -90);
+    if (size === 2) engine.setTableFrame(resetFrame, 0);
+    engine.reset('manual-reset', 0);
+    engine.update(new Quaternion(), 0);
+    let maxHeadingError = 0, episodesBeforeRegrip = 0, landmarkBeforeRegrip = 0;
+    for (let at = 100; at <= until; at += 100) {
+      const phase = at % 10_000;
+      if (phase === 100) {
+        engine.armAlgorithm('R U', 'alternative-algorithms-enabled', at);
+        if (size === 2) engine.setTableFrame(frame, at);
+      }
+      const yaw = sign * at * .0005 + (at >= regripAt ? regrip : 0);
+      const pose = hand(yaw, at);
+      const raw = size === 2 ? resetFrame.clone().multiply(pose).multiply(frame.clone().invert()) : pose;
+      const corrected = engine.update(raw, at);
+      const shown = size === 2 ? resetFrame.clone().invert().multiply(corrected).multiply(frame) : corrected;
+      const front = new Vector3(0, 0, 1).applyQuaternion(shown);
+      maxHeadingError = Math.max(maxHeadingError, Math.abs(Math.atan2(front.x, front.z) * 180 / Math.PI));
+      if (at < regripAt) {
+        const state = engine.snapshot(at).motionHeading!;
+        episodesBeforeRegrip = state.homeGrip.episodes;
+        landmarkBeforeRegrip = state.landmarkAdjustmentDeg;
+      }
+      if (phase === 2000) engine.noteMove(at, new Quaternion(), { cubeSize: size });
+      if (phase === 3000) engine.completeAlgorithm(new Quaternion(), at);
+    }
+    return { engine, maxHeadingError, episodesBeforeRegrip, landmarkBeforeRegrip };
+  }
+
+  it.each([2, 3].flatMap(size => [-1, 1].map(sign => ({ size, sign }))))(
+    'keeps learning past the displayed gate and raw 180° wrap for size $size, sign $sign', ({ size, sign }) => {
+      const { engine, maxHeadingError } = practiceHomeDrift(sign, size, 900_000);
+      const state = engine.snapshot(900_000).motionHeading!;
+      expect(state).toMatchObject({ rateReady: true, fitEvidence: 'home-grip',
+        fittedRate: expect.closeTo(sign * .5, 2) });
+      expect(maxHeadingError).toBeLessThan(15);
+      expect(Math.abs(sign * 450 - state.appliedDeg)).toBeLessThan(3);
+    });
+
+  it.each([-180, -90, 90, 180])('preserves a real %i° regrip after learning the drift rate', regrip => {
+    const { engine, episodesBeforeRegrip, landmarkBeforeRegrip } = practiceHomeDrift(Math.sign(regrip), 3, 151_500, regrip, 105_000);
+    const state = engine.snapshot(151_500);
+    expect(state.homeGrip!.reason).toBe('outside-displayed-home-heading');
+    expect(state.motionHeading!.homeGrip.episodes).toBe(episodesBeforeRegrip);
+    // No new absolute-heading adjustment can absorb the physical rotation.
+    expect(Math.abs(state.motionHeading!.landmarkAdjustmentDeg - landmarkBeforeRegrip)).toBeLessThan(.5);
+  });
+
   it.each(['reset', 'guidance', 'changed-frame', 'unknown-frame'] as const)('discards a provisional hold on %s without teaching the learner', action => {
     const engine = new GyroDriftCorrector({ adaptiveHeading: true });
     engine.setTableFrame(new Quaternion(), 0);
@@ -408,7 +545,7 @@ describe('home collector integration', () => {
       engine.completeAlgorithm(new Quaternion(), start + 2200);
     };
     for (let index = 0; index < 4; index++) attempt(index, 12);
-    expect(engine.snapshot(32_300).motionHeading!.landmarkAdjustmentDeg).toBe(1);
+    expect(engine.snapshot(32_300).motionHeading!.landmarkAdjustmentDeg).toBeGreaterThan(11);
     expect(engine.correction.angleTo(new Quaternion())).toBeGreaterThan(0);
 
     engine.setEnabled(false, 32_300);
@@ -424,7 +561,7 @@ describe('home collector integration', () => {
     for (let index = 8; index < 10; index++) attempt(index, 12);
     expect(engine.snapshot(92_300).motionHeading!.landmarkAdjustmentDeg).toBe(0);
     attempt(10, 12);
-    expect(engine.snapshot(102_300).motionHeading!.landmarkAdjustmentDeg).toBe(.5);
+    expect(engine.snapshot(102_300).motionHeading!.landmarkAdjustmentDeg).toBeGreaterThan(11);
   });
 
   it('preserves known 2×2 sticker and reset frames when correction is toggled', () => {

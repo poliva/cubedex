@@ -74,6 +74,23 @@ function homeConsensus(group: Observation[], newest: Observation, error: (p: Obs
   return { residual, agreeing };
 }
 
+/** Independent returns can establish a home pose while its yaw is drifting.
+ * This qualifies the current held pose, without learning a future drift rate. */
+function homePoseConsensus(group: Observation[], newest: Observation) {
+  const recent = group.filter(p => newest.measuredAt - p.measuredAt <= 2 * GYRO_HOME_THRESHOLDS.maxPredictionMs);
+  const slopes: number[] = [];
+  for (let i = 0; i < recent.length; i++) for (let j = i + 1; j < recent.length; j++) {
+    const a = recent[i], b = recent[j], span = b.measuredAt - a.measuredAt;
+    if (span >= GYRO_HOME_THRESHOLDS.minEpisodeSpanMs && span <= GYRO_HOME_THRESHOLDS.maxPredictionMs) {
+      slopes.push(wrap(b.yawDeg - a.yawDeg) / (span / 1000));
+    }
+  }
+  if (slopes.length < GYRO_MOTION_THRESHOLDS.minPairs) return null;
+  const rate = median(slopes);
+  if (Math.abs(rate) > GYRO_MOTION_THRESHOLDS.maxTimeRateDegPerSecond) return null;
+  return homeConsensus(recent, newest, p => wrap(p.yawDeg - rate * (p.measuredAt - newest.measuredAt) / 1000));
+}
+
 function pairEvidence(group: Observation[], basis: Basis, maxSpanMs: number = GYRO_MOTION_THRESHOLDS.maxPairSpanMs) {
   const slopes: number[] = [], noises: number[] = [];
   for (let i = 0; i < group.length; i++) for (let j = i + 1; j < group.length; j++) {
@@ -105,9 +122,11 @@ function pairMayWrap(a: Observation, b: Observation, basis: Basis, uncertainty: 
 export class GyroMotionDriftEstimator {
   private homeObservations: Observation[] = [];
   private homeEvidenceAt: number | null = null;
+  private trustedHome: Observation | null = null;
   private homeEverReady = false;
   private homeRatePending = new Map<Basis, { at: number; measuredAt: number; rate: number; uncertainty: number; attempts: Set<number> }>();
   private lastHomeAdjustment: { at: number; targetDeg: number; adjustmentDeg: number; episodes: number } | null = null;
+  private lastHomeRecenter: { at: number; targetDeg: number; adjustmentDeg: number } | null = null;
   private fragmentPending = new Map<Basis, RateConfirmation>();
   private precisePairPending = new Map<Basis, RateConfirmation>();
   private fitPairSelection: Candidate['pairSelection'] | null = null;
@@ -149,9 +168,11 @@ export class GyroMotionDriftEstimator {
   reset(_at: number) {
     this.homeObservations = [];
     this.homeEvidenceAt = null;
+    this.trustedHome = null;
     this.homeEverReady = false;
     this.homeRatePending.clear();
     this.lastHomeAdjustment = null;
+    this.lastHomeRecenter = null;
     this.fragmentPending.clear();
     this.precisePairPending.clear();
     this.fitPairSelection = null;
@@ -192,11 +213,26 @@ export class GyroMotionDriftEstimator {
       && at - this.homeEvidenceAt <= GYRO_HOME_THRESHOLDS.supportMs;
   }
 
+  /** Predict the next raw home grip only from a confirmed home drift rate.
+   * Use the measured rate, rather than the deliberately slower correction:
+   * rendered heading must not decide whether its own training data survives. */
+  predictHomeHeading(at: number): number | null {
+    const latest = this.homeObservations.at(-1), point = this.path.at(-1);
+    if (this.fitEvidence !== 'home-grip' || !this.ready(at) || !latest || !point
+      || at < latest.measuredAt || at - latest.measuredAt > GYRO_HOME_THRESHOLDS.maxPredictionMs
+      || at < point.at || at - point.at > GYRO_MOTION_THRESHOLDS.maxSampleGapMs) return null;
+    const exposure = position(point, this.basis) - position(latest, this.basis);
+    if (Math.hypot(latest.noiseDeg, (this.uncertainty ?? Infinity) * exposure)
+      > GYRO_HOME_THRESHOLDS.maxEpisodeResidualDeg) return null;
+    return wrap(latest.yawDeg + this.fittedRate! * exposure);
+  }
+
   private confirmHomeRate(candidate: Candidate, o: GyroHomeObservation) {
     // New absolute-pose rates have no algorithm diversity. Require repeated
     // independent confirmations before they take over velocity prediction.
+    // Compare to the confirmed fit, not the rate still slewing toward it.
     if (this.fitEvidence === 'home-grip' && this.ready(o.at) && candidate.basis === this.basis
-      && candidate.rate * this.rate > 0 && Math.abs(candidate.rate - this.rate)
+      && candidate.rate * this.fittedRate! > 0 && Math.abs(candidate.rate - this.fittedRate!)
         <= GYRO_MOTION_THRESHOLDS.minSignalToNoise * Math.hypot(candidate.uncertainty, this.uncertainty ?? 0)) return true;
     let pending = this.homeRatePending.get(candidate.basis);
     if (!pending || o.at - pending.at > GYRO_HOME_THRESHOLDS.supportMs || pending.rate * candidate.rate <= 0
@@ -267,12 +303,17 @@ export class GyroMotionDriftEstimator {
     this.homeObservations = [...this.homeObservations.filter(p => o.at - p.measuredAt <= GYRO_MOTION_THRESHOLDS.maxPairSpanMs), observation]
       .slice(-GYRO_HOME_THRESHOLDS.maxEpisodes);
     const recent = this.homeObservations.filter(p => o.at - p.measuredAt <= GYRO_HOME_THRESHOLDS.maxEpisodeAgeMs);
-    const heading = homeConsensus(recent, observation, p => wrap(p.yawDeg - p.predictedHeadingDeg));
+    // All raw home observations share the current absolute heading anchor.
+    // Comparing old innovations from before a rapid recenter would make a
+    // later real rotation look like agreement with the old drift error.
+    const heading = homeConsensus(recent, observation, p => wrap(p.yawDeg - p.integratedDriftDeg
+      - this.historyRevisionDeg - this.landmarkAdjustmentDeg));
     const predicted = this.integratedDriftDeg + this.historyRevisionDeg + this.landmarkAdjustmentDeg;
     const target = heading ? predicted + heading.residual : undefined;
-    if (heading) {
+    if (heading || homePoseConsensus(recent, observation)) {
       this.homeEvidenceAt = o.measuredAt;
       this.homeEverReady = true;
+      this.trustedHome = observation;
     }
     const candidates = this.homeRateCandidates(observation);
     const confirmed = candidates.filter(c => this.confirmHomeRate(c, o)).sort((a, b) => a.scoreDeg - b.scoreDeg);
@@ -344,7 +385,7 @@ export class GyroMotionDriftEstimator {
   }
 
   /** Every valid packet is observed, even while correction is disabled. */
-  observe(raw: Quaternion, at: number, steadyMs: number, enabled: boolean) {
+  observe(raw: Quaternion, at: number, steadyMs: number, enabled: boolean, homeHold: GyroHomeObservation | null = null) {
     if (![at, raw.x, raw.y, raw.z, raw.w, raw.lengthSq()].every(Number.isFinite) || raw.lengthSq() < 1e-8) return;
     const previous = this.previous;
     if (previous && at <= previous.at) return;
@@ -365,15 +406,47 @@ export class GyroMotionDriftEstimator {
       }
       if (this.ready(at)) this.integratedDriftDeg += this.rate * (this.basis === 'motion' ? motion : gap / 1000);
     }
-    this.path.push({ at, motionDeg: this.motionDeg, elapsedSeconds: this.elapsedSeconds,
+    const point = { at, motionDeg: this.motionDeg, elapsedSeconds: this.elapsedSeconds,
       integratedDriftDeg: this.integratedDriftDeg,
-      predictedHeadingDeg: this.integratedDriftDeg + this.historyRevisionDeg + this.landmarkAdjustmentDeg });
+      predictedHeadingDeg: this.integratedDriftDeg + this.historyRevisionDeg + this.landmarkAdjustmentDeg };
+    this.path.push(point);
     while (this.path.length > 1 && (at - this.path[0].at > GYRO_MOTION_THRESHOLDS.motionHistoryMs
       || this.path.length > GYRO_MOTION_THRESHOLDS.maxMotionSamples)) this.path.shift();
     if (!enabled || !validGap) return;
     const target = this.integratedDriftDeg + this.historyRevisionDeg + this.landmarkAdjustmentDeg;
     const step = GYRO_MOTION_THRESHOLDS.maxCorrectionSpeedDegPerSecond * gap / 1000;
-    const adjustment = Math.max(-step, Math.min(step, target - this.appliedDeg));
+    let adjustment = Math.max(-step, Math.min(step, target - this.appliedDeg));
+    if (homeHold?.at === at && this.homeReady(at) && Number.isFinite(homeHold.yawDeg)
+      && homeHold.sampleCount >= GYRO_HOME_THRESHOLDS.minSamples && homeHold.exposureMs >= GYRO_HOME_THRESHOLDS.minWindowMs) {
+      const measured = [...this.path].reverse().find(p => p.at <= homeHold.measuredAt);
+      const reference = this.lastHomeRecenter && this.lastHomeRecenter.at >= (this.trustedHome?.at ?? Infinity)
+        ? { at: this.lastHomeRecenter.at, yawDeg: this.lastHomeRecenter.targetDeg }
+        : this.trustedHome && { at: this.trustedHome.measuredAt, yawDeg: this.trustedHome.yawDeg };
+      const age = reference ? at - reference.at : Infinity;
+      const followsHome = reference && age >= 0 && age <= GYRO_HOME_THRESHOLDS.maxPredictionMs
+        && Math.abs(wrap(homeHold.yawDeg - reference.yawDeg)) <= GYRO_HOME_THRESHOLDS.maxEpisodeResidualDeg
+          + GYRO_MOTION_THRESHOLDS.maxTimeRateDegPerSecond * age / 1000;
+      if (followsHome && measured && homeHold.measuredAt <= at
+        && at - homeHold.measuredAt <= GYRO_HOME_THRESHOLDS.windowMs) {
+        // Recenter the shared physical heading, including the recovery preview.
+        // Commit only what is applied during this live, validated hold; leaving
+        // home must not leave a large correction queued during execution.
+        const homeTarget = homeHold.yawDeg + this.integratedDriftDeg - measured.integratedDriftDeg;
+        const error = wrap(homeTarget - this.appliedDeg);
+        const limit = GYRO_HOME_THRESHOLDS.maxCorrectionSpeedDegPerSecond * gap / 1000;
+        const requested = Math.abs(error) <= GYRO_HOME_THRESHOLDS.correctionDeadbandDeg ? 0
+          : error * (1 - Math.exp(-gap / GYRO_HOME_THRESHOLDS.correctionTimeConstantMs));
+        const homeStep = Math.max(-limit, Math.min(limit, requested));
+        const recenter = homeStep - adjustment;
+        this.landmarkAdjustmentDeg += recenter;
+        adjustment = homeStep;
+        this.lastHomeRecenter = { at, targetDeg: this.appliedDeg + error, adjustmentDeg: recenter };
+        // Continuing the same validated hold keeps its pose current, without
+        // inventing another independent observation for rate learning.
+        this.homeEvidenceAt = homeHold.measuredAt;
+        point.predictedHeadingDeg = this.integratedDriftDeg + this.historyRevisionDeg + this.landmarkAdjustmentDeg;
+      }
+    }
     this.appliedDeg += adjustment;
     this.adjusting = Math.abs(adjustment) > 1e-8;
   }
@@ -835,6 +908,7 @@ export class GyroMotionDriftEstimator {
       homeGrip: { episodes: this.homeObservations.length, evidenceAt: this.homeEvidenceAt,
         effectiveEpisodes: this.homeObservations.reduce((sum, o) => sum + o.quality, 0),
         ready: homeReady, lastAdjustment: this.lastHomeAdjustment && { ...this.lastHomeAdjustment },
+        lastRecenter: this.lastHomeRecenter && { ...this.lastHomeRecenter },
         rateConfirmation: [...this.homeRatePending].map(([basis, pending]) => ({ basis, at: pending.at,
           episodes: pending.attempts.size, rate: pending.rate })) },
       status: ready ? 'tracking' : this.learned || this.homeEverReady ? 'held' : 'learning',

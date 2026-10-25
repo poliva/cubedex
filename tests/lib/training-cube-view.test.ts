@@ -8,6 +8,23 @@ const turn = (axis: 'x' | 'y' | 'z', degrees: number) => new Quaternion().setFro
 
 describe('training reference view', () => {
 
+  it.each(['ready', 'executing'] as const)('keeps the %s view stable when rapid physical heading corrections cross the wrap', phase => {
+    const orientation = new TrainingCubeOrientation();
+    const raw = turn('y', 30).multiply(turn('x', 20));
+    const first = Object.assign(HOME_ORIENTATION.clone().multiply(raw), { basisVersion: 1, headingCorrectionDeg: 0 });
+    const view: TrainingCubeView = { phase, anchor: phase === 'executing' ? first : null };
+    const initial = orientation.target(first, new Quaternion(), view, 10, 0);
+    for (const [index, correction] of [-10, -30, -90, -170, 170, 90, 0].entries()) {
+      const corrected = Object.assign(HOME_ORIENTATION.clone().multiply(turn('y', correction)).multiply(raw),
+        { basisVersion: 1, headingCorrectionDeg: correction });
+      expect(orientation.target(corrected, new Quaternion(), view, 10, (index + 1) * 100).angleTo(initial)).toBeLessThan(1e-7);
+      const inspection = Object.assign(corrected.clone().multiply(turn('y', 15)),
+        { basisVersion: 1, headingCorrectionDeg: correction });
+      expect(orientation.target(inspection, new Quaternion(), view, 10, (index + 1) * 100)
+        .angleTo(initial.clone().multiply(turn('y', 15)))).toBeLessThan(1e-7);
+    }
+  });
+
   it('changes the default Y angle in both directions while keeping the same X tilt', () => {
     const up = new Vector3(0, 1, 0).applyQuaternion(referenceViewOrientation(0));
     for (const angle of [-45, -10, 0, 10, 45]) {

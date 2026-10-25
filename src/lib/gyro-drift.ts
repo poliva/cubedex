@@ -199,6 +199,8 @@ export class GyroDriftCorrector {
 
   currentOrientation() { return this.last ? this.apply(this.last.q) : null; }
 
+  headingCorrectionDegrees() { return yawDegrees(this.correction) ?? 0; }
+
   /** Measurement metadata only. A face turn invalidates the current frame;
    * requested, matched device stickers must establish it again. */
   setTableFrame(frame: Quaternion | null, _now: number, required = true, context: Record<string, unknown> = {}) {
@@ -382,9 +384,9 @@ export class GyroDriftCorrector {
     }
     this.last = { q: q.clone(), at: now };
     const steadyMs = now - Math.max(this.steadyAnchor!.at, this.lastMoveAt);
-    this.observeHomeGrip(q, now);
+    const homeHold = this.observeHomeGrip(q, now);
     const motionBefore = this.motionHeading?.snapshot().appliedDeg ?? 0;
-    this.motionHeading?.observe(q, now, steadyMs, this.enabled);
+    this.motionHeading?.observe(q, now, steadyMs, this.enabled, homeHold);
     const motionStep = (this.motionHeading?.snapshot().appliedDeg ?? 0) - motionBefore;
     if (motionStep) {
       const delta = new Quaternion().setFromAxisAngle(UP, -motionStep / DEG);
@@ -421,7 +423,7 @@ export class GyroDriftCorrector {
   }
 
   private observeHomeGrip(q: Quaternion, now: number) {
-    if (!this.homeGrip || !this.motionHeading) return;
+    if (!this.homeGrip || !this.motionHeading) return null;
     const unknown = this.tableFrameRequired && (!this.tableFrame || !this.resetTableFrame);
     // A reset frame that tilts world-up needs a different correction axis.
     // Keep that relation unknown for home learning instead of guessing yaw.
@@ -436,11 +438,13 @@ export class GyroDriftCorrector {
     const inReference = (pose: Quaternion) => this.tableFrameRequired && this.tableFrame && this.resetTableFrame
       ? pose.clone().premultiply(this.resetTableFrame.clone().invert()).multiply(this.tableFrame) : pose;
     const observation = this.homeGrip.observe(unknown ? null : inReference(q),
-      unknown ? null : inReference(this.apply(q)), now, this.attemptId + 1, reason);
+      unknown ? null : inReference(this.apply(q)), now, this.attemptId + 1, reason,
+      this.motionHeading.predictHomeHeading(now));
     if (observation && (!this.pendingHome || observation.exposureMs >= this.pendingHome.observation.exposureMs)) {
       this.pendingHome = { observation, reference: this.homeReferenceKey() };
     }
     this.deliverPendingHome(now, 'ready');
+    return !reason && !this.end && !this.usualGrip?.hasPendingFinish() ? this.homeGrip.currentHold() : null;
   }
 
   private homeReferenceKey() {

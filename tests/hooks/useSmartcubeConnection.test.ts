@@ -12,6 +12,7 @@ vi.mock('smartcube-web-bluetooth', () => ({
 
 import { connectSmartCube } from 'smartcube-web-bluetooth';
 import { useSmartcubeConnection } from '../../src/hooks/useSmartcubeConnection';
+import { useGuidanceOrientation } from '../../src/hooks/useGuidanceOrientation';
 import { faceletsToPattern, patternToFacelets, solvedFacelets, solvedPattern } from '../../src/lib/cube-utils';
 import { GyroDriftCorrector } from '../../src/lib/gyro-drift';
 import { HOME_ORIENTATION, guidanceFrameRotation } from '../../src/lib/cube-orientation';
@@ -86,6 +87,62 @@ describe('gyro drift connection integration', () => {
     now = 0;
     size = 3;
     vi.spyOn(performance, 'now').mockImplementation(() => now);
+  });
+
+  it('shares aggressive home correction with Your grip through real gyro events, while preserving recovery rotations and Reset Gyro', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] });
+    const { result, unmount } = renderHook(() => {
+      const smartcube = useSmartcubeConnection(true);
+      const grip = useGuidanceOrientation(smartcube, smartcube.currentPattern, smartcube.currentPattern);
+      return { smartcube, grip };
+    });
+    try {
+      await act(async () => result.current.smartcube.connectOrDisconnect());
+      act(() => events.next({ type: 'HARDWARE', timestamp: ++timestamp, hardwareName: 'Test gyro cube',
+        hardwareVersion: '1', softwareVersion: '1', gyroSupported: true }));
+      gyro(new Quaternion(), 0);
+      for (let index = 0; index < 30; index++) {
+        now = index * 10_000 + 1;
+        const start = result.current.smartcube.currentPattern!;
+        act(() => result.current.smartcube.handleGyroTrainingEvent({ phase: 'ready', algorithm: 'R',
+          pattern: start, reason: 'alternative-algorithms-enabled' }));
+        await act(async () => emitMove('R'));
+        for (let offset = 100; offset <= 10_000; offset += 100) {
+          const at = index * 10_000 + offset;
+          // Subtle hand motion and 240° of cumulative raw drift over five minutes.
+          gyro(turn('y', at * .0008).multiply(turn('x', 20 + .15 * Math.sin(at / 150))), at);
+          if (offset === 1000) act(() => {
+            const pattern = start.applyMove('R');
+            result.current.smartcube.handleGyroTrainingEvent({ phase: 'complete', pattern });
+            result.current.smartcube.handleGyroTrainingEvent({ phase: 'ready', algorithm: 'R',
+              pattern, reason: 'alternative-algorithms-enabled' });
+          });
+          act(() => vi.advanceTimersByTime(100));
+        }
+      }
+      const corrected = result.current.smartcube.cubeQuaternionRef.current!;
+      const physical = HOME_ORIENTATION.clone().invert().multiply(
+        new Quaternion(corrected.x, corrected.y, corrected.z, corrected.w));
+      expect(Math.abs(new Vector3(0, 0, 1).applyQuaternion(physical).x)).toBeLessThan(Math.sin(2 * Math.PI / 180));
+      expect(result.current.grip?.misaligned).toBe(false);
+      expect(result.current.grip!.rotation.angle).toBeLessThan(22);
+
+      act(() => result.current.smartcube.handleGyroTrainingEvent({ phase: 'guided-recovery-start' }));
+      for (let at = 300_100; at <= 301_200; at += 100) {
+        gyro(turn('y', at * .0008 + 180).multiply(turn('x', 20)), at);
+        act(() => vi.advanceTimersByTime(100));
+      }
+      expect(result.current.grip?.misaligned).toBe(true);
+      expect(result.current.grip!.rotation.angle).toBeGreaterThan(150);
+      act(() => result.current.smartcube.resetGyro());
+      gyro(turn('y', 301_200 * .0008 + 180).multiply(turn('x', 20)), 301_300);
+      act(() => vi.advanceTimersByTime(100));
+      expect(result.current.grip?.misaligned).toBe(false);
+      expect(result.current.grip!.rotation.angle).toBeLessThan(.01);
+    } finally {
+      unmount();
+      vi.useRealTimers();
+    }
   });
 
   it.each([2, 3] as const)('anchors the size %i reference view on the first physical turn without changing gyro measurements', async cubeSize => {

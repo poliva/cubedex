@@ -344,7 +344,7 @@ export const OptionsView = memo(function OptionsView({
             />
           </div>
           <div style={row()}>
-            {optionLabel('Auto-correct Gyro Drift', 'Corrects small tilts at rest, learns heading drift during practice, and gently recenters the training view between algorithms. Turning this off clears learned correction. Connect or reset with white on top and green in front.')}
+            {optionLabel('Auto-correct Gyro Drift', 'Corrects small tilts at rest, learns heading drift during practice, and quickly corrects heading while you hold your usual home grip between algorithms. Turning this off clears learned correction. Connect or reset with white on top and green in front.')}
             <Toggle
               ariaLabel="Auto-correct Gyro Drift"
               checked={options.autoCorrectGyroDrift}
