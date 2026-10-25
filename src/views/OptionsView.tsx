@@ -271,16 +271,16 @@ export const OptionsView = memo(function OptionsView({
             </select>
           </div>
           <div style={row()}>
-            <div style={{ ...lbl, flex: 1 }}>
+            <div style={lbl}>
               <label htmlFor="cube-view-angle">Default View Angle · {options.viewAngleDeg}°</label>
               <div id="cube-view-angle-description" style={{ fontSize: 12, color: 'var(--fg3)', marginTop: 4 }}>
                 Turn the default view left (negative) or right (positive).
               </div>
-              <input id="cube-view-angle" type="range" min={MIN_VIEW_ANGLE_DEG} max={MAX_VIEW_ANGLE_DEG} step={1}
-                value={options.viewAngleDeg} aria-label="Default View Angle" aria-valuetext={`${options.viewAngleDeg} degrees`}
-                aria-describedby="cube-view-angle-description" onChange={e => options.setViewAngleDeg(Number(e.target.value))}
-                style={{ width: '100%', marginTop: 8, accentColor: 'var(--accent)', cursor: 'pointer' }} />
             </div>
+            <input id="cube-view-angle" type="range" min={MIN_VIEW_ANGLE_DEG} max={MAX_VIEW_ANGLE_DEG} step={1}
+              value={options.viewAngleDeg} aria-label="Default View Angle" aria-valuetext={`${options.viewAngleDeg} degrees`}
+              aria-describedby="cube-view-angle-description" onChange={e => options.setViewAngleDeg(Number(e.target.value))}
+              style={{ width: 110, flexShrink: 0, accentColor: 'var(--accent)', cursor: 'pointer' }} />
           </div>
           <div style={row()}>
             {optionLabel('Floating Mirror Stickers', 'Show hidden stickers beside the virtual cube.')}
