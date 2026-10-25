@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Alg } from 'cubing/alg';
 import { App } from '../src/App';
 import type { SmartcubeConnectionState } from '../src/hooks/useSmartcubeConnection';
 
@@ -28,6 +29,7 @@ const trainingRegressDyn = vi.hoisted(() => ({
   statsAlgId: 'time-attack-scope',
   timeAttackMode: true,
   displayAlg: "R U R'",
+  caseAlgorithm: '',
 }));
 
 const mockState = vi.hoisted(() => {
@@ -99,6 +101,7 @@ const mocks = vi.hoisted(() => ({
     visualResetKey: trainingRegressDyn.visualResetKey,
     algInput: '',
     displayAlg: trainingRegressDyn.displayAlg,
+    caseAlgorithm: trainingRegressDyn.caseAlgorithm,
     currentCase: mockState.caseCards[0],
     currentAlgName: 'Aa',
     selectedCases: mockState.caseCards,
@@ -359,7 +362,7 @@ vi.mock('../src/components/MenuNavIcons', () => ({
 }));
 
 vi.mock('../src/views/PracticeView', () => ({
-  PracticeView: () => <div data-testid="practice-view" />,
+  PracticeView: ({ mainCubeAlg }: { mainCubeAlg: string }) => <div data-testid="practice-view" data-alg={mainCubeAlg} />,
 }));
 
 vi.mock('../src/views/OptionsView', () => ({
@@ -672,4 +675,33 @@ describe('App practice selection confirmation', () => {
       await confirmSelection(action);
     }
   });
+});
+
+it('keeps the cube animation seed when equivalent AUF guidance changes, and refreshes it for the next case', async () => {
+  const { Alg: RealAlg } = await vi.importActual<typeof import('cubing/alg')>('cubing/alg');
+  vi.mocked(Alg.fromString).mockImplementation(algorithm => RealAlg.fromString(algorithm));
+  connectionDyn.connected = true;
+  connectionDyn.cubeSize = 3;
+  alwaysScrambleRegressDyn.alwaysScrambleTo = false;
+  alwaysScrambleRegressDyn.scrambleMode = false;
+  trainingRegressDyn.inputMode = false;
+  trainingRegressDyn.timerState = 'RUNNING';
+  const original = "U' M2 U' M2 U2 M2 U' M2";
+  trainingRegressDyn.caseAlgorithm = original;
+  trainingRegressDyn.displayAlg = original;
+  const { rerender } = render(<App />);
+  const seed = RealAlg.fromString(original).invert().toString();
+  expect(screen.getByTestId('practice-view')).toHaveAttribute('data-alg', seed);
+
+  trainingRegressDyn.displayAlg = "M2 U' M2 U2 M2 U' M2 U'";
+  rerender(<App />);
+  expect(screen.getByTestId('practice-view')).toHaveAttribute('data-alg', seed);
+
+  const next = "R U R'";
+  trainingRegressDyn.caseAlgorithm = next;
+  trainingRegressDyn.displayAlg = next;
+  trainingRegressDyn.visualResetKey += 1;
+  rerender(<App />);
+  expect(screen.getByTestId('practice-view')).toHaveAttribute('data-alg', RealAlg.fromString(next).invert().toString());
+  trainingRegressDyn.caseAlgorithm = '';
 });

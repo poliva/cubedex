@@ -257,7 +257,8 @@ export function App() {
         : '';
     }
     if (!training.displayAlg.trim()) return '';
-    return Alg.fromString(training.displayAlg).invert().toString();
+    // Accepted AUFs update the guidance without restarting the sticker animation.
+    return Alg.fromString(training.caseAlgorithm || training.displayAlg).invert().toString();
   }, [
     acknowledgedDisconnectToken,
     inputModeSmartcubeSeed,
@@ -266,6 +267,7 @@ export function App() {
     smartcube.connected,
     smartcube.disconnectToken,
     training.displayAlg,
+    training.caseAlgorithm,
     training.inputMode,
   ]);
 

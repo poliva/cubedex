@@ -316,16 +316,17 @@ export const PracticeView = memo(function PracticeView({
     statusBody = null;
   }
 
+  const caseAlgorithm = training.caseAlgorithm || training.displayAlg;
   const trainingPictureGrip = useMemo(() => {
     const grip = training.caseGripPattern ?? training.caseStartPattern;
     // Recovery confirms a physical grip, but without sticker matching the
     // preview still represents the selected case in that grip.
     return puzzle === '3x3x3' && training.recoveredAt && !training.casePicturePattern
       && training.caseStartPattern && grip
-      ? projectTrainingPattern(training.displayAlg, training.caseStartPattern, grip)
+      ? projectTrainingPattern(caseAlgorithm, training.caseStartPattern, grip)
       : grip;
   }, [puzzle, training.caseGripPattern, training.caseStartPattern, training.casePicturePattern,
-    training.recoveredAt, training.displayAlg]);
+    training.recoveredAt, caseAlgorithm]);
 
   const trainingPicture = useMemo(() => {
     if (!PUZZLES[puzzle].smartcube || !smartcube.connected || training.inputMode || scramble.scrambleMode
@@ -337,16 +338,16 @@ export const PracticeView = memo(function PracticeView({
       ? training.caseCurrentPattern : smartcube.currentPattern;
     if (puzzle === '3x3x3') {
       const picture = training.casePicturePattern ? current
-        : projectTrainingPattern(training.displayAlg, training.caseStartPattern, current);
+        : projectTrainingPattern(caseAlgorithm, training.caseStartPattern, current);
       // Wide and slice turns rotate the algorithm's centers. The gyro already
       // supplies that physical rotation. Render in the grip's fixed sticker
       // frame and compensate those centers below, without sampling the hand.
       return options.gyroscope && smartcube.gyroSupported
         ? alignForGuidance(picture, trainingPictureGrip ?? training.caseStartPattern) : picture;
     }
-    return projectTrainingPattern(training.displayAlg, training.caseStartPattern, current, training.casePicturePattern);
+    return projectTrainingPattern(caseAlgorithm, training.caseStartPattern, current, training.casePicturePattern);
   }, [puzzle, smartcube.connected, smartcube.currentPattern, training.inputMode, scramble.scrambleMode,
-    training.displayAlg, training.caseStartPattern, training.casePicturePattern, training.caseGripPattern, training.caseCurrentPattern, training.recoveredAt,
+    training.displayAlg, caseAlgorithm, training.caseStartPattern, training.casePicturePattern, training.caseGripPattern, training.caseCurrentPattern, training.recoveredAt,
     options.gyroscope, smartcube.gyroSupported, trainingPictureGrip]);
   const fixedTrainingGrip = Boolean(trainingPicture && ((training.casePicturePattern && training.caseCurrentPattern) || training.recoveredAt));
   // Compensate the device frame in the gyro, leaving sticker turns in the

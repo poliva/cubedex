@@ -1,3 +1,7 @@
+export function isWholeCubeRotationMove(move: string): boolean {
+  return /^[xyz](?:2'|2|')?$/i.test(sanitizeMove(move));
+}
+
 export function trailingWholeCubeRotationMoveCount(moves: string[]): number {
   let count = 0;
   for (let index = moves.length - 1; index >= 0; index -= 1) {
@@ -5,7 +9,7 @@ export function trailingWholeCubeRotationMoveCount(moves: string[]): number {
     if (!raw) {
       continue;
     }
-    if (/^[xyz](?:2'|2|')?$/i.test(raw)) {
+    if (isWholeCubeRotationMove(raw)) {
       count += 1;
     } else {
       break;

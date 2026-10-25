@@ -1,48 +1,33 @@
-import { categoryPuzzle, PUZZLES, puzzleLoader, type PuzzleId } from './puzzles';
+import { categoryPuzzle, PUZZLES, type PuzzleId } from './puzzles';
 import { Alg } from 'cubing/alg';
-import { cube3x3x3 } from 'cubing/puzzles';
-import type { KPattern } from 'cubing/kpuzzle';
-import { faceletsToPattern } from './cube-utils';
 
-const SOLVED_STATE = 'UUUUUUUUURRRRRRRRRFFFFFFFFFDDDDDDDDDLLLLLLLLLBBBBBBBBB';
 const AUF_MOVES = ['U', "U'", 'U2', ''] as const;
-
-function arraysEqual(arr1: number[], arr2: number[]): boolean {
-  if (arr1.length !== arr2.length) return false;
-  for (let i = 0; i < arr1.length; i += 1) {
-    if (arr1[i] !== arr2[i]) return false;
-  }
-  return true;
-}
-
-export async function isSymmetricOLL(alg: string, puzzle: PuzzleId = '3x3x3'): Promise<boolean> {
-  const pattern = puzzle === '3x3x3' ? await faceletsToPattern(SOLVED_STATE) : (await puzzleLoader(puzzle).kpuzzle()).defaultPattern();
-
-  const algWithStartU = Alg.fromString(`U ${alg}`);
-  const algWithStartUp = Alg.fromString(`U' ${alg}`);
-  const algWithStartU2 = Alg.fromString(`U2 ${alg}`);
-  const algs = [algWithStartU, algWithStartUp, algWithStartU2];
-
-  const scramble = pattern.applyAlg(Alg.fromString(alg).invert());
-  for (const item of algs) {
-    const candidate = scramble.applyAlg(item);
-    const edgesOriented = !candidate.patternData.EDGES || arraysEqual(candidate.patternData.EDGES.orientation, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    const cornersOriented = arraysEqual(candidate.patternData.CORNERS.orientation, [0, 0, 0, 0, 0, 0, 0, 0]);
-    const centersOriented = !candidate.patternData.CENTERS || arraysEqual(candidate.patternData.CENTERS.orientation, [0, 0, 0, 0, 0, 0]);
-    if (edgesOriented && cornersOriented && centersOriented) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
-async function solvedPattern(): Promise<KPattern> {
-  return faceletsToPattern(SOLVED_STATE);
-}
 
 function randomAuf() {
   return AUF_MOVES[Math.floor(Math.random() * AUF_MOVES.length)];
+}
+
+function aufAmount(move: string): number | null {
+  const match = /^U(\d+)?(')?$/.exec(move);
+  return match ? Number(match[1] ?? 1) * (match[2] ? -1 : 1) : null;
+}
+
+function combineBoundaryAUFs(moves: string[]) {
+  const combine = (fromStart: boolean) => {
+    let amount = 0;
+    let count = 0;
+    while (count < moves.length) {
+      const value = aufAmount(moves[fromStart ? count : moves.length - 1 - count]);
+      if (value === null) break;
+      amount += value;
+      count += 1;
+    }
+    if (count === 0) return;
+    const auf = ['', 'U', 'U2', "U'"][((amount % 4) + 4) % 4];
+    moves.splice(fromStart ? 0 : moves.length - count, count, ...(auf ? [auf] : []));
+  };
+  combine(true);
+  combine(false);
 }
 
 export interface PreparedTrainingAlgorithm {
@@ -63,43 +48,20 @@ export async function prepareTrainingAlgorithm(
   const originalMoves = [...inputMoves];
 
   if (randomizeAUF && scrambleToMoves.length === 0) {
+    // Expand notation without rewriting authored turns into slice/wide moves.
+    userAlg = Alg.fromString(userAlg.join(' ')).expand().toString().split(/\s+/).filter(Boolean);
     const randomPreAUF = randomAuf();
+    const lowerCategory = category.toLowerCase();
+    const randomPostAUF = lowerCategory.includes('pll') || lowerCategory.includes('zbll') ? randomAuf() : '';
+
+    // Symmetry can make some angles look identical, but must not disable AUF.
     if (randomPreAUF.length > 0) {
-      const kpattern = puzzle === '3x3x3' ? await solvedPattern() : (await puzzleLoader(puzzle).kpuzzle()).defaultPattern();
-
-      const algWithStartU = Alg.fromString(`U ${userAlg.join(' ')}`);
-      const resultWithStartU = kpattern.applyAlg(algWithStartU);
-
-      const algWithEndU = Alg.fromString(`${userAlg.join(' ')} U'`);
-      const resultWithEndU = kpattern.applyAlg(algWithEndU);
-
-      const algWithStartU2 = Alg.fromString(`U2 ${userAlg.join(' ')}`);
-      const resultWithStartU2 = kpattern.applyAlg(algWithStartU2);
-
-      const algWithEndU2 = Alg.fromString(`${userAlg.join(' ')} U2'`);
-      const resultWithEndU2 = kpattern.applyAlg(algWithEndU2);
-
-      const lowerCategory = category.toLowerCase();
-      const isOLL = lowerCategory.includes('oll');
-      const areNotIdentical =
-        !resultWithStartU.isIdentical(resultWithEndU) &&
-        !resultWithStartU2.isIdentical(resultWithEndU2);
-
-      if (lowerCategory.includes('pll') || lowerCategory.includes('zbll')) {
-        const randomPostAUF = randomAuf();
-        if (randomPostAUF.length > 0) {
-          userAlg.push(randomPostAUF);
-        }
-      }
-
-      if ((areNotIdentical && !isOLL) || (isOLL && !(await isSymmetricOLL(userAlg.join(' '), puzzle)))) {
-        userAlg.unshift(randomPreAUF);
-        userAlg = Alg.fromString(userAlg.join(' '))
-          .experimentalSimplify({ cancel: true, puzzleLoader: puzzle === '3x3x3' ? cube3x3x3 : puzzleLoader(puzzle) })
-          .toString()
-          .split(/\s+/);
-      }
+      userAlg.unshift(randomPreAUF);
     }
+    if (randomPostAUF.length > 0) {
+      userAlg.push(randomPostAUF);
+    }
+    combineBoundaryAUFs(userAlg);
   }
 
   if (randomizeAUF && scrambleToMoves.length > 0) {

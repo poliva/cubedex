@@ -19,7 +19,7 @@ import { patternCubeSize, solvedPattern } from '../lib/cube-utils';
 import { alignForGuidance, fixOrientation } from '../lib/scramble';
 import { preparedCasePicture } from '../lib/training-visual';
 import { createCaseGoalMatcher } from '../lib/training-goal';
-import { getInverseMove, getOppositeMove, sanitizeMove, trailingWholeCubeRotationMoveCount } from '../lib/move-helpers';
+import { getInverseMove, getOppositeMove, isWholeCubeRotationMove, sanitizeMove, trailingWholeCubeRotationMoveCount } from '../lib/move-helpers';
 import {
   TIME_ATTACK_SCOPE_PREFIX,
   createTimeAttackScopeId,
@@ -144,6 +144,8 @@ export interface TrainingState {
   casePicturePattern: KPattern | null;
   caseGripPattern: KPattern | null;
   caseCurrentPattern: KPattern | null;
+  /** Defines the starting stickers, even when equivalent AUFs change the guidance. */
+  caseAlgorithm: string;
   algInput: string;
   displayAlg: string;
   currentCase: CaseCardData | null;
@@ -515,7 +517,8 @@ function buildDisplayState(displayAlg: string, currentMoveIndex: number, badMove
 
     const cleanMove = move.replace(/[()']/g, '').trim();
 
-    if (index === 0 && currentMoveIndex === -1 && randomizeAUF) {
+    if (index === currentMoveIndex + 1 && randomizeAUF
+      && (currentMoveIndex === -1 || index === userAlg.length - 1)) {
       if (
         simplifiedBadAlg.length === 1 &&
         simplifiedBadAlg[0]?.[0] === 'U' &&
@@ -551,7 +554,7 @@ function buildDisplayState(displayAlg: string, currentMoveIndex: number, badMove
         ? inverse[firstBadFace]
         : simplifiedBadAlg[0]?.[0];
       const badFace = simplifiedBadAlg[0]?.[0];
-      const faceMatch = badFace === expectedFace
+      const faceMatch = badFace === rawExpected || badFace === expectedFace
         || remappedBadFace === expectedFace
         || (isWideMove && (badFace === oppositeFace[expectedFace] || remappedBadFace === oppositeFace[expectedFace]));
 
@@ -617,6 +620,7 @@ export function useTrainingState(
   const [casePicturePattern, setCasePicturePattern] = useState<KPattern | null>(null);
   const [caseGripPattern, setCaseGripPattern] = useState<KPattern | null>(null);
   const [caseCurrentPattern, setCaseCurrentPattern] = useState<KPattern | null>(null);
+  const [caseAlgorithm, setCaseAlgorithm] = useState('');
   const [algInput, setAlgInputState] = useState('');
   const [displayAlg, setDisplayAlg] = useState('');
   const [currentCase, setCurrentCase] = useState<CaseCardData | null>(null);
@@ -683,7 +687,7 @@ export function useTrainingState(
     // Explicit recovery can make those virtual stickers physical too, including
     // when 2×2 undo recovery was already started by a wrong turn.
     const virtualStart = matchVirtualCube
-      ? casePicturePattern ?? start.kpuzzle.defaultPattern().applyAlg(new Alg(displayAlg).invert())
+      ? casePicturePattern ?? start.kpuzzle.defaultPattern().applyAlg(new Alg(caseAlgorithm).invert())
       : null;
     const target = virtualStart
       ? virtualStart.applyAlg(expectedMovesRef.current.slice(0, currentMoveIndex + 1).join(' '))
@@ -728,6 +732,12 @@ export function useTrainingState(
   const caseGoalMatcherRef = useRef<((pattern: KPattern) => boolean) | null>(null);
   const halfTurnStatesRef = useRef<KPattern[][]>([]);
   const initialAufStatesRef = useRef<KPattern[]>([]);
+  const equivalentAufRoutesRef = useRef<Array<{
+    moves: string[];
+    bodyIndex: number;
+    firstBodyPattern: KPattern;
+    firstBodyHalfTurnPatterns: KPattern[];
+  }>>([]);
   // Hash of each pattern in `patternStatesRef` → index in that array.
   // Used to replace an O(n) `isIdentical` scan per smartcube move with an O(1) lookup.
   const patternHashMapRef = useRef<Map<string, number>>(new Map());
@@ -803,9 +813,9 @@ export function useTrainingState(
   );
 
   useEffect(() => {
-    if (!options.alwaysScrambleTo || !options.smartcubeConnected || !caseStartPattern || !displayAlg) return;
-    setCasePicturePattern(preparedCasePicture(displayAlg, caseStartPattern, true));
-  }, [options.alwaysScrambleTo, options.smartcubeConnected, caseStartPattern, displayAlg]);
+    if (!options.alwaysScrambleTo || !options.smartcubeConnected || !caseStartPattern || !caseAlgorithm) return;
+    setCasePicturePattern(preparedCasePicture(caseAlgorithm, caseStartPattern, true));
+  }, [options.alwaysScrambleTo, options.smartcubeConnected, caseStartPattern, caseAlgorithm]);
 
   function getTimeAttackStatsScopeId() {
     return createTimeAttackScopeId(
@@ -1407,6 +1417,7 @@ export function useTrainingState(
     setCasePicturePattern(null);
     setCaseGripPattern(null);
     setCaseCurrentPattern(null);
+    setCaseAlgorithm('');
     recoveryTargetRef.current = null;
     recoveryStartPatternRef.current = null;
     recoveredPatternRef.current = null;
@@ -1421,6 +1432,7 @@ export function useTrainingState(
     caseGoalMatcherRef.current = null;
     halfTurnStatesRef.current = [];
     initialAufStatesRef.current = [];
+    equivalentAufRoutesRef.current = [];
     patternHashMapRef.current.clear();
     lastMovesRef.current = [];
     solutionMovesRef.current = [];
@@ -1579,17 +1591,15 @@ export function useTrainingState(
     patternStatesInTrainingFrameRef.current = [];
     halfTurnStatesRef.current = [];
     initialAufStatesRef.current = [];
+    equivalentAufRoutesRef.current = [];
     caseGoalMatcherRef.current = null;
     if (basePattern) {
-      if (options.randomizeAUF && /^U(?:2'?|')?$/.test(expectedMovesRef.current[0] ?? '')) {
-        initialAufStatesRef.current = ['U', 'U2', "U'"].map(move => basePattern.applyMove(move));
-      }
+      const startsWithAUF = /^U(?:2'?|')?$/.test(expectedMovesRef.current[0] ?? '');
       let previousPattern = basePattern;
       patternStatesRef.current = expectedMovesRef.current.map((move) => {
         // Quarter-turn packets inside a half turn are clean calibration data,
         // including on 3×3 where the visual tracker uses ordinary undo hints.
-        const face = (patternCubeSize(basePattern) === 2 || Boolean(options.onGyroTrainingEvent))
-          && /^[URFDLB]2'?$/i.test(move) ? move[0] : null;
+        const face = /^[URFDLBMES]2'?$/i.test(move) ? move[0] : null;
         halfTurnStatesRef.current.push(face
           ? [fixOrientation(previousPattern.applyMove(face)), fixOrientation(previousPattern.applyMove(`${face}'`))]
           : []);
@@ -1601,6 +1611,48 @@ export function useTrainingState(
       if (endpoint) {
         caseGoalMatcherRef.current = createCaseGoalMatcher(endpoint,
           currentCaseRef.current?.category ?? category, currentCaseRef.current?.subset);
+      }
+      if (options.randomizeAUF) {
+        const body = expectedMovesRef.current.slice(startsWithAUF ? 1 : 0);
+        const matchesGoal = caseGoalMatcherRef.current;
+        const adjustPostAUF = !matchesGoal;
+        if (adjustPostAUF && /^U(?:2'?|')?$/.test(body.at(-1) ?? '')) body.pop();
+        const firstBodyIndex = body.findIndex(move => !isWholeCubeRotationMove(move));
+        if ((matchesGoal || adjustPostAUF) && endpoint && firstBodyIndex >= 0) {
+          const displayedAUF = startsWithAUF ? expectedMovesRef.current[0] : '';
+          const target = fixOrientation(endpoint);
+          for (const auf of ['', 'U', 'U2', "U'"]) {
+            if (auf === displayedAUF) continue;
+            const start = basePattern.applyAlg(auf);
+            const afterBody = start.applyAlg(body.join(' '));
+            // Full-solve symmetries can change the final AUF. Require the same
+            // endpoint after that adjustment, even with arbitrary stickers.
+            const postAUF = adjustPostAUF
+              ? ['', 'U', 'U2', "U'"].find(post => fixOrientation(afterBody.applyAlg(post)).isIdentical(target))
+              : matchesGoal!(afterBody) ? '' : undefined;
+            if (postAUF === undefined) continue;
+            // A regrip produces no face-turn packet. Confirm the AUF with the
+            // first layer turn in the frame established by those rotations.
+            const firstSideTurnIndex = body.findIndex(move => !isWholeCubeRotationMove(move) && !/^U(?:2'?|')?$/.test(move));
+            const confirmationIndices = [...new Set([firstBodyIndex, firstSideTurnIndex])].filter(index => index >= 0);
+            for (const confirmationIndex of confirmationIndices) {
+              const firstBodyStart = start.applyAlg(body.slice(0, confirmationIndex).join(' '));
+              const firstBodyMove = body[confirmationIndex];
+              const firstBodyHalfTurn = /^[URFDLBMES]2'?$/i.test(firstBodyMove) ? firstBodyMove[0] : null;
+              equivalentAufRoutesRef.current.push({
+                moves: [...(auf ? [auf] : []), ...body, ...(postAUF ? [postAUF] : [])],
+                bodyIndex: (auf ? 1 : 0) + confirmationIndex,
+                firstBodyPattern: fixOrientation(firstBodyStart.applyMove(firstBodyMove)),
+                firstBodyHalfTurnPatterns: firstBodyHalfTurn
+                  ? [fixOrientation(firstBodyStart.applyMove(firstBodyHalfTurn)), fixOrientation(firstBodyStart.applyMove(`${firstBodyHalfTurn}'`))]
+                  : [],
+              });
+            }
+          }
+        }
+        // A random AUF can cancel an authored leading U. Keep intermediate
+        // U turns pending even when the displayed algorithm starts on a side.
+        initialAufStatesRef.current = ['U', 'U2', "U'"].map(move => basePattern.applyMove(move));
       }
     }
     // Rebuild the hash index in lockstep so `handleSmartcubeMove` can do O(1) lookups
@@ -1666,6 +1718,7 @@ export function useTrainingState(
 
     clearProgressState();
     setCaseStartPattern(basePattern);
+    setCaseAlgorithm(prepared.displayAlgorithm);
     setCaseGripPattern(basePattern);
     setCaseCurrentPattern(basePattern);
     setCasePicturePattern(basePattern && options.smartcubeConnected
@@ -2132,13 +2185,20 @@ export function useTrainingState(
       }
       return false;
     }
-    if (!options.allowAlternativeAlgorithms && is2x2 && initialPatternRef.current && currentMoveIndex < 0
+    let nextTurnIndex = currentMoveIndex + 1;
+    while (nextTurnIndex < expectedMovesRef.current.length && isWholeCubeRotationMove(expectedMovesRef.current[nextTurnIndex])) {
+      nextTurnIndex += 1;
+    }
+    if (!options.allowAlternativeAlgorithms && (is2x2 || options.randomizeAUF) && initialPatternRef.current && currentMoveIndex < 0
       && patternAfterMove.isIdentical(fixOrientation(initialPatternRef.current))) {
       setCaseCurrentPattern(initialPatternRef.current);
+      setBadMoves([]);
       return false;
     }
     if (!options.allowAlternativeAlgorithms && patternStatesRef.current.length > 0 && currentMoveIndex === 0 && initialPatternRef.current
-      && (is2x2 ? fixOrientation(initialPatternRef.current) : initialPatternRef.current).isIdentical(patternAfterMove)) {
+      && (is2x2 ? fixOrientation(initialPatternRef.current) : initialPatternRef.current).isIdentical(patternAfterMove)
+      && !patternStatesRef.current[nextTurnIndex]?.isIdentical(patternAfterMove)
+      && !halfTurnStatesRef.current[nextTurnIndex]?.some(pattern => pattern.isIdentical(patternAfterMove))) {
       if (is2x2) {
         setCaseCurrentPattern(initialPatternRef.current);
         setCurrentMoveIndex(-1);
@@ -2147,7 +2207,7 @@ export function useTrainingState(
       return false;
     }
 
-    const nextExpectedIdx = currentMoveIndex + 1;
+    let nextExpectedIdx = currentMoveIndex + 1;
     let matchedIndex: number | null = null;
 
     const finalIndex = patternStatesRef.current.length - 1;
@@ -2161,11 +2221,28 @@ export function useTrainingState(
       matchedIndex = finalIndex;
     } else if (
       // The expected next move is the common path and avoids a hash lookup.
-      nextExpectedIdx >= 0
-      && nextExpectedIdx < patternStatesRef.current.length
-      && patternAfterMove.isIdentical(patternStatesRef.current[nextExpectedIdx])
+      nextTurnIndex >= 0
+      && nextTurnIndex < patternStatesRef.current.length
+      && patternAfterMove.isIdentical(patternStatesRef.current[nextTurnIndex])
     ) {
-      matchedIndex = nextExpectedIdx;
+      matchedIndex = nextTurnIndex;
+    } else if (halfTurnStatesRef.current[nextTurnIndex]?.some(pattern => pattern.isIdentical(patternAfterMove))) {
+      const halfIndex = halfTurnStatesRef.current[nextTurnIndex].findIndex(pattern => pattern.isIdentical(patternAfterMove));
+      const face = expectedMovesRef.current[nextTurnIndex][0];
+      const halfMove = halfIndex === 0 ? face : `${face}'`;
+      const before = nextTurnIndex === 0 ? initialPatternRef.current : patternStatesInTrainingFrameRef.current[nextTurnIndex - 1];
+      if (before) setCaseCurrentPattern(before.applyMove(halfMove));
+      // Prefer a partial next turn over a coincidentally matching later state.
+      setCurrentMoveIndex(nextTurnIndex - 1);
+      setBadMoves([halfMove]);
+      return false;
+    } else if (currentMoveIndex < 0 && initialAufStatesRef.current.some(pattern => fixOrientation(pattern).isIdentical(patternAfterMove))) {
+      // Do not mistake a partial starting AUF for a later U after a silent
+      // regrip. A following side turn can disambiguate equivalent routes.
+      const pending = initialAufStatesRef.current.findIndex(pattern => fixOrientation(pattern).isIdentical(patternAfterMove));
+      setCaseCurrentPattern(initialAufStatesRef.current[pending]);
+      setBadMoves(/^U(?:2'?|')?$/.test(expectedMovesRef.current[0] ?? '') ? [['U', 'U2', "U'"][pending]] : []);
+      return false;
     } else {
       // Fallback: O(1) hash lookup against all known pattern states.
       const hash = hashKPattern(patternAfterMove);
@@ -2175,8 +2252,36 @@ export function useTrainingState(
       }
     }
 
+    if (matchedIndex === null && !options.allowAlternativeAlgorithms
+      && (currentMoveIndex < 0 || (currentMoveIndex === 0 && /^U(?:2'?|')?$/.test(expectedMovesRef.current[0] ?? '')))) {
+      const route = equivalentAufRoutesRef.current.find(candidate => candidate.firstBodyPattern.isIdentical(patternAfterMove)
+        || candidate.firstBodyHalfTurnPatterns.some(pattern => pattern.isIdentical(patternAfterMove)));
+      if (route) {
+        // The first body move confirms which equivalent AUF the user chose.
+        // Rebuild exact physical states so guidance, recovery and the next case
+        // continue from the actual route rather than the displayed AUF.
+        expectedMovesRef.current = route.moves;
+        setDisplayAlg(route.moves.join(' '));
+        rebuildPatternStates(initialPatternRef.current);
+        const halfIndex = route.firstBodyHalfTurnPatterns.findIndex(pattern => pattern.isIdentical(patternAfterMove));
+        if (halfIndex >= 0) {
+          const face = route.moves[route.bodyIndex][0];
+          const halfMove = halfIndex === 0 ? face : `${face}'`;
+          const before = initialPatternRef.current!.applyAlg(route.moves.slice(0, route.bodyIndex).join(' '));
+          setCaseCurrentPattern(before.applyMove(halfMove));
+          setCurrentMoveIndex(route.bodyIndex - 1);
+          setBadMoves([halfMove]);
+          return false;
+        }
+        matchedIndex = route.bodyIndex;
+        nextExpectedIdx = matchedIndex;
+      }
+    }
+
     if (matchedIndex !== null) {
-      if (matchedIndex !== nextExpectedIdx) cancelGyroTraining('nonsequential-progress');
+      const skippedOnlyRotations = matchedIndex > nextExpectedIdx
+        && expectedMovesRef.current.slice(nextExpectedIdx, matchedIndex).every(isWholeCubeRotationMove);
+      if (matchedIndex !== nextExpectedIdx && !skippedOnlyRotations) cancelGyroTraining('nonsequential-progress');
       const matchedPattern = alternativeGoalReached
         ? alignForGuidance(currentPattern, patternStatesInTrainingFrameRef.current[matchedIndex])
         : patternStatesInTrainingFrameRef.current[matchedIndex];
@@ -2188,8 +2293,12 @@ export function useTrainingState(
       const finishedIncludingIgnoredRotations = tailRotations > 0
         && lastLayerMoveIndex >= 0
         && matchedIndex === lastLayerMoveIndex;
+      const remainingMoves = expectedMovesRef.current.slice(matchedIndex + 1);
+      const finishedStageWithOptionalAUF = options.randomizeAUF && remainingMoves.length > 0
+        && remainingMoves.every(move => isWholeCubeRotationMove(move) || /^U(?:2'?|')?$/.test(move))
+        && caseGoalMatcherRef.current?.(currentPattern) === true;
 
-      if (matchedIndex === expectedMovesRef.current.length - 1 || finishedIncludingIgnoredRotations) {
+      if (matchedIndex === expectedMovesRef.current.length - 1 || finishedIncludingIgnoredRotations || finishedStageWithOptionalAUF) {
         if (gyroTrainingArmedRef.current) {
           gyroTrainingArmedRef.current = false;
           options.onGyroTrainingEvent?.({ phase: 'complete', pattern: matchedPattern });
@@ -2227,32 +2336,40 @@ export function useTrainingState(
       return false;
     }
 
-    if (currentMoveIndex < 0) {
+    let beforeFinalAUFIndex = finalIndex - 1;
+    while (beforeFinalAUFIndex >= 0 && isWholeCubeRotationMove(expectedMovesRef.current[beforeFinalAUFIndex])) {
+      beforeFinalAUFIndex -= 1;
+    }
+    if (options.randomizeAUF && currentMoveIndex >= beforeFinalAUFIndex && currentMoveIndex < finalIndex
+      && /^U(?:2'?|')?$/.test(expectedMovesRef.current[finalIndex] ?? '')) {
+      const beforeAUF = patternStatesInTrainingFrameRef.current[finalIndex - 1];
+      const pendingAUF = beforeAUF && ['U', 'U2', "U'"].find(auf =>
+        fixOrientation(beforeAUF.applyMove(auf)).isIdentical(patternAfterMove));
+      if (pendingAUF) {
+        // A final AUF can also be reached through quarter turns in either direction.
+        setCaseCurrentPattern(beforeAUF.applyMove(pendingAUF));
+        setCurrentMoveIndex(finalIndex - 1);
+        setBadMoves([pendingAUF]);
+        return false;
+      }
+    }
+
+
+    if (currentMoveIndex < 0 || (currentMoveIndex === 0 && /^U(?:2'?|')?$/.test(expectedMovesRef.current[0] ?? ''))) {
       // A random starting AUF can be reached in either direction. Keep its
       // intermediate U turns pending rather than starting undo recovery or
       // marking an equivalent route (such as U U U for U') as a mistake.
       const aufIndex = initialAufStatesRef.current.findIndex(pattern => fixOrientation(pattern).isIdentical(patternAfterMove));
       if (aufIndex >= 0) {
         setCaseCurrentPattern(initialAufStatesRef.current[aufIndex]);
-        setBadMoves([['U', 'U2', "U'"][aufIndex]]);
+        setCurrentMoveIndex(-1);
+        setBadMoves(/^U(?:2'?|')?$/.test(expectedMovesRef.current[0] ?? '')
+          ? [['U', 'U2', "U'"][aufIndex]] : []);
         return false;
       }
     }
 
     if (is2x2) {
-      if (halfTurnStatesRef.current[nextExpectedIdx]?.some(pattern => pattern.isIdentical(patternAfterMove))) {
-        const halfIndex = halfTurnStatesRef.current[nextExpectedIdx].findIndex(pattern => pattern.isIdentical(patternAfterMove));
-        const face = expectedMovesRef.current[nextExpectedIdx][0];
-        const halfMove = halfIndex === 0 ? face : `${face}'`;
-        const before = currentMoveIndex < 0 ? initialPatternRef.current : patternStatesInTrainingFrameRef.current[currentMoveIndex];
-        if (before) {
-          setCaseCurrentPattern(before.applyMove(halfMove));
-        }
-        // Color the recognized quarter turn in the algorithm's grip. A 2×2
-        // device can name this same layer using another face in its own frame.
-        setBadMoves([halfMove]);
-        return false;
-      }
       // Recovery must finish in the algorithm's grip, including after D/L/B
       // turns or authored rotations. Normalized states lose that orientation.
       const anchor = currentMoveIndex < 0 ? initialPatternRef.current : patternStatesInTrainingFrameRef.current[currentMoveIndex];
@@ -2380,6 +2497,7 @@ export function useTrainingState(
     casePicturePattern,
     caseGripPattern,
     caseCurrentPattern,
+    caseAlgorithm,
     algInput,
     displayAlg,
     currentCase,
@@ -2426,6 +2544,7 @@ export function useTrainingState(
     casePicturePattern,
     caseGripPattern,
     caseCurrentPattern,
+    caseAlgorithm,
     recoveryTarget,
     recoveryMoveCount,
     recoveredAt,

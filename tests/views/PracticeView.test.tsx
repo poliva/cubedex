@@ -1141,6 +1141,80 @@ it.each([false, true])('keeps the selected 2×2 case preview when sensor sticker
 });
 
 
+it.each([
+  { size: 2 as const, prepared: false, category: 'OLL' },
+  { size: 3 as const, prepared: false, category: 'OLL' },
+  { size: 3 as const, prepared: true, category: 'OLL' },
+  { size: 3 as const, prepared: false, category: 'PLL' },
+  { size: 3 as const, prepared: true, category: 'PLL' },
+].flatMap(scenario => [false, true].map(gyro => ({ ...scenario, gyro }))))
+  ('keeps every original $category case sticker while accepting an equivalent AUF (size $size, prepared $prepared, gyro $gyro)',
+    async ({ size, prepared, gyro, category }) => {
+      const { default: defaults } = await import('../../src/data/defaultAlgs.json');
+      const body = category === 'PLL'
+        ? new Alg(defaults.PLL.flatMap(subset => subset.algorithms).find(alg => alg.name === 'E Perm')!.algorithm).expand().toString()
+        : "R U R' U R U' R' U R U2 R'";
+      const original = `${category === 'PLL' ? 'U2' : "U'"} ${body}`;
+      const actualAlgorithm = category === 'PLL' ? `${body} U2` : `U ${body}`;
+      const solved = await solvedPattern(size);
+      const selectedCase = solved.applyAlg(new Alg(original).invert());
+      const initial = prepared ? selectedCase : solved.applyAlg('D R B y');
+      let physical = initial;
+      let expected = selectedCase;
+      const puzzle = size === 2 ? '2x2x2' : '3x3x3';
+      const props = makeProps({ puzzle, selectedStickering: category });
+      props.options.gyroscope = gyro;
+      props.options.alwaysScrambleTo = prepared;
+      props.smartcube.gyroSupported = true;
+      props.smartcube.currentPattern = initial;
+      let training!: TrainingState;
+      function SymmetricPractice() {
+        training = useTrainingState([], category, {
+          puzzle, selectionChangeMode: 'manual', countdownMode: false,
+          randomizeAUF: true, randomOrder: false, timeAttack: false, prioritizeSlowCases: false,
+          prioritizeFailedCases: false, smartReviewScheduling: false, smartcubeConnected: true,
+          alwaysScrambleTo: prepared,
+        });
+        const scramble = useScrambleState(puzzle);
+        return <PracticeView {...props} training={training} scramble={scramble} />;
+      }
+      const { rerender } = render(<SymmetricPractice />);
+      await act(async () => { await training.trainCurrent(initial, { algorithm: original, preserveDisplayedAlgorithm: true }); });
+      if (size === 3 && !prepared) {
+        await act(async () => {
+          training.beginRecovery(false);
+          expect(training.checkRecovery(initial)).toBe(true);
+        });
+      }
+      const shown = () => JSON.parse(screen.getByTestId('main-cube-area').dataset.target!);
+      expect(shown()).toEqual(selectedCase.patternData);
+      const moves = actualAlgorithm.replace(/U2/g, 'U U').split(/\s+/);
+      for (const [index, move] of moves.entries()) {
+        physical = physical.applyMove(move);
+        expected = expected.applyMove(move);
+        if (/^[xyz]/.test(move)) continue;
+        props.smartcube = { ...props.smartcube, currentPattern: fixOrientation(physical) };
+        let complete = false;
+        await act(async () => {
+          complete = training.handleSmartcubeMove(fixOrientation(physical), move);
+          rerender(<SymmetricPractice />);
+        });
+        expect(complete).toBe(index === moves.length - 1);
+        const pictured = size === 3 && gyro ? alignForGuidance(expected, selectedCase) : expected;
+        expect(shown(), `turn ${index + 1}: ${move}`).toEqual(pictured.patternData);
+        if (prepared) expect(training.casePicturePattern?.isIdentical(selectedCase)).toBe(true);
+        if (size === 2 && !gyro && index === 1) {
+          await act(async () => { training.beginRecovery(true); });
+          expect(training.recoveryTarget?.isIdentical(expected)).toBe(true);
+          physical = expected;
+          await act(async () => { expect(training.checkRecovery(physical)).toBe(true); });
+        }
+      }
+      expect(training.displayAlg).toBe(actualAlgorithm);
+      expect(fixOrientation(expected).patternData.CORNERS.orientation.every(value => value === 0)).toBe(true);
+      if (category === 'PLL') expect(fixOrientation(expected).isIdentical(solved)).toBe(true);
+    });
+
 it.each([false, true])('renders the selected case in the carried frame with gyro %s', async gyroscope => {
   const solved = await solvedPattern(2);
   const algorithm = "R U R'";
