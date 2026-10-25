@@ -727,6 +727,7 @@ export function useTrainingState(
   const patternStatesInTrainingFrameRef = useRef<KPattern[]>([]);
   const caseGoalMatcherRef = useRef<((pattern: KPattern) => boolean) | null>(null);
   const halfTurnStatesRef = useRef<KPattern[][]>([]);
+  const initialAufStatesRef = useRef<KPattern[]>([]);
   // Hash of each pattern in `patternStatesRef` → index in that array.
   // Used to replace an O(n) `isIdentical` scan per smartcube move with an O(1) lookup.
   const patternHashMapRef = useRef<Map<string, number>>(new Map());
@@ -1419,6 +1420,7 @@ export function useTrainingState(
     patternStatesInTrainingFrameRef.current = [];
     caseGoalMatcherRef.current = null;
     halfTurnStatesRef.current = [];
+    initialAufStatesRef.current = [];
     patternHashMapRef.current.clear();
     lastMovesRef.current = [];
     solutionMovesRef.current = [];
@@ -1576,8 +1578,12 @@ export function useTrainingState(
     patternStatesRef.current = [];
     patternStatesInTrainingFrameRef.current = [];
     halfTurnStatesRef.current = [];
+    initialAufStatesRef.current = [];
     caseGoalMatcherRef.current = null;
     if (basePattern) {
+      if (options.randomizeAUF && /^U(?:2'?|')?$/.test(expectedMovesRef.current[0] ?? '')) {
+        initialAufStatesRef.current = ['U', 'U2', "U'"].map(move => basePattern.applyMove(move));
+      }
       let previousPattern = basePattern;
       patternStatesRef.current = expectedMovesRef.current.map((move) => {
         // Quarter-turn packets inside a half turn are clean calibration data,
@@ -2219,6 +2225,18 @@ export function useTrainingState(
       // An unmatched intermediate state can belong to a valid alternative.
       // Keep timing and wait for the case endpoint without starting undo help.
       return false;
+    }
+
+    if (currentMoveIndex < 0) {
+      // A random starting AUF can be reached in either direction. Keep its
+      // intermediate U turns pending rather than starting undo recovery or
+      // marking an equivalent route (such as U U U for U') as a mistake.
+      const aufIndex = initialAufStatesRef.current.findIndex(pattern => fixOrientation(pattern).isIdentical(patternAfterMove));
+      if (aufIndex >= 0) {
+        setCaseCurrentPattern(initialAufStatesRef.current[aufIndex]);
+        setBadMoves([['U', 'U2', "U'"][aufIndex]]);
+        return false;
+      }
     }
 
     if (is2x2) {
