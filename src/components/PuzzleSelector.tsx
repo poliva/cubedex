@@ -5,6 +5,8 @@ export function PuzzleSelector({ puzzle, connected, onChange }: {
   connected: boolean;
   onChange: (puzzle: PuzzleId) => void;
 }) {
+  if (connected) return null;
+
   return (
     <div className="puzzle-selector">
       <div className="puzzle-selector-control">

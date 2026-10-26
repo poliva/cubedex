@@ -16,10 +16,16 @@ describe('PuzzleSelector', () => {
     expect(screen.getByText(/Use Space or tap/)).toBeInTheDocument();
   });
 
-  it('locks the connected puzzle and explains how to change it', () => {
-    render(<PuzzleSelector puzzle="2x2x2" connected onChange={vi.fn()} />);
-    expect(screen.getByRole('combobox', { name: 'Puzzle' })).toBeDisabled();
+  it('hides on connection and reappears on disconnection', () => {
+    const onChange = vi.fn();
+    const { rerender, container } = render(<PuzzleSelector puzzle="2x2x2" connected={false} onChange={onChange} />);
+    expect(screen.getByRole('combobox', { name: 'Puzzle' })).toBeEnabled();
+
+    rerender(<PuzzleSelector puzzle="2x2x2" connected onChange={onChange} />);
+    expect(container).toBeEmptyDOMElement();
+
+    rerender(<PuzzleSelector puzzle="2x2x2" connected={false} onChange={onChange} />);
+    expect(screen.getByRole('combobox', { name: 'Puzzle' })).toBeEnabled();
     expect(screen.getByRole('combobox', { name: 'Puzzle' })).toHaveValue('2x2x2');
-    expect(screen.getByText(/Showing 2×2 alg sets/)).toHaveTextContent('Disconnect to choose another puzzle.');
   });
 });
