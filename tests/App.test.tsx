@@ -8,6 +8,7 @@ import type { SmartcubeConnectionState } from '../src/hooks/useSmartcubeConnecti
 /** Mutable wiring for `alwaysScrambleTo` + scramble-mode regression (see App.tsx lastAutoScrambleKeyRef). */
 const alwaysScrambleRegressDyn = vi.hoisted(() => ({
   alwaysScrambleTo: false,
+  randomizeAUF: false,
   practiceTimeAttack: true,
   scrambleMode: false,
   setupTarget: null as object | null,
@@ -230,7 +231,7 @@ vi.mock('../src/hooks/useAppSettings', () => ({
 
 vi.mock('../src/hooks/usePracticeToggles', () => ({
   usePracticeToggles: vi.fn(() => ({
-    randomizeAUF: false,
+    randomizeAUF: alwaysScrambleRegressDyn.randomizeAUF,
     randomOrder: false,
     timeAttack: alwaysScrambleRegressDyn.practiceTimeAttack,
     prioritizeSlowCases: false,
@@ -444,6 +445,7 @@ describe('App case-card stats refresh', () => {
 describe('App alwaysScrambleTo auto scramble-to', () => {
   beforeEach(() => {
     alwaysScrambleRegressDyn.alwaysScrambleTo = false;
+    alwaysScrambleRegressDyn.randomizeAUF = false;
     alwaysScrambleRegressDyn.practiceTimeAttack = true;
     alwaysScrambleRegressDyn.scrambleMode = false;
     alwaysScrambleRegressDyn.startScrambleToSpyPick = 0;
@@ -479,6 +481,50 @@ describe('App alwaysScrambleTo auto scramble-to', () => {
 
     expect(alwaysScrambleRegressDyn.startScrambleToSpyA.mock.calls.length).toBe(callsAfterInitial);
     expect(alwaysScrambleRegressDyn.startScrambleToSpyB).not.toHaveBeenCalled();
+  });
+
+  it.each([2, 3])('starts the prepared random-AUF case after one setup on a size %s cube', async cubeSize => {
+    connectionDyn.connected = true;
+    connectionDyn.cubeSize = cubeSize;
+    alwaysScrambleRegressDyn.alwaysScrambleTo = true;
+    alwaysScrambleRegressDyn.randomizeAUF = true;
+    alwaysScrambleRegressDyn.practiceTimeAttack = false;
+    trainingRegressDyn.timerState = 'READY';
+    trainingRegressDyn.statsAlgId = 'case-1';
+    trainingRegressDyn.timeAttackMode = false;
+    trainingRegressDyn.displayAlg = "U R U R' U2";
+    const preparedAlgorithm = trainingRegressDyn.displayAlg;
+    let setupAlgorithm = '';
+    alwaysScrambleRegressDyn.startScrambleToSpyA.mockImplementation(async (...args: unknown[]) => {
+      const [algorithm, , , randomizeAUF] = args;
+      // Model setup adding another AUF only if the caller requests it.
+      setupAlgorithm = randomizeAUF ? `U ${algorithm} U` : String(algorithm);
+      return true;
+    });
+    try {
+      const { rerender } = render(<App />);
+      await waitFor(() => expect(setupAlgorithm).not.toBe(''));
+      alwaysScrambleRegressDyn.scrambleMode = true;
+      rerender(<App />);
+
+      // Guided setup preserves its target algorithm when it starts training.
+      alwaysScrambleRegressDyn.scrambleMode = false;
+      trainingRegressDyn.displayAlg = setupAlgorithm;
+      trainingRegressDyn.visualResetKey += 1;
+      rerender(<App />);
+      expect(alwaysScrambleRegressDyn.startScrambleToSpyA).toHaveBeenCalledTimes(1);
+      expect(trainingRegressDyn.displayAlg).toBe(preparedAlgorithm);
+      expect(alwaysScrambleRegressDyn.startScrambleToSpyA).toHaveBeenLastCalledWith(
+        preparedAlgorithm, mockState.caseCards[0], null, false, undefined,
+      );
+
+      trainingRegressDyn.displayAlg = "U2 R U R' U'";
+      rerender(<App />);
+      await waitFor(() => expect(alwaysScrambleRegressDyn.startScrambleToSpyA).toHaveBeenCalledTimes(2));
+    } finally {
+      alwaysScrambleRegressDyn.randomizeAUF = false;
+      alwaysScrambleRegressDyn.startScrambleToSpyA.mockReset().mockResolvedValue(true);
+    }
   });
 });
 

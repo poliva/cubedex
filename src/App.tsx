@@ -485,7 +485,9 @@ export function App() {
       training.displayAlg || training.algInput,
       training.currentCase,
       smartcube.currentPattern,
-      practiceToggles.randomizeAUF,
+      // Training already randomized the displayed algorithm. Changing it here
+      // would trigger another auto setup when that target is revealed.
+      !training.displayAlg && practiceToggles.randomizeAUF,
       training.casePicturePattern,
     ).then((started) => {
       if (!started) return;
