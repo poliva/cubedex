@@ -4,6 +4,8 @@ import defaults from '../../src/data/defaultAlgs.json';
 import { categoryPuzzle, puzzleLoader } from '../../src/lib/puzzles';
 import { expandNotation, type SavedAlgorithms } from '../../src/lib/storage';
 import { getCaseCards } from '../../src/lib/case-cards';
+import ftoSourceStates from '../fixtures/fto-source-states.json';
+import sarahIntermediateCases from '../fixtures/skewb-sarah-intermediate.json';
 
 const library: SavedAlgorithms = defaults;
 const expectedCaseCounts = {
@@ -24,6 +26,15 @@ const expectedCaseCounts = {
   'pyraminx:Last 4 Edges': 35,
   'megaminx:OLL': 178,
   'megaminx:PLL': 151,
+  '6x6x6:Parity': 3,
+  '7x7x7:Parity': 2,
+  "skewb:Sarah's Advanced": 131,
+  "skewb:Sarah's Beginner": 8,
+  "skewb:Sarah's Intermediate": 15,
+  'fto:TCP': 18,
+  'fto:L6X': 35,
+  'fto:L3C': 5,
+  'fto:1LP': 11,
 };
 
 describe('Starter libraries', () => {
@@ -46,6 +57,7 @@ describe('Starter libraries', () => {
     expect(algorithms).toHaveLength(expectedCount);
     const cards = getCaseCards(library, category, subsets.map((s) => s.subset));
     expect(cards).toHaveLength(algorithms.length);
+    expect(new Set(cards.map(card => card.id)).size).toBe(cards.length);
     const unsupported = category === 'megaminx:OLL' ? ['28-', '28+', '35A+'] : [];
     expect(algorithms.filter(a => unsupported.includes(a.name)).map(a => a.name)).toEqual(unsupported);
     for (const [index, entry] of algorithms.entries()) {
@@ -69,5 +81,88 @@ describe('Starter libraries', () => {
   it('keeps Megaminx and big cube moves distinct in normalization', () => {
     expect(expandNotation("BR' R2' U2'", 'megaminx')).toBe("BR' R2' U2'");
     expect(expandNotation("2R2 Uw2 3Rw'", '5x5x5')).toBe("2R2 Uw2 3Rw'");
+  });
+
+  it('preserves the FTO source corner and edge permutations through rotations and wide turns', async () => {
+    const kpuzzle = await puzzleLoader('fto').kpuzzle();
+    expect(ftoSourceStates).toHaveLength(69);
+    for (const source of ftoSourceStates) {
+      const entry = library[source.category].flatMap(subset => subset.algorithms)
+        .find(algorithm => algorithm.name === source.name)!;
+      const pattern = kpuzzle.defaultPattern().applyAlg(entry.algorithm);
+      expect(pattern.patternData.C4RNER.pieces, `${source.category}: ${source.name}`).toEqual(source.corners);
+      expect(pattern.patternData.EDGES.pieces, `${source.category}: ${source.name}`).toEqual(source.edges);
+    }
+  });
+
+  it('preserves a solved first side in all Sarah’s Advanced case previews', async () => {
+    const loader = puzzleLoader('skewb');
+    const kpuzzle = await loader.kpuzzle();
+    const { stickers } = (await loader.pg!()).get3d();
+    const stickerKey = (orbit: string, piece: number, orientation: number) => `${orbit}:${piece}:${orientation}`;
+    const solvedFaces = new Map(stickers.map(sticker => [stickerKey(sticker.orbit, sticker.ord, sticker.ori), sticker.face]));
+    for (const entry of library["skewb:Sarah's Advanced"].flatMap(subset => subset.algorithms)) {
+      const pattern = kpuzzle.defaultPattern().applyAlg(Alg.fromString(entry.algorithm).invert());
+      const faces = new Map<number, Set<number | undefined>>();
+      for (const sticker of stickers) {
+        const orbit = pattern.patternData[sticker.orbit];
+        const orientations = kpuzzle.definition.orbits.find(orbit => orbit.orbitName === sticker.orbit)!.numOrientations;
+        const orientation = (sticker.ori - orbit.orientation[sticker.ord] + orientations) % orientations;
+        const color = solvedFaces.get(stickerKey(sticker.orbit, orbit.pieces[sticker.ord], orientation));
+        const colors = faces.get(sticker.face) ?? new Set();
+        colors.add(color);
+        faces.set(sticker.face, colors);
+      }
+      expect([...faces.values()].some(colors => colors.size === 1 && !colors.has(undefined)), entry.name).toBe(true);
+    }
+  });
+
+  it('includes each stage of Sarah’s Beginner and Intermediate methods', () => {
+    expect(library["skewb:Sarah's Beginner"].map(subset => [subset.subset, subset.algorithms.length])).toEqual([
+      ['Step 1 - First Side', 2],
+      ['Step 2 - Remaining Corners', 2],
+      ['Step 3 - U Center', 1],
+      ['Step 4 - Remaining Centers', 3],
+    ]);
+    expect(library["skewb:Sarah's Intermediate"].map(subset => [subset.subset, subset.algorithms.length])).toEqual([
+      ['Step 1 - First Side', 2],
+      ['Step 2 - Category 1', 3],
+      ['Step 2 - Category 2', 4],
+      ['Step 2 - Category 3', 3],
+      ['Step 3 - Remaining Centers', 3],
+    ]);
+  });
+
+  it('matches all ten Intermediate opposite-side diagrams, including the complete reduction cases', async () => {
+    const loader = puzzleLoader('skewb');
+    const kpuzzle = await loader.kpuzzle();
+    const { stickers } = (await loader.pg!()).get3d();
+    // Physical face labels in the diagrams' yellow-up, green-front frame.
+    const faceNames = ['F', 'U', 'R', 'B', 'D', 'L'];
+    const solvedColors = new Map(stickers.map(sticker => [`${sticker.orbit}:${sticker.ord}:${sticker.ori}`, faceNames[sticker.face]]));
+    const cornerNames = Array.from({ length: 8 }, (_, piece) => stickers
+      .filter(sticker => sticker.orbit === 'CORNERS' && sticker.ord === piece)
+      .map(sticker => faceNames[sticker.face]).sort().join(''));
+    const algorithms = library["skewb:Sarah's Intermediate"]
+      .filter(subset => subset.subset.startsWith('Step 2'))
+      .flatMap(subset => subset.algorithms);
+    expect(sarahIntermediateCases).toHaveLength(10);
+    for (const source of sarahIntermediateCases) {
+      const algorithm = algorithms.find(entry => entry.name === source.name)!;
+      const pattern = kpuzzle.defaultPattern().applyAlg(Alg.fromString(algorithm.algorithm).invert());
+      const yellowStickers = new Set<string>();
+      for (const sticker of stickers) {
+        const orbit = pattern.patternData[sticker.orbit];
+        const orientations = kpuzzle.definition.orbits.find(orbit => orbit.orbitName === sticker.orbit)!.numOrientations;
+        const orientation = (sticker.ori - orbit.orientation[sticker.ord] + orientations) % orientations;
+        const color = solvedColors.get(`${sticker.orbit}:${orbit.pieces[sticker.ord]}:${orientation}`);
+        if (faceNames[sticker.face] === 'D') {
+          expect(color, `${source.name}: first side`).toBe('D');
+        } else if (color === 'U') {
+          yellowStickers.add(`${faceNames[sticker.face]}:${sticker.orbit === 'CENTERS' ? 'center' : cornerNames[sticker.ord]}`);
+        }
+      }
+      expect([...yellowStickers].sort(), source.name).toEqual(source.yellowStickers);
+    }
   });
 });

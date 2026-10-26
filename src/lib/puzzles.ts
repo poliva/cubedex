@@ -6,8 +6,12 @@ export const PUZZLES = {
   '3x3x3': { name: '3×3', available: true, cube: true, smartcube: true, randomAUF: true, lastLayerPreview: true },
   '4x4x4': { name: '4×4', available: true, cube: true, smartcube: false, randomAUF: false, lastLayerPreview: false },
   '5x5x5': { name: '5×5', available: true, cube: true, smartcube: false, randomAUF: false, lastLayerPreview: false },
+  '6x6x6': { name: '6×6', available: true, cube: true, smartcube: false, randomAUF: false, lastLayerPreview: false },
+  '7x7x7': { name: '7×7', available: true, cube: true, smartcube: false, randomAUF: false, lastLayerPreview: false },
   pyraminx: { name: 'Pyraminx', available: true, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
   megaminx: { name: 'Megaminx', available: true, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
+  skewb: { name: 'Skewb', available: true, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
+  fto: { name: 'FTO', available: true, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
   // Retain the namespace for old libraries/backups, but do not offer it for practice.
   square1: { name: 'Square-1', available: false, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
 } as const;

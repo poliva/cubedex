@@ -9,7 +9,7 @@ describe('PuzzleSelector', () => {
     render(<PuzzleSelector puzzle="3x3x3" connected={false} onChange={onChange} />);
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Puzzle' }), 'megaminx');
     expect(onChange).toHaveBeenCalledWith('megaminx');
-    for (const name of ['2×2', '3×3', '4×4', '5×5', 'Pyraminx', 'Megaminx']) {
+    for (const name of ['2×2', '3×3', '4×4', '5×5', '6×6', '7×7', 'Pyraminx', 'Megaminx', 'Skewb', 'FTO']) {
       expect(screen.getByRole('option', { name })).toBeInTheDocument();
     }
     expect(screen.queryByRole('option', { name: 'Square-1' })).not.toBeInTheDocument();

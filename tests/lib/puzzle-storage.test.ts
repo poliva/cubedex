@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SavedAlgorithms } from '../../src/lib/storage';
 import type { ScopedStatsRecord } from '../../src/lib/idb-storage';
+import bundledDefaults from '../../src/data/defaultAlgs.json';
 
 const db = vi.hoisted(() => ({
   library: {} as SavedAlgorithms,
@@ -72,5 +73,28 @@ describe('puzzle library persistence', () => {
     await storage.importAlgorithmsFromJson(JSON.stringify(mixed));
     expect(storage.getSavedAlgorithms()).toEqual(mixed);
     expect(db.library).toEqual(mixed);
+  });
+
+  it('seeds the new puzzle libraries once without replacing existing cases or restoring deletions', async () => {
+    const categories = ['6x6x6:Parity', '7x7x7:Parity', "skewb:Sarah's Beginner", "skewb:Sarah's Intermediate", "skewb:Sarah's Advanced", 'fto:TCP', 'fto:L6X', 'fto:L3C', 'fto:1LP'];
+    const expandedDefaults: SavedAlgorithms = Object.fromEntries(categories.map(category => [category, (bundledDefaults as SavedAlgorithms)[category]]));
+    const customFto = [{ subset: 'Mine', algorithms: [{ name: 'My case', algorithm: "R U R' U'" }] }];
+    db.library['fto:TCP'] = customFto;
+    let storage = await import('../../src/lib/storage');
+    await storage.initializeDefaultAlgorithms(expandedDefaults);
+    expect(storage.getSavedAlgorithms()['fto:TCP']).toEqual(customFto);
+    for (const category of categories.filter(category => category !== 'fto:TCP')) {
+      expect(storage.getSavedAlgorithms()[category]).toEqual(expandedDefaults[category]);
+      for (const entry of expandedDefaults[category].flatMap(subset => subset.algorithms)) {
+        await storage.deleteAlgorithm(category, entry.algorithm);
+      }
+    }
+    vi.resetModules();
+    storage = await import('../../src/lib/storage');
+    await storage.initializeDefaultAlgorithms(expandedDefaults);
+    expect(storage.getSavedAlgorithms()['fto:TCP']).toEqual(customFto);
+    for (const category of categories.filter(category => category !== 'fto:TCP')) {
+      expect(storage.getSavedAlgorithms()[category]).toBeUndefined();
+    }
   });
 });

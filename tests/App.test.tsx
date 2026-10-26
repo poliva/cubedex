@@ -518,7 +518,7 @@ describe('App puzzle context', () => {
       connectionDyn.disconnectToken = 0;
     });
 
-  it.each(['pyraminx', '4x4x4', '5x5x5', 'megaminx'])('remembers %s, follows a connected 2×2 and restores the manual choice on disconnect', async (manualPuzzle) => {
+  it.each(['pyraminx', '4x4x4', '5x5x5', 'megaminx', '6x6x6', '7x7x7', 'skewb', 'fto'])('remembers %s, follows a connected 2×2 and restores the manual choice on disconnect', async (manualPuzzle) => {
     const { rerender } = render(<App />);
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Puzzle' }), manualPuzzle);
     expect(window.localStorage.getItem('practicePuzzle')).toBe(manualPuzzle);
@@ -527,8 +527,7 @@ describe('App puzzle context', () => {
     connectionDyn.connected = true;
     connectionDyn.cubeSize = 2;
     rerender(<App />);
-    expect(screen.getByRole('combobox', { name: 'Puzzle' })).toHaveValue('2x2x2');
-    expect(screen.getByRole('combobox', { name: 'Puzzle' })).toBeDisabled();
+    expect(screen.queryByRole('combobox', { name: 'Puzzle' })).not.toBeInTheDocument();
     expect(mocks.useCaseLibrary).toHaveBeenLastCalledWith(expect.objectContaining({ puzzle: '2x2x2' }));
     connectionDyn.connected = false;
     rerender(<App />);
@@ -552,7 +551,7 @@ describe('App manual setup follows displayed cases', () => {
     trainingRegressDyn.timerState = 'READY';
   });
 
-  it.each(['3x3x3', '4x4x4', '5x5x5', 'pyraminx', 'megaminx'])(
+  it.each(['3x3x3', '4x4x4', '5x5x5', 'pyraminx', 'megaminx', '6x6x6', '7x7x7', 'skewb', 'fto'])(
     'refreshes a requested setup on the next case and repeat attempt for %s', (puzzle) => {
       window.localStorage.setItem('practicePuzzle', puzzle);
       const { rerender } = render(<App />);

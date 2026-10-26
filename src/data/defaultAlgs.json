@@ -10252,5 +10252,1140 @@
         }
       ]
     }
+  ],
+  "6x6x6:Parity": [
+    {
+      "subset": "Parity",
+      "algorithms": [
+        {
+          "name": "OLL Parity Inner",
+          "algorithm": "3Rw U2 3Rw x U2 3R U2 Lw 3Rw' U2 3L U2 3Rw' U2 3R U2 3R' U2 3Rw'"
+        },
+        {
+          "name": "OLL Parity Outer",
+          "algorithm": "Rw U2 x Rw U2 Rw U2 4Rw' U2 Lw U2 Rw' U2 Rw U2 Rw' U2 Rw'"
+        },
+        {
+          "name": "PLL Parity",
+          "algorithm": "3Rw2 F2 U2 3Rw2 R2 U2 F2 3Rw2"
+        }
+      ]
+    }
+  ],
+  "7x7x7:Parity": [
+    {
+      "subset": "Parity",
+      "algorithms": [
+        {
+          "name": "OLL Parity Inner",
+          "algorithm": "3Rw U2 3Rw x U2 3R U2 Lw 4Rw' U2 3L U2 3Rw' U2 3R U2 3R' U2 3Rw'"
+        },
+        {
+          "name": "OLL Parity Outer",
+          "algorithm": "Rw U2 x Rw U2 Rw U2 5Rw' U2 Lw U2 Rw' U2 Rw U2 Rw' U2 Rw'"
+        }
+      ]
+    }
+  ],
+  "fto:TCP": [
+    {
+      "subset": "2-Flip",
+      "algorithms": [
+        {
+          "name": "2-Flip 1",
+          "algorithm": "T' Uv Rv Rv' BR' U' br' BR U' BR U br BR' U"
+        },
+        {
+          "name": "2-Flip 2",
+          "algorithm": "T' Uv Rv Lv Uv BR U br BR' U BR' U' br' BR U'"
+        },
+        {
+          "name": "2-Flip 3",
+          "algorithm": "T' Uv Rv Rv Uv' BR U' BR' U Rv Uv' BR' U BR U'"
+        },
+        {
+          "name": "2-Flip 4",
+          "algorithm": "T' Uv Rv Rv' U br' U' BR U br BR U' BR"
+        },
+        {
+          "name": "2-Flip 5",
+          "algorithm": "T' Uv Rv Lv Uv U' br U BR' U' br' BR' U BR'"
+        },
+        {
+          "name": "2-Flip 6",
+          "algorithm": "T' Uv Rv Rv BR' U' BR D' BR U' BR' D BR' U' BR"
+        }
+      ]
+    },
+    {
+      "subset": "Even",
+      "algorithms": [
+        {
+          "name": "Even 1",
+          "algorithm": "T' Uv Rv Rv Uv' U' BR U BR'"
+        },
+        {
+          "name": "Even 2",
+          "algorithm": "T' Uv Rv Rv Uv' U' BR U BR D BR' U' BR D' BR' U BR'"
+        },
+        {
+          "name": "Even 3",
+          "algorithm": "T' Uv Rv Rv Uv' U' BR' D BR' U BR D' BR"
+        },
+        {
+          "name": "Even 4",
+          "algorithm": "T' Uv Rv Rv Uv U BR' U' BR"
+        },
+        {
+          "name": "Even 5",
+          "algorithm": "T' Uv Rv Rv Uv U BR' U' BR' D' BR U BR' D BR U' BR"
+        },
+        {
+          "name": "Even 6",
+          "algorithm": "T' Uv Rv Rv Uv U BR D' BR U' BR' D BR'"
+        }
+      ]
+    },
+    {
+      "subset": "Odd",
+      "algorithms": [
+        {
+          "name": "Odd 1",
+          "algorithm": "T' Uv Rv Rv' U D' BR U' BR' D Lv BR U' BR' U"
+        },
+        {
+          "name": "Odd 2",
+          "algorithm": "U' T' Uv Rv Rv Uv' BR' D' BR U' BR' D' BR' U BR D' BR"
+        },
+        {
+          "name": "Odd 3",
+          "algorithm": "U' T' Uv Rv Rv Uv' BR' D' BR U' BR' D BR' U BR'"
+        },
+        {
+          "name": "Odd 4",
+          "algorithm": "T' Uv Rv Lv Uv U' D BR' U BR D' Rv Uv' BR' U BR U'"
+        },
+        {
+          "name": "Odd 5",
+          "algorithm": "T' Uv Rv Lv Uv BR' D BR' U' BR D BR U BR' D BR"
+        },
+        {
+          "name": "Odd 6",
+          "algorithm": "U T' Uv Rv Rv' Uv BR B BR' F BR B' BR F' BR"
+        }
+      ]
+    }
+  ],
+  "fto:L6X": [
+    {
+      "subset": "Trapezoid",
+      "algorithms": [
+        {
+          "name": "Trapezoid T1",
+          "algorithm": "br U BR' U' br' F BR F'"
+        },
+        {
+          "name": "Trapezoid T2",
+          "algorithm": "R' U BR U' br' F BR' F' br R"
+        },
+        {
+          "name": "Trapezoid T3",
+          "algorithm": "F BR' F' br U BR U' br'"
+        },
+        {
+          "name": "Trapezoid T4",
+          "algorithm": "BR U BR' U' BR' br U BR U' br'"
+        },
+        {
+          "name": "Trapezoid T5",
+          "algorithm": "br BR U BR U' br' U' br' BR' U' BR' U br"
+        }
+      ]
+    },
+    {
+      "subset": "Headlights",
+      "algorithms": [
+        {
+          "name": "Headlights H1",
+          "algorithm": "BR U BR' U BR U BR'"
+        },
+        {
+          "name": "Headlights H2",
+          "algorithm": "BR U' BR' U' BR U' BR'"
+        },
+        {
+          "name": "Headlights H3",
+          "algorithm": "BR U' BR' U BR' br U BR U' br'"
+        },
+        {
+          "name": "Headlights H4",
+          "algorithm": "R U BR U' BR' R U' BR U' BR' U' R"
+        },
+        {
+          "name": "Headlights H5",
+          "algorithm": "BR' U BR U' br' BR U' BR' U br"
+        },
+        {
+          "name": "Headlights H6",
+          "algorithm": "F U' BR br' U' BR U BR' br U BR' F'"
+        },
+        {
+          "name": "Headlights H7",
+          "algorithm": "br' U' BR U BR' br U BR' U' BR"
+        },
+        {
+          "name": "Headlights H8",
+          "algorithm": "BR U' BR' U BR U br' U' BR U br BR"
+        },
+        {
+          "name": "Headlights H9",
+          "algorithm": "BR' U BR U' BR' U' br U BR' U' BR' br'"
+        },
+        {
+          "name": "Headlights H10",
+          "algorithm": "br U BR' U' BR br' U' BR U BR'"
+        }
+      ]
+    },
+    {
+      "subset": "Diamonds",
+      "algorithms": [
+        {
+          "name": "Diamonds D1",
+          "algorithm": "br' BR' U' BR' U br BR F BR F'"
+        },
+        {
+          "name": "Diamonds D2",
+          "algorithm": "br U' BR' U' BR br' U BR U' BR' br U' br'"
+        },
+        {
+          "name": "Diamonds D3",
+          "algorithm": "br U BR' U' br' BR' U BR F BR F'"
+        },
+        {
+          "name": "Diamonds D4",
+          "algorithm": "r' L r F' r' L r F r' L r"
+        },
+        {
+          "name": "Diamonds D5",
+          "algorithm": "R F' br U BR' U' br' F BR R'"
+        },
+        {
+          "name": "Diamonds D6",
+          "algorithm": "R BR' F' br U BR U' br' F R'"
+        },
+        {
+          "name": "Diamonds D7",
+          "algorithm": "F' r U R r U r' F' R' r'"
+        },
+        {
+          "name": "Diamonds D8",
+          "algorithm": "BR' U BR U BR' R U' BR U BR' R' U BR"
+        },
+        {
+          "name": "Diamonds D9",
+          "algorithm": "BR U' BR' R U' BR U BR' R' BR U BR'"
+        },
+        {
+          "name": "Diamonds D10",
+          "algorithm": "BR F BR F' U br U BR' U' br' BR'"
+        },
+        {
+          "name": "Diamonds D11",
+          "algorithm": "br' BR' F BR F' BR U' BR' U br"
+        },
+        {
+          "name": "Diamonds D12",
+          "algorithm": "F BR U BR' U' F'"
+        },
+        {
+          "name": "Diamonds D13",
+          "algorithm": "br U BR' U' br BR' U' BR U br BR"
+        },
+        {
+          "name": "Diamonds D14",
+          "algorithm": "F U BR U' BR' F'"
+        },
+        {
+          "name": "Diamonds D15",
+          "algorithm": "r' F r U' r U' r' F"
+        },
+        {
+          "name": "Diamonds D16",
+          "algorithm": "br' BR' U' BR' U br U' BR F BR F'"
+        }
+      ]
+    },
+    {
+      "subset": "Cat Ears",
+      "algorithms": [
+        {
+          "name": "Cat Ears C1",
+          "algorithm": "br U BR' U' BR br' F' U' F BR U BR'"
+        },
+        {
+          "name": "Cat Ears C2",
+          "algorithm": "BR U B' BR' U BR U' B U' BR'"
+        }
+      ]
+    },
+    {
+      "subset": "Chameleons",
+      "algorithms": [
+        {
+          "name": "Chameleons C3",
+          "algorithm": "BR' R' U br' BR F BR' F' br U' R BR"
+        },
+        {
+          "name": "Chameleons C4",
+          "algorithm": "BR' U' R U' BR U BR' R' U BR"
+        }
+      ]
+    }
+  ],
+  "fto:L3C": [
+    {
+      "subset": "L3C",
+      "algorithms": [
+        {
+          "name": "L3C1",
+          "algorithm": "T' Uv Rv Rv' D' R' U' R B' R' B R' L R L' U R D"
+        },
+        {
+          "name": "L3C2",
+          "algorithm": "U T' Uv Rv Lv U BR' R' BR U' B U BR' R' BR U'"
+        },
+        {
+          "name": "L3C3",
+          "algorithm": "U T' Uv Rv Lv U BR' R BR U' B' U BR' R BR U'"
+        },
+        {
+          "name": "L3C4",
+          "algorithm": "Rv R' U R' D' R U' R' D R'"
+        },
+        {
+          "name": "L3C5",
+          "algorithm": "Rv R D' R U R' D R U' R"
+        }
+      ]
+    }
+  ],
+  "fto:1LP": [
+    {
+      "subset": "1LP",
+      "algorithms": [
+        {
+          "name": "1",
+          "algorithm": "R B' R' B"
+        },
+        {
+          "name": "2",
+          "algorithm": "U L R' L' R U' L R' L' R U"
+        },
+        {
+          "name": "3",
+          "algorithm": "U' B' R B R' U'"
+        },
+        {
+          "name": "4a",
+          "algorithm": "Uv' U R' L R L' U"
+        },
+        {
+          "name": "4b",
+          "algorithm": "Uv U' L R' L' R U'"
+        },
+        {
+          "name": "4c",
+          "algorithm": "Uv' U L R' L' R U R' L R L' U'"
+        },
+        {
+          "name": "5",
+          "algorithm": "Uv L R' L' R U' R' L R L' U"
+        },
+        {
+          "name": "6a",
+          "algorithm": "Uv U' R' L R L' U"
+        },
+        {
+          "name": "6b",
+          "algorithm": "Uv' U L R' L' R U'"
+        },
+        {
+          "name": "7",
+          "algorithm": "Uv' L R' L' R U' L R' L' R U' R' L R L' U"
+        },
+        {
+          "name": "8",
+          "algorithm": "R B' R' B U R B' R' B U"
+        }
+      ]
+    }
+  ],
+  "skewb:Sarah's Beginner": [
+    {
+      "subset": "Step 1 - First Side",
+      "algorithms": [
+        {
+          "name": "Last corner 1",
+          "algorithm": "D L' D'"
+        },
+        {
+          "name": "Last corner 2",
+          "algorithm": "B' L B"
+        }
+      ]
+    },
+    {
+      "subset": "Step 2 - Remaining Corners",
+      "algorithms": [
+        {
+          "name": "Pi",
+          "algorithm": "L' D L D'"
+        },
+        {
+          "name": "Peanut",
+          "algorithm": "B' L B L' y' B' L B L'"
+        }
+      ]
+    },
+    {
+      "subset": "Step 3 - U Center",
+      "algorithms": [
+        {
+          "name": "U center",
+          "algorithm": "B' L B L' y2 B' L B L'"
+        }
+      ]
+    },
+    {
+      "subset": "Step 4 - Remaining Centers",
+      "algorithms": [
+        {
+          "name": "Centers case 1",
+          "algorithm": "B' L B L' y2 B' L B L'"
+        },
+        {
+          "name": "Centers case 2",
+          "algorithm": "B' L B L' y2 B' L B L' y2 x B' L B L' y2 B' L B L'"
+        },
+        {
+          "name": "Centers case 3",
+          "algorithm": "B' L B L' y2 B' L B L' z2 x B' L B L' y2 B' L B L'"
+        }
+      ]
+    }
+  ],
+  "skewb:Sarah's Intermediate": [
+    {
+      "subset": "Step 1 - First Side",
+      "algorithms": [
+        {
+          "name": "Last corner 1",
+          "algorithm": "D L' D'"
+        },
+        {
+          "name": "Last corner 2",
+          "algorithm": "B' L B"
+        }
+      ]
+    },
+    {
+      "subset": "Step 2 - Category 1",
+      "algorithms": [
+        {
+          "name": "Pi - front center",
+          "algorithm": "L' D L D'"
+        },
+        {
+          "name": "Pi - back center",
+          "algorithm": "y2 D L' D' L"
+        },
+        {
+          "name": "Pi - top center",
+          "algorithm": "y2 L' D L D' L' D L D'"
+        }
+      ]
+    },
+    {
+      "subset": "Step 2 - Category 2",
+      "algorithms": [
+        {
+          "name": "Peanut - front center",
+          "algorithm": "B' L B L' y2 L' D L D'"
+        },
+        {
+          "name": "Peanut - back center",
+          "algorithm": "B' L B L' D L' D' L"
+        },
+        {
+          "name": "Peanut - right center",
+          "algorithm": "D L' D' L y D L' D' L"
+        },
+        {
+          "name": "Peanut - left center",
+          "algorithm": "D L' D' L y' L' D L D'"
+        }
+      ]
+    },
+    {
+      "subset": "Step 2 - Category 3",
+      "algorithms": [
+        {
+          "name": "Pi - left center",
+          "algorithm": "B' L B L' y2 D L' D' L y D L' D' L"
+        },
+        {
+          "name": "Pi - right center",
+          "algorithm": "y2 B' L B L' y' B' L B L' D L' D' L"
+        },
+        {
+          "name": "Peanut - top center",
+          "algorithm": "L B' L' B y' B' L B L' y2 L' D L D'"
+        }
+      ]
+    },
+    {
+      "subset": "Step 3 - Remaining Centers",
+      "algorithms": [
+        {
+          "name": "Centers case 1",
+          "algorithm": "B' L B L' y2 B' L B L'"
+        },
+        {
+          "name": "Centers case 2",
+          "algorithm": "B' L B L' y2 B' L B L' y2 x B' L B L' y2 B' L B L'"
+        },
+        {
+          "name": "Centers case 3",
+          "algorithm": "B' L B L' y2 B' L B L' z2 x B' L B L' y2 B' L B L'"
+        }
+      ]
+    }
+  ],
+  "skewb:Sarah's Advanced": [
+    {
+      "subset": "Pi + Swirl Perm",
+      "algorithms": [
+        {
+          "name": "1a",
+          "algorithm": "y x UR B' R' UR' R z U' R U"
+        },
+        {
+          "name": "1b",
+          "algorithm": "y2 x R' U UR R UR' U R' U'"
+        },
+        {
+          "name": "2a",
+          "algorithm": "y2 x R U UR' U' R UR R UR' R' UR R"
+        },
+        {
+          "name": "2b",
+          "algorithm": "x UR B UR' z' UR R' UR' U' R"
+        },
+        {
+          "name": "1c",
+          "algorithm": "x y2 R' UR R UR B' R UR' B'"
+        },
+        {
+          "name": "1d",
+          "algorithm": "x R' UR R z UR R UR' z' R' UR' R UR'"
+        },
+        {
+          "name": "2c",
+          "algorithm": "x R' UR R' UR' z' R' UR R U UR U'"
+        },
+        {
+          "name": "2d",
+          "algorithm": "y' x UR R' UR R U UR' U' R' UR' R"
+        }
+      ]
+    },
+    {
+      "subset": "Pi + Wat Perm",
+      "algorithms": [
+        {
+          "name": "3a",
+          "algorithm": "x R2' UR R U UR R' UR U"
+        },
+        {
+          "name": "3b",
+          "algorithm": "y x U UR' U' UR U UR U' UR' R' UR' R UR"
+        },
+        {
+          "name": "4a",
+          "algorithm": "x R' UR' R U UR' U' UR' R' UR R UR'"
+        },
+        {
+          "name": "4b",
+          "algorithm": "y x R' UR R UR U' R' UR' R U UR'"
+        },
+        {
+          "name": "3c",
+          "algorithm": "y' x UR R' UR' R UR' R' UR R z R UR R' UR'"
+        },
+        {
+          "name": "3d",
+          "algorithm": "x R' UR R UR' R UR R' UR' z' UR' R' UR R"
+        },
+        {
+          "name": "4c",
+          "algorithm": "y' x UR R' UR R z UR R' UR' R UR R UR'"
+        },
+        {
+          "name": "4d",
+          "algorithm": "y x UR R' UR' R' z' R' UR R UR z UR R UR' R'"
+        }
+      ]
+    },
+    {
+      "subset": "Pi + X Perm",
+      "algorithms": [
+        {
+          "name": "5a",
+          "algorithm": "x z' R' UR z' R' UR R z R UR R' UR"
+        },
+        {
+          "name": "5b",
+          "algorithm": "y2 x UR R' U UR' U' UR' R' UR R'"
+        },
+        {
+          "name": "6a",
+          "algorithm": "y x UR R' UR R z2 UR R' UR' R B"
+        },
+        {
+          "name": "6b",
+          "algorithm": "y' x UR' R UR' R' z' R' UR' R z UR' R"
+        },
+        {
+          "name": "5c",
+          "algorithm": "y' x R' UR R' UR' R' UR R UR' z' UR R' UR R"
+        },
+        {
+          "name": "5d",
+          "algorithm": "x R' UR' R UR' R' UR R UR' U UR' U'"
+        },
+        {
+          "name": "6c",
+          "algorithm": "y' x U' R' UR R UR' z2 R' UR R' UR'"
+        },
+        {
+          "name": "6d",
+          "algorithm": "y x R U UR' U' UR R z' R' UR R"
+        }
+      ]
+    },
+    {
+      "subset": "Pi + Horizontal U Perm",
+      "algorithms": [
+        {
+          "name": "7a",
+          "algorithm": "y' x U R' UR R' UR' R U R'"
+        },
+        {
+          "name": "7b",
+          "algorithm": "y2 x R' z UR R' UR R z R' U' R"
+        },
+        {
+          "name": "7c",
+          "algorithm": "y' x R U' R' UR R UR' R U'"
+        },
+        {
+          "name": "7d",
+          "algorithm": "y2 x U' R z UR R' UR' R z' U' R"
+        },
+        {
+          "name": "8a",
+          "algorithm": "x UR' R UR' U B R' UR R'"
+        },
+        {
+          "name": "8b",
+          "algorithm": "x UR' R U UR' U' R2' UR' R"
+        },
+        {
+          "name": "8c",
+          "algorithm": "x R UR' R B' U' UR R' UR"
+        },
+        {
+          "name": "8d",
+          "algorithm": "y x UR U' R' UR R z UR' R UR'"
+        }
+      ]
+    },
+    {
+      "subset": "Pi + Vertical U Perm",
+      "algorithms": [
+        {
+          "name": "9a",
+          "algorithm": "y' x U' R' UR R UR U' UR' R' UR' R U'"
+        },
+        {
+          "name": "9b",
+          "algorithm": "y' x U R' UR R z UR R' UR' R UR' R'"
+        },
+        {
+          "name": "10a",
+          "algorithm": "x z R U R U' R' U'"
+        },
+        {
+          "name": "10b",
+          "algorithm": "x U' R' U' R U R"
+        }
+      ]
+    },
+    {
+      "subset": "Pi + O Perm",
+      "algorithms": [
+        {
+          "name": "11a",
+          "algorithm": "y' x UR R' UR' R' UR R UR' z' R' UR R"
+        },
+        {
+          "name": "11b",
+          "algorithm": "x R' UR R UR R' UR' R z UR R' UR'"
+        },
+        {
+          "name": "12a",
+          "algorithm": "y' x R' UR' R z UR R' UR' R UR R UR'"
+        },
+        {
+          "name": "12b",
+          "algorithm": "y x U UR U' R' UR R UR' R' UR' R"
+        },
+        {
+          "name": "11c",
+          "algorithm": "y x R UR' R U R' UR U"
+        },
+        {
+          "name": "11d",
+          "algorithm": "y2 x UR' R UR' z' R' U UR' R'"
+        },
+        {
+          "name": "12c",
+          "algorithm": "x U' UR' R U' R' UR R'"
+        },
+        {
+          "name": "12d",
+          "algorithm": "x R UR U' R U UR' U"
+        }
+      ]
+    },
+    {
+      "subset": "Pi + Z Perm Conjugates",
+      "algorithms": [
+        {
+          "name": "13a",
+          "algorithm": "y x R' UR' R' UR' z' R' UR R UR U'"
+        },
+        {
+          "name": "13b",
+          "algorithm": "y' x U UR U' R U UR' U' R'"
+        },
+        {
+          "name": "13c",
+          "algorithm": "x R U UR U' R' U UR' U'"
+        },
+        {
+          "name": "13d",
+          "algorithm": "x U' R' UR' R U R' UR R"
+        },
+        {
+          "name": "14a",
+          "algorithm": "x UR' R' UR' R UR R' UR' R UR R' UR R"
+        },
+        {
+          "name": "14b",
+          "algorithm": "y x UR' U' R' UR R U R' UR' R UR"
+        },
+        {
+          "name": "14c",
+          "algorithm": "y2 x R UR R UR' R' UR' R UR R UR' R' UR R"
+        },
+        {
+          "name": "14d",
+          "algorithm": "y' x UR R UR' U UR U' UR R2' UR R"
+        }
+      ]
+    },
+    {
+      "subset": "Pi + Triple Sledge",
+      "algorithms": [
+        {
+          "name": "15a",
+          "algorithm": "x R' UR R UR R' z' R' UR R z R UR R'"
+        },
+        {
+          "name": "15b",
+          "algorithm": "x R UR' R' z' R' UR' R z R UR' R' UR' R"
+        }
+      ]
+    },
+    {
+      "subset": "Pi + H or Z Perm",
+      "algorithms": [
+        {
+          "name": "16",
+          "algorithm": "x R U UR U' R2' UR R UR"
+        },
+        {
+          "name": "17a",
+          "algorithm": "y2 x R' UR' R UR U UR' U' R' UR R"
+        },
+        {
+          "name": "17b",
+          "algorithm": "y2 x UR R UR' R' z' R' UR R z UR R' UR'"
+        }
+      ]
+    },
+    {
+      "subset": "Peanut + Swirl Perm",
+      "algorithms": [
+        {
+          "name": "18a",
+          "algorithm": "y x B' R' UR R UR' z' UR R' UR' R'"
+        },
+        {
+          "name": "18b",
+          "algorithm": "x R UR R UR' z UR R' UR' R B"
+        },
+        {
+          "name": "18c",
+          "algorithm": "x UR R' UR R z UR R' UR' R'"
+        },
+        {
+          "name": "18d",
+          "algorithm": "x z R' UR R' UR' z' R' UR R UR"
+        },
+        {
+          "name": "18e",
+          "algorithm": "y' x U R' UR R UR' z UR R' UR R"
+        },
+        {
+          "name": "18f",
+          "algorithm": "y2 x U R' UR R UR' z UR R' UR' R UR'"
+        },
+        {
+          "name": "18g",
+          "algorithm": "x UR' R' UR' R z UR R UR' R"
+        },
+        {
+          "name": "18h",
+          "algorithm": "x z R UR R UR' z' R' UR' R UR'"
+        }
+      ]
+    },
+    {
+      "subset": "Peanut + Wat Perm",
+      "algorithms": [
+        {
+          "name": "19a",
+          "algorithm": "y' x R UR R UR' U UR' U' UR' R UR'"
+        },
+        {
+          "name": "19b",
+          "algorithm": "y2 x R' UR R z UR R UR' z UR R' UR' R B"
+        },
+        {
+          "name": "19c",
+          "algorithm": "x R2' UR R UR' z' R' UR R"
+        },
+        {
+          "name": "19d",
+          "algorithm": "x UR R UR' z' R' UR R UR"
+        },
+        {
+          "name": "19e",
+          "algorithm": "y x U' UR R UR' R' UR R UR' U' R"
+        },
+        {
+          "name": "19f",
+          "algorithm": "y R' UR R B' U z' UR' R' UR"
+        },
+        {
+          "name": "19g",
+          "algorithm": "x z UR' R' UR R z R UR R UR' R"
+        },
+        {
+          "name": "19h",
+          "algorithm": "x R UR R' UR' z' UR' R' UR' R UR'"
+        }
+      ]
+    },
+    {
+      "subset": "Peanut + X Perm",
+      "algorithms": [
+        {
+          "name": "20a",
+          "algorithm": "y UR' F UR F' y' UR' F UR F'"
+        },
+        {
+          "name": "20b",
+          "algorithm": "UR' F UR F' y UR' F UR F'"
+        },
+        {
+          "name": "20c",
+          "algorithm": "y2 F UR' F' UR y F UR' F' UR"
+        },
+        {
+          "name": "20d",
+          "algorithm": "y R' U R' UR R UR' R2 U"
+        },
+        {
+          "name": "20e",
+          "algorithm": "y2 x U' UR R' UR' R z R' UR R"
+        },
+        {
+          "name": "20f",
+          "algorithm": "y' x R' UR' R z' R' UR R UR' U"
+        },
+        {
+          "name": "20g",
+          "algorithm": "x y B R' UR R UR' z' UR R' UR'"
+        },
+        {
+          "name": "20h",
+          "algorithm": "x UR R UR' z UR R' UR' R B'"
+        }
+      ]
+    },
+    {
+      "subset": "Peanut + Horizontal U Perm",
+      "algorithms": [
+        {
+          "name": "21a",
+          "algorithm": "y x B' R' UR R UR z' R' U' R U R'"
+        },
+        {
+          "name": "21b",
+          "algorithm": "y' x UR R UR' z UR R' UR' R z' R2' UR R UR'"
+        },
+        {
+          "name": "21c",
+          "algorithm": "x U' R UR' R' U R UR R'"
+        },
+        {
+          "name": "21d",
+          "algorithm": "x R' UR' R' UR R UR U UR' U' R"
+        },
+        {
+          "name": "21e",
+          "algorithm": "y x UR' R UR' R' z' R' UR' R z R UR'"
+        },
+        {
+          "name": "21f",
+          "algorithm": "y' x UR R' z' R' UR R z R UR R' UR"
+        },
+        {
+          "name": "21g",
+          "algorithm": "x UR' U' UR R' y' R' UR' z' UR R UR'"
+        },
+        {
+          "name": "21h",
+          "algorithm": "x R' UR U UR' U' UR' R' UR R'"
+        }
+      ]
+    },
+    {
+      "subset": "Peanut + Vertical U Perm",
+      "algorithms": [
+        {
+          "name": "22a",
+          "algorithm": "x R UR' R' UR R UR U UR' U' R'"
+        },
+        {
+          "name": "22b",
+          "algorithm": "x U' UR U UR' U' UR' R' UR R U"
+        },
+        {
+          "name": "22c",
+          "algorithm": "y R' UR' R UR z' UR R' UR' R"
+        },
+        {
+          "name": "22d",
+          "algorithm": "z2 UR R UR' R' z R' UR R UR'"
+        }
+      ]
+    },
+    {
+      "subset": "Peanut + O Perm",
+      "algorithms": [
+        {
+          "name": "23a",
+          "algorithm": "x z R UR R' UR' z' UR' R' UR R"
+        },
+        {
+          "name": "23b",
+          "algorithm": "x UR' R' UR R z R UR R' UR'"
+        },
+        {
+          "name": "23c",
+          "algorithm": "x R' UR' R UR z UR R UR' R'"
+        },
+        {
+          "name": "23d",
+          "algorithm": "x z UR R UR' R' z' R' UR' R UR"
+        },
+        {
+          "name": "23e",
+          "algorithm": "y' UR R UR U UR' U' UR' R'"
+        },
+        {
+          "name": "23f",
+          "algorithm": "y x U' R' UR R UR' z UR' R' UR R UR"
+        },
+        {
+          "name": "23g",
+          "algorithm": "y2 x B R' UR R UR' z' UR R UR' R"
+        },
+        {
+          "name": "23h",
+          "algorithm": "y R' UR' R' UR R z' R' UR R"
+        }
+      ]
+    },
+    {
+      "subset": "Peanut + Z Perm Conjugates",
+      "algorithms": [
+        {
+          "name": "24a",
+          "algorithm": "x z UR R UR' R' UR R UR' R z' R' UR R"
+        },
+        {
+          "name": "24b",
+          "algorithm": "x R' UR' R UR R' UR' R UR' z UR R' UR'"
+        },
+        {
+          "name": "24c",
+          "algorithm": "x R' UR' R UR' z UR R' UR' R UR R' UR'"
+        },
+        {
+          "name": "24d",
+          "algorithm": "y' x UR R' UR R UR' z UR R' UR' R UR R' UR'"
+        },
+        {
+          "name": "25a",
+          "algorithm": "y' x R' UR' R' z' R' UR' R UR R' UR' R U"
+        },
+        {
+          "name": "25b",
+          "algorithm": "y2 R U UR' U' UR U UR' U' UR' R' UR'"
+        },
+        {
+          "name": "25c",
+          "algorithm": "y' x B' UR R UR' R' UR R UR' R z' R' UR R'"
+        },
+        {
+          "name": "25d",
+          "algorithm": "y2 x U' R' UR R UR' R' UR R z R UR R"
+        }
+      ]
+    },
+    {
+      "subset": "Peanut + Triple Sledge",
+      "algorithms": [
+        {
+          "name": "26a",
+          "algorithm": "UR' F UR F' y F UR' F' UR F UR' F' UR"
+        },
+        {
+          "name": "26b",
+          "algorithm": "x R UR R' UR' R U UR' U' UR' R' UR'"
+        },
+        {
+          "name": "26c",
+          "algorithm": "y2 UR' F UR F' UR' F UR F' y F UR' F' UR"
+        },
+        {
+          "name": "26d",
+          "algorithm": "x z' R' U UR' U' UR' R' UR' R UR R' UR' R'"
+        }
+      ]
+    },
+    {
+      "subset": "Peanut + H or Z Perm and Pure Peanut",
+      "algorithms": [
+        {
+          "name": "27",
+          "algorithm": "y2 U R' UR R UR' U' z' UR R' UR' R"
+        },
+        {
+          "name": "28",
+          "algorithm": "x z' R' UR' R z R' UR R UR' R z' R' UR' R UR"
+        },
+        {
+          "name": "29a",
+          "algorithm": "y x R' UR' R UR R' UR' R' z' R' UR' R U"
+        },
+        {
+          "name": "29b",
+          "algorithm": "y' R' UR R y' R L U R' L U'"
+        }
+      ]
+    },
+    {
+      "subset": "L4C",
+      "algorithms": [
+        {
+          "name": "30a",
+          "algorithm": "y2 x U' R' U R U UR R' UR'"
+        },
+        {
+          "name": "30b",
+          "algorithm": "y x U R' U' z' R' UR' R B UR"
+        },
+        {
+          "name": "31",
+          "algorithm": "y2 x B' R' UR' R B z R U R'"
+        },
+        {
+          "name": "U Perm",
+          "algorithm": "y x B' R' UR R UR' z2 R' UR R"
+        },
+        {
+          "name": "32",
+          "algorithm": "y x R' U R' U' z' R' UR' R z U R'"
+        },
+        {
+          "name": "33",
+          "algorithm": "R UR' R UR' B' R U' R"
+        },
+        {
+          "name": "34a",
+          "algorithm": "x B R' UR R UR' z2 R' UR R UR"
+        },
+        {
+          "name": "34b",
+          "algorithm": "x U' R' UR R UR' z2 R' UR R UR' R"
+        }
+      ]
+    },
+    {
+      "subset": "L5C",
+      "algorithms": [
+        {
+          "name": "35a",
+          "algorithm": "y' x R' UR R UR' R UR y' R' UR R U' R"
+        },
+        {
+          "name": "35b",
+          "algorithm": "y2 x UR R' UR' R U R' UR R' UR' R U R'"
+        },
+        {
+          "name": "36a",
+          "algorithm": "y' x R' UR' R U R' UR R' UR' R U R' UR"
+        },
+        {
+          "name": "36b",
+          "algorithm": "y' x U R' UR R' UR' R U R' UR R' UR' R"
+        },
+        {
+          "name": "37a",
+          "algorithm": "x U' R' UR R UR' R U' R' UR R UR' R"
+        },
+        {
+          "name": "37b",
+          "algorithm": "x R' UR R z' R U' UR R' UR' U' R"
+        }
+      ]
+    }
   ]
 }

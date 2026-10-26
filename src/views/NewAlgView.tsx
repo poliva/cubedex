@@ -9,8 +9,12 @@ const PRESET_CATEGORIES: Partial<Record<PuzzleId, string[]>> = {
   '2x2x2': ['OLL', 'PBL', 'CLL', 'Custom'],
   '4x4x4': ['OLL Parity', 'PLL Parity', 'Custom'],
   '5x5x5': ['Last Two Edges', 'Last Two Centers', 'Custom'],
+  '6x6x6': ['Parity', 'Custom'],
+  '7x7x7': ['Parity', 'Custom'],
   pyraminx: ['Last Layer', 'Custom'],
   megaminx: ['EO', 'CO', 'EP', 'CP', 'Custom'],
+  skewb: ["Sarah's Beginner", "Sarah's Intermediate", "Sarah's Advanced", 'Custom'],
+  fto: ['TCP', 'L6X', 'L3C', '1LP', 'Custom'],
 };
 
 export const NewAlgView = memo(function NewAlgView({
@@ -94,7 +98,10 @@ export const NewAlgView = memo(function NewAlgView({
   const expandedAlg = algInput.trim() ? expandNotation(algInput.trim(), puzzle) : '';
   const parsedMoves = expandedAlg ? expandedAlg.split(/\s+/).filter(Boolean) : [];
   const algorithmExample = puzzle === 'megaminx' ? "e.g. R' BR' R BR R' F' R BR' R' BR F R"
+    : puzzle === '6x6x6' || puzzle === '7x7x7' ? "e.g. 3Rw U2 3Rw' U2"
     : puzzle === '4x4x4' || puzzle === '5x5x5' ? "e.g. Rw U2 Rw' U2"
+    : puzzle === 'fto' ? "e.g. R U R' U' r U r'"
+    : puzzle === 'skewb' ? "e.g. R' L R L'"
     : puzzle === 'pyraminx' ? "e.g. R U R' U R U R'"
     : "e.g. (R U R' U) (R U2 R')";
   const activeCategory = algorithmActions.categoryInput.trim();

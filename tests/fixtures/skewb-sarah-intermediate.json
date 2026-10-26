@@ -1,0 +1,112 @@
+[
+  {
+    "name": "Pi - front center",
+    "sourceAlgorithm": "F' L F L'",
+    "yellowStickers": [
+      "B:BLU",
+      "F:FLU",
+      "F:center",
+      "R:BRU",
+      "R:FRU"
+    ]
+  },
+  {
+    "name": "Pi - back center",
+    "sourceAlgorithm": "y2 L F' L' F",
+    "yellowStickers": [
+      "B:BLU",
+      "B:center",
+      "F:FLU",
+      "R:BRU",
+      "R:FRU"
+    ]
+  },
+  {
+    "name": "Pi - top center",
+    "sourceAlgorithm": "y2 (F' L F L')2",
+    "yellowStickers": [
+      "B:BLU",
+      "F:FLU",
+      "R:BRU",
+      "R:FRU",
+      "U:center"
+    ]
+  },
+  {
+    "name": "Peanut - front center",
+    "sourceAlgorithm": "R' F R F' y2 F' L F L'",
+    "yellowStickers": [
+      "F:FLU",
+      "F:center",
+      "R:BRU",
+      "U:BLU",
+      "U:FRU"
+    ]
+  },
+  {
+    "name": "Peanut - back center",
+    "sourceAlgorithm": "R' F R F' L F' L' F",
+    "yellowStickers": [
+      "B:center",
+      "F:FLU",
+      "R:BRU",
+      "U:BLU",
+      "U:FRU"
+    ]
+  },
+  {
+    "name": "Peanut - right center",
+    "sourceAlgorithm": "L F' L' F y' L F' L' F",
+    "yellowStickers": [
+      "F:FLU",
+      "R:BRU",
+      "R:center",
+      "U:BLU",
+      "U:FRU"
+    ]
+  },
+  {
+    "name": "Peanut - left center",
+    "sourceAlgorithm": "L F' L' F y F' L F L'",
+    "yellowStickers": [
+      "F:FLU",
+      "L:center",
+      "R:BRU",
+      "U:BLU",
+      "U:FRU"
+    ]
+  },
+  {
+    "name": "Pi - left center",
+    "sourceAlgorithm": "R' F R F' y2 L F' L' F y' L F' L' F",
+    "yellowStickers": [
+      "B:BLU",
+      "F:FLU",
+      "L:center",
+      "R:BRU",
+      "R:FRU"
+    ]
+  },
+  {
+    "name": "Pi - right center",
+    "sourceAlgorithm": "y2 R' F R F' y R' F R F' L F' L' F",
+    "yellowStickers": [
+      "B:BLU",
+      "F:FLU",
+      "R:BRU",
+      "R:FRU",
+      "R:center"
+    ]
+  },
+  {
+    "name": "Peanut - top center",
+    "sourceAlgorithm": "F R' F' R y R' F R F' y2 F' L F L'",
+    "yellowStickers": [
+      "F:FLU",
+      "R:BRU",
+      "U:BLU",
+      "U:FRU",
+      "U:center"
+    ]
+  }
+]

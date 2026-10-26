@@ -33,7 +33,7 @@ describe('useScrambleState', () => {
     });
   });
 
-  it.each(['4x4x4', '5x5x5', 'pyraminx', 'megaminx'] as const)(
+  it.each(['4x4x4', '5x5x5', '6x6x6', '7x7x7', 'pyraminx', 'megaminx', 'skewb', 'fto'] as const)(
     'shows the same individual setup moves with or without parentheses for %s', async (puzzle) => {
       const { result } = renderHook(() => useScrambleState(puzzle));
       const expected = "R U R' U R U R'";
@@ -51,6 +51,10 @@ describe('useScrambleState', () => {
     ['5x5x5', "3Rw U Rw' U'"],
     ['pyraminx', "R U R' U' r"],
     ['megaminx', "[R, U] DR2 DL'"],
+    ['6x6x6', "3Rw U2 3R U2 3R' 3Rw'"],
+    ['7x7x7', "4Rw U2 3R U2 3R' 4Rw'"],
+    ['skewb', "(UR R' UR' R)2"],
+    ['fto', "Rv BR U r' U'"],
   ] as const)('creates a setup from solved for %s without using the cube solver', async (puzzle, algorithm) => {
     const { result } = renderHook(() => useScrambleState(puzzle as PuzzleId));
     await act(async () => {
