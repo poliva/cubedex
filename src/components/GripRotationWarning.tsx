@@ -34,7 +34,7 @@ export function GripRotationWarning({ rotation, setupAlg, size, onResetGyro }: {
       <span>Your grip</span>
       <div className="grip-warning__cube">
         <TwistyCube puzzle={size === 2 ? '2x2x2' : '3x3x3'} setupAlg={setupAlg} alg=""
-          visualization="3D" hintFacelets="none" controlPanel="none" experimentalStickering="full"
+          visualization="3D" hintFacelets="none" experimentalStickering="full"
           cameraLatitude={30} cameraLongitude={30} dragInput="none" backView="none"
           gyroscopeEnabled cubeQuaternion={rotation.visualQuaternion} enableExternalOrientationLoop
           className="grip-warning__player" />

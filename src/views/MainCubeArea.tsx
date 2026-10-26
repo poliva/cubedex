@@ -16,7 +16,6 @@ interface MainCubeAreaProps {
   sizePx: number;
   visualization: string;
   hintFacelets: string;
-  controlPanel: string;
   experimentalStickering: string;
   setupAlg: string;
   backView: 'none' | 'side-by-side' | 'top-right';
@@ -40,7 +39,6 @@ function MainCubeAreaComponent({
   sizePx,
   visualization,
   hintFacelets,
-  controlPanel,
   experimentalStickering,
   setupAlg,
   backView,
@@ -68,7 +66,6 @@ function MainCubeAreaComponent({
         sizePx={sizePx}
         visualization={visualization}
         hintFacelets={hintFacelets}
-        controlPanel={controlPanel}
         experimentalStickering={experimentalStickering}
         setupAlg={setupAlg}
         cameraLatitude={fixedOrientation && !gyroscopeEnabled ? 30 : 0}

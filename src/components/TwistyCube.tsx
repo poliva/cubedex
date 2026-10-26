@@ -21,7 +21,6 @@ export interface TwistyCubeProps {
   sizePx?: number;
   visualization: string;
   hintFacelets: string;
-  controlPanel: string;
   experimentalStickering: string;
   setupAlg?: string;
   setupAnchor?: 'start' | 'end';
@@ -80,7 +79,6 @@ export function TwistyCube({
   sizePx,
   visualization,
   hintFacelets,
-  controlPanel,
   experimentalStickering,
   setupAlg = '',
   setupAnchor = 'start',
@@ -162,7 +160,7 @@ export function TwistyCube({
       alg,
       experimentalSetupAnchor: setupAnchor,
       background,
-      controlPanel: controlPanel === 'bottom-row' ? 'bottom-row' : 'none',
+      controlPanel: 'none',
       viewerLink: 'none',
       hintFacelets: hintFacelets === 'floating' ? 'floating' : 'none',
       experimentalDragInput: dragInput,
@@ -335,7 +333,7 @@ export function TwistyCube({
 
     player.puzzle = puzzle;
     player.visualization = toVisualization(visualization);
-    player.controlPanel = controlPanel === 'bottom-row' ? 'bottom-row' : 'none';
+    player.controlPanel = 'none';
     player.hintFacelets = hintFacelets === 'floating' ? 'floating' : 'none';
     player.experimentalStickering = experimentalStickering;
     player.experimentalSetupAlg = setupAlg;
@@ -352,7 +350,6 @@ export function TwistyCube({
     backView,
     cameraLatitude,
     cameraLongitude,
-    controlPanel,
     dragInput,
     experimentalStickering,
     puzzle,

@@ -81,6 +81,7 @@ describe('TwistyCube training frame', () => {
   }
 
   it.each([2, 3] as const)('keeps size %i tilt live while ready and preserves it through execution and completion', async size => {
+    localStorage.setItem('control-panel', 'bottom-row');
     vi.spyOn(performance, 'now').mockReturnValue(0);
     const frames = orientationFrames();
     drawing.solved = await solvedPattern(size);
@@ -92,11 +93,12 @@ describe('TwistyCube training frame', () => {
     const cubeQuaternionRef = { current: drifted.clone().multiply(frame.clone().invert()) };
     const trainingViewRef = { current: { phase: 'ready', anchor: null } as TrainingCubeView };
     const props = { puzzle: size === 2 ? '2x2x2' as const : '3x3x3' as const, alg: '', targetPattern: picture,
-      fixedOrientation: true, sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      fixedOrientation: true, sizePx: 420, visualization: '3D', hintFacelets: 'none',
       experimentalStickering: 'full', setupAlg: '', backView: 'none' as const, resetToken: 'reference-view',
       orientationResetToken: 0, orientationResetAlg: null, gyroscopeEnabled: true, gyroFrameQuaternion: frame,
       cubeQuaternionRef, trainingViewRef, viewAngleDeg: 10 };
     const { rerender, unmount } = render(<MainCubeArea {...props} />);
+    expect(drawing.player!.controlPanel).toBe('none');
     await frames.advance(64);
     expect(drawing.object!.quaternion.angleTo(referenceViewOrientation(10).multiply(turn('x', 20)))).toBeLessThan(1e-6);
     expect(drawing.current!.isIdentical(picture)).toBe(true);
@@ -138,7 +140,7 @@ describe('TwistyCube training frame', () => {
     const cubeQuaternionRef = { current: HOME_ORIENTATION.clone().multiply(turn(40)) };
     const trainingViewRef = { current: { phase: 'ready', anchor: null } as TrainingCubeView };
     const props = { puzzle: '3x3x3' as const, alg: '', targetPattern: drawing.solved, fixedOrientation: true,
-      sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none', experimentalStickering: 'full',
+      sizePx: 420, visualization: '3D', hintFacelets: 'none', experimentalStickering: 'full',
       setupAlg: '', backView: 'none' as const, resetToken: 'toggle-training-view', orientationResetToken: 0,
       orientationResetAlg: null, gyroscopeEnabled: true, cubeQuaternionRef, trainingViewRef, viewAngleDeg: 0 };
     const { rerender } = render(<MainCubeArea {...props} />);
@@ -167,7 +169,7 @@ describe('TwistyCube training frame', () => {
     const cubeQuaternionRef = { current: Object.assign(initial.clone().multiply(frame.clone().invert()), { basisVersion: 1 }) as (THREE.Quaternion & { basisVersion: number }) | null };
     const trainingViewRef = { current: { phase: 'ready', anchor: null } as TrainingCubeView };
     const props = { puzzle: size === 2 ? '2x2x2' as const : '3x3x3' as const, alg: '', targetPattern: picture,
-      fixedOrientation: true, sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      fixedOrientation: true, sizePx: 420, visualization: '3D', hintFacelets: 'none',
       experimentalStickering: 'full', setupAlg: '', backView: 'none' as const, resetToken: 'mid-alg-reset',
       orientationResetToken: 0, orientationResetAlg: null, gyroscopeEnabled: true,
       gyroFrameQuaternion: frame, cubeQuaternionRef, trainingViewRef, viewAngleDeg: -15 };
@@ -199,7 +201,7 @@ describe('TwistyCube training frame', () => {
   it('changes camera longitude rather than latitude for the signed view angle without gyro', async () => {
     drawing.solved = await solvedPattern(3);
     const props = { puzzle: '3x3x3' as const, alg: 'R U', targetPattern: drawing.solved,
-      fixedOrientation: true, sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      fixedOrientation: true, sizePx: 420, visualization: '3D', hintFacelets: 'none',
       experimentalStickering: 'full', setupAlg: '', backView: 'none' as const, resetToken: 'camera-view',
       orientationResetToken: 0, orientationResetAlg: null, gyroscopeEnabled: false, cubeQuaternionRef: { current: null } };
     const { rerender } = render(<MainCubeArea {...props} viewAngleDeg={25} />);
@@ -223,7 +225,7 @@ describe('TwistyCube training frame', () => {
     const props = {
       puzzle: size === 2 ? '2x2x2' as const : '3x3x3' as const, alg: "R U' R'",
       targetPattern: physical, fixedOrientation: true, sizePx: 420, visualization: '3D',
-      hintFacelets: 'none', controlPanel: 'none', experimentalStickering: 'full',
+      hintFacelets: 'none', experimentalStickering: 'full',
       setupAlg: '', backView: 'none' as const, resetToken: 'after-guidance', gyroFrameQuaternion: frame,
       orientationResetToken: 0, orientationResetAlg: null, gyroscopeEnabled: true, cubeQuaternionRef,
     };
@@ -274,7 +276,7 @@ describe('TwistyCube training frame', () => {
     const cubeQuaternionRef = { current: null as THREE.Quaternion | null };
     const props = {
       puzzle: '2x2x2' as const, alg: '', targetPattern: physical, fixedOrientation: true,
-      sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      sizePx: 420, visualization: '3D', hintFacelets: 'none',
       experimentalStickering: 'full', setupAlg: '', backView: 'none' as const, resetToken: 'recovery',
       orientationResetToken: 0, orientationResetAlg: null, gyroscopeEnabled: false, cubeQuaternionRef,
     };
@@ -315,7 +317,7 @@ describe('TwistyCube training frame', () => {
     const cubeQuaternionRef = { current: HOME_ORIENTATION.clone().multiply(grip) };
     const props = {
       puzzle: '3x3x3' as const, alg: '', targetPattern: recovered, fixedOrientation: true,
-      sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      sizePx: 420, visualization: '3D', hintFacelets: 'none',
       experimentalStickering: 'PLL', setupAlg: '', backView: 'none' as const,
       resetToken: 'v-perm-recovered', orientationResetToken: 0, orientationResetAlg: null,
       gyroFrameQuaternion: grip.clone().invert(),
@@ -365,7 +367,7 @@ describe('TwistyCube training frame', () => {
     const rotation = new THREE.Quaternion().setFromEuler(new THREE.Euler(.3, -.8, .1));
     const cubeQuaternionRef = { current: rotation.clone() };
     render(<MainCubeArea puzzle="3x3x3" alg="R U" sizePx={420} visualization="3D"
-      hintFacelets="none" controlPanel="none" experimentalStickering="full" setupAlg=""
+      hintFacelets="none" experimentalStickering="full" setupAlg=""
       backView="none" resetToken="ordinary-training" orientationResetToken={0}
       orientationResetAlg={null} gyroscopeEnabled cubeQuaternionRef={cubeQuaternionRef} />);
     await frames.advance(24);
@@ -384,7 +386,7 @@ describe('TwistyCube training frame', () => {
       const cubeQuaternionRef = { current: shown.clone().multiply(frame.clone().invert()) };
       const props = {
         puzzle: '2x2x2' as const, alg: '', targetPattern: physical, fixedOrientation: true,
-        sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+        sizePx: 420, visualization: '3D', hintFacelets: 'none',
         experimentalStickering: 'full', setupAlg: '', backView: 'none' as const,
         resetToken: `auto-setup-${i}`, orientationResetToken: 0, orientationResetAlg: null,
         gyroscopeEnabled: true, cubeQuaternionRef, gyroFrameQuaternion: frame,
@@ -416,7 +418,7 @@ describe('TwistyCube training frame', () => {
     const picture = solved.applyAlg(new Alg(cards[4].algorithm).invert());
     const props = {
       puzzle: '2x2x2' as const, alg: '', targetPattern: picture, fixedOrientation,
-      sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      sizePx: 420, visualization: '3D', hintFacelets: 'none',
       experimentalStickering: 'full', setupAlg: '', backView: 'none' as const,
       resetToken: 'after-adj-adj', orientationResetToken: 0, orientationResetAlg: null,
       gyroscopeEnabled: true, cubeQuaternionRef, gyroFrameQuaternion: gyroFrame,
@@ -454,7 +456,7 @@ describe('TwistyCube training frame', () => {
     const cubeQuaternionRef = { current: HOME_ORIENTATION.clone() };
     const props = {
       puzzle: '3x3x3' as const, alg: '', targetPattern: start, fixedOrientation: true,
-      sizePx: 420, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      sizePx: 420, visualization: '3D', hintFacelets: 'none',
       experimentalStickering: 'OLL', setupAlg: '', backView: 'none' as const,
       resetToken: 'oll4-wand', orientationResetToken: 0, orientationResetAlg: null,
       gyroscopeEnabled: true, cubeQuaternionRef,
@@ -520,7 +522,7 @@ describe('TwistyCube training frame', () => {
     render(<StrictMode><MainCubeArea
       puzzle="2x2x2" alg={new Alg(card.algorithm).invert().toString()}
       targetPattern={picture} fixedOrientation sizePx={420} visualization="3D"
-      hintFacelets="none" controlPanel="none" experimentalStickering="full"
+      hintFacelets="none" experimentalStickering="full"
       setupAlg="" backView="none" resetToken="fourth-pbl-setup"
       orientationResetToken={0} orientationResetAlg={null}
       gyroscopeEnabled={false} cubeQuaternionRef={{ current: null }}
@@ -542,7 +544,7 @@ describe('TwistyCube training frame', () => {
     render(<StrictMode><MainCubeArea
       puzzle="2x2x2" alg={new Alg(algorithm).invert().toString()}
       targetPattern={physical} fixedOrientation sizePx={420} visualization="3D"
-      hintFacelets="none" controlPanel="none" experimentalStickering="full"
+      hintFacelets="none" experimentalStickering="full"
       setupAlg="" backView="none" resetToken="adj-adj-setup"
       orientationResetToken={0} orientationResetAlg={null}
       gyroscopeEnabled={false} cubeQuaternionRef={{ current: null }}
@@ -558,7 +560,7 @@ describe('TwistyCube training frame', () => {
     const props = {
       puzzle: '2x2x2' as const, alg: "R U' R'", resetToken: 'wand-setup',
       targetPattern: physical, fixedOrientation: true, sizePx: 420,
-      visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      visualization: '3D', hintFacelets: 'none',
       experimentalStickering: 'full', setupAlg: '', backView: 'none' as const,
       orientationResetToken: 1, orientationResetAlg: 'U2',
       appendMoveKey: 'setup-last-turn', appendMove: 'F', gyroscopeEnabled,
@@ -589,7 +591,7 @@ describe('TwistyCube training frame', () => {
     const props = {
       puzzle: size === 2 ? '2x2x2' as const : '3x3x3' as const, alg: inverse, targetPattern: physical,
       fixedOrientation: true, sizePx: 420, visualization: '3D', hintFacelets: 'none',
-      controlPanel: 'none', experimentalStickering: 'full', setupAlg: whiteOnBottom ? 'z2' : '',
+      experimentalStickering: 'full', setupAlg: whiteOnBottom ? 'z2' : '',
       backView: 'none' as const, resetToken: 'guided-case', orientationResetToken: 1,
       // A reset from before guidance must not replace a later case on remount.
       orientationResetAlg: '', gyroscopeEnabled, cubeQuaternionRef: { current: null },
@@ -616,7 +618,7 @@ describe('TwistyCube training frame', () => {
     const solved = await solvedPattern(3);
     drawing.solved = solved;
     const props = {
-      alg: 'R U', visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      alg: 'R U', visualization: '3D', hintFacelets: 'none',
       experimentalStickering: 'full', enableExternalOrientationLoop: false,
       orientationResetToken: 0, orientationResetAlg: null as string | null,
       cameraLatitude: 0, cameraLongitude: 0,
@@ -639,7 +641,7 @@ describe('TwistyCube training frame', () => {
     const initial = projectTrainingPattern(algorithm, start, start.applyAlg("y'"));
     const props = {
       puzzle: '2x2x2' as const, alg: "R U' R'", resetToken: 'case-1',
-      targetPattern: initial, visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      targetPattern: initial, visualization: '3D', hintFacelets: 'none',
       experimentalStickering: 'full', enableExternalOrientationLoop: false,
       appendMoveKey: 'old', appendMove: 'F', orientationResetAlg: 'U2', orientationResetToken: 1,
     };
@@ -678,7 +680,7 @@ describe('TwistyCube training frame', () => {
     drawing.solved = solved;
     drawing.moves = [];
     const props = { puzzle: '2x2x2' as const, alg: '', targetPattern: solved,
-      visualization: '3D', hintFacelets: 'none', controlPanel: 'none',
+      visualization: '3D', hintFacelets: 'none',
       experimentalStickering: 'full', enableExternalOrientationLoop: false };
     const { rerender } = render(<TwistyCube {...props} />);
     const batched = solved.applyAlg("R U F R'");

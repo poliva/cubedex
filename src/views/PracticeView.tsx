@@ -488,7 +488,6 @@ export const PracticeView = memo(function PracticeView({
             sizePx={options.cubeSizePx}
             visualization={fixedTrainingGrip || (!PUZZLES[puzzle].lastLayerPreview && options.visualization.includes('LL')) ? '3D' : options.visualization}
             hintFacelets={fixedTrainingGrip ? 'none' : options.hintFacelets}
-            controlPanel={options.controlPanel}
             experimentalStickering={selectedStickering}
             setupAlg={PUZZLES[puzzle].cube && options.whiteOnBottom ? 'z2' : ''}
             backView={options.backview as 'none' | 'side-by-side' | 'top-right'}

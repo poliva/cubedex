@@ -35,7 +35,7 @@ describe('TwistyCube initial playback position', () => {
       const props = {
         puzzle: size === 2 ? '2x2x2' as const : '3x3x3' as const,
         alg: inverse, setupAlg: 'z2', visualization: '3D', hintFacelets: 'none',
-        controlPanel: 'none', experimentalStickering: 'full', enableExternalOrientationLoop: false,
+        experimentalStickering: 'full', enableExternalOrientationLoop: false,
         targetPattern: prepared ? solved.applyAlg(inverse) : null,
       };
       const { container, rerender } = render(<StrictMode><TwistyCube {...props} /></StrictMode>);
@@ -61,7 +61,7 @@ describe('TwistyCube initial playback position', () => {
     const solved = await solvedPattern(3);
     const { container } = render(<StrictMode><TwistyCube
       alg="R" setupAlg="F U" autoplay visualization="3D" hintFacelets="none"
-      controlPanel="none" experimentalStickering="full" enableExternalOrientationLoop={false}
+      experimentalStickering="full" enableExternalOrientationLoop={false}
     /></StrictMode>);
     const player = container.querySelector('twisty-player') as TwistyPlayer;
     expect(play).toHaveBeenCalled();

@@ -46,7 +46,6 @@ export const STORAGE_KEYS = {
   backview: 'backview',
   gyroscope: 'gyroscope',
   autoCorrectGyroDrift: 'autoCorrectGyroDrift',
-  controlPanel: 'control-panel',
   flashingIndicatorEnabled: 'flashingIndicatorEnabled',
   showAlgName: 'showAlgName',
   countdownMode: 'countdownMode',

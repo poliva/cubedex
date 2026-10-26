@@ -308,14 +308,6 @@ export const OptionsView = memo(function OptionsView({
               <span style={{ fontSize: 11, color: 'var(--fg3)' }}>Requires "Always Show Full Stickers"</span>
             </div>
           )}
-          <div style={row()}>
-            {optionLabel('Virtual Cube Control Panel', 'Show playback and move controls below the virtual cube.')}
-            <Toggle
-              ariaLabel="Virtual Cube Control Panel"
-              checked={options.controlPanel === 'bottom-row'}
-              onChange={(v) => options.setControlPanel(v ? 'bottom-row' : 'none')}
-            />
-          </div>
           <div style={row(true)}>
             {optionLabel(`Cube Size · ${options.cubeSizePx}px`, 'Adjust the size of the virtual cube during practice.')}
             <input

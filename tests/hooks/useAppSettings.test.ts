@@ -127,14 +127,12 @@ describe('useAppSettings', () => {
     localStorage.setItem('visualization', '2D');
     localStorage.setItem('backview', 'side-by-side');
     localStorage.setItem('hintFacelets', 'floating');
-    localStorage.setItem('control-panel', 'bottom-row');
 
     const { result } = renderHook(() => useAppSettings());
 
     expect(result.current.visualization).toBe('2D');
     expect(result.current.backview).toBe('side-by-side');
     expect(result.current.hintFacelets).toBe('floating');
-    expect(result.current.controlPanel).toBe('bottom-row');
   });
 
   it('defaults countdown mode off and persists changes', async () => {

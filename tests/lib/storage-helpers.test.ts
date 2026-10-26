@@ -46,11 +46,11 @@ describe('storage helpers', () => {
 
   it('reads and writes option values through storage keys', () => {
     writeOption('theme', 'dark');
-    writeOption('controlPanel', 'bottom-row');
+    writeOption('backview', 'side-by-side');
 
     expect(localStorage.getItem(STORAGE_KEYS.theme)).toBe('dark');
     expect(readOption('theme')).toBe('dark');
-    expect(readOption('controlPanel')).toBe('bottom-row');
+    expect(readOption('backview')).toBe('side-by-side');
   });
 
   it('backfills legacy lastTimes into solve history with null recognition', () => {

@@ -18,7 +18,6 @@ export interface AppSettingsState {
   whiteOnBottom: boolean;
   gyroscope: boolean;
   autoCorrectGyroDrift: boolean;
-  controlPanel: string;
   flashingIndicatorEnabled: boolean;
   cubeSizePx: number;
   viewAngleDeg: number;
@@ -38,7 +37,6 @@ export interface AppSettingsState {
   setWhiteOnBottom: (value: boolean) => void;
   setGyroscope: (value: boolean) => void;
   setAutoCorrectGyroDrift: (value: boolean) => void;
-  setControlPanel: (value: string) => void;
   setFlashingIndicatorEnabled: (value: boolean) => void;
   setCubeSizePx: (value: number) => void;
   setViewAngleDeg: (value: number) => void;
@@ -81,7 +79,6 @@ export function useAppSettings(): AppSettingsState {
   const [whiteOnBottom, setWhiteOnBottomState] = useState(readOption('whiteOnBottom') === 'true');
   const [gyroscope, setGyroscopeState] = useState(readOption('gyroscope') !== 'disabled');
   const [autoCorrectGyroDrift, setAutoCorrectGyroDrift] = useState(readOption('autoCorrectGyroDrift') !== 'false');
-  const [controlPanel, setControlPanelState] = useState(readOption('controlPanel') || 'none');
   const [flashingIndicatorEnabled, setFlashingIndicatorEnabledState] = useState(
     readOption('flashingIndicatorEnabled') !== 'false',
   );
@@ -159,10 +156,6 @@ export function useAppSettings(): AppSettingsState {
   }, [autoCorrectGyroDrift]);
 
   useEffect(() => {
-    writeOption('controlPanel', controlPanel);
-  }, [controlPanel]);
-
-  useEffect(() => {
     writeOption('flashingIndicatorEnabled', String(flashingIndicatorEnabled));
   }, [flashingIndicatorEnabled]);
 
@@ -201,7 +194,6 @@ export function useAppSettings(): AppSettingsState {
     whiteOnBottom,
     gyroscope,
     autoCorrectGyroDrift,
-    controlPanel,
     flashingIndicatorEnabled,
     cubeSizePx,
     viewAngleDeg,
@@ -221,7 +213,6 @@ export function useAppSettings(): AppSettingsState {
     setWhiteOnBottom: setWhiteOnBottomState,
     setGyroscope: setGyroscopeState,
     setAutoCorrectGyroDrift,
-    setControlPanel: setControlPanelState,
     setFlashingIndicatorEnabled: setFlashingIndicatorEnabledState,
     setCubeSizePx,
     setViewAngleDeg,
@@ -234,7 +225,6 @@ export function useAppSettings(): AppSettingsState {
     autoUpdateLearningState,
     backview,
     countdownMode,
-    controlPanel,
     cubeSizePx,
     viewAngleDeg,
     darkMode,

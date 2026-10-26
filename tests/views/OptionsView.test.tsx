@@ -24,7 +24,6 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     whiteOnBottom: false,
     gyroscope: true,
     autoCorrectGyroDrift: true,
-    controlPanel: 'none',
     flashingIndicatorEnabled: true,
     cubeSizePx: 400,
     viewAngleDeg: 0,
@@ -44,7 +43,6 @@ function createOptions(overrides: Partial<AppSettingsState> = {}): AppSettingsSt
     setWhiteOnBottom: vi.fn(),
     setGyroscope: vi.fn(),
     setAutoCorrectGyroDrift: vi.fn(),
-    setControlPanel: vi.fn(),
     setFlashingIndicatorEnabled: vi.fn(),
     setCubeSizePx: vi.fn(),
     setViewAngleDeg: vi.fn(),
@@ -324,7 +322,6 @@ describe('OptionsView', () => {
       visualization: '2D',
       backview: 'side-by-side',
       hintFacelets: 'floating',
-      controlPanel: 'bottom-row',
       fullStickering: true,
       whiteOnBottom: true,
     });

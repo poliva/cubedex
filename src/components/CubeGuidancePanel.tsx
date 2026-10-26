@@ -217,7 +217,7 @@ export function CubeGuidancePanel({ smartcube, target, onRecovered, onCancel, mo
       {pictureControls}
       <TwistyCube key={`${setup}:${state.index}:${guiding}:${replay}:${rotateFirst}`}
         puzzle={size === 2 ? '2x2x2' : '3x3x3'} setupAlg={setup} alg={expert || rotateFirst ? '' : turn} autoplay={guiding && !expert && !rotateFirst} tempoScale={0.65}
-        visualization="3D" hintFacelets="none" controlPanel="none" experimentalStickering="full"
+        visualization="3D" hintFacelets="none" experimentalStickering="full"
         cameraLatitude={30} cameraLongitude={30} dragInput="none" backView="none"
         gyroscopeEnabled={false} enableExternalOrientationLoop={false} className="recovery-player" />
     </div> : null}

@@ -85,7 +85,7 @@ export function AlgorithmPlaybackPanel({ algorithm, puzzle, setupAlg, backView, 
       {pictureControls}
       <TwistyCube alg={sequence.join(' ')} puzzle={puzzle} setupAlg={setupAlg} setupAnchor="end"
         initialTimestamp="start" onPlayerReady={connectPlayer} tempoScale={speed}
-        visualization="3D" hintFacelets="none" controlPanel="none" experimentalStickering="full"
+        visualization="3D" hintFacelets="none" experimentalStickering="full"
         cameraLatitude={30} cameraLongitude={30} backView={backView}
         enableExternalOrientationLoop={false} className="recovery-player" />
     </div>
