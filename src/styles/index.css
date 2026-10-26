@@ -2735,6 +2735,24 @@ html.dark .footer {
 .guidance-sequence__done { color: var(--fg3); opacity: .55; }
 .guidance-sequence__current { background: var(--accent-tint); color: var(--accent); outline: 2px solid var(--accent); }
 .guidance-progress { font-size: 13px; color: var(--fg3); margin: 6px 0; }
+.algorithm-preview { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 8px; }
+.algorithm-preview__learn { display: inline-flex; align-items: center; gap: 8px; align-self: center; }
+.algorithm-playback { margin: 0 auto; }
+.algorithm-playback__heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.algorithm-playback__heading strong { font-size: 18px; }
+.algorithm-playback__hint { margin: 8px 0 0; color: var(--fg2); font-size: 13px; line-height: 1.5; }
+.algorithm-playback__picture { position: relative; width: min(100%, 320px); aspect-ratio: 1; margin: 0 auto; }
+.algorithm-playback__sequence { gap: 6px; font-size: 18px; margin-top: 4px; }
+.algorithm-playback__sequence li { padding: 0; }
+.algorithm-playback__sequence button { padding: 4px 7px; min-width: 32px; min-height: 36px; border: 0; border-radius: 6px; color: inherit; background: transparent; font: inherit; cursor: pointer; }
+.algorithm-playback__sequence button:hover { background: var(--accent-tint); }
+.algorithm-playback__sequence button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.algorithm-playback__controls { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.algorithm-playback__controls .recovery-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; padding: 9px; }
+.algorithm-playback__controls .recovery-button--primary { flex: 1; }
+.algorithm-playback__controls .recovery-button:disabled { cursor: default; }
+.algorithm-playback__speed { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--fg2); margin-left: auto; }
+.algorithm-playback__speed select { border: 1px solid var(--border); border-radius: 6px; padding: 4px; background: var(--raised); color: var(--fg); font: inherit; font-size: 13px; }
 .grip-warning { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 8px 12px; padding: 12px; margin: 12px 0; border: 2px solid var(--warn); border-radius: 12px; background: rgba(245, 158, 11, .08); }
 .grip-warning__preview { text-align: center; font-size: 12px; color: var(--fg2); }
 .grip-warning__cube { position: relative; width: 100px; height: 100px; }

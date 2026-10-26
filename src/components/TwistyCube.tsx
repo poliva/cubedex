@@ -16,6 +16,8 @@ export interface TwistyCubeProps {
   targetPattern?: KPattern | null;
   autoplay?: boolean;
   tempoScale?: number;
+  initialTimestamp?: 'start' | 'end';
+  onPlayerReady?: (player: TwistyPlayer) => void | (() => void);
   sizePx?: number;
   visualization: string;
   hintFacelets: string;
@@ -73,6 +75,8 @@ export function TwistyCube({
   targetPattern = null,
   autoplay = false,
   tempoScale = 5,
+  initialTimestamp = 'end',
+  onPlayerReady,
   sizePx,
   visualization,
   hintFacelets,
@@ -295,9 +299,9 @@ export function TwistyCube({
     player.alg = alg;
     // With a setup alg (including white-on-bottom z2), Twisty's automatic
     // timestamp shows the setup alone. Show the full case before any turn.
-    // Animated guidance explicitly returns to the start in the autoplay effect.
-    player.timestamp = 'end';
-  }, [alg, resetToken]);
+    // Learning playback opts into the start; animated guidance jumps there below.
+    player.timestamp = initialTimestamp;
+  }, [alg, resetToken, initialTimestamp]);
 
   useEffect(() => {
     const player = playerRef.current as (TwistyPlayer & HTMLElement) | null;
@@ -433,12 +437,20 @@ export function TwistyCube({
   }, [targetPattern, alg, resetToken]);
 
   useEffect(() => {
+    if (playerRef.current) playerRef.current.tempoScale = tempoScale;
+  }, [tempoScale]);
+
+  useEffect(() => {
     const player = playerRef.current;
     if (!autoplay || !player || !alg) return;
     player.jumpToStart();
     player.play();
     return () => player.pause();
   }, [autoplay, alg, resetToken]);
+
+  useEffect(() => {
+    if (playerRef.current) return onPlayerReady?.(playerRef.current);
+  }, [onPlayerReady]);
 
   return <div ref={hostRef} className={className} />;
 }

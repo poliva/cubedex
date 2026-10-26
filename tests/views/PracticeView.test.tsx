@@ -13,6 +13,7 @@ import { PracticeView } from '../../src/views/PracticeView';
 import { getTrainingVisualDelta, projectTrainingPattern } from '../../src/lib/training-visual';
 import { guidanceFrameRotation, HOME_ORIENTATION } from '../../src/lib/cube-orientation';
 import { getStickeringForCategory } from '../../src/lib/stickering';
+import { puzzleIds } from '../../src/lib/puzzles';
 
 vi.mock('../../src/components/TwistyCube', () => ({
   TwistyCube: (props: ComponentProps<typeof import('../../src/components/TwistyCube').TwistyCube>) =>
@@ -301,6 +302,69 @@ function makeProps(overrides: Record<string, unknown> = {}) {
 }
 
 describe('PracticeView', () => {
+  it.each(puzzleIds)('offers learning during manual %s setup without Bluetooth or a timed attempt', async puzzle => {
+    const props = makeProps({ puzzle });
+    props.smartcube.connected = false;
+    props.options.alwaysScrambleTo = true;
+    props.training.inputMode = true;
+    props.training.displayAlg = '';
+    props.training.algInput = "R U R'";
+    props.scramble.scrambleMode = true;
+    props.scramble.targetAlgorithm = "R U2 R'";
+    const { rerender } = render(<PracticeView {...props} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Learn algorithm' }));
+    expect(screen.getByTestId('recovery-cube')).toHaveAttribute('data-turn', "R U2 R'");
+    expect(props.training.trainCurrent).not.toHaveBeenCalled();
+    expect(props.scramble.clearScramble).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Back to practice' }));
+    // A typed algorithm is also available before Train has revealed a case.
+    rerender(<PracticeView {...props} scramble={{ ...props.scramble, scrambleMode: false }} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Learn algorithm' }));
+    expect(screen.getByTestId('recovery-cube')).toHaveAttribute('data-turn', "R U R'");
+  });
+
+  it.each(['', '(', '()'])('hides learning for empty or incomplete input %j', algInput => {
+    const props = makeProps();
+    props.smartcube.connected = false;
+    props.training = { ...props.training, inputMode: true, algInput };
+    render(<PracticeView {...props} />);
+    expect(screen.queryByRole('button', { name: 'Learn algorithm' })).toBeNull();
+  });
+
+  it.each([false, true])('opens learning playback with the displayed algorithm on mobile %s', async isMobile => {
+    const props = makeProps({ isMobile });
+    props.options.whiteOnBottom = true;
+    props.training.caseAlgorithm = "(R U2)2";
+    const { rerender } = render(<PracticeView {...props} />);
+    const practiceCube = screen.getByTestId('main-cube-area');
+    await userEvent.click(screen.getByRole('button', { name: 'Learn algorithm' }));
+    expect(practiceCube).toBeInTheDocument();
+    expect(practiceCube).not.toBeVisible();
+    expect(screen.getByRole('region', { name: 'Learn algorithm' })).toBeInTheDocument();
+    expect(screen.getByTestId('recovery-cube')).toHaveAttribute('data-turn', 'R U2 R U2');
+    expect(screen.getByTestId('recovery-cube')).toHaveAttribute('data-setup', 'z2');
+    expect(props.training.trainCurrent).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Back to practice' }));
+    expect(screen.getByTestId('main-cube-area')).toBe(practiceCube);
+    expect(practiceCube).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'Learn algorithm' }));
+    rerender(<PracticeView {...props} training={{ ...props.training, timerState: 'RUNNING' }} />);
+    expect(screen.queryByRole('region', { name: 'Learn algorithm' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Learn algorithm' })).toBeNull();
+  });
+
+  it('closes learning playback when leaving practice or changing cases', async () => {
+    const props = makeProps();
+    const { rerender } = render(<PracticeView {...props} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Learn algorithm' }));
+    rerender(<PracticeView {...props} visible={false} />);
+    rerender(<PracticeView {...props} />);
+    expect(screen.queryByRole('region', { name: 'Learn algorithm' })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Learn algorithm' }));
+    rerender(<PracticeView {...props} training={{ ...props.training, visualResetKey: 2 }} />);
+    expect(screen.queryByRole('region', { name: 'Learn algorithm' })).toBeNull();
+  });
+
   it('gates training stabilization behind drift correction while keeping live gyro tracking', () => {
     const props = makeProps();
     props.options = { ...props.options, gyroscope: true, autoCorrectGyroDrift: true };

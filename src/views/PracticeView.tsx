@@ -1,4 +1,5 @@
 import { PUZZLES, type PuzzleId } from '../lib/puzzles';
+import { Alg } from 'cubing/alg';
 import { Fragment, memo, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { AppSettingsState } from '../hooks/useAppSettings';
 import type { PracticeTogglesState } from '../hooks/usePracticeToggles';
@@ -7,11 +8,12 @@ import type { ScrambleState } from '../hooks/useScrambleState';
 import type { SmartcubeConnectionState } from '../hooks/useSmartcubeConnection';
 import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
 import { averageOfFiveTimeNumber, historyTimeString } from '../lib/case-cards';
-import { getBestTime } from '../lib/storage';
+import { expandNotation, getBestTime } from '../lib/storage';
 import { alignForGuidance, fixOrientation, patternToPlayerAlg } from '../lib/scramble';
 import { projectTrainingPattern } from '../lib/training-visual';
 import { guidanceFrameRotation } from '../lib/cube-orientation';
 import { CubeGuidancePanel } from '../components/CubeGuidancePanel';
+import { AlgorithmPlaybackPanel } from '../components/AlgorithmPlaybackPanel';
 import { MainCubeArea } from './MainCubeArea';
 import { MoveListPanel } from './MoveListPanel';
 import { StatsPanel } from './StatsPanel';
@@ -141,6 +143,25 @@ export const PracticeView = memo(function PracticeView({
   const [practiceViewEnter, setPracticeViewEnter] = useState(false);
   const [practiceTogglesExpanded, setPracticeTogglesExpanded] = useState(false);
   const [caseNavigationBusy, setCaseNavigationBusy] = useState(false);
+  const [learningAlgorithm, setLearningAlgorithm] = useState(false);
+  const playbackAlgorithm = useMemo(() => {
+    // Manual setup can stay visible between attempts. Its target is still an
+    // algorithm we can demonstrate, without starting or changing training.
+    const source = (scramble.scrambleMode ? scramble.targetAlgorithm : '')
+      || (training.inputMode ? training.algInput : training.caseAlgorithm || training.displayAlg);
+    try {
+      const alg = new Alg(expandNotation(source, puzzle));
+      return alg.experimentalLeafMoves().next().done ? '' : alg.toString();
+    } catch { return ''; }
+  }, [puzzle, scramble.scrambleMode, scramble.targetAlgorithm, training.inputMode,
+    training.algInput, training.caseAlgorithm, training.displayAlg]);
+  const canLearnAlgorithm = PUZZLES[puzzle].available && Boolean(playbackAlgorithm) && !showAlgEditor
+    && !(smartcube.connected && scramble.scrambleMode) && training.timerState !== 'RUNNING' && !training.countdownActive
+    && !training.timeAttackActive && !training.recoveryTarget && !training.fixVisible;
+  useEffect(() => {
+    setLearningAlgorithm(false);
+  }, [visible, puzzle, training.visualResetKey, training.currentCase?.id, canLearnAlgorithm]);
+  const showingAlgorithmPlayback = learningAlgorithm && canLearnAlgorithm && visible;
   useEffect(() => {
     if (!visible) {
       return;
@@ -442,50 +463,68 @@ export const PracticeView = memo(function PracticeView({
       }}
     />
   ) : (
-    <div
-      style={{
-        position: 'relative',
-        width: isMobile ? `min(calc(100vw - 56px), ${options.cubeSizePx}px)` : `min(100%, ${options.cubeSizePx}px)`,
-        height: isMobile ? `min(calc(100vw - 56px), ${options.cubeSizePx}px)` : undefined,
-        aspectRatio: isMobile ? undefined : 1,
-        maxWidth: '100%',
-        overflow: 'visible',
-        flexShrink: 0,
-      }}
-    >
-      {caseNavigation}
-      <div className={training.countdownActive ? 'cube-area-content cube-area-content--hidden' : 'cube-area-content'}
-        aria-hidden={training.countdownActive}>
-        <MainCubeArea
-          puzzle={puzzle}
-          alg={mainCubeAlg}
-          targetPattern={trainingPicture}
-          fixedOrientation={fixedTrainingGrip}
-          sizePx={options.cubeSizePx}
-          visualization={fixedTrainingGrip || (!PUZZLES[puzzle].lastLayerPreview && options.visualization.includes('LL')) ? '3D' : options.visualization}
-          hintFacelets={fixedTrainingGrip ? 'none' : options.hintFacelets}
-          controlPanel={options.controlPanel}
-          experimentalStickering={selectedStickering}
-          setupAlg={PUZZLES[puzzle].cube && options.whiteOnBottom ? 'z2' : ''}
-          backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
-          resetToken={`${smartcube.connected}:${training.visualResetKey}`}
-          orientationResetToken={orientationResetToken}
-          orientationResetAlg={orientationResetAlg}
-          appendMoveKey={smartcubeAppendMoveKey}
-          appendMove={smartcubeAppendMove}
-          gyroscopeEnabled={options.gyroscope && smartcube.connected}
-          gyroFrameQuaternion={gyroFrameQuaternion}
-          cubeQuaternionRef={smartcube.cubeQuaternionRef}
-          trainingViewRef={options.autoCorrectGyroDrift && !training.inputMode && !scramble.scrambleMode && !showAlgEditor && training.displayAlg
-            ? smartcube.trainingViewRef : undefined}
-          viewAngleDeg={options.viewAngleDeg}
-        />
-      </div>
-      {training.countdownActive ? (
-        <div className="cube-countdown-overlay" aria-live="polite" aria-label={`Countdown ${training.countdownValue ?? ''}`}>
-          {training.countdownValue}
+    <div className="algorithm-preview">
+      <div
+        aria-hidden={showingAlgorithmPlayback || undefined}
+        style={{
+          display: showingAlgorithmPlayback ? 'none' : undefined,
+          position: 'relative',
+          width: isMobile ? `min(calc(100vw - 56px), ${options.cubeSizePx}px)` : `min(100%, ${options.cubeSizePx}px)`,
+          height: isMobile ? `min(calc(100vw - 56px), ${options.cubeSizePx}px)` : undefined,
+          aspectRatio: isMobile ? undefined : 1,
+          maxWidth: '100%',
+          overflow: 'visible',
+          flexShrink: 0,
+        }}
+      >
+        {caseNavigation}
+        <div className={training.countdownActive ? 'cube-area-content cube-area-content--hidden' : 'cube-area-content'}
+          aria-hidden={training.countdownActive}>
+          <MainCubeArea
+            puzzle={puzzle}
+            alg={mainCubeAlg}
+            targetPattern={trainingPicture}
+            fixedOrientation={fixedTrainingGrip}
+            sizePx={options.cubeSizePx}
+            visualization={fixedTrainingGrip || (!PUZZLES[puzzle].lastLayerPreview && options.visualization.includes('LL')) ? '3D' : options.visualization}
+            hintFacelets={fixedTrainingGrip ? 'none' : options.hintFacelets}
+            controlPanel={options.controlPanel}
+            experimentalStickering={selectedStickering}
+            setupAlg={PUZZLES[puzzle].cube && options.whiteOnBottom ? 'z2' : ''}
+            backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
+            resetToken={`${smartcube.connected}:${training.visualResetKey}`}
+            orientationResetToken={orientationResetToken}
+            orientationResetAlg={orientationResetAlg}
+            appendMoveKey={smartcubeAppendMoveKey}
+            appendMove={smartcubeAppendMove}
+            gyroscopeEnabled={options.gyroscope && smartcube.connected}
+            gyroFrameQuaternion={gyroFrameQuaternion}
+            cubeQuaternionRef={smartcube.cubeQuaternionRef}
+            trainingViewRef={options.autoCorrectGyroDrift && !training.inputMode && !scramble.scrambleMode && !showAlgEditor && training.displayAlg
+              ? smartcube.trainingViewRef : undefined}
+            viewAngleDeg={options.viewAngleDeg}
+          />
         </div>
-      ) : null}
+        {training.countdownActive ? (
+          <div className="cube-countdown-overlay" aria-live="polite" aria-label={`Countdown ${training.countdownValue ?? ''}`}>
+            {training.countdownValue}
+          </div>
+        ) : null}
+      </div>
+      {showingAlgorithmPlayback ? <AlgorithmPlaybackPanel
+        key={`${puzzle}:${training.visualResetKey}:${playbackAlgorithm}`}
+        algorithm={playbackAlgorithm}
+        puzzle={puzzle}
+        setupAlg={PUZZLES[puzzle].cube && options.whiteOnBottom ? 'z2' : ''}
+        backView={options.backview as 'none' | 'side-by-side' | 'top-right'}
+        pictureControls={caseNavigation}
+        onClose={() => setLearningAlgorithm(false)}
+      /> : canLearnAlgorithm && <button type="button" className="recovery-button algorithm-preview__learn"
+        onKeyDown={event => { if (event.code === 'Space') event.stopPropagation(); }}
+        onKeyUp={event => { if (event.code === 'Space') event.stopPropagation(); }}
+        onClick={() => setLearningAlgorithm(true)}>
+        <Icon d="M8 5l11 7-11 7V5Z" size={18} /> Learn algorithm
+      </button>}
     </div>
   );
 
