@@ -12,8 +12,7 @@ export const PUZZLES = {
   megaminx: { name: 'Megaminx', available: true, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
   skewb: { name: 'Skewb', available: true, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
   fto: { name: 'FTO', available: true, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
-  // Retain the namespace for old libraries/backups, but do not offer it for practice.
-  square1: { name: 'Square-1', available: false, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
+  square1: { name: 'Square-1', available: true, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
 } as const;
 
 export type PuzzleId = keyof typeof PUZZLES;
@@ -38,4 +37,9 @@ export function categoryId(puzzle: PuzzleId, name: string): string {
 }
 export function puzzleLoader(puzzle: PuzzleId) {
   return puzzles[puzzle];
+}
+
+/** Square-1's shape-changing diagrams are provided by the 2D renderer. */
+export function puzzleVisualization(puzzle: PuzzleId, visualization: string): string {
+  return puzzle === 'square1' ? '2D' : visualization;
 }

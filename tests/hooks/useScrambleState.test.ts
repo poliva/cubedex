@@ -23,6 +23,17 @@ const mockedGetScrambleToSolution = vi.mocked(getScrambleToSolution);
 const mockedPrepareTrainingAlgorithm = vi.mocked(prepareTrainingAlgorithm);
 
 describe('useScrambleState', () => {
+  it('creates a Square-1 setup using native pairs and slices', async () => {
+    const algorithm = '(1, 0) / (-1, -1) / (0, 1)';
+    const { result } = renderHook(() => useScrambleState('square1'));
+    await act(async () => {
+      await expect(result.current.startScrambleTo(algorithm, null)).resolves.toBe(true);
+    });
+    expect(result.current.scrambleText).toBe('(0, -1) / (1, 1) / (-1, 0)');
+    const solved = (await puzzles.square1.kpuzzle()).defaultPattern();
+    expect(solved.applyAlg(result.current.scrambleText).applyAlg(algorithm).isIdentical(solved)).toBe(true);
+  });
+
   beforeEach(() => {
     mockedGetScrambleToSolution.mockReset();
     mockedPrepareTrainingAlgorithm.mockReset();

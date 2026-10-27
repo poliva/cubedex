@@ -23,6 +23,7 @@ import {
   normalizeSrsState,
 } from './srs';
 import { normalizeNullableNumber } from './normalize';
+import { normalizeSquare1Notation } from './square1';
 
 export interface SavedAlgorithm {
   name: string;
@@ -337,6 +338,7 @@ let initializePromise: Promise<{ migratedSavedAlgorithmsV1: boolean; alertMessag
 let writeQueue: Promise<void> = Promise.resolve();
 
 export function expandNotation(input: string, puzzle: PuzzleId = '3x3x3'): string {
+  if (puzzle === 'square1') input = normalizeSquare1Notation(input);
   // Preserve wide/layer turns, multi-letter Megaminx faces and puzzle-specific syntax.
   // The legacy formatter remains unchanged for 2×2/3×3 to preserve stored case IDs.
   if ((puzzle !== '2x2x2' && puzzle !== '3x3x3') || /[,/]/.test(input)) {

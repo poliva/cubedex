@@ -1,4 +1,4 @@
-import type { PuzzleId } from './puzzles';
+import { puzzleVisualization, type PuzzleId } from './puzzles';
 import { TwistyPlayer } from 'cubing/twisty';
 import { Alg } from 'cubing/alg';
 import {
@@ -142,7 +142,8 @@ function touch(key: PreviewKey, value: Preview) {
 }
 
 export function previewKey(params: PreviewParams): PreviewKey {
-  return `v${PREVIEW_CACHE_VERSION}|${params.puzzle ?? '3x3x3'}|${params.visualization}|${params.stickering}|${params.setupAnchor ?? 'end'}|${params.alg}`;
+  const puzzle = params.puzzle ?? '3x3x3';
+  return `v${PREVIEW_CACHE_VERSION}|${puzzle}|${puzzleVisualization(puzzle, params.visualization)}|${params.stickering}|${params.setupAnchor ?? 'end'}|${params.alg}`;
 }
 
 export function getPreview(key: PreviewKey): Preview | undefined {
@@ -449,6 +450,7 @@ async function renderImagePreview(params: PreviewParams): Promise<Preview> {
 }
 
 export function requestPreview(params: PreviewParams): Promise<Preview> {
+  params = { ...params, visualization: puzzleVisualization(params.puzzle ?? '3x3x3', params.visualization) };
   const key = previewKey(params);
   const cached = cache.get(key);
   if (cached) return Promise.resolve(cached);

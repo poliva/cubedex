@@ -13,6 +13,7 @@ const additionalPuzzles: Array<[PuzzleId, string]> = [
   ['6x6x6', "3Rw U2 3Rw'"], ['7x7x7', "3Rw U2 3Rw'"],
   ['pyraminx', "R u R'"], ['megaminx', "R BR U2 BR' R'"],
   ['skewb', "R U R'"], ['fto', "R r U r' R'"],
+  ['square1', '(1, 0) / (-1, -1) / (0, 1)'],
 ];
 
 const sheets = Object.getOwnPropertyDescriptor(ShadowRoot.prototype, 'adoptedStyleSheets');
@@ -31,6 +32,31 @@ afterEach(() => {
 });
 
 describe('algorithm learning playback with the real player model', () => {
+  it('steps and seeks through complete Square-1 turn pairs in both directions', async () => {
+    const algorithm = '(1, -1) / (3, 0) /';
+    const { container } = render(<AlgorithmPlaybackPanel algorithm={algorithm}
+      puzzle="square1" setupAlg="" backView="none" onClose={vi.fn()} />);
+    const player = container.querySelector('twisty-player') as TwistyPlayer;
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Next move' })).toBeEnabled());
+    const solved = (await puzzleLoader('square1').kpuzzle()).defaultPattern();
+    const initial = solved.applyAlg(new Alg(algorithm).invert());
+    expect(await player.experimentalModel.visualizationStrategy.get()).toBe('2D');
+    expect(screen.getAllByRole('listitem').map(item => item.textContent)).toEqual(['(1, -1)', '/', '(3, 0)', '/']);
+    await userEvent.click(screen.getByRole('button', { name: 'Next move' }));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('1 of 4 moves complete'));
+    expect((await player.experimentalModel.currentPattern.get()).isIdentical(initial.applyAlg('(1, -1)'))).toBe(true);
+    await userEvent.click(screen.getByRole('button', { name: 'Previous move' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Previous move' })).toBeDisabled());
+    expect((await player.experimentalModel.currentPattern.get()).isIdentical(initial)).toBe(true);
+    await userEvent.click(screen.getByRole('button', { name: 'Go to move 3: (3, 0)' }));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('2 of 4 moves complete'));
+    expect((await player.experimentalModel.currentPattern.get()).isIdentical(initial.applyAlg('(1, -1) /'))).toBe(true);
+    await userEvent.click(screen.getByRole('button', { name: 'Next move' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Next move' }));
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Algorithm complete'));
+    expect((await player.experimentalModel.currentPattern.get()).isIdentical(solved)).toBe(true);
+  });
+
   it.each(additionalPuzzles)('plays puzzle-specific %s turns from the case to the solved state', async (puzzle, algorithm) => {
     const setupAlg = PUZZLES[puzzle].cube ? 'z2' : '';
     const { container } = render(<AlgorithmPlaybackPanel algorithm={algorithm}

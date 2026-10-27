@@ -76,7 +76,8 @@ describe('puzzle library persistence', () => {
   });
 
   it('seeds the new puzzle libraries once without replacing existing cases or restoring deletions', async () => {
-    const categories = ['6x6x6:Parity', '7x7x7:Parity', "skewb:Sarah's Beginner", "skewb:Sarah's Intermediate", "skewb:Sarah's Advanced", 'fto:TCP', 'fto:L6X', 'fto:L3C', 'fto:1LP'];
+    const categories = ['6x6x6:Parity', '7x7x7:Parity', "skewb:Sarah's Beginner", "skewb:Sarah's Intermediate", "skewb:Sarah's Advanced", 'fto:TCP', 'fto:L6X', 'fto:L3C', 'fto:1LP',
+      ...Object.keys(bundledDefaults).filter(category => category.startsWith('square1:'))];
     const expandedDefaults: SavedAlgorithms = Object.fromEntries(categories.map(category => [category, (bundledDefaults as SavedAlgorithms)[category]]));
     const customFto = [{ subset: 'Mine', algorithms: [{ name: 'My case', algorithm: "R U R' U'" }] }];
     db.library['fto:TCP'] = customFto;

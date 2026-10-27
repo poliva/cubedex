@@ -4,6 +4,7 @@ import type { TwistyPlayer, ExperimentalLeafIndex } from 'cubing/twisty';
 import type { PuzzleId } from '../lib/puzzles';
 import { TwistyCube } from './TwistyCube';
 import { Icon } from './ui/Icon';
+import { normalizeSquare1Notation, square1LeafCount, square1Tokens } from '../lib/square1';
 
 type Timeline = Awaited<ReturnType<TwistyPlayer['experimentalModel']['detailedTimelineInfo']['get']>>;
 type PlayingInfo = Awaited<ReturnType<TwistyPlayer['experimentalModel']['playingInfo']['get']>>;
@@ -16,11 +17,23 @@ export function AlgorithmPlaybackPanel({ algorithm, puzzle, setupAlg, backView, 
   onClose: () => void;
   pictureControls?: ReactNode;
 }) {
-  // Expand repetitions and commutators so every displayed token is one turn.
+  // Square-1's two layer turns share one displayed turn pair.
   const sequence = useMemo(() => {
-    try { return [...new Alg(algorithm).experimentalLeafMoves()].map(move => move.toString()); }
+    try {
+      return puzzle === 'square1'
+        ? square1Tokens(new Alg(normalizeSquare1Notation(algorithm)))
+        : [...new Alg(algorithm).experimentalLeafMoves()].map(move => move.toString());
+    }
     catch { return []; }
-  }, [algorithm]);
+  }, [algorithm, puzzle]);
+  const leafStarts = useMemo(() => {
+    let next = 0;
+    return sequence.map(token => {
+      const start = next;
+      next += puzzle === 'square1' ? square1LeafCount(token) : 1;
+      return start;
+    });
+  }, [puzzle, sequence]);
   const [player, setPlayer] = useState<TwistyPlayer | null>(null);
   const [completed, setCompleted] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -37,8 +50,8 @@ export function AlgorithmPlaybackPanel({ algorithm, puzzle, setupAlg, backView, 
     player.experimentalModel.playingInfo.addFreshListener(onPlaying);
     void player.experimentalModel.indexer.get().then(indexer => {
       if (!active) return;
-      const ends = sequence.map((_, i) => {
-        const index = i as ExperimentalLeafIndex;
+      const ends = sequence.map((token, i) => {
+        const index = (leafStarts[i] + (puzzle === 'square1' ? square1LeafCount(token) : 1) - 1) as ExperimentalLeafIndex;
         return indexer.indexToMoveStartTimestamp(index) + indexer.moveDuration(index);
       });
       onTimeline = value => {
@@ -55,9 +68,23 @@ export function AlgorithmPlaybackPanel({ algorithm, puzzle, setupAlg, backView, 
       player.experimentalModel.playingInfo.removeFreshListener(onPlaying);
       if (onTimeline) player.experimentalModel.detailedTimelineInfo.removeFreshListener(onTimeline);
     };
-  }, [player, sequence]);
+  }, [player, sequence, leafStarts, puzzle]);
 
-  function step(direction: 1 | -1) {
+  async function step(direction: 1 | -1) {
+    if (player && puzzle === 'square1') {
+      player.pause();
+      const indexer = await player.experimentalModel.indexer.get();
+      const { timestamp } = await player.experimentalModel.detailedTimelineInfo.get();
+      const boundaries = [0, ...sequence.map((token, i) => {
+        const last = (leafStarts[i] + square1LeafCount(token) - 1) as ExperimentalLeafIndex;
+        return indexer.indexToMoveStartTimestamp(last) + indexer.moveDuration(last);
+      })];
+      const target = direction === 1
+        ? boundaries.find(time => time > timestamp + 0.01)
+        : boundaries.reverse().find(time => time < timestamp - 0.01);
+      if (target !== undefined) player.timestamp = target as typeof timestamp;
+      return;
+    }
     // Use the player's own move boundaries, including a partially played turn.
     player?.controller.animationController.play({
       direction, untilBoundary: 'move' as PlayingInfo['untilBoundary'],
@@ -69,7 +96,7 @@ export function AlgorithmPlaybackPanel({ algorithm, puzzle, setupAlg, backView, 
     if (!player) return;
     player.pause();
     const indexer = await player.experimentalModel.indexer.get();
-    player.timestamp = indexer.indexToMoveStartTimestamp(index as ExperimentalLeafIndex);
+    player.timestamp = indexer.indexToMoveStartTimestamp(leafStarts[index] as ExperimentalLeafIndex);
   }
 
   const atEnd = completed === sequence.length;

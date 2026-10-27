@@ -11387,5 +11387,325 @@
         }
       ]
     }
+  ],
+  "square1:Cube Shape": [
+    {
+      "subset": "1 Slice",
+      "algorithms": [
+        {
+          "name": "Kite / Kite",
+          "algorithm": "/"
+        }
+      ]
+    },
+    {
+      "subset": "2 Slices",
+      "algorithms": [
+        {
+          "name": "Barrel / Barrel",
+          "algorithm": "/ (-3, -3) /"
+        },
+        {
+          "name": "Fist / Fist (different)",
+          "algorithm": "/ (-3, 0) /"
+        }
+      ]
+    },
+    {
+      "subset": "3 Slices",
+      "algorithms": [
+        {
+          "name": "Scallop / Scallop",
+          "algorithm": "/ (-1, -2) / (-3, -3) /"
+        },
+        {
+          "name": "Muffin / Muffin",
+          "algorithm": "/ (-1, 3) / (-3, -3) /"
+        },
+        {
+          "name": "Shield / Shield",
+          "algorithm": "/ (-1, 0) / (-3, -3) /"
+        },
+        {
+          "name": "Paw / Paw (different)",
+          "algorithm": "/ (-1, 4) / (-3, 0) /"
+        },
+        {
+          "name": "Shield / Square",
+          "algorithm": "/ (-1, 0) / (-3, 0) /"
+        },
+        {
+          "name": "Muffin / Square",
+          "algorithm": "/ (-1, -3) / (-3, 0) /"
+        },
+        {
+          "name": "Barrel / Kite",
+          "algorithm": "/ (0, -3) / (-3, 0) /"
+        },
+        {
+          "name": "Scallop / Kite",
+          "algorithm": "/ (-1, -2) / (-3, 0) /"
+        }
+      ]
+    },
+    {
+      "subset": "4 Slices",
+      "algorithms": [
+        {
+          "name": "Star / Spaceship",
+          "algorithm": "/ (4, 2) / (-1, -2) / (-3, -3) /"
+        },
+        {
+          "name": "Peacock / Fish",
+          "algorithm": "/ (0, 2) / (-1, -2) / (-3, -3) /"
+        },
+        {
+          "name": "Peacock / Crown",
+          "algorithm": "/ (0, 4) / (-1, -2) / (-3, -3) /"
+        },
+        {
+          "name": "Scallop / Barrel",
+          "algorithm": "/ (4, 0) / (-1, 0) / (-3, -3) /"
+        },
+        {
+          "name": "Peacock / Triangle",
+          "algorithm": "/ (0, 2) / (-1, 0) / (-3, -3) /"
+        },
+        {
+          "name": "Star / Lemon",
+          "algorithm": "/ (2, 2) / (-1, 0) / (-3, -3) /"
+        },
+        {
+          "name": "Star / Ghost",
+          "algorithm": "/ (2, 4) / (-1, 4) / (-3, 0) /"
+        },
+        {
+          "name": "Arrow / Bullet",
+          "algorithm": "/ (2, 0) / (-1, 4) / (-3, 0) /"
+        },
+        {
+          "name": "Peacock / Cut Corner",
+          "algorithm": "/ (0, 4) / (-1, 4) / (-3, 0) /"
+        },
+        {
+          "name": "Arrow / House",
+          "algorithm": "/ (2, 0) / (-1, 0) / (-3, 0) /"
+        },
+        {
+          "name": "Paw / Fist (same)",
+          "algorithm": "/ (0, 1) / (-1, 0) / (-3, 0) /"
+        },
+        {
+          "name": "Arrow / Penguin",
+          "algorithm": "/ (4, 0) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Peacock / Penguin",
+          "algorithm": "/ (2, -3) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Arrow / Cut Corner",
+          "algorithm": "/ (2, 0) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Shield / Muffin",
+          "algorithm": "/ (0, -3) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Badge / Fish",
+          "algorithm": "/ (2, 3) / (-1, -2) / (-3, 0) /"
+        }
+      ]
+    },
+    {
+      "subset": "5 Slices",
+      "algorithms": [
+        {
+          "name": "Badge / Crown",
+          "algorithm": "/ (0, 3) / (4, 2) / (-1, -2) / (-3, -3) /"
+        },
+        {
+          "name": "Badge / Bullet",
+          "algorithm": "/ (2, -1) / (0, 2) / (-1, -2) / (-3, -3) /"
+        },
+        {
+          "name": "Paw / Muffin",
+          "algorithm": "/ (2, 5) / (0, 2) / (-1, -2) / (-3, -3) /"
+        },
+        {
+          "name": "Badge / House",
+          "algorithm": "/ (4, -1) / (0, 2) / (-1, -2) / (-3, -3) /"
+        },
+        {
+          "name": "Scallop / Shield",
+          "algorithm": "/ (4, 2) / (0, 4) / (-1, -2) / (-3, -3) /"
+        },
+        {
+          "name": "Badge / Penguin",
+          "algorithm": "/ (-2, 3) / (4, 0) / (-1, 0) / (-3, -3) /"
+        },
+        {
+          "name": "Shield / Barrel",
+          "algorithm": "/ (4, -2) / (0, 2) / (-1, 0) / (-3, -3) /"
+        },
+        {
+          "name": "Paw / Paw (same)",
+          "algorithm": "/ (0, 1) / (2, 2) / (-1, 0) / (-3, -3) /"
+        },
+        {
+          "name": "Shield / Fist",
+          "algorithm": "/ (0, -1) / (2, 0) / (-1, 4) / (-3, 0) /"
+        },
+        {
+          "name": "Paw / Fist (different)",
+          "algorithm": "/ (0, -2) / (2, 0) / (-1, 4) / (-3, 0) /"
+        },
+        {
+          "name": "Peacock / House",
+          "algorithm": "/ (0, 4) / (2, 0) / (-1, 4) / (-3, 0) /"
+        },
+        {
+          "name": "Arrow / Crown",
+          "algorithm": "/ (2, -1) / (0, 4) / (-1, 4) / (-3, 0) /"
+        },
+        {
+          "name": "Arrow / Fish",
+          "algorithm": "/ (4, -1) / (0, 4) / (-1, 4) / (-3, 0) /"
+        },
+        {
+          "name": "Scallop / Paw",
+          "algorithm": "/ (-6, 3) / (0, 4) / (-1, 4) / (-3, 0) /"
+        },
+        {
+          "name": "Scallop / Fist",
+          "algorithm": "/ (2, 3) / (0, 4) / (-1, 4) / (-3, 0) /"
+        },
+        {
+          "name": "Shield / Kite",
+          "algorithm": "/ (-2, 0) / (2, 0) / (-1, 0) / (-3, 0) /"
+        },
+        {
+          "name": "Badge / Cut Corner",
+          "algorithm": "/ (-2, 3) / (4, 0) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Paw / Shield",
+          "algorithm": "/ (0, -1) / (2, -3) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Scallop / Muffin",
+          "algorithm": "/ (-2, 0) / (2, -3) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Paw / Kite",
+          "algorithm": "/ (0, 3) / (2, 0) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Scallop / Square",
+          "algorithm": "/ (0, 2) / (2, 0) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Paw / Square",
+          "algorithm": "/ (0, -1) / (2, 0) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Peacock / Bullet",
+          "algorithm": "/ (2, 0) / (0, -3) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Paw / Barrel",
+          "algorithm": "/ (0, 3) / (2, 3) / (-1, -2) / (-3, 0) /"
+        }
+      ]
+    },
+    {
+      "subset": "6 Slices",
+      "algorithms": [
+        {
+          "name": "Muffin / Kite",
+          "algorithm": "/ (-2, -3) / (4, -2) / (0, 2) / (-1, 0) / (-3, -3) /"
+        },
+        {
+          "name": "Barrel / Square",
+          "algorithm": "/ (-2, -2) / (0, 1) / (2, 2) / (-1, 0) / (-3, -3) /"
+        },
+        {
+          "name": "Arrow / Triangle",
+          "algorithm": "/ (0, -1) / (0, 2) / (2, 1) / (-1, 0) / (-3, 0) /"
+        },
+        {
+          "name": "Star / Observatory",
+          "algorithm": "/ (0, -2) / (2, -1) / (0, 4) / (-1, 4) / (-3, 0) /"
+        },
+        {
+          "name": "Fist / Barrel",
+          "algorithm": "/ (4, -6) / (-6, 3) / (0, 4) / (-1, 4) / (-3, 0) /"
+        },
+        {
+          "name": "Muffin / Fist",
+          "algorithm": "/ (4, -1) / (2, 3) / (0, 4) / (-1, 4) / (-3, 0) /"
+        },
+        {
+          "name": "Fist / Fist (same)",
+          "algorithm": "/ (2, 0) / (-2, 0) / (2, 0) / (-1, 0) / (-3, 0) /"
+        },
+        {
+          "name": "Star / Shell",
+          "algorithm": "/ (0, -4) / (0, -1) / (2, -3) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Muffin / Barrel",
+          "algorithm": "/ (4, -1) / (-2, 0) / (2, -3) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Fist / Square",
+          "algorithm": "/ (2, -6) / (0, 3) / (2, 0) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Fist / Kite",
+          "algorithm": "/ (-2, 0) / (0, -1) / (2, 0) / (-1, -2) / (-3, 0) /"
+        },
+        {
+          "name": "Badge / Triangle",
+          "algorithm": "/ (2, -6) / (2, 0) / (0, -3) / (-1, -2) / (-3, 0) /"
+        }
+      ]
+    },
+    {
+      "subset": "7 Slices",
+      "algorithms": [
+        {
+          "name": "Square / Kite",
+          "algorithm": "/ (-1, 0) / (2, 0) / (-2, 0) / (2, 0) / (-1, 0) / (-3, 0) /"
+        }
+      ]
+    }
+  ],
+  "square1:Parity": [
+    {
+      "subset": "Parity",
+      "algorithms": [
+        {
+          "name": "Adj Parity",
+          "algorithm": "/ (-3, 0) / (0, 3) / (0, -3) / (0, 3) / (2, 0) / (0, 2) / (-2, 0) / (4, 0) / (0, -2) / (0, 2) / (-1, 4) / (0, -3) / (0, 3)"
+        },
+        {
+          "name": "Opp Parity",
+          "algorithm": "/ (3, 3) / (-1, 0) / (2, -4) / (4, -2) / (0, -2) / (-4, 2) / (1, -5) / (3, 0) / (3, 3) / (3, 0)"
+        },
+        {
+          "name": "O+ Parity",
+          "algorithm": "(0, -1) / (-2, -2) / (2, 0) / (-3, -3) / (0, 1) / (-2, -2) / (0, -2) / (2, 2) / (0, -1) / (3, 3) / (3, 3)"
+        },
+        {
+          "name": "O- Parity",
+          "algorithm": "/ (-3, -3) / (0, 1) / (-2, -2) / (0, 2) / (2, 2) / (0, -1) / (3, 3) / (-2, 0) / (2, 2) / (-3, -2)"
+        },
+        {
+          "name": "W Parity",
+          "algorithm": "(0, -1) / (1, -2) / (-4, 0) / (0, 3) / (1, 0) / (3, -2) / (-4, 0) / (-4, 0) / (-2, 2) / (-1, 0) / (0, -3) / (-3, 0)"
+        }
+      ]
+    }
   ]
 }

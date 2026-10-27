@@ -3,6 +3,7 @@ import { memo } from 'react';
 import type { AlgorithmImportExportState } from '../hooks/useAlgorithmImportExport';
 import { EmptyState } from '../components/ui/EmptyState';
 import { expandNotation } from '../lib/storage';
+import { algorithmDisplayTokens } from '../lib/square1';
 
 const PRESET_CATEGORIES: Partial<Record<PuzzleId, string[]>> = {
   '3x3x3': ['PLL', 'OLL', 'F2L', 'Custom'],
@@ -15,6 +16,7 @@ const PRESET_CATEGORIES: Partial<Record<PuzzleId, string[]>> = {
   megaminx: ['EO', 'CO', 'EP', 'CP', 'Custom'],
   skewb: ["Sarah's Beginner", "Sarah's Intermediate", "Sarah's Advanced", 'Custom'],
   fto: ['TCP', 'L6X', 'L3C', '1LP', 'Custom'],
+  square1: ['Cube Shape', 'Parity'],
 };
 
 export const NewAlgView = memo(function NewAlgView({
@@ -96,13 +98,14 @@ export const NewAlgView = memo(function NewAlgView({
   const pb = isMobile ? 'calc(var(--tab-h) + 12px)' : 16;
   const presetCategories = PRESET_CATEGORIES[puzzle] ?? ['Custom'];
   const expandedAlg = algInput.trim() ? expandNotation(algInput.trim(), puzzle) : '';
-  const parsedMoves = expandedAlg ? expandedAlg.split(/\s+/).filter(Boolean) : [];
+  const parsedMoves = algorithmDisplayTokens(expandedAlg);
   const algorithmExample = puzzle === 'megaminx' ? "e.g. R' BR' R BR R' F' R BR' R' BR F R"
     : puzzle === '6x6x6' || puzzle === '7x7x7' ? "e.g. 3Rw U2 3Rw' U2"
     : puzzle === '4x4x4' || puzzle === '5x5x5' ? "e.g. Rw U2 Rw' U2"
     : puzzle === 'fto' ? "e.g. R U R' U' r U r'"
     : puzzle === 'skewb' ? "e.g. R' L R L'"
     : puzzle === 'pyraminx' ? "e.g. R U R' U R U R'"
+    : puzzle === 'square1' ? 'e.g. (1, 0) / (-1, -1) / (0, 1)'
     : "e.g. (R U R' U) (R U2 R')";
   const activeCategory = algorithmActions.categoryInput.trim();
 

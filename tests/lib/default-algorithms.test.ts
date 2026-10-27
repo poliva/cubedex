@@ -35,9 +35,20 @@ const expectedCaseCounts = {
   'fto:L6X': 35,
   'fto:L3C': 5,
   'fto:1LP': 11,
+  'square1:Cube Shape': 64,
+  'square1:Parity': 5,
 };
 
 describe('Starter libraries', () => {
+  it('bundles only the 64 Cube Shape cases and five Parity cases for Square-1', () => {
+    expect(Object.keys(library).filter(category => category.startsWith('square1:')))
+      .toEqual(['square1:Cube Shape', 'square1:Parity']);
+    expect(library['square1:Cube Shape'].map(subset => [subset.subset, subset.algorithms.length])).toEqual([
+      ['1 Slice', 1], ['2 Slices', 2], ['3 Slices', 8], ['4 Slices', 16],
+      ['5 Slices', 24], ['6 Slices', 12], ['7 Slices', 1],
+    ]);
+  });
+
   it('includes every requested PLL parity and Megaminx subset', () => {
     expect(library['4x4x4:PLL Parity'].map(s => [s.subset, s.algorithms.length])).toEqual([
       ['Edge Swap', 5], ['Adj Corner Swap', 12], ['Diag Corner Swap', 5],

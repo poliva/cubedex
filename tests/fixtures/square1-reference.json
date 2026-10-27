@@ -1,0 +1,346 @@
+{
+  "cases": [
+    {
+      "name": "Kite / Kite",
+      "top": "010110111011",
+      "bottom": "010110111011"
+    },
+    {
+      "name": "Barrel / Barrel",
+      "top": "010111010111",
+      "bottom": "010111010111"
+    },
+    {
+      "name": "Fist / Fist (different)",
+      "top": "010110110111",
+      "bottom": "010110110111"
+    },
+    {
+      "name": "Scallop / Scallop",
+      "top": "010101011111",
+      "bottom": "010101011111"
+    },
+    {
+      "name": "Muffin / Muffin",
+      "top": "010110101111",
+      "bottom": "010110101111"
+    },
+    {
+      "name": "Shield / Shield",
+      "top": "010101110111",
+      "bottom": "010101110111"
+    },
+    {
+      "name": "Paw / Paw (different)",
+      "top": "010101101111",
+      "bottom": "010101101111"
+    },
+    {
+      "name": "Shield / Square",
+      "top": "010101110111",
+      "bottom": "011011011011"
+    },
+    {
+      "name": "Muffin / Square",
+      "top": "010110101111",
+      "bottom": "011011011011"
+    },
+    {
+      "name": "Barrel / Kite",
+      "top": "010111010111",
+      "bottom": "010110111011"
+    },
+    {
+      "name": "Scallop / Kite",
+      "top": "010101011111",
+      "bottom": "010110111011"
+    },
+    {
+      "name": "Star / Spaceship",
+      "top": "010101010101",
+      "bottom": "010111111111"
+    },
+    {
+      "name": "Peacock / Fish",
+      "top": "010101010111",
+      "bottom": "010111110111"
+    },
+    {
+      "name": "Peacock / Crown",
+      "top": "010101010111",
+      "bottom": "010101111111"
+    },
+    {
+      "name": "Scallop / Barrel",
+      "top": "010101011111",
+      "bottom": "010111010111"
+    },
+    {
+      "name": "Peacock / Triangle",
+      "top": "010101010111",
+      "bottom": "011101110111"
+    },
+    {
+      "name": "Star / Lemon",
+      "top": "010101010101",
+      "bottom": "011111011111"
+    },
+    {
+      "name": "Star / Ghost",
+      "top": "010101010101",
+      "bottom": "011101111111"
+    },
+    {
+      "name": "Arrow / Bullet",
+      "top": "010101011011",
+      "bottom": "010111101111"
+    },
+    {
+      "name": "Peacock / Cut Corner",
+      "top": "010101010111",
+      "bottom": "011011011111"
+    },
+    {
+      "name": "Arrow / House",
+      "top": "010101011011",
+      "bottom": "011011110111"
+    },
+    {
+      "name": "Paw / Fist (same)",
+      "top": "010101101111",
+      "bottom": "010111011011"
+    },
+    {
+      "name": "Arrow / Penguin",
+      "top": "010101011011",
+      "bottom": "010111111011"
+    },
+    {
+      "name": "Peacock / Penguin",
+      "top": "010101010111",
+      "bottom": "010111111011"
+    },
+    {
+      "name": "Arrow / Cut Corner",
+      "top": "010101011011",
+      "bottom": "011011011111"
+    },
+    {
+      "name": "Shield / Muffin",
+      "top": "010101110111",
+      "bottom": "010110101111"
+    },
+    {
+      "name": "Badge / Fish",
+      "top": "010101101011",
+      "bottom": "010111011111"
+    },
+    {
+      "name": "Badge / Crown",
+      "top": "010101101011",
+      "bottom": "010101111111"
+    },
+    {
+      "name": "Badge / Bullet",
+      "top": "010101101011",
+      "bottom": "010111101111"
+    },
+    {
+      "name": "Paw / Muffin",
+      "top": "010101101111",
+      "bottom": "010110101111"
+    },
+    {
+      "name": "Badge / House",
+      "top": "010101101011",
+      "bottom": "011011101111"
+    },
+    {
+      "name": "Scallop / Shield",
+      "top": "010101011111",
+      "bottom": "010101110111"
+    },
+    {
+      "name": "Badge / Penguin",
+      "top": "010101101011",
+      "bottom": "010110111111"
+    },
+    {
+      "name": "Shield / Barrel",
+      "top": "010101110111",
+      "bottom": "010111010111"
+    },
+    {
+      "name": "Paw / Paw (same)",
+      "top": "010101101111",
+      "bottom": "010101111011"
+    },
+    {
+      "name": "Shield / Fist",
+      "top": "010101110111",
+      "bottom": "010110110111"
+    },
+    {
+      "name": "Paw / Fist (different)",
+      "top": "010101111011",
+      "bottom": "010111011011"
+    },
+    {
+      "name": "Peacock / House",
+      "top": "010101010111",
+      "bottom": "011011101111"
+    },
+    {
+      "name": "Arrow / Crown",
+      "top": "010101011011",
+      "bottom": "010101111111"
+    },
+    {
+      "name": "Arrow / Fish",
+      "top": "010101011011",
+      "bottom": "010111110111"
+    },
+    {
+      "name": "Scallop / Paw",
+      "top": "010101011111",
+      "bottom": "010101111011"
+    },
+    {
+      "name": "Scallop / Fist",
+      "top": "010101011111",
+      "bottom": "010110110111"
+    },
+    {
+      "name": "Shield / Kite",
+      "top": "010101110111",
+      "bottom": "010110111011"
+    },
+    {
+      "name": "Badge / Cut Corner",
+      "top": "010101101011",
+      "bottom": "011011011111"
+    },
+    {
+      "name": "Paw / Shield",
+      "top": "010101101111",
+      "bottom": "010101110111"
+    },
+    {
+      "name": "Scallop / Muffin",
+      "top": "010101011111",
+      "bottom": "010110101111"
+    },
+    {
+      "name": "Paw / Kite",
+      "top": "010101111011",
+      "bottom": "010110111011"
+    },
+    {
+      "name": "Scallop / Square",
+      "top": "010101011111",
+      "bottom": "011011011011"
+    },
+    {
+      "name": "Paw / Square",
+      "top": "010101101111",
+      "bottom": "011011011011"
+    },
+    {
+      "name": "Peacock / Bullet",
+      "top": "010101010111",
+      "bottom": "010111101111"
+    },
+    {
+      "name": "Paw / Barrel",
+      "top": "010101111011",
+      "bottom": "010111010111"
+    },
+    {
+      "name": "Muffin / Kite",
+      "top": "010110101111",
+      "bottom": "010110111011"
+    },
+    {
+      "name": "Barrel / Square",
+      "top": "010111010111",
+      "bottom": "011011011011"
+    },
+    {
+      "name": "Arrow / Triangle",
+      "top": "010101011011",
+      "bottom": "011101110111"
+    },
+    {
+      "name": "Star / Observatory",
+      "top": "010101010101",
+      "bottom": "011011111111"
+    },
+    {
+      "name": "Fist / Barrel",
+      "top": "010111011011",
+      "bottom": "010111010111"
+    },
+    {
+      "name": "Muffin / Fist",
+      "top": "010110101111",
+      "bottom": "010111011011"
+    },
+    {
+      "name": "Fist / Fist (same)",
+      "top": "010111011011",
+      "bottom": "010110110111"
+    },
+    {
+      "name": "Star / Shell",
+      "top": "010101010101",
+      "bottom": "011110111111"
+    },
+    {
+      "name": "Muffin / Barrel",
+      "top": "010110101111",
+      "bottom": "010111010111"
+    },
+    {
+      "name": "Fist / Square",
+      "top": "010111011011",
+      "bottom": "011011011011"
+    },
+    {
+      "name": "Fist / Kite",
+      "top": "010110110111",
+      "bottom": "010110111011"
+    },
+    {
+      "name": "Badge / Triangle",
+      "top": "010101101011",
+      "bottom": "011101110111"
+    },
+    {
+      "name": "Square / Kite",
+      "top": "010110111011",
+      "bottom": "011011011011"
+    }
+  ],
+  "parity": [
+    {
+      "name": "O+ Parity",
+      "setup": "(-3, -3) / (-3, -3) / (0, 1) / (-2, -2) / (0, 2) / (2, 2) / (0, -1) / (3, 3) / (-2, 0) / (2, 2) / (0, 1)"
+    },
+    {
+      "name": "O- Parity",
+      "setup": "(3, 2) / (-2, -2) / (2, 0) / (-3, -3) / (0, 1) / (-2, -2) / (0, -2) / (2, 2) / (0, -1) / (3, 3) /"
+    },
+    {
+      "name": "W Parity",
+      "setup": "(3, -3) / (0, 3) / (1, 0) / (2, -2) / (4, 0) / (4, 0) / (-3, 2) / (-1, 0) / (0, -3) / (4, 0) / (-1, 2) / (0, 1)"
+    },
+    {
+      "name": "Adj Parity",
+      "setup": "(0, -3) / (0, 3) / (1, -4) / (0, -2) / (0, 2) / (-4, 0) / (2, 0) / (0, -2) / (-2, 0) / (0, -3) / (0, 3) / (0, -3) / (3, 0) /"
+    },
+    {
+      "name": "Opp Parity",
+      "setup": "/ (-3, -3) / (-3, 0) / (-1, 5) / (4, -2) / (0, 2) / (-4, 2) / (-2, 4) / (1, 0) / (-3, -3) / (-3, 0)"
+    }
+  ]
+}

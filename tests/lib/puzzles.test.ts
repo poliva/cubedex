@@ -17,9 +17,9 @@ describe('puzzle-scoped libraries', () => {
       .not.toBe(createScopeId('2x2x2:OLL', 'Corners', algId));
   });
 
-  it('hides Square-1 while retaining its namespace for existing backups', () => {
-    expect(puzzleIds).not.toContain('square1');
-    expect(isPuzzleId('square1')).toBe(false);
+  it('offers Square-1 and retains its namespace for existing backups', () => {
+    expect(puzzleIds).toContain('square1');
+    expect(isPuzzleId('square1')).toBe(true);
     expect(categoryPuzzle('square1:Custom')).toBe('square1');
     expect(expandNotation('(1, 0) /')).toBe('(1, 0) /');
   });

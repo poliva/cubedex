@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { useAlgorithmImportExport } from '../../src/hooks/useAlgorithmImportExport';
 import { saveAlgorithm } from '../../src/lib/storage';
-import type { PuzzleId } from '../../src/lib/puzzles';
+import { categoryName, type PuzzleId } from '../../src/lib/puzzles';
 
 vi.mock('../../src/lib/storage', async () => ({
   ...await vi.importActual<typeof import('../../src/lib/storage')>('../../src/lib/storage'),
@@ -21,10 +21,11 @@ describe('saving puzzle algorithms', () => {
     ['7x7x7', "4Rw U2 3R' U2", '7x7x7:OLL'],
     ['skewb', "UR R' UR' R", 'skewb:OLL'],
     ['fto', "Rv BR U r' U'", 'fto:OLL'],
+    ['square1', '(1, 0) / (-1, -1) / (0, 1)', 'square1:Cube Shape'],
   ] as [PuzzleId, string, string][])('saves %s notation into its own library', async (puzzle, algorithm, category) => {
     const { result } = renderHook(() => useAlgorithmImportExport(undefined, puzzle));
     act(() => {
-      result.current.setCategoryInput('OLL');
+      result.current.setCategoryInput(categoryName(category));
       result.current.setSubsetInput('My cases');
       result.current.setAlgNameInput('Case');
     });

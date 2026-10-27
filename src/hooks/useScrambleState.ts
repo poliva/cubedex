@@ -9,6 +9,7 @@ import { alignForGuidance, fixOrientation, getGuidanceMoves, getScrambleToSoluti
 import { prepareTrainingAlgorithm } from '../lib/auf';
 import { countMovesETM } from '../lib/charts';
 import { expandNotation } from '../lib/storage';
+import { square1Tokens } from '../lib/square1';
 
 /** First half of a planned face double (e.g. B of B2); excludes wide/slice tokens like Rw2. */
 function isFirstQuarterOfPlannedDouble(plannedFirst: string, move: string): boolean {
@@ -133,7 +134,9 @@ export function useScrambleState(puzzle: PuzzleId = '3x3x3'): ScrambleState {
             currentPattern ?? await solvedPattern(puzzle === '2x2x2' ? 2 : 3),
           )
           // Show individual setup moves, including inverses of groups and repetitions.
-          : Alg.fromString(expandNotation(aufModifiedAlgorithm, puzzle)).invert().expand().toString().trim();
+          : puzzle === 'square1'
+            ? square1Tokens(Alg.fromString(expandNotation(aufModifiedAlgorithm, puzzle)).invert()).join(' ')
+            : Alg.fromString(expandNotation(aufModifiedAlgorithm, puzzle)).invert().expand().toString().trim();
       }
 
       if (generation !== generationRef.current) return false;

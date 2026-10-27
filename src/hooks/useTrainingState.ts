@@ -15,6 +15,7 @@ import {
 } from '../lib/case-cards';
 import { countMovesETM } from '../lib/charts';
 import { prepareTrainingAlgorithm } from '../lib/auf';
+import { algorithmDisplayTokens } from '../lib/square1';
 import { patternCubeSize, solvedPattern } from '../lib/cube-utils';
 import { alignForGuidance, fixOrientation } from '../lib/scramble';
 import { preparedCasePicture } from '../lib/training-visual';
@@ -485,7 +486,7 @@ function buildDisplayState(displayAlg: string, currentMoveIndex: number, badMove
   fixText: string;
   suppressedFix: boolean;
 } {
-  const userAlg = displayAlg.split(/\s+/).filter(Boolean);
+  const userAlg = algorithmDisplayTokens(displayAlg);
   let fixText = '';
   let simplifiedBadAlg: string[] = [];
 
@@ -1686,11 +1687,11 @@ export function useTrainingState(
     const prepared = trainOptions?.preserveDisplayedAlgorithm
       ? {
           displayAlgorithm: normalizedAlgorithm,
-          moves: normalizedAlgorithm.split(/\s+/).filter(Boolean),
-          originalMoves: normalizedAlgorithm.split(/\s+/).filter(Boolean),
+          moves: algorithmDisplayTokens(normalizedAlgorithm),
+          originalMoves: algorithmDisplayTokens(normalizedAlgorithm),
         }
       : await prepareTrainingAlgorithm(
-          normalizedAlgorithm.split(/\s+/).filter(Boolean),
+          algorithmDisplayTokens(normalizedAlgorithm),
           category,
           options.randomizeAUF,
           [],

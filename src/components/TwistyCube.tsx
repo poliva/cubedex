@@ -4,7 +4,7 @@ import { TwistyPlayer } from 'cubing/twisty';
 import type { KPattern } from 'cubing/kpuzzle';
 import { patternToGuidanceAlg } from '../lib/scramble';
 import { getTrainingVisualDelta } from '../lib/training-visual';
-import type { PuzzleId } from '../lib/puzzles';
+import { puzzleVisualization, type PuzzleId } from '../lib/puzzles';
 import type { SmartcubeQuaternion } from '../hooks/useSmartcubeConnection';
 import { HOME_ORIENTATION } from '../lib/cube-orientation';
 import { DEFAULT_VIEW_ANGLE_DEG, TrainingCubeOrientation,
@@ -104,6 +104,7 @@ export function TwistyCube({
   nudgeRenderOnMount = false,
   className,
 }: TwistyCubeProps) {
+  visualization = puzzleVisualization(puzzle, visualization);
   const hostRef = useRef<HTMLDivElement | null>(null);
   const playerRef = useRef<TwistyPlayer | null>(null);
   const appendedMoveKeyRef = useRef('');
@@ -206,7 +207,7 @@ export function TwistyCube({
   }, []);
 
   useEffect(() => {
-    if (!enableExternalOrientationLoop) {
+    if (!enableExternalOrientationLoop || visualization === '2D') {
       if (fixedOrientation) {
         puzzleObjectRef.current?.quaternion.identity();
         vantageRef.current?.render?.();
@@ -275,7 +276,7 @@ export function TwistyCube({
         animationFrameRef.current = null;
       }
     };
-  }, [enableExternalOrientationLoop, fixedOrientation, cubeQuaternionRef]);
+  }, [enableExternalOrientationLoop, fixedOrientation, cubeQuaternionRef, visualization]);
 
   useEffect(() => {
     const player = playerRef.current;
