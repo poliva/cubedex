@@ -10293,27 +10293,27 @@
       "algorithms": [
         {
           "name": "2-Flip 1",
-          "algorithm": "T' Uv Rv Rv' BR' U' br' BR U' BR U br BR' U"
+          "algorithm": "Uv T F' U' f' F U' F U f F' U"
         },
         {
           "name": "2-Flip 2",
-          "algorithm": "T' Uv Rv Lv Uv BR U br BR' U BR' U' br' BR U'"
+          "algorithm": "Uv' T' F U f F' U F' U' f' F U'"
         },
         {
           "name": "2-Flip 3",
-          "algorithm": "T' Uv Rv Rv Uv' BR U' BR' U Rv Uv' BR' U BR U'"
+          "algorithm": "R B' R' B R' L R L'"
         },
         {
           "name": "2-Flip 4",
-          "algorithm": "T' Uv Rv Rv' U br' U' BR U br BR U' BR"
+          "algorithm": "Uv T U f' U' F U f F U' F"
         },
         {
           "name": "2-Flip 5",
-          "algorithm": "T' Uv Rv Lv Uv U' br U BR' U' br' BR' U BR'"
+          "algorithm": "Uv' T' U' f U F' U' f' F' U F'"
         },
         {
           "name": "2-Flip 6",
-          "algorithm": "T' Uv Rv Rv BR' U' BR D' BR U' BR' D BR' U' BR"
+          "algorithm": "Uv T' Uv F' U' F D' F U' F' D F' U' F"
         }
       ]
     },
@@ -10322,27 +10322,27 @@
       "algorithms": [
         {
           "name": "Even 1",
-          "algorithm": "T' Uv Rv Rv Uv' U' BR U BR'"
+          "algorithm": "B' R B R'"
         },
         {
           "name": "Even 2",
-          "algorithm": "T' Uv Rv Rv Uv' U' BR U BR D BR' U' BR D' BR' U BR'"
+          "algorithm": "Uv T' U' F U F D F' U' F D' F' U F'"
         },
         {
           "name": "Even 3",
-          "algorithm": "T' Uv Rv Rv Uv' U' BR' D BR' U BR D' BR"
+          "algorithm": "Uv T' U' F' D F' U F D' F"
         },
         {
           "name": "Even 4",
-          "algorithm": "T' Uv Rv Rv Uv U BR' U' BR"
+          "algorithm": "Uv R B' R' B"
         },
         {
           "name": "Even 5",
-          "algorithm": "T' Uv Rv Rv Uv U BR' U' BR' D' BR U BR' D BR U' BR"
+          "algorithm": "Uv' T U F' U' F' D' F U F' D F U' F"
         },
         {
           "name": "Even 6",
-          "algorithm": "T' Uv Rv Rv Uv U BR D' BR U' BR' D BR'"
+          "algorithm": "Uv' T U F D' F U' F' D F2"
         }
       ]
     },
@@ -10351,27 +10351,27 @@
       "algorithms": [
         {
           "name": "Odd 1",
-          "algorithm": "T' Uv Rv Rv' U D' BR U' BR' D Lv BR U' BR' U"
+          "algorithm": "Uv T U D' F U' F' D T' R B' R' B"
         },
         {
           "name": "Odd 2",
-          "algorithm": "U' T' Uv Rv Rv Uv' BR' D' BR U' BR' D' BR' U BR D' BR"
+          "algorithm": "U' Uv T' F' D' F U' F' D' F' U F D' F"
         },
         {
           "name": "Odd 3",
-          "algorithm": "U' T' Uv Rv Rv Uv' BR' D' BR U' BR' D BR' U BR'"
+          "algorithm": "U' Uv T' F' D' F U' F' D F' U F'"
         },
         {
           "name": "Odd 4",
-          "algorithm": "T' Uv Rv Lv Uv U' D BR' U BR D' Rv Uv' BR' U BR U'"
+          "algorithm": "T Uv U' D F' U F D' Fv F' U F U'"
         },
         {
           "name": "Odd 5",
-          "algorithm": "T' Uv Rv Lv Uv BR' D BR' U' BR D BR U BR' D BR"
+          "algorithm": "U Uv' T F D F' U F D F U' F' D F2"
         },
         {
           "name": "Odd 6",
-          "algorithm": "U T' Uv Rv Rv' Uv BR B BR' F BR B' BR F' BR"
+          "algorithm": "U Uv' T F D F' U F D' F U' F"
         }
       ]
     }
@@ -10549,15 +10549,15 @@
       "algorithms": [
         {
           "name": "L3C1",
-          "algorithm": "T' Uv Rv Rv' D' R' U' R B' R' B R' L R L' U R D"
+          "algorithm": "T' Uv D' R' U' R B' R' B R' L R L' U R D"
         },
         {
           "name": "L3C2",
-          "algorithm": "U T' Uv Rv Lv U BR' R' BR U' B U BR' R' BR U'"
+          "algorithm": "U T Uv' U BR' R' BR U' B U BR' R' BR U'"
         },
         {
           "name": "L3C3",
-          "algorithm": "U T' Uv Rv Lv U BR' R BR U' B' U BR' R BR U'"
+          "algorithm": "U T Uv' U BR' R BR U' B' U BR' R BR U'"
         },
         {
           "name": "L3C4",

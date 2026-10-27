@@ -1,0 +1,96 @@
+{
+  "documentUrl": "https://docs.google.com/document/d/1EmygFPcfztXBNnm7WPAVreMLHsRbkOI589v4mESxBuQ/edit",
+  "notationUrl": "https://docs.google.com/document/d/1W0nqrep_Xm0qe4GHxrq61czHmGPy1DDXEACIliXiHnM/edit",
+  "cases": [
+    {
+      "name": "Even 1",
+      "documentCase": 1,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=FLv+Uv%27+R+B%27+R%27+B&alg=B%27+R+B+R%27#"
+    },
+    {
+      "name": "Even 4",
+      "documentCase": 2,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=FLv+Uv%27+L%27+B+L+B%27&alg=Uv+R+B%27+R%27+B#"
+    },
+    {
+      "name": "Even 3",
+      "documentCase": 3,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=FLv+Uv%27+R%27+F+R%27+B%27+R+F%27+R+B&alg=Uv+T%27+U%27+F%27+D+F%27+U+F+D%27+F#"
+    },
+    {
+      "name": "Even 6",
+      "documentCase": 4,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=FLv+U%27+B%27+R%27+F+R%27+B+R+F%27+R+d&alg=Uv%27+T+U+F+D%27+F+U%27+F%27+D+F2"
+    },
+    {
+      "name": "Even 5",
+      "documentCase": 5,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=Lv+Uv+F%27+U+F%27+D%27+F+U%27+F%27+D+F+U+F+U%27+T%27+Uv&alg=Uv%27+T+U+F%27+U%27+F%27+D%27+F+U+F%27+D+F+U%27+F"
+    },
+    {
+      "name": "Even 2",
+      "documentCase": 6,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=Lv%27+Uv+F+U%27+F+D+F%27+U+F+D%27+F%27+U%27+F%27+U+T+Uv%27&alg=Uv+T%27+U%27+F+U+F+D+F%27+U%27+F+D%27+F%27+U+F%27"
+    },
+    {
+      "name": "Odd 6",
+      "documentCase": 7,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=Lv+Uv+F%27+U+F%27+D+F%27+U%27+F+D%27+F%27+T%27+Uv+U%27&alg=U+Uv%27+T+F+D+F%27+U+F+D%27+F+U%27+F"
+    },
+    {
+      "name": "Odd 3",
+      "documentCase": 8,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=Lv%27+Uv+F+U%27+F+D%27+F+U+F%27+D+F+T+Uv%27+U&alg=U%27+Uv+T%27+F%27+D%27+F+U%27+F%27+D+F%27+U+F%27"
+    },
+    {
+      "name": "Odd 5",
+      "documentCase": 9,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=Lv+Uv+F+D%27+F+U+F%27+D%27+F%27+U%27+F+D%27+F%27+T%27+Uv+U%27&alg=U+Uv%27+T+F+D+F%27+U+F+D+F+U%27+F%27+D+F2"
+    },
+    {
+      "name": "Odd 2",
+      "documentCase": 10,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=Lv%27+Uv+F%27+D+F%27+U%27+F+D+F+U+F%27+D+F+T+Uv%27+U&alg=U%27+Uv+T%27+F%27+D%27+F+U%27+F%27+D%27+F%27+U+F+D%27+F"
+    },
+    {
+      "name": "Odd 4",
+      "documentCase": 11,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=Lv+Uv+U+F%27+U%27+F+Fv%27+D+F%27+U%27+F+D%27+U+Uv%27+T%27&alg=T+Uv+U%27+D+F%27+U+F+D%27+Fv+F%27+U+F+U%27"
+    },
+    {
+      "name": "Odd 1",
+      "documentCase": 12,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=Bv%27+T+Uv+B%27+R+B+R%27+T+D%27+F+U+F%27+D+U%27+T%27+Uv%27&alg=Uv+T+U+D%27+F+U%27+F%27+D+T%27+R+B%27+R%27+B"
+    },
+    {
+      "name": "2-Flip 3",
+      "documentCase": 13,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=Bv%27+T+Uv+L+R%27+L%27+R+B%27+R+B+R%27&alg=R+B%27+R%27+B+R%27+L+R+L%27"
+    },
+    {
+      "name": "2-Flip 1",
+      "documentCase": 14,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&alg=Uv+T+F%27+U%27+f%27+F+U%27+F+U+f+F%27+U&setup-alg=Lv+Uv+U%27+F+f%27+U%27+F%27+U+F%27+f+U+F+T%27+Uv%27"
+    },
+    {
+      "name": "2-Flip 2",
+      "documentCase": 15,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=Lv%27+Uv+U+F%27+f+U+F+U%27+F+f%27+U%27+F%27+T+Uv&alg=Uv%27+T%27+F+U+f+F%27+U+F%27+U%27+f%27+F+U%27"
+    },
+    {
+      "name": "2-Flip 6",
+      "documentCase": 16,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=Lv%27+Uv%27+F%27+U+F+D%27+F+U+F%27+D+F%27+U+F+Uv%27+T+Uv%27&alg=Uv+T%27+Uv+F%27+U%27+F+D%27+F+U%27+F%27+D+F%27+U%27+F"
+    },
+    {
+      "name": "2-Flip 4",
+      "documentCase": 17,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=Lv+Uv+F%27+U+F%27+f%27+U%27+F%27+U+f+U%27+T%27+Uv%27&alg=Uv+T+U+f%27+U%27+F+U+f+F+U%27+F"
+    },
+    {
+      "name": "2-Flip 5",
+      "documentCase": 18,
+      "twizzleUrl": "https://alpha.twizzle.net/edit/?puzzle=fto&setup-alg=Lv+Uv%27+F+U%27+F+f+U+F+U%27+f%27+U+T+Uv&alg=Uv%27+T%27+U%27+f+U+F%27+U%27+f%27+F%27+U+F%27"
+    }
+  ]
+}

@@ -83,9 +83,10 @@ describe('Starter libraries', () => {
     expect(expandNotation("2R2 Uw2 3Rw'", '5x5x5')).toBe("2R2 Uw2 3Rw'");
   });
 
-  it('preserves the FTO source corner and edge permutations through rotations and wide turns', async () => {
+  it('preserves non-TCP FTO source corner and edge permutations through rotations and wide turns', async () => {
     const kpuzzle = await puzzleLoader('fto').kpuzzle();
-    expect(ftoSourceStates).toHaveLength(69);
+    // TCP is checked against independent Twizzle setups in fto-algorithms.test.ts.
+    expect(ftoSourceStates).toHaveLength(51);
     for (const source of ftoSourceStates) {
       const entry = library[source.category].flatMap(subset => subset.algorithms)
         .find(algorithm => algorithm.name === source.name)!;
