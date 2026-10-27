@@ -20,12 +20,6 @@ vi.mock('../../src/components/CaseCardPreview', () => ({
   },
 }));
 
-const stickeringSpy = vi.hoisted(() => vi.fn(() => 'PLL'));
-
-vi.mock('../../src/lib/stickering', () => ({
-  getStickeringForCategory: stickeringSpy,
-}));
-
 vi.mock('../../src/state/caseCardStore', () => ({
   stableActions: {
     cycleCaseLearnedState: (id: string) => mockState.cycleCaseLearnedState(id),
@@ -66,7 +60,6 @@ describe('CaseCard', () => {
     mockState.cycleCaseLearnedState.mockReset();
     mockState.onBeforeToggleCase.mockReset();
     mockState.toggleCaseSelection.mockReset();
-    stickeringSpy.mockClear();
     vi.mocked(useCaseCardSlice).mockReturnValue({
       practiceCount: 0,
       failedCount: 0,
@@ -136,13 +129,35 @@ describe('CaseCard', () => {
   it('keeps category stickering for previews even when full-stickering is enabled elsewhere', () => {
     render(<CaseCard card={card} index={0} />);
 
-    expect(stickeringSpy).toHaveBeenCalledWith('PLL', false, '3x3x3');
     expect(mockState.previewProps).toMatchObject({
       alg: "R U R'",
       visualization: 'experimental-2D-LL',
       stickering: 'PLL',
       setupAnchor: 'end',
     });
+  });
+
+  it.each([
+    ['2x2x2:CLL', '2x2x2', 'CLL', 'experimental-2D-LL'],
+    ['2x2x2:PBL', '2x2x2', 'PBL', '3D'],
+    ['4x4x4:OLL Parity', '4x4x4', 'OLL', 'experimental-2D-LL'],
+    ['5x5x5:Last Two Centers', '5x5x5', 'L2C', '3D'],
+    ['6x6x6:Parity', '6x6x6', 'full', '3D'],
+    ['7x7x7:Parity', '7x7x7', 'full', '3D'],
+    ['megaminx:EO', 'megaminx', 'EOLL', 'experimental-2D-LL'],
+    ['fto:L3T', 'fto', 'experimental-fto-l3t', '3D'],
+  ])('renders %s with its puzzle mask and supported thumbnail', (category, puzzle, stickering, visualization) => {
+    render(<CaseCard card={{ ...card, category }} index={0} />);
+    expect(mockState.previewProps).toMatchObject({ puzzle, stickering, visualization, setupAnchor: 'end' });
+  });
+
+  it.each([
+    ['6x6x6:Parity', 'OLL Parity Inner', 'OLL'],
+    ['6x6x6:Parity', 'PLL Parity', 'PLL'],
+    ['7x7x7:Parity', 'OLL Parity Outer', 'OLL'],
+  ])('masks %s case %s individually in 3D', (category, name, stickering) => {
+    render(<CaseCard card={{ ...card, category, name }} index={0} />);
+    expect(mockState.previewProps).toMatchObject({ stickering, visualization: '3D' });
   });
 
   it('shows success and fail counts independently (e.g. one stop then one full solve)', () => {

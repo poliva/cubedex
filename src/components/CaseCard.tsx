@@ -1,8 +1,8 @@
-import { categoryName, categoryPuzzle, PUZZLES } from '../lib/puzzles';
+import { categoryName, categoryPuzzle } from '../lib/puzzles';
 import { memo, type CSSProperties } from 'react';
 import type { CaseCardData } from '../lib/case-cards';
 import { averageTimeString, bestTimeString } from '../lib/case-cards';
-import { getStickeringForCategory } from '../lib/stickering';
+import { getCasePreviewVisualization, getStickeringForCategory } from '../lib/stickering';
 import { BookmarkButton } from './BookmarkButton';
 import { CaseCardPreview } from './CaseCardPreview';
 import {
@@ -19,9 +19,8 @@ interface CaseCardProps {
 function CaseCardComponent({ card, index, style }: CaseCardProps) {
   const { practiceCount, failedCount, bestTime, ao5, selected } = useCaseCardSlice(card.id);
   const puzzle = categoryPuzzle(card.category);
-  const isLL = PUZZLES[puzzle].lastLayerPreview && categoryName(card.category).toLowerCase().includes('ll');
-  const visualization = isLL ? 'experimental-2D-LL' : '3D';
-  const stickering = getStickeringForCategory(categoryName(card.category), false, puzzle);
+  const visualization = getCasePreviewVisualization(card.category, puzzle, card.name);
+  const stickering = getStickeringForCategory(categoryName(card.category), false, puzzle, card.name);
 
   const background = failedCount
     ? 'rgba(239,68,68,0.12)'

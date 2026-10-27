@@ -1,12 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { Alg } from 'cubing/alg';
-import { categoryId, categoryName, categoryPuzzle, isPuzzleId, puzzleIds, puzzleLoader } from '../../src/lib/puzzles';
+import { categoryId, categoryName, categoryPuzzle, isPuzzleId, puzzleIds, puzzleLoader, puzzleVisualization, PUZZLES } from '../../src/lib/puzzles';
 import { createScopeId, expandNotation, getAlgorithmId } from '../../src/lib/storage';
 import { prepareTrainingAlgorithm } from '../../src/lib/auf';
 import { fixOrientation } from '../../src/lib/scramble';
 import defaults from '../../src/data/defaultAlgs.json';
 
 describe('puzzle-scoped libraries', () => {
+  it.each(puzzleIds)('tracks actual last-layer diagram support for %s', puzzle => {
+    expect(PUZZLES[puzzle].lastLayerPreview).toBe(Boolean(puzzleLoader(puzzle).llSVG));
+  });
+
+  it.each(puzzleIds)('uses a last-layer diagram or the puzzle fallback for %s', puzzle => {
+    const loader = puzzleLoader(puzzle);
+    const fallback = puzzle === 'square1' ? '2D' : '3D';
+    expect(puzzleVisualization(puzzle, 'experimental-2D-LL')).toBe(loader.llSVG ? 'experimental-2D-LL' : fallback);
+    expect(puzzleVisualization(puzzle, 'experimental-2D-LL-face')).toBe(
+      loader.llFaceSVG ? 'experimental-2D-LL-face' : loader.llSVG ? 'experimental-2D-LL' : fallback,
+    );
+  });
+
   it('preserves legacy IDs and separates identical category names on different puzzles', () => {
     expect(categoryId('3x3x3', 'OLL')).toBe('OLL');
     expect(categoryPuzzle('OLL')).toBe('3x3x3');

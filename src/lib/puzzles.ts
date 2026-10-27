@@ -2,14 +2,14 @@ import { puzzles } from 'cubing/puzzles';
 
 /** One registry drives selection, rendering and practice capabilities. */
 export const PUZZLES = {
-  '2x2x2': { name: '2×2', available: true, cube: true, smartcube: true, randomAUF: true, lastLayerPreview: false },
+  '2x2x2': { name: '2×2', available: true, cube: true, smartcube: true, randomAUF: true, lastLayerPreview: true },
   '3x3x3': { name: '3×3', available: true, cube: true, smartcube: true, randomAUF: true, lastLayerPreview: true },
-  '4x4x4': { name: '4×4', available: true, cube: true, smartcube: false, randomAUF: false, lastLayerPreview: false },
+  '4x4x4': { name: '4×4', available: true, cube: true, smartcube: false, randomAUF: false, lastLayerPreview: true },
   '5x5x5': { name: '5×5', available: true, cube: true, smartcube: false, randomAUF: false, lastLayerPreview: false },
   '6x6x6': { name: '6×6', available: true, cube: true, smartcube: false, randomAUF: false, lastLayerPreview: false },
   '7x7x7': { name: '7×7', available: true, cube: true, smartcube: false, randomAUF: false, lastLayerPreview: false },
   pyraminx: { name: 'Pyraminx', available: true, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
-  megaminx: { name: 'Megaminx', available: true, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
+  megaminx: { name: 'Megaminx', available: true, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: true },
   skewb: { name: 'Skewb', available: true, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
   fto: { name: 'FTO', available: true, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
   square1: { name: 'Square-1', available: true, cube: false, smartcube: false, randomAUF: false, lastLayerPreview: false },
@@ -39,7 +39,13 @@ export function puzzleLoader(puzzle: PuzzleId) {
   return puzzles[puzzle];
 }
 
-/** Square-1's shape-changing diagrams are provided by the 2D renderer. */
+/** Fall back to 3D for missing LL diagrams; Square-1 uses its shape-changing 2D renderer. */
 export function puzzleVisualization(puzzle: PuzzleId, visualization: string): string {
-  return puzzle === 'square1' ? '2D' : visualization;
+  if (puzzle === 'square1') return '2D';
+  const loader = puzzleLoader(puzzle);
+  if (visualization === 'experimental-2D-LL-face' && !loader.llFaceSVG) {
+    return loader.llSVG ? 'experimental-2D-LL' : '3D';
+  }
+  if (visualization === 'experimental-2D-LL' && !loader.llSVG) return '3D';
+  return visualization;
 }

@@ -206,7 +206,7 @@ export function App() {
     algorithmActions.clearForm, algorithmActions.clearMessages, activeView, smartcube.disconnectToken]);
   const selectedStickering = mainCubeStickeringDeferred && !options.fullStickering
     ? 'full'
-    : getStickeringForCategory(selectedCategory || 'PLL', options.fullStickering, puzzle);
+    : getStickeringForCategory(selectedCategory || 'PLL', options.fullStickering, puzzle, training.currentCase?.name);
   const optionsVisible = activeView === 'options';
   const optionsDeviceInfoOpen = activeView === 'options' && infoVisible;
 
