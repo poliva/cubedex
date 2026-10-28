@@ -481,6 +481,39 @@ describe('App alwaysScrambleTo auto scramble-to', () => {
     expect(alwaysScrambleRegressDyn.startScrambleToSpyB).not.toHaveBeenCalled();
   });
 
+  it.each([2, 3])('scrambles again for repeated solves of one algorithm on a size %s cube', async cubeSize => {
+    connectionDyn.connected = true;
+    connectionDyn.cubeSize = cubeSize;
+    alwaysScrambleRegressDyn.alwaysScrambleTo = true;
+    alwaysScrambleRegressDyn.practiceTimeAttack = false;
+    trainingRegressDyn.timerState = 'READY';
+    trainingRegressDyn.statsAlgId = 'case-1';
+    trainingRegressDyn.timeAttackMode = false;
+
+    const { rerender } = render(<App />);
+    await waitFor(() => expect(alwaysScrambleRegressDyn.startScrambleToSpyA).toHaveBeenCalledTimes(1));
+
+    for (let attempt = 1; attempt <= 3; attempt += 1) {
+      alwaysScrambleRegressDyn.scrambleMode = true;
+      rerender(<App />);
+      alwaysScrambleRegressDyn.scrambleMode = false;
+      trainingRegressDyn.visualResetKey += 1;
+      rerender(<App />);
+      expect(alwaysScrambleRegressDyn.startScrambleToSpyA).toHaveBeenCalledTimes(attempt);
+
+      trainingRegressDyn.timerState = 'RUNNING';
+      rerender(<App />);
+      trainingRegressDyn.timerState = 'STOPPED';
+      rerender(<App />);
+      expect(alwaysScrambleRegressDyn.startScrambleToSpyA).toHaveBeenCalledTimes(attempt);
+
+      trainingRegressDyn.timerState = 'READY';
+      trainingRegressDyn.visualResetKey += 1;
+      rerender(<App />);
+      await waitFor(() => expect(alwaysScrambleRegressDyn.startScrambleToSpyA).toHaveBeenCalledTimes(attempt + 1));
+    }
+  });
+
   it.each([2, 3])('starts the prepared random-AUF case after one setup on a size %s cube', async cubeSize => {
     connectionDyn.connected = true;
     connectionDyn.cubeSize = cubeSize;

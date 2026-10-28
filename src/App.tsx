@@ -477,6 +477,11 @@ export function App() {
       lastAutoScrambleKeyRef.current = '';
       return;
     }
+    // A new attempt needs setup even when the selected case and algorithm repeat.
+    // Keep the guard through READY after setup, but release it once the solve runs.
+    if (training.timerState === 'RUNNING' || training.timerState === 'STOPPED') {
+      lastAutoScrambleKeyRef.current = '';
+    }
     if (training.inputMode || training.timerState !== 'READY') return;
     const key = `${training.statsAlgId}:${training.displayAlg || training.algInput}`;
     if (lastAutoScrambleKeyRef.current === key) return;
